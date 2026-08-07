@@ -123,7 +123,7 @@ function RequisitionPDF({ requisition, organization }: RequisitionPDFProps) {
           </View>
         </View>
 
-        <View style={{ ...pdfStyles.table, minHeight: 150, marginBottom: 50 }}>
+        <View style={{ ...pdfStyles.table, minHeight: 230, marginBottom: 50 }}>
           <View style={pdfStyles.tableRow}>
             <Text
               style={{
