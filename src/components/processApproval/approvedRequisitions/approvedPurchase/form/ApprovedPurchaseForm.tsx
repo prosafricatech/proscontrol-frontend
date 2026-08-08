@@ -10,6 +10,7 @@ import PurchaseOrderPaymentAndReceive from '@/components/procurement/purchases/p
 import PurchaseOrderSummary from '@/components/procurement/purchases/purchaseOrderForm/PurchaseOrderSummary';
 import { Product } from '@/components/productAndServices/products/ProductType';
 import CommaSeparatedField from '@/shared/Inputs/CommaSeparatedField';
+import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { yupResolver } from '@hookform/resolvers/yup';
 import {
   AddOutlined,
@@ -244,10 +245,13 @@ const ApprovedPurchaseForm: React.FC<ApprovedPurchaseFormProps> = ({
           // If we have prevApprovedDetails, check the original fulfillment_type
           if (prevApprovedDetails?.items) {
             const prevItem = prevApprovedDetails.items.find(
-              (prev: any) => 
+              (prev: any) =>
                 prev.id === orderItem.requisition_approval_product_item_id
             );
-            return prevItem?.fulfillment_type === 'PURCHASE' || approvedDetails?.process_type === 'PURCHASE';
+            return (
+              prevItem?.fulfillment_type === 'PURCHASE' ||
+              approvedDetails?.process_type === 'PURCHASE'
+            );
           }
           // If no prevApprovedDetails, check the order item's data
           // The order item might have a flag or we assume it's from previous filter
@@ -270,16 +274,17 @@ const ApprovedPurchaseForm: React.FC<ApprovedPurchaseFormProps> = ({
             fulfillment_type: 'PURCHASE',
           };
         });
-    } 
+    }
     // If creating a new order from approvedDetails
     else if (approvedDetails?.items) {
       // Filter only PURCHASE items with unordered_quantity > 0
       const purchaseItems = approvedDetails.items.filter(
-        (item: any) => 
-          item.unordered_quantity > 0 && 
-          item.fulfillment_type === 'PURCHASE' || approvedDetails?.process_type === 'PURCHASE'
+        (item: any) =>
+          (item.unordered_quantity > 0 &&
+            item.fulfillment_type === 'PURCHASE') ||
+          approvedDetails?.process_type === 'PURCHASE'
       );
-      
+
       return purchaseItems.map((item: any) => ({
         ...item,
         quantity: item.unordered_quantity,
@@ -495,7 +500,7 @@ const ApprovedPurchaseForm: React.FC<ApprovedPurchaseFormProps> = ({
     },
     onError: (error: any) => {
       error?.response?.data?.message &&
-        enqueueSnackbar(error.response.data.message, { variant: 'error' });
+        enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
     },
   });
 
@@ -509,7 +514,7 @@ const ApprovedPurchaseForm: React.FC<ApprovedPurchaseFormProps> = ({
     },
     onError: (error: any) => {
       error?.response?.data?.message &&
-        enqueueSnackbar(error.response.data.message, { variant: 'error' });
+        enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
     },
   });
 
@@ -549,7 +554,11 @@ const ApprovedPurchaseForm: React.FC<ApprovedPurchaseFormProps> = ({
       });
     } else if (approvedDetails?.items) {
       sourceItems = approvedDetails.items
-        .filter((item: any) => item.fulfillment_type === 'PURCHASE' || approvedDetails?.process_type === 'PURCHASE')
+        .filter(
+          (item: any) =>
+            item.fulfillment_type === 'PURCHASE' ||
+            approvedDetails?.process_type === 'PURCHASE'
+        )
         .map((item: any) => ({
           ...item,
           quantity: sanitizedNumber(item.unordered_quantity),

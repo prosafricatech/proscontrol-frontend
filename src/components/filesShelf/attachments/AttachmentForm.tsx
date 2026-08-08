@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { LoadingButton } from '@mui/lab';
 import {
@@ -103,13 +104,14 @@ function AttachmentForm({
     },
     onError: (error: any) => {
       console.log('error: ', error);
-      enqueueSnackbar(
-        error?.response?.data?.error?.message ||
-          error?.response?.data?.message ||
-          error?.message ||
-          'Upload failed',
-        { variant: 'error' }
-      );
+      // enqueueSnackbar(
+      //   error?.response?.data?.error?.message ||
+      //     error?.response?.data?.message ||
+      //     error?.message ||
+      //     'Upload failed',
+      //   { variant: 'error' }
+      // );
+      enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
     },
   });
 
