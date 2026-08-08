@@ -136,6 +136,8 @@ export const PERMISSIONS = {
   PURCHASES_CREATE: 'Purchases:Create',
   PURCHASES_DELETE: 'Purchases:Delete',
   PURCHASES_EDIT: 'Purchases:Edit',
+  PURCHASES_INSTANT_PAY: 'Purchases:InstantPay',
+  PURCHASES_INSTANT_RECEIVE: 'Purchases:InstantReceive',
   PURCHASES_POSTDATE: 'Purchases:PostDate',
   PURCHASES_READ: 'Purchases:Read',
   PURCHASES_RECEIVE: 'Purchases:Receive',

@@ -1,14 +1,17 @@
-import React, { useContext } from 'react'
-import { Box, Grid, IconButton, Tooltip, Typography } from '@mui/material';
-import { AttachmentOutlined, UndoOutlined, VisibilityOutlined, EditOutlined } from '@mui/icons-material';
+import React, { useContext, useState } from 'react'
+import { Box, Dialog, Grid, IconButton, Tooltip, Typography } from '@mui/material';
+import { AttachmentOutlined, ReceiptLongOutlined, UndoOutlined, VisibilityOutlined, EditOutlined } from '@mui/icons-material';
 import { listItemContext } from './PurchaseOrderListItem';
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import { readableDate } from '@/app/helpers/input-sanitization-helpers';
 import { PERMISSIONS } from '@/utilities/constants/permissions';
+import PurchaseBillFormDialog from '../../grns/PurchaseBillFormDialog';
 
 function PurchaseOrderGrns({order}) {
     const { setOpenEditReceive, setAttachDialog, setSelectedOrderGrn, setOpenDialog, setOpenDocumentDialog, purchaseOrderGrns } = useContext(listItemContext);
-    const {checkOrganizationPermission} = useJumboAuth();
+    const {checkOrganizationPermission, authOrganization: { organization }} = useJumboAuth();
+    const deferGrnBilling = !!organization?.settings?.defer_grn_billing;
+    const [billGrn, setBillGrn] = useState(null);
 
   return (
     <React.Fragment>
@@ -59,7 +62,7 @@ function PurchaseOrderGrns({order}) {
                         flexDirection={'row'}
                         justifyContent={'flex-end'}
                     >
-                        {order.status !== 'Instantly Received' && order.status !== 'Closed' && checkOrganizationPermission([PERMISSIONS.PURCHASES_UNRECEIVE]) &&
+                        {!orderGrn.billed && order.status !== 'Instantly Received' && order.status !== 'Closed' && checkOrganizationPermission([PERMISSIONS.PURCHASES_UNRECEIVE]) &&
                             <Tooltip title={`Unreceive ${orderGrn.grnNo}`}>
                                 <IconButton
                                     onClick={() => {
@@ -72,16 +75,18 @@ function PurchaseOrderGrns({order}) {
                             </Tooltip>
                         }
 
-                        <Tooltip title={`Edit ${orderGrn.grnNo}`}>
-                            <IconButton
-                                onClick={() => {
-                                    setSelectedOrderGrn(orderGrn);
-                                    setOpenEditReceive(true);
-                                }}
-                            >
-                                <EditOutlined/>
-                            </IconButton>
-                        </Tooltip>
+                        {!orderGrn.billed &&
+                            <Tooltip title={`Edit ${orderGrn.grnNo}`}>
+                                <IconButton
+                                    onClick={() => {
+                                        setSelectedOrderGrn(orderGrn);
+                                        setOpenEditReceive(true);
+                                    }}
+                                >
+                                    <EditOutlined/>
+                                </IconButton>
+                            </Tooltip>
+                        }
 
                         <Tooltip  title={`${orderGrn.grnNo} Attachments`}>
                             <IconButton onClick={() => {
@@ -105,10 +110,33 @@ function PurchaseOrderGrns({order}) {
                                 />
                             </IconButton>
                         </Tooltip>
+
+                        {deferGrnBilling && !orderGrn.billed && orderGrn.unbilled_amount > 0 &&
+                            checkOrganizationPermission([PERMISSIONS.PURCHASES_CREATE]) &&
+                            <Tooltip title={`Create Purchase Bill for ${orderGrn.grnNo}`}>
+                                <IconButton onClick={() => setBillGrn(orderGrn)}>
+                                    <ReceiptLongOutlined />
+                                </IconButton>
+                            </Tooltip>
+                        }
                     </Box>
                 </Grid>
             </Grid>
         ))}
+
+        <Dialog
+            open={!!billGrn}
+            onClose={() => setBillGrn(null)}
+            fullWidth
+            maxWidth='sm'
+        >
+            {billGrn && (
+                <PurchaseBillFormDialog
+                    grn={billGrn}
+                    setOpenDialog={(open) => !open && setBillGrn(null)}
+                />
+            )}
+        </Dialog>
     </React.Fragment>
   )
 }

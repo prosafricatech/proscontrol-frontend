@@ -88,6 +88,13 @@ financialReportsServices.creditors = async (params) => {
   return data;
 }
 
+financialReportsServices.apArAging = async (params) => {
+  const { data } = await axios.get(`/api/financialReports/apArAging`, {
+    params
+  })
+  return data;
+}
+
 financialReportsServices.exportDebtorsOrCreditorsToExcel = async (params) => {
   const { data } = await axios.post(`/api/exports/excel/debtorsOrCreditors/`, params, {
     responseType: 'blob',

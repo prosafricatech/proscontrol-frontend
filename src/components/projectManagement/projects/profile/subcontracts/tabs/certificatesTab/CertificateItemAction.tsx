@@ -16,6 +16,7 @@ import {
   EditOutlined,
   HighlightOff,
   MoreHorizOutlined,
+  ReceiptLongOutlined,
   VisibilityOutlined,
 } from '@mui/icons-material';
 import {
@@ -46,6 +47,7 @@ interface Certificate {
   remarks?: string | null;
   total_amount?: number | null;
   currency?: Currency | null;
+  status?: 'draft' | 'invoiced';
 }
 
 const DocumentDialog: React.FC<{
@@ -242,19 +244,49 @@ const CertificateItemAction: React.FC<{ certificate: Certificate }> = ({
     },
   });
 
+  const { mutate: invoiceCertificate } = useMutation({
+    mutationFn: () => projectsServices.invoiceCertificate(certificate.id),
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ['Certificates'] });
+      enqueueSnackbar(data.message, { variant: 'success' });
+    },
+    onError: (error: any) => {
+      enqueueSnackbar(
+        error?.response?.data?.message || 'Failed to create invoice',
+        { variant: 'error' }
+      );
+    },
+  });
+
+  // Same rationale as ProjectClaimItemAction — the edit lock only applies
+  // once invoiced AND the org actually defers invoicing; otherwise every
+  // certificate is 'invoiced' immediately and has always stayed editable.
+  const deferredInvoicing = !!organization?.settings?.defer_project_certificate_invoicing;
+  const isDraft = certificate.status === 'draft';
+  const isLocked = deferredInvoicing && certificate.status === 'invoiced';
+
   const menuItems = [
     {
       icon: <VisibilityOutlined fontSize='small' />,
       title: 'View',
       action: 'view',
     },
-    { icon: <EditOutlined fontSize='small' />, title: 'Edit', action: 'edit' },
+    !isLocked && {
+      icon: <EditOutlined fontSize='small' />,
+      title: 'Edit',
+      action: 'edit',
+    },
+    isDraft && {
+      icon: <ReceiptLongOutlined fontSize='small' />,
+      title: 'Create Invoice',
+      action: 'invoice',
+    },
     {
       icon: <DeleteOutlined fontSize='small' color='error' />,
       title: 'Delete',
       action: 'delete',
     },
-  ];
+  ].filter(Boolean) as MenuItemProps[];
 
   const handleItemAction = (menu: MenuItemProps) => {
     switch (menu.action) {
@@ -263,6 +295,19 @@ const CertificateItemAction: React.FC<{ certificate: Certificate }> = ({
         break;
       case 'edit':
         setOpenEditDialog(true);
+        break;
+      case 'invoice':
+        showDialog({
+          title: 'Create Invoice',
+          content:
+            'This will post the Certificate to the subcontractor’s account and it can no longer be edited. Continue?',
+          onYes: () => {
+            invoiceCertificate();
+            hideDialog();
+          },
+          onNo: hideDialog,
+          variant: 'confirm',
+        });
         break;
       case 'delete':
         showDialog({

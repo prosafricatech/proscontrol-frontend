@@ -199,6 +199,10 @@ const EmployeesContractsForm = ({
       .number()
       .nullable()
       .typeError('This value should be a number'),
+    standard_hours_per_month: yup
+      .number()
+      .nullable()
+      .typeError('This value should be a number'),
     overtime_multiplier: yup
       .number()
       .nullable()
@@ -232,6 +236,7 @@ const EmployeesContractsForm = ({
       basic_salary: contract?.basic_salary || undefined,
       pay_basis: contract?.pay_basis || 'monthly',
       standard_hours_per_day: contract?.standard_hours_per_day || 8,
+      standard_hours_per_month: contract?.standard_hours_per_month ?? null,
       overtime_multiplier: contract?.overtime_multiplier || 1.5,
       holiday_work_multiplier: contract?.holiday_work_multiplier || 2,
       remarks: contract?.remarks || '',
@@ -249,6 +254,7 @@ const EmployeesContractsForm = ({
       basic_salary: contract?.basic_salary || undefined,
       pay_basis: contract?.pay_basis || 'monthly',
       standard_hours_per_day: contract?.standard_hours_per_day || 8,
+      standard_hours_per_month: contract?.standard_hours_per_month ?? null,
       overtime_multiplier: contract?.overtime_multiplier || 1.5,
       holiday_work_multiplier: contract?.holiday_work_multiplier || 2,
       remarks: contract?.remarks || '',
@@ -257,6 +263,7 @@ const EmployeesContractsForm = ({
 
   const watchSelectedPayBasis = watch('pay_basis');
   const showMoreFields = watchSelectedPayBasis !== 'monthly' ? true : false;
+  const showMonthlyOvertimeField = watchSelectedPayBasis === 'monthly';
 
   useEffect(() => {
     if (!showMoreFields) {
@@ -427,6 +434,44 @@ const EmployeesContractsForm = ({
                 />
               </Div>
             </Grid>
+
+            {showMonthlyOvertimeField && (
+              <Grid size={{ xs: 12, md: 4 }}>
+                <Div sx={{ mt: 1, mb: 1 }}>
+                  <Controller
+                    name='standard_hours_per_month'
+                    control={control}
+                    render={({ field }) => (
+                      <TextField
+                        label='Standard Hours/Month'
+                        size='small'
+                        fullWidth
+                        value={field.value ?? ''}
+                        onChange={(event) => {
+                          const raw = event.target.value.replace(/,/g, '');
+                          field.onChange(raw === '' ? null : Number(raw));
+                        }}
+                        error={
+                          !!errors?.standard_hours_per_month ||
+                          !!error?.response?.data?.validation_errors
+                            ?.standard_hours_per_month ||
+                          !!updateError?.response?.data?.validation_errors
+                            ?.standard_hours_per_month
+                        }
+                        helperText={
+                          errors.standard_hours_per_month?.message ||
+                          error?.response?.data?.validation_errors
+                            ?.standard_hours_per_month ||
+                          updateError?.response?.data?.validation_errors
+                            ?.standard_hours_per_month ||
+                          'Leave blank to use the organization default'
+                        }
+                      />
+                    )}
+                  />
+                </Div>
+              </Grid>
+            )}
 
             {showMoreFields && (
               <>

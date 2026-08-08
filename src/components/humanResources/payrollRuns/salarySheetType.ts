@@ -6,6 +6,7 @@ type EmployeesType = {
   name: string;
   bank_name: string | null;
   branch: string | null;
+  bank_code: string | null;
   account_number: string | null;
   account_name: string | null;
   net_salary: number;

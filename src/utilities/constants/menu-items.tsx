@@ -428,6 +428,11 @@ export async function getMenus(locale: string) {
               type: 'nav-item',
             },
             {
+              uri: `/${locale}/humanResources/overtime-types`,
+              label: 'Overtime Types',
+              type: 'nav-item',
+            },
+            {
               uri: `/${locale}/humanResources/employer-contribution-types`,
               label: 'Employer Contribution Types',
               type: 'nav-item',
