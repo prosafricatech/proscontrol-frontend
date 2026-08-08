@@ -13,11 +13,8 @@ export const getErrorMessage = (error: any) => {
 
     // Try different common response formats
     if (typeof data === 'string') return data;
-    if (data?.message) return data.message;
-    if (data?.error)
-      return typeof data.error === 'string' ? data.error : data.error.message;
 
-    // Handle validation errors
+    // Handle validation errors FIRST (before general message)
     if (data?.validation_errors) {
       const errors = data.validation_errors;
       // If it's an object with arrays of errors
@@ -38,6 +35,11 @@ export const getErrorMessage = (error: any) => {
       }
       return Array.isArray(errors) ? errors.join(', ') : String(errors);
     }
+
+    // Then check for message/error fields
+    if (data?.message) return data.message;
+    if (data?.error)
+      return typeof data.error === 'string' ? data.error : data.error.message;
 
     // Fallback to status text
     return error.response.statusText || `Error ${error.response.status}`;
