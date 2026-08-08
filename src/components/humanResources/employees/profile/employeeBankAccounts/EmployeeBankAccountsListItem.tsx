@@ -36,6 +36,13 @@ const EmployeeBankAccountsListItem = ({
           <Tooltip title='Bank'>
             <Typography>{bankDisplayName}</Typography>
           </Tooltip>
+          {account.bank_code && (
+            <Tooltip title='Bank Code'>
+              <Typography variant='caption' color='text.secondary'>
+                Code: {account.bank_code}
+              </Typography>
+            </Tooltip>
+          )}
         </Grid>
 
         <Grid size={{ xs: 12, md: 3 }}>

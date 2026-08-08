@@ -1,5 +1,7 @@
+import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import LedgerSelect from '@/components/accounts/ledgers/forms/LedgerSelect';
 import { useProductsSelect } from '@/components/productAndServices/products/ProductsSelectProvider';
+import { PERMISSIONS } from '@/utilities/constants/permissions';
 import { Checkbox, FormControlLabel, Grid, TextField } from '@mui/material';
 import React, { useState } from 'react';
 import StoreSelector from '../../stores/StoreSelector';
@@ -19,6 +21,11 @@ function PurchaseOrderPaymentAndReceive({
 }) {
   const [storeOptions, setStoreOptions] = useState([]);
   const { productOptions } = useProductsSelect();
+  const { checkOrganizationPermission } = useJumboAuth();
+  const canInstantPay = checkOrganizationPermission(PERMISSIONS.PURCHASES_INSTANT_PAY);
+  const canInstantReceive = checkOrganizationPermission(
+    PERMISSIONS.PURCHASES_INSTANT_RECEIVE
+  );
 
   //Get Store options
   React.useEffect(() => {
@@ -79,23 +86,25 @@ function PurchaseOrderPaymentAndReceive({
       <Grid size={{ xs: 12, md: 6 }}>
         <Grid container columnSpacing={1} rowSpacing={1}>
           <Grid size={{ xs: 12, md: 6 }}>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={instant_pay}
-                  disabled={!watch('stakeholder_id')}
-                  onChange={(e) => {
-                    const checked = e.target.checked;
-                    setValue('instant_pay', checked, {
-                      shouldDirty: true,
-                      shouldValidate: true,
-                    });
-                  }}
-                  name='instant_pay'
-                />
-              }
-              label='Instant Payment'
-            />
+            {canInstantPay && (
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={instant_pay}
+                    disabled={!watch('stakeholder_id')}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setValue('instant_pay', checked, {
+                        shouldDirty: true,
+                        shouldValidate: true,
+                      });
+                    }}
+                    name='instant_pay'
+                  />
+                }
+                label='Instant Payment'
+              />
+            )}
             {instant_pay && (
               <LedgerSelect
                 label='Pay from'
@@ -112,7 +121,7 @@ function PurchaseOrderPaymentAndReceive({
             )}
           </Grid>
 
-          {displayStoreSelector && (
+          {displayStoreSelector && canInstantReceive && (
             <Grid size={{ xs: 12, md: 6 }}>
               <FormControlLabel
                 control={

@@ -14,6 +14,7 @@ import {
   BalanceOutlined,
   DeckOutlined,
   Money,
+  QueryStatsOutlined,
   ReceiptLongOutlined,
   ViewTimelineOutlined,
 } from '@mui/icons-material';
@@ -31,6 +32,7 @@ import LedgerSelectProvider from '../ledgers/forms/LedgerSelectProvider';
 import BalanceSheet from './balance sheet/BalanceSheet';
 import CashierReport from './cashierReport/CashierReport';
 import DebtorCreditorReport from './debtorCreditor/DebtorCreditorReport';
+import ApArAgingReport from './agingReport/ApArAgingReport';
 import IncomeStatement from './incomeStatement/IncomeStatement';
 import TrialBalance from './trial balance/TrialBalance';
 import XReport from './zReport/ZReport';
@@ -80,6 +82,9 @@ function AccountsReports() {
       setOpenBalanceSheet(true);
     } else if (reportParam === 'debtors-creditors') {
       setReport(<DebtorCreditorReport setOpenDebtorsCreditorsDialog={setOpenDialog} />);
+      setOpenDialog(true);
+    } else if (reportParam === 'ap-ar-aging') {
+      setReport(<ApArAgingReport setOpenDialog={setOpenDialog} />);
       setOpenDialog(true);
     } else if (reportParam === 'z-report') {
       setReport(<XReport />);
@@ -289,6 +294,24 @@ function AccountsReports() {
             >
               <Money sx={{ fontSize: '40px' }} />
               <Typography>Debtors & Creditors</Typography>
+            </Grid>
+            <Grid
+              sx={{
+                cursor: 'pointer',
+                '&:hover': {
+                  bgcolor: 'action.hover',
+                },
+              }}
+              size={{ xs: 6, md: 3, lg: 2 }}
+              p={1}
+              textAlign={'center'}
+              onClick={() => {
+                setReport(<ApArAgingReport setOpenDialog={setOpenDialog} />);
+                setOpenDialog(true);
+              }}
+            >
+              <QueryStatsOutlined sx={{ fontSize: '40px' }} />
+              <Typography>A/P &amp; A/R Aging</Typography>
             </Grid>
           </Grid>
         </JumboCardQuick>

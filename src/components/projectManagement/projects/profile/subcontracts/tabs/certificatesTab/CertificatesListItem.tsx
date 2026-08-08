@@ -2,6 +2,7 @@
 
 import React from 'react';
 import {
+  Chip,
   Grid,
   ListItemText,
   Tooltip,
@@ -19,6 +20,7 @@ interface Certificate {
   remarks?: string | null;
   total_amount?: number | null;
   currency?: Currency | null;
+  status?: 'draft' | 'invoiced';
 }
 
 interface CertificatesListItemProps {
@@ -68,8 +70,11 @@ const CertificatesListItem: React.FC<CertificatesListItemProps> = ({ certificate
           }
           secondary={
             <Tooltip title="Certificate Number">
-              <span style={{ display: 'block' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 {certificate.certificateNo || 'Draft / Pending'}
+                {certificate.status === 'draft' && (
+                  <Chip label="Draft" size="small" color="warning" variant="outlined" />
+                )}
               </span>
             </Tooltip>
           }

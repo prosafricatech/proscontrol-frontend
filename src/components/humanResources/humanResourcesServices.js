@@ -430,6 +430,37 @@ humanResourcesServices.deleteDeductionType = async (id) => {
 }
 
 // ============================================
+// OVERTIME TYPES
+// ============================================
+humanResourcesServices.getOvertimeTypesList = async (params = {}) => {
+    const { page = 1, limit = 50, ...queryParams } = params;
+    const { data } = await axios.get('/api/humanResources/overtimeTypes', {
+        params: { page, limit, ...queryParams }
+    });
+    return data;
+};
+
+humanResourcesServices.addOvertimeType = async (overtimeType) => {
+    const { data } = await axios.post('/api/humanResources/overtimeTypes/add', overtimeType);
+    return data;
+}
+
+humanResourcesServices.updateOvertimeType = async (overtimeType) => {
+    const { data } = await axios.put(`/api/humanResources/overtimeTypes/${overtimeType.id}/update`, overtimeType);
+    return data;
+}
+
+humanResourcesServices.showOvertimeType = async (id) => {
+    const { data } = await axios.get(`/api/humanResources/overtimeTypes/${id}`);
+    return data;
+}
+
+humanResourcesServices.deleteOvertimeType = async (id) => {
+    const { data } = await axios.delete(`/api/humanResources/overtimeTypes/${id}/delete`);
+    return data;
+}
+
+// ============================================
 // EMPLOYER CONTRIBUTION TYPES
 // ============================================
 humanResourcesServices.getEmployerContributionTypesList = async (params = {}) => {
@@ -862,6 +893,64 @@ humanResourcesServices.deleteperiodAdjustmentAllowance = async (allowanceId) => 
 }
 humanResourcesServices.deleteperiodAdjustmentDeduction = async (deductionId) => {
     const { data } = await axios.delete(`/api/humanResources/payrollPeriods/period-adjustments-template/deductions/${deductionId}/delete`);
+    return data;
+}
+
+// ===== period overtime (monthly employees, logged one dated entry at a time) ===== //
+humanResourcesServices.addPeriodOvertime = async (overtimeEntry) => {
+    const { data } = await axios.post('/api/humanResources/payrollPeriods/period-adjustments-template/overtime/add', overtimeEntry);
+    return data;
+}
+humanResourcesServices.updatePeriodOvertime = async (overtimeEntry) => {
+    const { data } = await axios.put(`/api/humanResources/payrollPeriods/period-adjustments-template/overtime/${overtimeEntry.id}/update`, overtimeEntry);
+    return data;
+}
+humanResourcesServices.deletePeriodOvertime = async (id) => {
+    const { data } = await axios.delete(`/api/humanResources/payrollPeriods/period-adjustments-template/overtime/${id}/delete`);
+    return data;
+}
+
+// ===== salary advances (bulk-uploaded against one period) ===== //
+humanResourcesServices.getPeriodAdvances = async (periodId) => {
+    const { data } = await axios.get(`/api/humanResources/payrollPeriods/advances/${periodId}`);
+    return data;
+}
+humanResourcesServices.downloadAdvancesTemplate = async () => {
+    const { data } = await axios.post('/api/humanResources/payrollPeriods/advances/template/download', {}, {
+        responseType: 'blob',
+    });
+    return data;
+}
+humanResourcesServices.importPeriodAdvances = async (periodId, file) => {
+    const { data } = await axios.post(`/api/humanResources/payrollPeriods/advances/${periodId}/upload`, file, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return data;
+}
+humanResourcesServices.updatePeriodAdvance = async (advance) => {
+    const { data } = await axios.put(`/api/humanResources/payrollPeriods/advances/${advance.id}/update`, advance);
+    return data;
+}
+humanResourcesServices.deletePeriodAdvance = async (id) => {
+    const { data } = await axios.delete(`/api/humanResources/payrollPeriods/advances/${id}/delete`);
+    return data;
+}
+humanResourcesServices.advanceTransferSheet = async (periodId) => {
+    const { data } = await axios.get(`/api/humanResources/payrollPeriods/advances/${periodId}/transfer-sheet`);
+    return data;
+}
+humanResourcesServices.advanceTransferSheetExcel = async (periodId) => {
+    const { data } = await axios.post(`/api/humanResources/payrollPeriods/advances/${periodId}/transfer-sheet`, {}, {
+        responseType: 'blob',
+    });
+    return data;
+}
+humanResourcesServices.payAdvances = async ({ id, ...payload }) => {
+    const { data } = await axios.post(`/api/humanResources/payrollPeriods/advances/${id}/pay`, payload);
+    return data;
+}
+humanResourcesServices.markAdvancesPaid = async ({ id, ...payload }) => {
+    const { data } = await axios.post(`/api/humanResources/payrollPeriods/advances/${id}/mark-paid`, payload);
     return data;
 }
 

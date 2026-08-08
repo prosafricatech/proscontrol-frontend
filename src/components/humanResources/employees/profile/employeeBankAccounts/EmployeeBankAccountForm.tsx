@@ -130,6 +130,7 @@ const EmployeeBankAccountForm = ({
       .typeError('Bank is required')
       .required('Bank is required'),
     branch: yup.string().max(100, 'Branch cannot exceed 100 characters'),
+    bank_code: yup.string().max(50, 'Bank code cannot exceed 50 characters'),
     account_number: yup
       .string()
       .required('Account number is required')
@@ -155,6 +156,7 @@ const EmployeeBankAccountForm = ({
       employee_id: account?.employee_id,
       bank_id: account?.bank_id,
       branch: account?.branch || '',
+      bank_code: account?.bank_code || '',
       account_number: account?.account_number || '',
       account_name: account?.account_name || '',
       is_primary: account?.is_primary || false,
@@ -167,6 +169,7 @@ const EmployeeBankAccountForm = ({
       employee_id: account?.employee_id,
       bank_id: account?.bank_id,
       branch: account?.branch || '',
+      bank_code: account?.bank_code || '',
       account_number: account?.account_number || '',
       account_name: account?.account_name || '',
       is_primary: account?.is_primary || false,
@@ -261,6 +264,26 @@ const EmployeeBankAccountForm = ({
                     getValidationMessage(validationErrors, 'branch')
                   }
                   {...register('branch')}
+                />
+              </Div>
+            </Grid>
+
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Div sx={{ mt: 1, mb: 1 }}>
+                <TextField
+                  label='Bank Code'
+                  size='small'
+                  fullWidth
+                  helperText={
+                    errors.bank_code?.message ||
+                    getValidationMessage(validationErrors, 'bank_code') ||
+                    'Optional — only needed if your bank requires a routing/branch code for transfers'
+                  }
+                  error={
+                    !!errors?.bank_code ||
+                    !!getValidationMessage(validationErrors, 'bank_code')
+                  }
+                  {...register('bank_code')}
                 />
               </Div>
             </Grid>

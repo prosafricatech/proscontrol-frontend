@@ -15,6 +15,7 @@ export interface EmployeeBankAccountType {
   };
   bank_name?: string;
   branch?: string;
+  bank_code?: string;
   account_number: string;
   account_name: string;
   swift_code?: string;

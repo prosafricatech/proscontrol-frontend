@@ -309,6 +309,17 @@ const BankTransferListDialog = ({
                                 }}
                                 align='left'
                               >
+                                Bank Code
+                              </TableCell>
+                              <TableCell
+                                colSpan={1}
+                                sx={{
+                                  backgroundColor: mainColor,
+                                  color: contrastText,
+                                  textWrap: 'nowrap',
+                                }}
+                                align='left'
+                              >
                                 Account Number
                               </TableCell>
                               <TableCell
@@ -361,6 +372,9 @@ const BankTransferListDialog = ({
                                   </TableCell>
                                   <TableCell colSpan={1} align='left'>
                                     {row.branch ?? '-'}
+                                  </TableCell>
+                                  <TableCell colSpan={1} align='left'>
+                                    {row.bank_code ?? '-'}
                                   </TableCell>
                                   <TableCell colSpan={1} align='left'>
                                     {row.account_number ?? '-'}
