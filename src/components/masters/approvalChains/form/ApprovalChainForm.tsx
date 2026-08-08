@@ -9,8 +9,10 @@ import approvalChainsServices from '../approvalChainsServices';
 import ApprovalChainsItemForm from './ApprovalChainsItemForm';
 import ApprovalChainsItemRow from './ApprovalChainsItemRow';
 import CostCenterSelector from '../../costCenters/CostCenterSelector';
+import DepartmentSelector from '../../../humanResources/departments/DepartmentSelector';
+import { DepartmentsProvider } from '../../../humanResources/departments/DepartmentsProvider';
 import { HighlightOff } from '@mui/icons-material';
-import { getProcessTypes } from '@/utilities/constants/processTypes';
+import { getProcessTypes, DEPARTMENT_SCOPABLE_PROCESS_TYPES } from '@/utilities/constants/processTypes';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Div } from '@jumbo/shared';
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
@@ -19,8 +21,9 @@ import { MODULES } from '@/utilities/constants/modules';
 interface ApprovalChainFormValues {
   process_type: string;
   cost_center_id?: number | null;
+  department_id?: number | null;
   remarks?: string;
-  levels?: any[]; 
+  levels?: any[];
 }
 
 interface ApprovalChainFormProps {
@@ -29,6 +32,7 @@ interface ApprovalChainFormProps {
 
 function ApprovalChainForm({ toggleOpen }: ApprovalChainFormProps) {
   const [items, setItems] = useState<any[]>([]);
+  const [selectedProcessType, setSelectedProcessType] = useState<string>('');
   const [serverError, setServerError] = useState<{ process_type?: string[] } | null>(null);
   const { enqueueSnackbar } = useSnackbar();
   const queryClient = useQueryClient();
@@ -59,6 +63,7 @@ function ApprovalChainForm({ toggleOpen }: ApprovalChainFormProps) {
     defaultValues: {
       process_type: '',
       cost_center_id: null,
+      department_id: null,
       remarks: '',
       levels: []
     }
@@ -112,7 +117,7 @@ function ApprovalChainForm({ toggleOpen }: ApprovalChainFormProps) {
   };
 
   return (
-    <>
+    <DepartmentsProvider>
       <DialogTitle>
         <Grid container columnSpacing={2}>
           <Grid size={12} textAlign={"center"} mb={2}>
@@ -121,7 +126,7 @@ function ApprovalChainForm({ toggleOpen }: ApprovalChainFormProps) {
           <Grid size={12}>
             <form autoComplete='off'>
               <Grid container columnSpacing={1} rowSpacing={2}>
-                <Grid size={{xs: 12, md: 4}}>
+                <Grid size={{xs: 12, md: 3}}>
                   <Div sx={{ mt: 0.3 }}>
                     <Autocomplete
                       id="checkboxes-process_type"
@@ -144,29 +149,55 @@ function ApprovalChainForm({ toggleOpen }: ApprovalChainFormProps) {
                           shouldValidate: true,
                           shouldDirty: true,
                         });
-                      }}
-                    />
-                  </Div>
-                </Grid>
-                <Grid size={{xs: 12, md: 4}}>
-                  <Div sx={{ mt: 0.3 }}>
-                    <CostCenterSelector
-                      multiple={false}
-                      withNotSpecified={true}
-                      label="Cost Center"
-                      onChange={(newValue) => {
-                        setServerError(null);
-                        if (!Array.isArray(newValue)) {
-                          setValue('cost_center_id', newValue?.id ?? null);
+                        setSelectedProcessType(newValue || '');
+                        if (!newValue || !DEPARTMENT_SCOPABLE_PROCESS_TYPES.includes(newValue)) {
+                          setValue('department_id', null);
                         } else {
-                          // just in case, handle the array scenario safely
                           setValue('cost_center_id', null);
                         }
                       }}
                     />
                   </Div>
                 </Grid>
-                <Grid size={{xs: 12, md: 4}}>
+                {!DEPARTMENT_SCOPABLE_PROCESS_TYPES.includes(selectedProcessType) && (
+                  <Grid size={{xs: 12, md: 3}}>
+                    <Div sx={{ mt: 0.3 }}>
+                      <CostCenterSelector
+                        multiple={false}
+                        withNotSpecified={true}
+                        label="Cost Center"
+                        onChange={(newValue) => {
+                          setServerError(null);
+                          if (!Array.isArray(newValue)) {
+                            setValue('cost_center_id', newValue?.id ?? null);
+                          } else {
+                            // just in case, handle the array scenario safely
+                            setValue('cost_center_id', null);
+                          }
+                        }}
+                      />
+                    </Div>
+                  </Grid>
+                )}
+                {DEPARTMENT_SCOPABLE_PROCESS_TYPES.includes(selectedProcessType) && (
+                  <Grid size={{xs: 12, md: 3}}>
+                    <Div sx={{ mt: 0.3 }}>
+                      <DepartmentSelector
+                        multiple={false}
+                        label="Department"
+                        onChange={(newValue) => {
+                          setServerError(null);
+                          if (newValue && !Array.isArray(newValue)) {
+                            setValue('department_id', newValue.id);
+                          } else {
+                            setValue('department_id', null);
+                          }
+                        }}
+                      />
+                    </Div>
+                  </Grid>
+                )}
+                <Grid size={{xs: 12, md: 3}}>
                   <Div sx={{ mt: 0.3 }}>
                     <TextField
                       label="Remarks"
@@ -263,7 +294,7 @@ function ApprovalChainForm({ toggleOpen }: ApprovalChainFormProps) {
           Submit
         </LoadingButton>
       </DialogActions>
-    </>
+    </DepartmentsProvider>
   );
 }
 

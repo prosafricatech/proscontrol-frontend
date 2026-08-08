@@ -12,10 +12,11 @@ import {
   EditOutlined,
   HighlightOffOutlined,
   PaidOutlined,
-  PaymentsOutlined,
   ReplayOutlined,
   UndoOutlined,
 } from '@mui/icons-material';
+import { faMoneyBill1 } from '@fortawesome/free-regular-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Dialog, IconButton, Tooltip, useMediaQuery } from '@mui/material';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSnackbar } from 'notistack';
@@ -311,8 +312,8 @@ const LoanRequestItemAction = ({
 
       {canDisburseWithLedger && (
         <Tooltip title='Disburse'>
-          <IconButton size='small' onClick={() => setOpenDisburseDialog(true)}>
-            <PaymentsOutlined color='success' />
+          <IconButton size='small' color='success' onClick={() => setOpenDisburseDialog(true)}>
+            <FontAwesomeIcon icon={faMoneyBill1} size='lg' />
           </IconButton>
         </Tooltip>
       )}

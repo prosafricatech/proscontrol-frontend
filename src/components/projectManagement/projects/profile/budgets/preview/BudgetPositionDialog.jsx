@@ -202,14 +202,19 @@ function BudgetPositionDialog({ open, onClose, budget }) {
           acc.budgeted += item.budgeted_amount || 0;
           acc.spent += item.spent_amount || 0;
           acc.committed += item.committed_amount || 0;
+          // Backend already computes remaining_amount as Budgeted - Spent -
+          // Stock On Hand (not the full committed_amount) — summed directly
+          // here rather than re-derived, so this can't drift from the
+          // per-row Available figures below.
+          acc.available += item.remaining_amount || 0;
           return acc;
         },
-        { budgeted: 0, spent: 0, committed: 0 }
+        { budgeted: 0, spent: 0, committed: 0, available: 0 }
       ),
     [items]
   );
   const totalBudgetMinusSpent = totals.budgeted - totals.spent;
-  const totalAvailable = totals.budgeted - totals.spent - totals.committed;
+  const totalAvailable = totals.available;
   // % Spent is deliberately actual-only (not blended with Committed) — same
   // call made for the Project dashboard and the ledger-level Budget view.
   const totalPercentageSpent = totals.budgeted

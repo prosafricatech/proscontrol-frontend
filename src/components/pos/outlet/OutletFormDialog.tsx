@@ -3,6 +3,7 @@ import { Ledger } from '@/components/accounts/ledgers/LedgerType';
 import StoreSelector from '@/components/procurement/stores/StoreSelector';
 import UsersSelector from '@/components/sharedComponents/UsersSelector';
 import { User } from '@/types/auth-types';
+import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Div } from '@jumbo/shared';
 import { DisabledByDefault } from '@mui/icons-material';
@@ -149,18 +150,18 @@ const OutletFormDialog: React.FC<OutletFormProps> = ({
       setOpenDialog(false);
     },
     onError: (error: unknown) => {
-      let message = 'Something went wrong';
+      let message = getErrorMessage(error);
 
-      if (
-        typeof error === 'object' &&
-        error !== null &&
-        'response' in error &&
-        typeof (error as any).response?.data?.message === 'string'
-      ) {
-        message = (error as any).response.data.message;
-      } else if (error instanceof Error) {
-        message = error.message;
-      }
+      // if (
+      //   typeof error === 'object' &&
+      //   error !== null &&
+      //   'response' in error &&
+      //   typeof (error as any).response?.data?.message === 'string'
+      // ) {
+      //   message = (error as any).response.data.message;
+      // } else if (error instanceof Error) {
+      //   message = error.message;
+      // }
 
       enqueueSnackbar(message, { variant: 'error' });
     },
@@ -178,18 +179,18 @@ const OutletFormDialog: React.FC<OutletFormProps> = ({
       setOpenDialog(false);
     },
     onError: (error: unknown) => {
-      let message = 'Something went wrong';
+      let message = getErrorMessage(error);
 
-      if (
-        typeof error === 'object' &&
-        error !== null &&
-        'response' in error &&
-        typeof (error as any).response?.data?.message === 'string'
-      ) {
-        message = (error as any).response.data.message;
-      } else if (error instanceof Error) {
-        message = error.message;
-      }
+      // if (
+      //   typeof error === 'object' &&
+      //   error !== null &&
+      //   'response' in error &&
+      //   typeof (error as any).response?.data?.message === 'string'
+      // ) {
+      //   message = (error as any).response.data.message;
+      // } else if (error instanceof Error) {
+      //   message = error.message;
+      // }
 
       enqueueSnackbar(message, { variant: 'error' });
     },

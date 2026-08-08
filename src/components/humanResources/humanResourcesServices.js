@@ -17,6 +17,11 @@ humanResourcesServices.getAllEmployees = async () => {
     return data;
 };
 
+humanResourcesServices.getOrgChart = async () => {
+    const { data } = await axios.get('/api/humanResources/employees/org-chart');
+    return data;
+};
+
 humanResourcesServices.addEmployee = async (employee) => {
     const { data } = await axios.post(`/api/humanResources/employees/add`, employee)
     return data;

@@ -359,7 +359,7 @@ function RFQDialogFormContent({ toggleOpen, rfq }: RFQDialogFormProps) {
           <StakeholderSelector
             label='Invited Suppliers'
             multiple={true}
-            defaultValue={selectedStakeholders}
+            defaultValue={selectedStakeholders as any}
             onChange={(newValue) => {
               const stakeholders = Array.isArray(newValue)
                 ? newValue

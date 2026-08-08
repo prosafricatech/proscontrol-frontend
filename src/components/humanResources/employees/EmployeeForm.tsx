@@ -37,6 +37,7 @@ import { Department } from '../departments/DepartmentsType';
 import { useDesignations } from '../designations/DesignationsProvider';
 import { Designation } from '../designations/DesignationsType';
 import humanResourcesServices from '../humanResourcesServices';
+import EmployeeSelector from './EmployeeSelector';
 import { Employee } from './EmployeesType';
 
 interface User {
@@ -257,6 +258,7 @@ const EmployeeForm = ({
     passport_number: yup.string().nullable().max(50),
     department_id: yup.number().nullable(),
     cost_center_id: yup.number().nullable().optional(),
+    manager_id: yup.number().nullable().optional(),
     payable_ledger_id: yup.number().nullable().optional(),
     create_payable: yup.boolean().optional(),
     payable_ledger_name: yup.string().nullable().optional(),
@@ -301,6 +303,7 @@ const EmployeeForm = ({
       passport_number: '',
       department_id: undefined,
       cost_center_id: null,
+      manager_id: null,
       payable_ledger_id: null,
       create_payable: false,
       payable_ledger_name: '',
@@ -316,7 +319,8 @@ const EmployeeForm = ({
 
   const { isDirty, dirtyFields } = useFormState({ control });
   const showReasonField =
-    !!employee && (dirtyFields.cost_center_id || dirtyFields.department_id);
+    !!employee &&
+    (dirtyFields.cost_center_id || dirtyFields.department_id || dirtyFields.manager_id);
 
   // Populate form when editing
   useEffect(() => {
@@ -353,6 +357,7 @@ const EmployeeForm = ({
       passport_number: employee.passport_number || '',
       department_id: employee.department_id || undefined,
       cost_center_id: employee.cost_center_id ?? null,
+      manager_id: employee.manager_id ?? null,
       payable_ledger_id: employee.payable_ledger_id ?? null,
       create_payable: false,
       payable_ledger_name: '',
@@ -658,6 +663,25 @@ const EmployeeForm = ({
                       defaultCostCenter ||
                       null
                     }
+                    onChange={(val) => {
+                      const selected = Array.isArray(val) ? val[0] : val;
+                      field.onChange(selected?.id || null);
+                    }}
+                  />
+                )}
+              />
+            </Grid>
+
+            <Grid size={{ xs: 12, md: 8 }}>
+              <Controller
+                name='manager_id'
+                control={control}
+                render={({ field }) => (
+                  <EmployeeSelector
+                    multiple={false}
+                    label='Line Manager'
+                    excludeId={employee?.id}
+                    defaultValue={(employee as any)?.manager || null}
                     onChange={(val) => {
                       const selected = Array.isArray(val) ? val[0] : val;
                       field.onChange(selected?.id || null);

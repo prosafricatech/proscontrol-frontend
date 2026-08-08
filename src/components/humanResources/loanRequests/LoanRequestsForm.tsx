@@ -1,6 +1,4 @@
 'use client';
-import CostCenterSelector from '@/components/masters/costCenters/CostCenterSelector';
-import { CostCenter } from '@/components/masters/costCenters/CostCenterType';
 import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { LoadingButton } from '@mui/lab';
@@ -31,7 +29,6 @@ interface LoanRequstFormProps {
 interface FormData {
   id?: number;
   employee_id?: number | null;
-  cost_center_id: number | null;
   amount?: number | null;
   installments?: string;
   reason?: string | null;
@@ -57,8 +54,6 @@ const LoanRequestsForm = ({
   const [selectedEmployees, setSelectedEmployees] = useState<Employee | null>(
     loan?.employee || null
   );
-  const [selectedCostCenter, setSelectedCostCenter] =
-    useState<CostCenter | null>(loan?.cost_center || null);
 
   //   useEffect(() => {
   //     if (employees) {
@@ -121,7 +116,6 @@ const LoanRequestsForm = ({
       .min(0, 'Basic salary must be >= 0')
       .typeError('Basic salary must be a number'),
     installments: yup.string().required('Please enter an installments amount'),
-    cost_center_id: yup.number().nullable(),
     reason: yup.string().nullable(),
     requested_at: yup.string().nullable(),
   });
@@ -141,7 +135,6 @@ const LoanRequestsForm = ({
       employee_id: loan?.employee_id ?? null,
       amount: loan?.amount ?? null,
       installments: loan?.installments ? String(loan.installments) : '',
-      cost_center_id: loan?.cost_center_id ?? null,
       reason: loan?.reason ?? '',
       requested_at: loan?.requested_at || dayjs().format('YYYY-MM-DD'),
     },
@@ -232,23 +225,6 @@ const LoanRequestsForm = ({
                 }}
                 error={!!errors.installments}
                 helperText={errors.installments?.message}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <CostCenterSelector
-                label='Cost Center'
-                multiple={false}
-                defaultValue={selectedCostCenter}
-                frontError={errors.cost_center_id}
-                onChange={(value) => {
-                  if (value === null) {
-                    setValue('cost_center_id', null);
-                    setSelectedCostCenter(null);
-                  } else if (!Array.isArray(value)) {
-                    setValue('cost_center_id', value.id);
-                    setSelectedCostCenter(value);
-                  }
-                }}
               />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>

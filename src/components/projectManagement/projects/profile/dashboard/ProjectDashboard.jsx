@@ -13,6 +13,7 @@ import { Div } from '@jumbo/shared';
 import {
   AccountBalanceWalletOutlined,
   EditOutlined,
+  ExpandMoreOutlined,
   HighlightOff,
   Inventory2Outlined,
   PaidOutlined,
@@ -20,6 +21,9 @@ import {
   VisibilityOutlined,
 } from '@mui/icons-material';
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Alert,
   Box,
   Button,
@@ -437,6 +441,8 @@ function ProjectDashboard() {
   const [openDialog, setOpenDialog] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
   const [openCommitmentsDialog, setOpenCommitmentsDialog] = useState(false);
+  const [expandedCommittedSection, setExpandedCommittedSection] =
+    useState(false);
   const [grnsReportOrderId, setGrnsReportOrderId] = useState(null);
 
   const handleTabChange = (event, newValue) => {
@@ -961,7 +967,10 @@ function ProjectDashboard() {
                     <StatItem
                       label='Committed'
                       value={formatCurrency(dashboardFigures?.committed_cost)}
-                      onClick={() => setOpenCommitmentsDialog(true)}
+                      onClick={() => {
+                        setExpandedCommittedSection(false);
+                        setOpenCommitmentsDialog(true);
+                      }}
                     />
                   </Grid>
                   <Grid size={{ xs: 12 }} paddingBottom={3}>
@@ -1345,10 +1354,31 @@ function ProjectDashboard() {
             <Skeleton variant='rectangular' height={200} />
           ) : (
             <>
-              <Typography variant='subtitle2' color='text.secondary' mb={1}>
-                Ordered Material — Open Purchase Orders (
-                {formatCurrency(commitments?.committed_purchase_orders)})
-              </Typography>
+              <Accordion
+                expanded={expandedCommittedSection === 'purchase_orders'}
+                onChange={(e, isExpanded) =>
+                  setExpandedCommittedSection(
+                    isExpanded ? 'purchase_orders' : false
+                  )
+                }
+              >
+                <AccordionSummary expandIcon={<ExpandMoreOutlined />}>
+                  <Box
+                    display='flex'
+                    justifyContent='space-between'
+                    alignItems='center'
+                    width='100%'
+                    pr={1}
+                  >
+                    <Typography>
+                      Unreceived Order Amounts (Open Purchase Orders)
+                    </Typography>
+                    <Typography fontWeight={600}>
+                      {formatCurrency(commitments?.committed_purchase_orders)}
+                    </Typography>
+                  </Box>
+                </AccordionSummary>
+                <AccordionDetails>
               {belowSmallScreen ? (
                 <Box mb={3}>
                   {(commitments?.purchase_orders || []).length === 0 && (
@@ -1541,11 +1571,34 @@ function ProjectDashboard() {
                   </Table>
                 </TableContainer>
               )}
+                </AccordionDetails>
+              </Accordion>
 
-              <Typography variant='subtitle2' color='text.secondary' mb={1}>
-                Stock On Hand — Received, Not Yet Consumed (
-                {formatCurrency(commitments?.committed_stock_on_hand)})
-              </Typography>
+              <Accordion
+                expanded={expandedCommittedSection === 'stock_on_hand'}
+                onChange={(e, isExpanded) =>
+                  setExpandedCommittedSection(
+                    isExpanded ? 'stock_on_hand' : false
+                  )
+                }
+              >
+                <AccordionSummary expandIcon={<ExpandMoreOutlined />}>
+                  <Box
+                    display='flex'
+                    justifyContent='space-between'
+                    alignItems='center'
+                    width='100%'
+                    pr={1}
+                  >
+                    <Typography>
+                      Stock In Hand (Received, Not Yet Consumed)
+                    </Typography>
+                    <Typography fontWeight={600}>
+                      {formatCurrency(commitments?.committed_stock_on_hand)}
+                    </Typography>
+                  </Box>
+                </AccordionSummary>
+                <AccordionDetails>
               {belowSmallScreen ? (
                 <Box mb={3}>
                   {(commitments?.stock_on_hand || []).length === 0 && (
@@ -1604,17 +1657,35 @@ function ProjectDashboard() {
                   </Table>
                 </TableContainer>
               )}
+                </AccordionDetails>
+              </Accordion>
 
               {commitments?.process_approval_active !== false && (
-                <>
-                  <Typography
-                    variant='subtitle2'
-                    color='text.secondary'
-                    mb={1}
-                  >
-                    Payments to Suppliers — Approved, Not Yet Paid (
-                    {formatCurrency(commitments?.committed_payments)})
-                  </Typography>
+                <Accordion
+                  expanded={expandedCommittedSection === 'payments'}
+                  onChange={(e, isExpanded) =>
+                    setExpandedCommittedSection(
+                      isExpanded ? 'payments' : false
+                    )
+                  }
+                >
+                  <AccordionSummary expandIcon={<ExpandMoreOutlined />}>
+                    <Box
+                      display='flex'
+                      justifyContent='space-between'
+                      alignItems='center'
+                      width='100%'
+                      pr={1}
+                    >
+                      <Typography>
+                        Unpaid Expenses (Approved, Not Yet Paid)
+                      </Typography>
+                      <Typography fontWeight={600}>
+                        {formatCurrency(commitments?.committed_payments)}
+                      </Typography>
+                    </Box>
+                  </AccordionSummary>
+                  <AccordionDetails>
                   {belowSmallScreen ? (
                     <Box>
                       {(commitments?.payments || []).length === 0 && (
@@ -1755,7 +1826,8 @@ function ProjectDashboard() {
                       </Table>
                     </TableContainer>
                   )}
-                </>
+                  </AccordionDetails>
+                </Accordion>
               )}
             </>
           )}

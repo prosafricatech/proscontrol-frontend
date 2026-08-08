@@ -30,7 +30,7 @@ import {
   Typography,
   useMediaQuery,
 } from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers';
+import { DateTimePicker } from '@mui/x-date-pickers';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { useSnackbar } from 'notistack';
@@ -99,7 +99,7 @@ const PayrollPaymentViewEditDialog = ({
     }
     if (data) {
       setTransactionDate(
-        data.transaction_date ? dayjs(data.transaction_date).format('YYYY-MM-DD') : ''
+        data.transaction_date ? dayjs(data.transaction_date).toISOString() : ''
       );
       setNarration(data.narration || '');
       setCreditLedgerId(data.credit_ledger_id || 0);
@@ -236,11 +236,11 @@ const PayrollPaymentViewEditDialog = ({
             <Grid container spacing={2}>
               <Grid size={{ xs: 12, md: 6 }}>
                 {isEditing ? (
-                  <DatePicker
-                    label='Transaction Date'
+                  <DateTimePicker
+                    label='Transaction Date & Time'
                     value={transactionDate ? dayjs(transactionDate) : null}
                     onChange={(val) =>
-                      setTransactionDate(val?.format('YYYY-MM-DD') || '')
+                      setTransactionDate(val?.toISOString() || '')
                     }
                     slotProps={{
                       textField: { size: 'small', fullWidth: true },
@@ -252,7 +252,7 @@ const PayrollPaymentViewEditDialog = ({
                       Transaction Date
                     </Typography>
                     <Typography variant='body2'>
-                      {dayjs(data?.transaction_date).format('DD MMM YYYY')}
+                      {dayjs(data?.transaction_date).format('DD MMM YYYY, HH:mm')}
                     </Typography>
                   </>
                 )}

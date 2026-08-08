@@ -283,6 +283,24 @@ function ProfileContent() {
                   ? ` · ${employee.active_contract.designation.title}`
                   : ''}
               </Typography>
+              {employee?.manager && (
+                <Typography variant='body2' color='text.secondary'>
+                  {'Reports to: '}
+                  <Typography
+                    component='span'
+                    variant='body2'
+                    color='primary.main'
+                    onClick={() =>
+                      router.push(
+                        `/${lang}/humanResources/employees/${employee.manager!.id}`
+                      )
+                    }
+                    sx={{ cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}
+                  >
+                    {`${employee.manager.first_name} ${employee.manager.last_name}`}
+                  </Typography>
+                </Typography>
+              )}
               <Stack direction='row' spacing={1} alignItems='center' mt={0.5}>
                 {empTypeBadge && (
                   <Chip

@@ -12,6 +12,7 @@ const MOVEMENT_TYPES = [
   { value: 'all', label: 'All Movements' },
   { value: 'cost_center', label: 'Cost Center Changes' },
   { value: 'department', label: 'Department Changes' },
+  { value: 'manager', label: 'Manager Changes' },
 ];
 
 const MovementTypeSelector = ({ onChange, value }: MovementTypeSelectorProps) => {

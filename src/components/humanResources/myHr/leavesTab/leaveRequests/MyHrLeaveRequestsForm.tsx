@@ -1,7 +1,6 @@
 'use client';
 
 import { LeaveRequestType } from '@/components/humanResources/employees/profile/leaveRequests/LeaveRequestType';
-import CostCenterSelector from '@/components/masters/costCenters/CostCenterSelector';
 import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Div } from '@jumbo/shared';
@@ -35,7 +34,6 @@ interface LeaveRequestFormProps {
 interface FormData {
   id?: number;
   leave_type_id: number;
-  cost_center_id?: number | null;
   start_date: string;
   end_date: string;
   days_requested: number;
@@ -128,7 +126,6 @@ const MyHrLeaveRequestsForm = ({
   const validationSchema = yup.object({
     id: yup.number().optional(),
     leave_type_id: yup.number().required('Leave type is required'),
-    cost_center_id: yup.number().nullable().optional(),
     start_date: yup.string().required('Start date is required'),
     end_date: yup.string().required('End date is required'),
     days_requested: yup
@@ -145,13 +142,13 @@ const MyHrLeaveRequestsForm = ({
     control,
     reset,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<FormData>({
     resolver: yupResolver(validationSchema) as any,
     defaultValues: {
       id: leaveRequest?.id,
       leave_type_id: leaveRequest?.leave_type_id,
-      cost_center_id: leaveRequest?.cost_center_id ?? null,
       start_date: leaveRequest?.start_date || '',
       end_date: leaveRequest?.end_date || '',
       days_requested: leaveRequest?.days_requested ?? 1,
@@ -163,7 +160,6 @@ const MyHrLeaveRequestsForm = ({
     reset({
       id: leaveRequest?.id,
       leave_type_id: leaveRequest?.leave_type_id,
-      cost_center_id: leaveRequest?.cost_center_id ?? null,
       start_date: leaveRequest?.start_date || '',
       end_date: leaveRequest?.end_date || '',
       days_requested: leaveRequest?.days_requested ?? 1,
@@ -174,6 +170,30 @@ const MyHrLeaveRequestsForm = ({
   const saveMutation = useMemo(() => {
     return leaveRequest?.id ? updateLeaveRequest : addLeaveRequest;
   }, [leaveRequest?.id, updateLeaveRequest, addLeaveRequest]);
+
+  const watchedStartDate = watch('start_date');
+  const watchedEndDate = watch('end_date');
+  const watchedDaysRequested = watch('days_requested');
+
+  // Calendar span between the picked dates — purely informational, since a
+  // shorter days_requested is often correct (weekends/holidays excluded).
+  const dateSpanDays = useMemo(() => {
+    if (!watchedStartDate || !watchedEndDate) return null;
+    const start = dayjs(watchedStartDate).startOf('day');
+    const end = dayjs(watchedEndDate).startOf('day');
+    if (!start.isValid() || !end.isValid()) return null;
+    const diff = end.diff(start, 'day') + 1;
+    return diff > 0 ? diff : null;
+  }, [watchedStartDate, watchedEndDate]);
+
+  const daysRequestedHint =
+    dateSpanDays === null
+      ? undefined
+      : `${dateSpanDays} calendar day${dateSpanDays === 1 ? '' : 's'} between selected dates${
+          Number(watchedDaysRequested) !== dateSpanDays
+            ? ' — differs from days requested'
+            : ' — matches days requested'
+        }`;
 
   const validationErrors =
     error?.response?.data?.validation_errors ||
@@ -246,38 +266,6 @@ const MyHrLeaveRequestsForm = ({
 
             <Grid size={{ xs: 12, md: 6 }}>
               <Div sx={{ mt: 1, mb: 1 }}>
-                <Controller
-                  name='cost_center_id'
-                  control={control}
-                  render={({ field }) => (
-                    <CostCenterSelector
-                      multiple={false}
-                      label='Cost Center (optional)'
-                      defaultValue={(leaveRequest as any)?.cost_center || null}
-                      onChange={(value) => {
-                        const selected = Array.isArray(value)
-                          ? value[0]
-                          : value;
-                        field.onChange(selected?.id || null);
-                      }}
-                      frontError={
-                        getValidationMessage(validationErrors, 'cost_center_id')
-                          ? {
-                              message: getValidationMessage(
-                                validationErrors,
-                                'cost_center_id'
-                              ),
-                            }
-                          : null
-                      }
-                    />
-                  )}
-                />
-              </Div>
-            </Grid>
-
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Div sx={{ mt: 1, mb: 1 }}>
                 <TextField
                   label='Days Requested'
                   size='small'
@@ -288,8 +276,21 @@ const MyHrLeaveRequestsForm = ({
                   }
                   helperText={
                     errors.days_requested?.message ||
-                    getValidationMessage(validationErrors, 'days_requested')
+                    getValidationMessage(validationErrors, 'days_requested') ||
+                    daysRequestedHint
                   }
+                  slotProps={{
+                    formHelperText: {
+                      sx: {
+                        color:
+                          !errors?.days_requested &&
+                          dateSpanDays !== null &&
+                          Number(watchedDaysRequested) !== dateSpanDays
+                            ? 'warning.main'
+                            : undefined,
+                      },
+                    },
+                  }}
                   {...register('days_requested')}
                 />
               </Div>

@@ -23,6 +23,9 @@ export async function GET(
     case 'department':
       endpoint = `${API_BASE}/employees/${id}/department-movements`;
       break;
+    case 'manager':
+      endpoint = `${API_BASE}/employees/${id}/manager-movements`;
+      break;
     case 'all':
     default:
       endpoint = `${API_BASE}/employees/${id}/all-movements`;

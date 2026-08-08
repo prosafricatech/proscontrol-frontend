@@ -20,6 +20,7 @@ import { DesignationsProvider } from '../designations/DesignationsProvider';
 import { Designation } from '../designations/DesignationsType';
 import humanResourcesServices from '../humanResourcesServices';
 import EmployeeActionTail from './EmployeeActionTail';
+import { EmployeesProvider } from './EmployeesProvider';
 import EmployeesListItem from './EmployeesListItem';
 import { Employee } from './EmployeesType';
 
@@ -116,6 +117,7 @@ const Employees = () => {
       <LedgerGroupProvider>
         <DesignationsProvider>
           <DepartmentsProvider>
+            <EmployeesProvider>
             <Typography variant={'h4'} mb={2}>
               Employees
             </Typography>
@@ -202,6 +204,7 @@ const Employees = () => {
                 ></JumboListToolbar>
               }
             />
+            </EmployeesProvider>
           </DepartmentsProvider>
         </DesignationsProvider>
       </LedgerGroupProvider>

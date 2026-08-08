@@ -1,6 +1,7 @@
 'use client';
 import { useJumboTheme } from '@jumbo/components/JumboTheme/hooks';
-import { MonetizationOnOutlined } from '@mui/icons-material';
+import { faMoneyBill1 } from '@fortawesome/free-regular-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   ButtonGroup,
   Dialog,
@@ -66,7 +67,7 @@ const ApprovedPaymentActionTail: React.FC<ApprovedPaymentActionTailProps> = ({
       >
         <Tooltip title='Pay'>
           <IconButton onClick={() => setOpenDialog(true)}>
-            <MonetizationOnOutlined />
+            <FontAwesomeIcon icon={faMoneyBill1} size='lg' />
           </IconButton>
         </Tooltip>
       </ButtonGroup>

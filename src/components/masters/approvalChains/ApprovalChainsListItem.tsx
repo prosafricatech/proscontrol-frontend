@@ -16,6 +16,7 @@ import ApprovalChainsListItemAction from './ApprovalChainsListItemAction';
 import ApprovalChainLevels from './ApprovalChainLevels';
 import approvalChainsServices from './approvalChainsServices';
 import { ApprovalChain, ApprovalChainLevel } from './ApprovalChainType';
+import { DEPARTMENT_SCOPABLE_PROCESS_TYPES } from '@/utilities/constants/processTypes';
 import { useQuery } from '@tanstack/react-query';
 
 interface ApprovalChainsListItemContextValue {
@@ -121,7 +122,16 @@ const ApprovalChainsListItem: React.FC<ApprovalChainsListItemProps> = ({ approva
               </Tooltip>
             </Grid>
             <Grid size={{xs: 6, md: 5}}>
-              {approvalChain.cost_center?.name && (
+              {approvalChain.department?.name && (
+                <Tooltip title={'Department'}>
+                  <Chip
+                    size="small"
+                    label={approvalChain.department.name}
+                    sx={{ mr: 0.5 }}
+                  />
+                </Tooltip>
+              )}
+              {approvalChain.cost_center?.name && !DEPARTMENT_SCOPABLE_PROCESS_TYPES.includes(approvalChain.process_type) && (
                 <Tooltip title={'Cost Center'}>
                   <Chip
                     size="small"

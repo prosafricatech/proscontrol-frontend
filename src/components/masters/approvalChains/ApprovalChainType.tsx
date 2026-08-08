@@ -1,10 +1,13 @@
 import { CostCenter } from "../costCenters/CostCenterType";
+import { Department } from "../../humanResources/departments/DepartmentsType";
 
 export interface ApprovalChain {
     id: number;
-    process_type: "PURCHASE" | "PAYMENT" | string; 
+    process_type: "PURCHASE" | "PAYMENT" | string;
     cost_center_id: number | null;
-    cost_center: CostCenter; 
+    cost_center: CostCenter;
+    department_id: number | null;
+    department: Department | null;
     remarks?: string | null;
     created_by: number;
     created_at: string;

@@ -12,7 +12,7 @@ import {
   DialogTitle,
   Stack,
 } from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers';
+import { DateTimePicker } from '@mui/x-date-pickers';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { useSnackbar } from 'notistack';
@@ -34,14 +34,14 @@ const LoanDisburseForm = ({
   onClose,
 }: LoanDisburseFormProps) => {
   const [creditLedgerId, setCreditLedgerId] = useState(0);
-  const [disbursedAt, setDisbursedAt] = useState(dayjs().format('YYYY-MM-DD'));
+  const [disbursedAt, setDisbursedAt] = useState(dayjs().toISOString());
   const { enqueueSnackbar } = useSnackbar();
   const queryClient = useQueryClient();
 
   useEffect(() => {
     if (!open) return;
     setCreditLedgerId(0);
-    setDisbursedAt(dayjs().format('YYYY-MM-DD'));
+    setDisbursedAt(dayjs().toISOString());
   }, [open]);
 
   const { mutate: disburse, isPending } = useMutation({
@@ -83,12 +83,9 @@ const LoanDisburseForm = ({
       <DialogTitle>Disburse Loan</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
-          <Alert severity='info' variant='outlined'>
-            Select the bank or cash account this loan will be paid out from.
-          </Alert>
           <LedgerSelectProvider>
             <LedgerSelect
-              label='Bank or Cash Account'
+              label='Pay From'
               allowedGroups={[
                 'Current Assets',
                 'Current Liabilities',
@@ -100,10 +97,10 @@ const LoanDisburseForm = ({
               onChange={(ledger: any) => setCreditLedgerId(ledger?.id || 0)}
             />
           </LedgerSelectProvider>
-          <DatePicker
-            label='Payment Date'
+          <DateTimePicker
+            label='Payment Date & Time'
             value={disbursedAt ? dayjs(disbursedAt) : null}
-            onChange={(val) => setDisbursedAt(val?.format('YYYY-MM-DD') || '')}
+            onChange={(val) => setDisbursedAt(val?.toISOString() || '')}
             slotProps={{
               textField: { size: 'small', fullWidth: true },
             }}

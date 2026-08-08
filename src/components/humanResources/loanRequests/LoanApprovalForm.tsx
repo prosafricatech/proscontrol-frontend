@@ -12,7 +12,7 @@ import {
   Stack,
   TextField,
 } from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers';
+import { DateTimePicker } from '@mui/x-date-pickers';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { useSnackbar } from 'notistack';
@@ -58,7 +58,7 @@ const LoanApprovalForm = ({
     defaultInstallments
   );
   const [remarks, setRemarks] = useState('');
-  const [approvalDate, setApprovalDate] = useState(dayjs().format('YYYY-MM-DD'));
+  const [approvalDate, setApprovalDate] = useState(dayjs().toISOString());
   const [amountError, setAmountError] = useState('');
   const [installmentsError, setInstallmentsError] = useState('');
   const [remarksError, setRemarksError] = useState('');
@@ -71,7 +71,7 @@ const LoanApprovalForm = ({
     setAmountApproved(ceilingAmount);
     setInstallmentsApproved(defaultInstallments);
     setRemarks('');
-    setApprovalDate(dayjs().format('YYYY-MM-DD'));
+    setApprovalDate(dayjs().toISOString());
     setAmountError('');
     setInstallmentsError('');
     setRemarksError('');
@@ -190,10 +190,10 @@ const LoanApprovalForm = ({
               );
             }}
           />
-          <DatePicker
-            label='Approval Date'
+          <DateTimePicker
+            label='Approval Date & Time'
             value={approvalDate ? dayjs(approvalDate) : null}
-            onChange={(val) => setApprovalDate(val?.format('YYYY-MM-DD') || '')}
+            onChange={(val) => setApprovalDate(val?.toISOString() || '')}
             slotProps={{
               textField: { size: 'small', fullWidth: true },
             }}

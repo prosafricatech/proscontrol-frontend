@@ -11,7 +11,9 @@ import {
   Stack,
   TextField,
 } from '@mui/material';
+import { DateTimePicker } from '@mui/x-date-pickers';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import dayjs from 'dayjs';
 import { useSnackbar } from 'notistack';
 import { useEffect, useState } from 'react';
 import humanResourcesServices from '../../../humanResourcesServices';
@@ -210,6 +212,14 @@ const LeaveApprovalDialog = ({
               setDaysApproved(
                 e.target.value === '' ? '' : sanitizedNumber(e.target.value)
               );
+            }}
+          />
+          <DateTimePicker
+            label='Approval Date & Time'
+            value={approvalDate ? dayjs(approvalDate) : null}
+            onChange={(val) => setApprovalDate(val?.toISOString() || '')}
+            slotProps={{
+              textField: { size: 'small', fullWidth: true },
             }}
           />
           <TextField

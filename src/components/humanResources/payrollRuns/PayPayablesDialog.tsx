@@ -25,7 +25,7 @@ import {
   Typography,
   useMediaQuery,
 } from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers';
+import { DateTimePicker } from '@mui/x-date-pickers';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { useSnackbar } from 'notistack';
@@ -68,7 +68,7 @@ const PayPayablesDialog = ({
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [amounts, setAmounts] = useState<Record<string, string>>({});
   const [transactionDate, setTransactionDate] = useState(
-    dayjs().format('YYYY-MM-DD')
+    dayjs().toISOString()
   );
 
   const rowKey = (row: PayableRow) => `${row.payable_type}:${row.type_id}`;
@@ -84,7 +84,7 @@ const PayPayablesDialog = ({
 
   useEffect(() => {
     if (!open) return;
-    setTransactionDate(dayjs().format('YYYY-MM-DD'));
+    setTransactionDate(dayjs().toISOString());
   }, [open]);
 
   useEffect(() => {
@@ -167,11 +167,11 @@ const PayPayablesDialog = ({
             onChange={(ledger: any) => setCreditLedgerId(ledger?.id || 0)}
           />
 
-          <DatePicker
-            label='Settlement Date'
+          <DateTimePicker
+            label='Settlement Date & Time'
             value={transactionDate ? dayjs(transactionDate) : null}
             onChange={(val) =>
-              setTransactionDate(val?.format('YYYY-MM-DD') || '')
+              setTransactionDate(val?.toISOString() || '')
             }
             slotProps={{
               textField: { size: 'small', fullWidth: true },

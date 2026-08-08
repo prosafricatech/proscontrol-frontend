@@ -1,6 +1,5 @@
 'use client';
 
-import { useDictionary } from '@/app/[lang]/contexts/DictionaryContext';
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import LedgerGroupProvider from '@/components/accounts/ledgerGroups/LedgerGroupProvider';
 import LedgerSelect from '@/components/accounts/ledgers/forms/LedgerSelect';
@@ -93,7 +92,6 @@ const DeductionTypeForm = ({
 }: DeductionTypeFormProps) => {
   const queryClient = useQueryClient();
   const { enqueueSnackbar } = useSnackbar();
-  const dictionary = useDictionary();
   const { ungroupedLedgerOptions } = useLedgerSelect();
   const { organizationHasSubscribed, checkOrganizationPermission } =
     useJumboAuth();
@@ -282,6 +280,13 @@ const DeductionTypeForm = ({
   });
 
   const applyScope = watch('apply_scope');
+  // The auto-provisioned "Staff Loan Repayment" type is the one deduction
+  // type whose ledger is actually a receivable (money owed TO the company by
+  // employees), not a payable — the field needs a different label and a
+  // different allowed ledger group for this one, or it's impossible to map
+  // correctly (an Accounts Payable ledger is the wrong nature for it).
+  const watchedCode = watch('code');
+  const isStaffLoanRepayment = watchedCode === 'STAFF_LOAN';
 
   useEffect(() => {
     reset({
@@ -493,10 +498,16 @@ const DeductionTypeForm = ({
               <Grid size={{ xs: 12, md: 6 }}>
                 <Div sx={{ my: 1 }}>
                   <LedgerSelect
-                    label='Payable Ledger'
-                    allowedGroups={['Accounts Payable']}
+                    label={
+                      isStaffLoanRepayment ? 'Receivable Ledger' : 'Payable Ledger'
+                    }
+                    allowedGroups={
+                      isStaffLoanRepayment
+                        ? ['Accounts Receivable']
+                        : ['Accounts Payable']
+                    }
                     frontError={errors.payable_ledger_id}
-                    key={'account-payable-ledger'}
+                    key={isStaffLoanRepayment ? 'account-receivable-ledger' : 'account-payable-ledger'}
                     value={recentlyAddedPayableLedger || undefined}
                     defaultValue={
                       deductionType?.payable_ledger || defaultValue || undefined
@@ -532,6 +543,17 @@ const DeductionTypeForm = ({
                       )
                     }
                   />
+                  {isStaffLoanRepayment && (
+                    <Typography
+                      variant='caption'
+                      color='text.secondary'
+                      sx={{ display: 'block', mt: 0.5 }}
+                    >
+                      Staff loans are recovered from employees, so this is money
+                      owed to the company — pick a receivable ledger, not a
+                      payable one.
+                    </Typography>
+                  )}
                 </Div>
               </Grid>
             )}

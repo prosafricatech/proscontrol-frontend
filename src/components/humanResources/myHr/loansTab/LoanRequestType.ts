@@ -19,6 +19,9 @@ export interface MyHrLoanRequestType {
   reason: string | null;
   requested_at: string | null;
   status: LoanRequestStatus;
+  // Backend-computed — "Waiting for {Role}" while under a pending approval
+  // level, same convention as Requisitions; otherwise the ucwords'd status.
+  status_label?: string;
   deduction_type_id: number | null;
   employee_deduction_id: number | null;
   reviewed_by: number | null;

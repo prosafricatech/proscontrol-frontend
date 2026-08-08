@@ -11,9 +11,11 @@ import {
   Stack,
   TextField,
 } from '@mui/material';
+import { DateTimePicker } from '@mui/x-date-pickers';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import dayjs from 'dayjs';
 import { useSnackbar } from 'notistack';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import humanResourcesServices from '../../../humanResourcesServices';
 import { LeaveRequestType } from './LeaveRequestType';
 
@@ -62,6 +64,11 @@ const LeaveDirectDecisionForm = ({
   const { enqueueSnackbar } = useSnackbar();
   const queryClient = useQueryClient();
 
+  useEffect(() => {
+    if (!open) return;
+    setApprovalDate(DEFAULT_APPROVAL_DATE());
+  }, [open]);
+
   const { mutate: submit, isPending } = useMutation({
     mutationFn: isApprove
       ? humanResourcesServices.approveLeaveRequest
@@ -106,6 +113,7 @@ const LeaveDirectDecisionForm = ({
       id: leaveRequest.id,
       days_approved: status === 'approve' ? Number(daysApproved) : undefined,
       remarks: remarks || undefined,
+      reviewed_at: approvalDate || undefined,
     });
   };
   return (
@@ -136,6 +144,14 @@ const LeaveDirectDecisionForm = ({
               }}
             />
           )}
+          <DateTimePicker
+            label={isApprove ? 'Approval Date & Time' : 'Rejection Date & Time'}
+            value={approvalDate ? dayjs(approvalDate) : null}
+            onChange={(val) => setApprovalDate(val?.toISOString() || '')}
+            slotProps={{
+              textField: { size: 'small', fullWidth: true },
+            }}
+          />
           <TextField
             label='Remarks'
             size='small'

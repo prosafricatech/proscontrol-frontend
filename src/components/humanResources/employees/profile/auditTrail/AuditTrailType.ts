@@ -4,6 +4,8 @@ export interface Movement {
   to_cost_center_id?: number | null;
   from_department_id?: number | null;
   to_department_id?: number | null;
+  from_manager_id?: number | null;
+  to_manager_id?: number | null;
   moved_date: string;
   reason?: string | null;
   created_by: number;
@@ -23,6 +25,16 @@ export interface Movement {
   to_department?: {
     id: number;
     name: string;
+  } | null;
+  from_manager?: {
+    id: number;
+    first_name: string;
+    last_name: string;
+  } | null;
+  to_manager?: {
+    id: number;
+    first_name: string;
+    last_name: string;
   } | null;
   creator?: {
     id: number;

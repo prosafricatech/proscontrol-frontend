@@ -47,8 +47,13 @@ const MyHrLoanRequestsListItem = ({
   const [openEditDialog, setOpenEditDialog] = useState(false);
 
   const statusColor = STATUS_COLOR[loanRequest.status] || 'default';
+  // status_label is backend-computed — "Waiting for {Role}" while a chain-driven
+  // request sits at a pending level, same convention as Requisitions.
   const statusLabel =
-    STATUS_LABEL[loanRequest.status] || loanRequest.status || 'Pending';
+    loanRequest.status_label ||
+    STATUS_LABEL[loanRequest.status] ||
+    loanRequest.status ||
+    'Pending';
 
   const hasDecision =
     loanRequest.amount_approved != null ||

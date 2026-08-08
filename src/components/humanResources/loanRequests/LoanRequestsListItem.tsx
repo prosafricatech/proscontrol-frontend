@@ -4,7 +4,7 @@ import { readableDate } from '@/app/helpers/input-sanitization-helpers';
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import organizationServices from '@/components/organizations/organizationServices';
 import { PERMISSIONS } from '@/utilities/constants/permissions';
-import { PaidOutlined } from '@mui/icons-material';
+import {  Verified } from '@mui/icons-material';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import {
@@ -133,8 +133,13 @@ const LoanRequestsListItem = ({
     : `Employee #${loanRequest.employee_id}`;
 
   const statusColor = STATUS_COLOR[loanRequest.status] || 'default';
+  // status_label is backend-computed — "Waiting for {Role}" while a chain-driven
+  // request sits at a pending level, same convention as Requisitions.
   const statusLabel =
-    STATUS_LABEL[loanRequest.status] || loanRequest.status || 'Pending';
+    loanRequest.status_label ||
+    STATUS_LABEL[loanRequest.status] ||
+    loanRequest.status ||
+    'Pending';
 
   return (
     <Accordion
@@ -228,7 +233,7 @@ const LoanRequestsListItem = ({
                 <Tooltip
                   title={`Disbursed ${readableDate(loanRequest.disbursed_at, false)}`}
                 >
-                  <PaidOutlined color='success' fontSize='small' />
+                  <Verified  color='success' fontSize='small' />
                 </Tooltip>
               )}
             </Stack>
@@ -276,8 +281,8 @@ const LoanRequestsListItem = ({
                         </Grid>
                         <Field label='Employee' value={employeeName} />
                         <Field
-                          label='Cost Center'
-                          value={details.cost_center?.name}
+                          label='Department'
+                          value={details.department?.name}
                         />
                         <Field
                           label='Amount Requested'
@@ -302,7 +307,9 @@ const LoanRequestsListItem = ({
                           value={
                             <Chip
                               label={
-                                STATUS_LABEL[details.status] || details.status
+                                details.status_label ||
+                                STATUS_LABEL[details.status] ||
+                                details.status
                               }
                               size='small'
                               color={STATUS_COLOR[details.status] || 'default'}
@@ -346,34 +353,6 @@ const LoanRequestsListItem = ({
                         <Field
                           label='Review Remarks'
                           value={details.review_remarks}
-                        />
-                      </Grid>
-                    </CardContent>
-                  </Card>
-
-                  <Card sx={{ width: '100%' }}>
-                    <CardContent>
-                      <Grid container spacing={2}>
-                        <Grid size={12}>
-                          <SectionTitle>Linked Deduction</SectionTitle>
-                        </Grid>
-                        <Grid size={12}>
-                          <Typography
-                            variant='subtitle2'
-                            color='text.secondary'
-                          >
-                            {details.deduction_type?.description}
-                          </Typography>
-                        </Grid>
-                        <Field
-                          label='Deduction Type'
-                          value={details.deduction_type?.name}
-                        />
-                        <Field
-                          label='Category'
-                          value={
-                            details.deduction_type?.category ?? 'Not yet linked'
-                          }
                         />
                       </Grid>
                     </CardContent>

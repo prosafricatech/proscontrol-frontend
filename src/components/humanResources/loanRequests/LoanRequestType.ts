@@ -1,5 +1,6 @@
 import { DeductionType } from '@/components/humanResources/deductionTypes/DeductionType';
 import { Employee } from '@/components/humanResources/employees/EmployeesType';
+import { Department } from '@/components/humanResources/departments/DepartmentsType';
 import { CostCenter } from '@/components/masters/costCenters/CostCenterType';
 import { Currency } from '@/components/organizations/profile/subscriptions/SubscriptionTypes';
 
@@ -68,6 +69,7 @@ export interface LoanRequestType {
   id: number;
   employee_id: number;
   cost_center_id: number | null;
+  department_id: number | null;
   approval_chain_id: number | null;
   amount: number;
   installments: number;
@@ -77,6 +79,9 @@ export interface LoanRequestType {
   reason: string | null;
   requested_at: string | null;
   status: LoanRequestStatus;
+  // Backend-computed — "Waiting for {Role}" while under a pending approval
+  // level, same convention as Requisitions; otherwise the ucwords'd status.
+  status_label?: string;
   deduction_type_id: number | null;
   employee_deduction_id: number | null;
   reviewed_by: number | null;
@@ -97,6 +102,7 @@ export interface LoanRequestType {
   deleted_at: string | null;
   employee?: Employee;
   cost_center?: CostCenter | null;
+  department?: Department | null;
   deduction_type?: DeductionType | null;
   payment?: LoanRequestPayment | null;
   approval_chain?: LoanRequestApprovalChain | null;

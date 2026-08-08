@@ -16,8 +16,11 @@ const MyHrLeaveRequestsListItem = ({
           ? 'default'
           : 'warning';
 
+  // status_label is backend-computed — "Waiting for {Role}" while a chain-driven
+  // request sits at a pending level, same convention as Requisitions.
   const formattedStatus =
-    leaveRequest.status === 'in_review'
+    leaveRequest.status_label ||
+    (leaveRequest.status === 'in_review'
       ? 'In Review'
       : leaveRequest.status === 'approved'
         ? 'Approved'
@@ -25,7 +28,7 @@ const MyHrLeaveRequestsListItem = ({
           ? 'Cancelled'
           : leaveRequest.status === 'rejected'
             ? 'Rejected'
-            : leaveRequest.status || 'Pending';
+            : leaveRequest.status || 'Pending');
 
   return (
     <>

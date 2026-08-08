@@ -8,10 +8,10 @@ import {
   CheckCircleOutline,
   DeleteOutlined,
   DownloadOutlined,
-  PaidOutlined,
-  PaymentsOutlined,
   PreviewOutlined,
 } from '@mui/icons-material';
+import { faMoneyBill1 } from '@fortawesome/free-regular-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   Alert,
   Button,
@@ -27,7 +27,7 @@ import {
   Typography,
   useMediaQuery,
 } from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers';
+import { DateTimePicker } from '@mui/x-date-pickers';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { useSnackbar } from 'notistack';
@@ -89,7 +89,7 @@ const PayrollRunItemAction = ({
     salary_expense_ledger_id: 0,
     paye_payable_ledger_id: 0,
     fallback_payable_ledger_id: 0,
-    transaction_date: dayjs().format('YYYY-MM-DD'),
+    transaction_date: dayjs().toISOString(),
   });
 
   // State for Salary Sheet Dialog
@@ -383,8 +383,8 @@ const PayrollRunItemAction = ({
 
       {!isFromPayrollPeriodsList && (isPosted || isPartiallyPaid) && !isPaid && (
         <Tooltip title='Pay Employees'>
-          <IconButton size='small' onClick={() => setOpenPayDialog(true)}>
-            <PaidOutlined color='success' />
+          <IconButton size='small' color='success' onClick={() => setOpenPayDialog(true)}>
+            <FontAwesomeIcon icon={faMoneyBill1} size='lg' />
           </IconButton>
         </Tooltip>
       )}
@@ -394,9 +394,10 @@ const PayrollRunItemAction = ({
           <Tooltip title='Pay Payables'>
             <IconButton
               size='small'
+              color='secondary'
               onClick={() => setOpenPayPayablesDialog(true)}
             >
-              <PaymentsOutlined color='secondary' />
+              <FontAwesomeIcon icon={faMoneyBill1} size='lg' />
             </IconButton>
           </Tooltip>
         )}
@@ -522,8 +523,8 @@ const PayrollRunItemAction = ({
                 }))
               }
             />
-            <DatePicker
-              label='Transaction Date'
+            <DateTimePicker
+              label='Transaction Date & Time'
               value={
                 postForm.transaction_date
                   ? dayjs(postForm.transaction_date)
@@ -532,7 +533,7 @@ const PayrollRunItemAction = ({
               onChange={(val) =>
                 setPostForm((state) => ({
                   ...state,
-                  transaction_date: val?.format('YYYY-MM-DD') || '',
+                  transaction_date: val?.toISOString() || '',
                 }))
               }
               slotProps={{

@@ -69,6 +69,7 @@ export async function exportLedgerStatement(exportedData: any) {
         transactionDate: openingBalanceTx.transactionDate,
         reference: '',
         description: 'Opening Balance',
+        correspondingLedger: '',
         debit: null as number | null,
         credit: null as number | null,
         balance: openingBalance,
@@ -97,6 +98,7 @@ export async function exportLedgerStatement(exportedData: any) {
         reference:
           `${transaction.voucherNo ? transaction.voucherNo : ''} ${transaction.reference ? transaction.reference : ''}`.trim(),
         description: transaction.description,
+        correspondingLedger: transaction.correspondingLedger || '',
         debit: transaction.debit || 0,
         credit: transaction.credit || 0,
         balance: runningBalance,
@@ -111,17 +113,24 @@ export async function exportLedgerStatement(exportedData: any) {
     const wb = createWorkbook();
     const ws = wb.addWorksheet('Ledger Statement');
 
-    const columnCount = hasForeignCurrency ? 9 : 6;
+    // "Corresponding Ledger" is appended as the last column (rather than inserted
+    // after Description) since every other column below is addressed by a
+    // hardcoded letter that depends on hasForeignCurrency; appending avoids having
+    // to shift all of those.
+    const columnCount = hasForeignCurrency ? 10 : 7;
+    const correspondingLedgerCol = String.fromCharCode(65 + columnCount - 1);
     if (hasForeignCurrency) {
       ws.columns = [
         { width: 22 }, { width: 22 }, { width: 40 },
         { width: 18 }, { width: 18 }, { width: 18 },
-        { width: 18 }, { width: 22 }, { width: 22 }
+        { width: 18 }, { width: 22 }, { width: 22 },
+        { width: 30 }
       ];
     } else {
       ws.columns = [
         { width: 22 }, { width: 22 }, { width: 40 },
-        { width: 20 }, { width: 20 }, { width: 22 }
+        { width: 20 }, { width: 20 }, { width: 22 },
+        { width: 30 }
       ];
     }
 
@@ -272,14 +281,16 @@ export async function exportLedgerStatement(exportedData: any) {
 
     // ── TABLE HEADER ROW ──────────────────────────────────────────────────────
     const headers = hasForeignCurrency
-      ? ['Date', 'Reference', 'Description', 'Debit', 'Credit', `Debit (${currencyCode})`, `Credit (${currencyCode})`, 'Balance', `Balance (${currencyCode})`]
-      : ['Date', 'Reference', 'Description', 'Debit', 'Credit', 'Balance'];
+      ? ['Date', 'Reference', 'Description', 'Debit', 'Credit', `Debit (${currencyCode})`, `Credit (${currencyCode})`, 'Balance', `Balance (${currencyCode})`, 'Corresponding Ledger']
+      : ['Date', 'Reference', 'Description', 'Debit', 'Credit', 'Balance', 'Corresponding Ledger'];
 
     for (let col = 0; col < columnCount; col++) {
       const cell = ws.getCell(`${String.fromCharCode(65 + col)}${currentRow}`);
       cell.value = headers[col] || '';
       applyCellStyle(cell, CELL_STYLES.tableHeader);
-      if (col >= 3) {
+      // The appended "Corresponding Ledger" column is text, like Description, so
+      // it's excluded from the right-alignment applied to the numeric columns.
+      if (col >= 3 && col < columnCount - 1) {
         cell.alignment = { horizontal: 'right', vertical: 'middle' };
       }
     }
@@ -341,15 +352,18 @@ export async function exportLedgerStatement(exportedData: any) {
         ws.getCell(`${balanceCol}${rowNum}`).value = balanceDisplay;
         ws.getCell(`${balanceCol}${rowNum}`).numFmt = '#,###.00';
 
+        ws.getCell(`${correspondingLedgerCol}${rowNum}`).value = row.correspondingLedger || '';
+
         for (let col = 0; col < columnCount; col++) {
           const cell = ws.getCell(`${String.fromCharCode(65 + col)}${rowNum}`);
           applyCellStyle(cell, CELL_STYLES.dataRowText);
-          if (col >= 3) {
+          if (col >= 3 && col < columnCount - 1) {
             cell.alignment = { horizontal: 'right', vertical: 'middle' };
           }
         }
-        
+
         ws.getCell(`C${rowNum}`).alignment = { wrapText: true, vertical: 'top' };
+        ws.getCell(`${correspondingLedgerCol}${rowNum}`).alignment = { wrapText: true, vertical: 'top' };
 
         if (row.isOpeningBalance) {
           for (let col = 0; col < columnCount; col++) {
@@ -376,7 +390,9 @@ export async function exportLedgerStatement(exportedData: any) {
       const cell = ws.getCell(`${String.fromCharCode(65 + col)}${totalRowNum}`);
       if (col >= 3) {
         applyCellStyle(cell, CELL_STYLES.tableHeader);
-        cell.alignment = { horizontal: 'right', vertical: 'middle' };
+        if (col < columnCount - 1) {
+          cell.alignment = { horizontal: 'right', vertical: 'middle' };
+        }
       }
     }
 

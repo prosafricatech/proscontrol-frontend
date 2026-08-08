@@ -12,6 +12,7 @@ interface CurrencySelectorProps {
   defaultValue?: number;
   disabled?: boolean;
   readOnly?: boolean;
+  required?: boolean;
 }
 
 function CurrencySelector({
@@ -21,6 +22,7 @@ function CurrencySelector({
   defaultValue = 1,
   disabled = false,
   readOnly = false,
+  required = true,
 }: CurrencySelectorProps) {
   const { currencies } = useCurrencySelect();
 
@@ -44,7 +46,7 @@ function CurrencySelector({
       renderInput={(params) => (
         <TextField
           {...params}
-          required
+          required={required}
           error={!!frontError}
           helperText={frontError?.message}
           label={label}

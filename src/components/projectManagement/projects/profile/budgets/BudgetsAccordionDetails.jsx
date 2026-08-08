@@ -6,14 +6,20 @@ import PDFContent from '@/components/pdf/PDFContent';
 import { FileExportGrid } from '@/components/sharedComponents/FileExportGrid';
 import { useJumboTheme } from '@jumbo/components/JumboTheme/hooks';
 import {
+  ExpandMoreOutlined,
   HighlightOff,
   TableChartOutlined,
   VisibilityOutlined,
 } from '@mui/icons-material';
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Alert,
   Box,
   Button,
+  Card,
+  CardContent,
   Chip,
   Dialog,
   DialogActions,
@@ -316,8 +322,11 @@ function BudgetsAccordionDetails({ budget, expanded }) {
   const [budgetedPdfDialogOpen, setBudgetedPdfDialogOpen] = useState(false);
   const [budgetedPdfDetails, setBudgetedPdfDetails] = useState(null);
   const [committedDialogItem, setCommittedDialogItem] = useState(null);
+  const [expandedCommittedSection, setExpandedCommittedSection] =
+    useState(false);
   const { theme } = useJumboTheme();
   const belowLargeScreen = useMediaQuery(theme.breakpoints.down('lg'));
+  const belowSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const {
     authOrganization: { organization },
   } = useJumboAuth();
@@ -351,8 +360,15 @@ function BudgetsAccordionDetails({ budget, expanded }) {
       (total, item) => total + (item?.committed || 0),
       0
     ) || 0;
+  // Available = Budgeted - Spent - Stock On Hand (backend-computed per
+  // ledger, summed here) — NOT the full Committed figure. An unreceived
+  // order or an unpaid expense isn't a sure thing yet the way stock already
+  // sitting in the store is, so those two stay visible only in Committed.
   const totalAvailableAmount =
-    totalBudgetedAmount - totalSpentAmount - totalCommittedAmount;
+    filteredExpenses?.reduce(
+      (total, item) => total + (item?.available ?? 0),
+      0
+    ) || 0;
 
   const handleViewLedger = (item) => {
     setLedgerFilters({
@@ -368,6 +384,7 @@ function BudgetsAccordionDetails({ budget, expanded }) {
 
   const handleViewCommitted = (item) => {
     setCommittedDialogItem(item);
+    setExpandedCommittedSection(false);
   };
 
   const { data: committedItemsDetails, isLoading: isLoadingCommittedItems } =
@@ -795,141 +812,373 @@ function BudgetsAccordionDetails({ budget, expanded }) {
             <Skeleton variant='rectangular' height={200} />
           ) : (
             <>
-              <Typography variant='subtitle2' color='text.secondary' mb={1}>
-                Ordered Material — Open Purchase Orders
-              </Typography>
-              <TableContainer sx={{ mb: 3 }}>
-                <Table size='small'>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>P.O No</TableCell>
-                      <TableCell>Supplier</TableCell>
-                      <TableCell>Order Date</TableCell>
-                      <TableCell align='right'>Outstanding</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {(committedItemsDetails?.purchase_orders || [])
-                      .length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={4} align='center'>
-                          No open purchase orders
-                        </TableCell>
-                      </TableRow>
-                    )}
-                    {(committedItemsDetails?.purchase_orders || []).map(
-                      (po) => (
-                        <TableRow key={po.order_id}>
-                          <TableCell>{po.order_no}</TableCell>
-                          <TableCell>{po.stakeholder}</TableCell>
-                          <TableCell>
-                            {po.order_date
-                              ? dayjs(po.order_date).format('DD-MM-YYYY')
-                              : '-'}
-                          </TableCell>
-                          <TableCell align='right'>
-                            {po.amount_display.toLocaleString('en-US', {
-                              style: 'currency',
-                              currency: po.currency || baseCurrency?.code,
-                            })}
-                          </TableCell>
-                        </TableRow>
-                      )
-                    )}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-
-              <Typography variant='subtitle2' color='text.secondary' mb={1}>
-                Stock On Hand — Received, Not Yet Consumed
-              </Typography>
-              <TableContainer sx={{ mb: 3 }}>
-                <Table size='small'>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Category</TableCell>
-                      <TableCell align='right'>Value</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {(committedItemsDetails?.stock_on_hand || []).length ===
-                      0 && (
-                      <TableRow>
-                        <TableCell colSpan={2} align='center'>
-                          No stock currently on hand
-                        </TableCell>
-                      </TableRow>
-                    )}
-                    {(committedItemsDetails?.stock_on_hand || []).map(
-                      (stock) => (
-                        <TableRow key={stock.category_id ?? 'uncategorized'}>
-                          <TableCell>{stock.category}</TableCell>
-                          <TableCell align='right'>
-                            {stock.amount.toLocaleString('en-US', {
-                              style: 'currency',
-                              currency: baseCurrency?.code,
-                            })}
-                          </TableCell>
-                        </TableRow>
-                      )
-                    )}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-
-              {committedItemsDetails?.process_approval_active !== false && (
-                <>
-                  <Typography
-                    variant='subtitle2'
-                    color='text.secondary'
-                    mb={1}
+              <Accordion
+                expanded={expandedCommittedSection === 'purchase_orders'}
+                onChange={(e, isExpanded) =>
+                  setExpandedCommittedSection(
+                    isExpanded ? 'purchase_orders' : false
+                  )
+                }
+              >
+                <AccordionSummary expandIcon={<ExpandMoreOutlined />}>
+                  <Box
+                    display='flex'
+                    justifyContent='space-between'
+                    alignItems='center'
+                    width='100%'
+                    pr={1}
                   >
-                    Payments to Suppliers — Approved, Not Yet Paid
-                  </Typography>
-                  <TableContainer>
-                    <Table size='small'>
-                      <TableHead>
-                        <TableRow>
-                          <TableCell>Requisition No</TableCell>
-                          <TableCell>Requester</TableCell>
-                          <TableCell>Date Required</TableCell>
-                          <TableCell align='right'>Unpaid</TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {(committedItemsDetails?.payments || []).length ===
-                          0 && (
+                    <Typography>
+                      Unreceived Order Amounts (Open Purchase Orders)
+                    </Typography>
+                    <Typography fontWeight={600}>
+                      {(
+                        committedItemsDetails?.committed_purchase_orders || 0
+                      ).toLocaleString('en-US', {
+                        style: 'currency',
+                        currency: baseCurrency?.code,
+                      })}
+                    </Typography>
+                  </Box>
+                </AccordionSummary>
+                <AccordionDetails>
+                  {belowSmallScreen ? (
+                    <Box>
+                      {(committedItemsDetails?.purchase_orders || [])
+                        .length === 0 && (
+                        <Alert severity='info'>No open purchase orders</Alert>
+                      )}
+                      {(committedItemsDetails?.purchase_orders || []).map(
+                        (po) => (
+                          <Card
+                            key={po.order_id}
+                            variant='outlined'
+                            sx={{ mb: 1.5 }}
+                          >
+                            <CardContent sx={{ pb: '12px !important' }}>
+                              <Typography variant='subtitle2'>
+                                {po.order_no}
+                              </Typography>
+                              <Typography
+                                variant='body2'
+                                color='text.secondary'
+                              >
+                                {po.stakeholder}
+                                {po.order_date &&
+                                  ` · ${dayjs(po.order_date).format('DD-MM-YYYY')}`}
+                              </Typography>
+                              <Box
+                                display='flex'
+                                justifyContent='space-between'
+                                alignItems='center'
+                                mt={1}
+                              >
+                                <Typography
+                                  variant='caption'
+                                  color='text.secondary'
+                                >
+                                  Outstanding
+                                </Typography>
+                                <Typography variant='body2'>
+                                  {po.amount_display.toLocaleString('en-US', {
+                                    style: 'currency',
+                                    currency:
+                                      po.currency || baseCurrency?.code,
+                                  })}
+                                </Typography>
+                              </Box>
+                            </CardContent>
+                          </Card>
+                        )
+                      )}
+                    </Box>
+                  ) : (
+                    <TableContainer>
+                      <Table size='small'>
+                        <TableHead>
                           <TableRow>
-                            <TableCell colSpan={4} align='center'>
-                              No pending supplier payments
-                            </TableCell>
+                            <TableCell>P.O No</TableCell>
+                            <TableCell>Supplier</TableCell>
+                            <TableCell>Order Date</TableCell>
+                            <TableCell align='right'>Outstanding</TableCell>
                           </TableRow>
-                        )}
-                        {(committedItemsDetails?.payments || []).map(
-                          (payment) => (
-                            <TableRow key={payment.requisition_id}>
-                              <TableCell>{payment.requisition_no}</TableCell>
-                              <TableCell>{payment.requester}</TableCell>
-                              <TableCell>
-                                {payment.date_required
-                                  ? dayjs(payment.date_required).format(
-                                      'DD-MM-YYYY'
-                                    )
-                                  : '-'}
+                        </TableHead>
+                        <TableBody>
+                          {(committedItemsDetails?.purchase_orders || [])
+                            .length === 0 && (
+                            <TableRow>
+                              <TableCell colSpan={4} align='center'>
+                                No open purchase orders
                               </TableCell>
-                              <TableCell align='right'>
-                                {payment.amount.toLocaleString('en-US', {
+                            </TableRow>
+                          )}
+                          {(committedItemsDetails?.purchase_orders || []).map(
+                            (po) => (
+                              <TableRow key={po.order_id}>
+                                <TableCell>{po.order_no}</TableCell>
+                                <TableCell>{po.stakeholder}</TableCell>
+                                <TableCell>
+                                  {po.order_date
+                                    ? dayjs(po.order_date).format(
+                                        'DD-MM-YYYY'
+                                      )
+                                    : '-'}
+                                </TableCell>
+                                <TableCell align='right'>
+                                  {po.amount_display.toLocaleString('en-US', {
+                                    style: 'currency',
+                                    currency:
+                                      po.currency || baseCurrency?.code,
+                                  })}
+                                </TableCell>
+                              </TableRow>
+                            )
+                          )}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  )}
+                </AccordionDetails>
+              </Accordion>
+
+              <Accordion
+                expanded={expandedCommittedSection === 'stock_on_hand'}
+                onChange={(e, isExpanded) =>
+                  setExpandedCommittedSection(
+                    isExpanded ? 'stock_on_hand' : false
+                  )
+                }
+              >
+                <AccordionSummary expandIcon={<ExpandMoreOutlined />}>
+                  <Box
+                    display='flex'
+                    justifyContent='space-between'
+                    alignItems='center'
+                    width='100%'
+                    pr={1}
+                  >
+                    <Typography>
+                      Stock In Hand (Received, Not Yet Consumed)
+                    </Typography>
+                    <Typography fontWeight={600}>
+                      {(
+                        committedItemsDetails?.committed_stock_on_hand || 0
+                      ).toLocaleString('en-US', {
+                        style: 'currency',
+                        currency: baseCurrency?.code,
+                      })}
+                    </Typography>
+                  </Box>
+                </AccordionSummary>
+                <AccordionDetails>
+                  {belowSmallScreen ? (
+                    <Box>
+                      {(committedItemsDetails?.stock_on_hand || []).length ===
+                        0 && (
+                        <Alert severity='info'>
+                          No stock currently on hand
+                        </Alert>
+                      )}
+                      {(committedItemsDetails?.stock_on_hand || []).map(
+                        (stock) => (
+                          <Card
+                            key={stock.category_id ?? 'uncategorized'}
+                            variant='outlined'
+                            sx={{ mb: 1 }}
+                          >
+                            <CardContent
+                              sx={{
+                                py: '10px !important',
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                              }}
+                            >
+                              <Typography variant='body2'>
+                                {stock.category}
+                              </Typography>
+                              <Typography variant='body2'>
+                                {stock.amount.toLocaleString('en-US', {
                                   style: 'currency',
                                   currency: baseCurrency?.code,
                                 })}
+                              </Typography>
+                            </CardContent>
+                          </Card>
+                        )
+                      )}
+                    </Box>
+                  ) : (
+                    <TableContainer>
+                      <Table size='small'>
+                        <TableHead>
+                          <TableRow>
+                            <TableCell>Category</TableCell>
+                            <TableCell align='right'>Value</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {(committedItemsDetails?.stock_on_hand || [])
+                            .length === 0 && (
+                            <TableRow>
+                              <TableCell colSpan={2} align='center'>
+                                No stock currently on hand
                               </TableCell>
                             </TableRow>
+                          )}
+                          {(committedItemsDetails?.stock_on_hand || []).map(
+                            (stock) => (
+                              <TableRow
+                                key={stock.category_id ?? 'uncategorized'}
+                              >
+                                <TableCell>{stock.category}</TableCell>
+                                <TableCell align='right'>
+                                  {stock.amount.toLocaleString('en-US', {
+                                    style: 'currency',
+                                    currency: baseCurrency?.code,
+                                  })}
+                                </TableCell>
+                              </TableRow>
+                            )
+                          )}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  )}
+                </AccordionDetails>
+              </Accordion>
+
+              {committedItemsDetails?.process_approval_active !== false && (
+                <Accordion
+                  expanded={expandedCommittedSection === 'payments'}
+                  onChange={(e, isExpanded) =>
+                    setExpandedCommittedSection(
+                      isExpanded ? 'payments' : false
+                    )
+                  }
+                >
+                  <AccordionSummary expandIcon={<ExpandMoreOutlined />}>
+                    <Box
+                      display='flex'
+                      justifyContent='space-between'
+                      alignItems='center'
+                      width='100%'
+                      pr={1}
+                    >
+                      <Typography>
+                        Unpaid Expenses (Approved, Not Yet Paid)
+                      </Typography>
+                      <Typography fontWeight={600}>
+                        {(
+                          committedItemsDetails?.committed_payments || 0
+                        ).toLocaleString('en-US', {
+                          style: 'currency',
+                          currency: baseCurrency?.code,
+                        })}
+                      </Typography>
+                    </Box>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    {belowSmallScreen ? (
+                      <Box>
+                        {(committedItemsDetails?.payments || []).length ===
+                          0 && (
+                          <Alert severity='info'>
+                            No pending supplier payments
+                          </Alert>
+                        )}
+                        {(committedItemsDetails?.payments || []).map(
+                          (payment) => (
+                            <Card
+                              key={payment.requisition_id}
+                              variant='outlined'
+                              sx={{ mb: 1.5 }}
+                            >
+                              <CardContent sx={{ pb: '12px !important' }}>
+                                <Typography variant='subtitle2'>
+                                  {payment.requisition_no}
+                                </Typography>
+                                <Typography
+                                  variant='body2'
+                                  color='text.secondary'
+                                >
+                                  {payment.requester}
+                                  {payment.date_required &&
+                                    ` · ${dayjs(payment.date_required).format('DD-MM-YYYY')}`}
+                                </Typography>
+                                <Box
+                                  display='flex'
+                                  justifyContent='space-between'
+                                  alignItems='center'
+                                  mt={1}
+                                >
+                                  <Typography
+                                    variant='caption'
+                                    color='text.secondary'
+                                  >
+                                    Unpaid
+                                  </Typography>
+                                  <Typography variant='body2'>
+                                    {payment.amount.toLocaleString('en-US', {
+                                      style: 'currency',
+                                      currency: baseCurrency?.code,
+                                    })}
+                                  </Typography>
+                                </Box>
+                              </CardContent>
+                            </Card>
                           )
                         )}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
-                </>
+                      </Box>
+                    ) : (
+                      <TableContainer>
+                        <Table size='small'>
+                          <TableHead>
+                            <TableRow>
+                              <TableCell>Requisition No</TableCell>
+                              <TableCell>Requester</TableCell>
+                              <TableCell>Date Required</TableCell>
+                              <TableCell align='right'>Unpaid</TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {(committedItemsDetails?.payments || [])
+                              .length === 0 && (
+                              <TableRow>
+                                <TableCell colSpan={4} align='center'>
+                                  No pending supplier payments
+                                </TableCell>
+                              </TableRow>
+                            )}
+                            {(committedItemsDetails?.payments || []).map(
+                              (payment) => (
+                                <TableRow key={payment.requisition_id}>
+                                  <TableCell>
+                                    {payment.requisition_no}
+                                  </TableCell>
+                                  <TableCell>{payment.requester}</TableCell>
+                                  <TableCell>
+                                    {payment.date_required
+                                      ? dayjs(payment.date_required).format(
+                                          'DD-MM-YYYY'
+                                        )
+                                      : '-'}
+                                  </TableCell>
+                                  <TableCell align='right'>
+                                    {payment.amount.toLocaleString('en-US', {
+                                      style: 'currency',
+                                      currency: baseCurrency?.code,
+                                    })}
+                                  </TableCell>
+                                </TableRow>
+                              )
+                            )}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    )}
+                  </AccordionDetails>
+                </Accordion>
               )}
             </>
           )}

@@ -24,6 +24,8 @@ interface EmployeeSelector {
   addedEmployee?: Employee | null;
   multiple?: boolean;
   startAdornment?: React.ReactNode;
+  /** Excludes this employee id from the options — e.g. so someone can't pick themselves as their own manager. */
+  excludeId?: number;
   renderOption?: (
     props: React.HTMLAttributes<HTMLLIElement>,
     option: Employee,
@@ -41,6 +43,7 @@ const EmployeeSelector = (props: EmployeeSelector) => {
     addedEmployee = null,
     multiple = false,
     startAdornment,
+    excludeId,
   } = props;
 
   const { employees, isLoading } = useEmployees();
@@ -50,8 +53,14 @@ const EmployeeSelector = (props: EmployeeSelector) => {
   >(defaultValue ? defaultValue : multiple ? [] : value);
 
   useEffect(() => {
-    if (employees) setOptions(employees);
-  }, [employees]);
+    if (employees) {
+      setOptions(
+        excludeId
+          ? employees.filter((employee: Employee) => employee.id !== excludeId)
+          : employees
+      );
+    }
+  }, [employees, excludeId]);
 
   useEffect(() => {
     if (value) setSelectedValue(value);

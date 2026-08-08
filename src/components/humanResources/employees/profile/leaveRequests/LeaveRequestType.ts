@@ -8,6 +8,9 @@ export interface LeaveRequestType {
   days_granted?: number | null;
   reason?: string;
   status: 'pending' | 'in_review' | 'approved' | 'rejected' | 'cancelled';
+  // Backend-computed — "Waiting for {Role}" while under a pending approval
+  // level, same convention as Requisitions; otherwise the ucwords'd status.
+  status_label?: string;
   cost_center_id?: number | null;
   approval_chain_id?: number | null;
   reviewed_by?: number | null;

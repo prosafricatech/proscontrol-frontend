@@ -18,6 +18,7 @@ export interface Employee {
   photo_path?: string;
   department_id?: number;
   cost_center_id?: number | null;
+  manager_id?: number | null;
   payable_ledger_id?: number | null;
   create_payable?: boolean;
   payable_ledger_name?: string | null;
@@ -35,6 +36,12 @@ export interface Employee {
   cost_center?: {
     id: number;
     name: string;
+  } | null;
+  manager?: {
+    id: number;
+    first_name: string;
+    middle_name?: string;
+    last_name: string;
   } | null;
   active_contract: {
     id: number;

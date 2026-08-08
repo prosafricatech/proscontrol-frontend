@@ -37,6 +37,7 @@ interface Transaction {
   credit: number;
   debit_foreign?: number;  // ✅ New
   credit_foreign?: number; // ✅ New
+  correspondingLedger?: string | null;
 }
 
 interface TransactionsData {
@@ -135,6 +136,7 @@ const LedgerStatementOnScreen: React.FC<LedgerStatementOnScreenProps> = ({
             transactionDate: openingBalanceTx.transactionDate,
             reference: '',
             description: openingBalanceTx.description,
+            correspondingLedger: '',
             debit: null as number | null,
             credit: null as number | null,
             balance: openingBalance,
@@ -162,6 +164,7 @@ const LedgerStatementOnScreen: React.FC<LedgerStatementOnScreenProps> = ({
         reference:
           `${transaction.voucherNo || ''} ${transaction.reference || ''}`.trim(),
         description: transaction.description,
+        correspondingLedger: transaction.correspondingLedger || '',
         debit: transaction.debit,
         credit: transaction.credit,
         balance: runningBalance,
@@ -228,6 +231,9 @@ const LedgerStatementOnScreen: React.FC<LedgerStatementOnScreenProps> = ({
               Description
             </TableCell>
             <TableCell sx={{ backgroundColor: mainColor, color: contrastText }}>
+              Corresponding Ledger
+            </TableCell>
+            <TableCell sx={{ backgroundColor: mainColor, color: contrastText }}>
               Debit (TSh)
             </TableCell>
             <TableCell sx={{ backgroundColor: mainColor, color: contrastText }}>
@@ -270,6 +276,7 @@ const LedgerStatementOnScreen: React.FC<LedgerStatementOnScreenProps> = ({
               </TableCell>
               <TableCell>{row.reference}</TableCell>
               <TableCell>{row.description}</TableCell>
+              <TableCell>{row.correspondingLedger}</TableCell>
               <TableCell align='right'>
                 {row.debit && row.debit !== 0 ? formatBalance(row.debit) : '-'}
               </TableCell>
@@ -300,7 +307,7 @@ const LedgerStatementOnScreen: React.FC<LedgerStatementOnScreenProps> = ({
           {/* TOTAL row */}
           <TableRow sx={{ backgroundColor: mainColor }}>
             <TableCell
-              colSpan={hasForeignCurrency ? 3 : 3}
+              colSpan={4}
               sx={{
                 color: contrastText,
                 fontWeight: 700,

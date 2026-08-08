@@ -45,6 +45,7 @@ interface Transaction {
   credit: number;
   debit_foreign?: number;  // ✅ New: foreign currency debit
   credit_foreign?: number; // ✅ New: foreign currency credit
+  correspondingLedger?: string | null;
 }
 
 interface ReportDocumentProps {
@@ -175,6 +176,7 @@ const ReportDocument: React.FC<ReportDocumentProps> = ({
           transactionDate: openingBalanceTx.transactionDate,
           reference: '',
           description: openingBalanceTx.description,
+          correspondingLedger: '',
           debit: null as number | null,
           credit: null as number | null,
           balance: openingBalance,
@@ -201,6 +203,7 @@ const ReportDocument: React.FC<ReportDocumentProps> = ({
         reference:
           `${transaction.voucherNo ? transaction.voucherNo : ''} ${transaction.reference ? transaction.reference : ''}`.trim(),
         description: transaction.description,
+        correspondingLedger: transaction.correspondingLedger || '',
         debit: transaction.debit,
         credit: transaction.credit,
         balance: runningBalance,
@@ -217,7 +220,7 @@ const ReportDocument: React.FC<ReportDocumentProps> = ({
       producer='ProsERP'
       title={`${ledger?.name || ledgerName} Statement ${readableDate(transactionsData.filters.from)} to ${readableDate(transactionsData.filters.to)}`}
     >
-      <Page size='A4' style={pdfStyles.page}>
+      <Page size='A4' orientation={hasForeignCurrency ? 'landscape' : 'portrait'} style={pdfStyles.page}>
         <View style={pdfStyles.table}>
           {/* Header Section */}
           <View style={{ ...pdfStyles.tableRow, marginBottom: 20 }}>
@@ -332,15 +335,16 @@ const ReportDocument: React.FC<ReportDocumentProps> = ({
           {/* ── TABLE ── */}
           <View style={pdfStyles.tableRow}>
             {/* Table headers */}
-            <Text style={{ ...pdfStyles.tableHeader, backgroundColor: mainColor, color: contrastText, flex: 1.5 }}>Date</Text>
+            <Text style={{ ...pdfStyles.tableHeader, backgroundColor: mainColor, color: contrastText, flex: 1 }}>Date</Text>
             <Text style={{ ...pdfStyles.tableHeader, backgroundColor: mainColor, color: contrastText, flex: 1 }}>Reference</Text>
             <Text style={{ ...pdfStyles.tableHeader, backgroundColor: mainColor, color: contrastText, flex: 2 }}>Description</Text>
-            <Text style={{ ...pdfStyles.tableHeader, backgroundColor: mainColor, color: contrastText, flex: 1 }}>Debit</Text>
-            <Text style={{ ...pdfStyles.tableHeader, backgroundColor: mainColor, color: contrastText, flex: 1 }}>Credit</Text>
+            <Text style={{ ...pdfStyles.tableHeader, backgroundColor: mainColor, color: contrastText, flex: 1.5 }}>Corresponding Ledger</Text>
+            <Text style={{ ...pdfStyles.tableHeader, backgroundColor: mainColor, color: contrastText, flex: 1.5 }}>Debit</Text>
+            <Text style={{ ...pdfStyles.tableHeader, backgroundColor: mainColor, color: contrastText, flex: 1.5 }}>Credit</Text>
             {hasForeignCurrency && (
               <>
-                <Text style={{ ...pdfStyles.tableHeader, backgroundColor: mainColor, color: contrastText, flex: 1 }}>Debit     ({currencyCode})</Text>
-                <Text style={{ ...pdfStyles.tableHeader, backgroundColor: mainColor, color: contrastText, flex: 1 }}>Credit    ({currencyCode})</Text>
+                <Text style={{ ...pdfStyles.tableHeader, backgroundColor: mainColor, color: contrastText, flex: 1.5 }}>Debit     ({currencyCode})</Text>
+                <Text style={{ ...pdfStyles.tableHeader, backgroundColor: mainColor, color: contrastText, flex: 1.5 }}>Credit    ({currencyCode})</Text>
               </>
             )}
             <Text style={{ ...pdfStyles.tableHeader, backgroundColor: mainColor, color: contrastText, flex: 1.5 }}>Balance</Text>
@@ -352,7 +356,7 @@ const ReportDocument: React.FC<ReportDocumentProps> = ({
           {/* Data rows */}
           {tableRows.map((row, index) => (
             <View key={`${row.transactionDate}-${index}`} style={pdfStyles.tableRow}>
-              <Text style={{ ...pdfStyles.tableCell, backgroundColor: index % 2 === 0 ? '#FFFFFF' : lightColor, flex: 1.5 }}>
+              <Text style={{ ...pdfStyles.tableCell, backgroundColor: index % 2 === 0 ? '#FFFFFF' : lightColor, flex: 1 }}>
                 {readableDate(row.transactionDate)}
               </Text>
               <Text style={{ ...pdfStyles.tableCell, backgroundColor: index % 2 === 0 ? '#FFFFFF' : lightColor, flex: 1 }}>
@@ -361,18 +365,21 @@ const ReportDocument: React.FC<ReportDocumentProps> = ({
               <Text style={{ ...pdfStyles.tableCell, backgroundColor: index % 2 === 0 ? '#FFFFFF' : lightColor, flex: 2 }}>
                 {row.description}
               </Text>
-              <Text style={{ ...pdfStyles.tableCell, backgroundColor: index % 2 === 0 ? '#FFFFFF' : lightColor, flex: 1, textAlign: 'right' }}>
+              <Text style={{ ...pdfStyles.tableCell, backgroundColor: index % 2 === 0 ? '#FFFFFF' : lightColor, flex: 1.5 }}>
+                {row.correspondingLedger}
+              </Text>
+              <Text style={{ ...pdfStyles.tableCell, backgroundColor: index % 2 === 0 ? '#FFFFFF' : lightColor, flex: 1.5, textAlign: 'right' }}>
                 {row.debit && row.debit !== 0 ? row.debit.toLocaleString('en-US', { maximumFractionDigits: 2, minimumFractionDigits: 2 }) : '-'}
               </Text>
-              <Text style={{ ...pdfStyles.tableCell, backgroundColor: index % 2 === 0 ? '#FFFFFF' : lightColor, flex: 1, textAlign: 'right' }}>
+              <Text style={{ ...pdfStyles.tableCell, backgroundColor: index % 2 === 0 ? '#FFFFFF' : lightColor, flex: 1.5, textAlign: 'right' }}>
                 {row.credit && row.credit !== 0 ? row.credit.toLocaleString('en-US', { maximumFractionDigits: 2, minimumFractionDigits: 2 }) : '-'}
               </Text>
               {hasForeignCurrency && (
                 <>
-                  <Text style={{ ...pdfStyles.tableCell, backgroundColor: index % 2 === 0 ? '#FFFFFF' : lightColor, flex: 1, textAlign: 'right' }}>
+                  <Text style={{ ...pdfStyles.tableCell, backgroundColor: index % 2 === 0 ? '#FFFFFF' : lightColor, flex: 1.5, textAlign: 'right' }}>
                     {row.debit_foreign && row.debit_foreign !== 0 ? row.debit_foreign.toLocaleString('en-US', { maximumFractionDigits: 2, minimumFractionDigits: 2 }) : '-'}
                   </Text>
-                  <Text style={{ ...pdfStyles.tableCell, backgroundColor: index % 2 === 0 ? '#FFFFFF' : lightColor, flex: 1, textAlign: 'right' }}>
+                  <Text style={{ ...pdfStyles.tableCell, backgroundColor: index % 2 === 0 ? '#FFFFFF' : lightColor, flex: 1.5, textAlign: 'right' }}>
                     {row.credit_foreign && row.credit_foreign !== 0 ? row.credit_foreign.toLocaleString('en-US', { maximumFractionDigits: 2, minimumFractionDigits: 2 }) : '-'}
                   </Text>
                 </>
@@ -390,19 +397,19 @@ const ReportDocument: React.FC<ReportDocumentProps> = ({
 
           {/* TOTAL row */}
           <View style={pdfStyles.tableRow}>
-            <Text style={{ ...pdfStyles.tableCell, backgroundColor: mainColor, color: contrastText, fontWeight: 'bold', textAlign: 'center', flex: 4.7 }}>TOTAL</Text>
-            <Text style={{ ...pdfStyles.tableCell, backgroundColor: mainColor, color: contrastText, fontWeight: 'bold', flex: 1, textAlign: 'right' }}>
+            <Text style={{ ...pdfStyles.tableCell, backgroundColor: mainColor, color: contrastText, fontWeight: 'bold', textAlign: 'center', flex: 5.5 }}>TOTAL</Text>
+            <Text style={{ ...pdfStyles.tableCell, backgroundColor: mainColor, color: contrastText, fontWeight: 'bold', flex: 1.5, textAlign: 'right' }}>
               {totalDebits.toLocaleString('en-US', { maximumFractionDigits: 2, minimumFractionDigits: 2 })}
             </Text>
-            <Text style={{ ...pdfStyles.tableCell, backgroundColor: mainColor, color: contrastText, fontWeight: 'bold', flex: 1, textAlign: 'right' }}>
+            <Text style={{ ...pdfStyles.tableCell, backgroundColor: mainColor, color: contrastText, fontWeight: 'bold', flex: 1.5, textAlign: 'right' }}>
               {totalCredits.toLocaleString('en-US', { maximumFractionDigits: 2, minimumFractionDigits: 2 })}
             </Text>
             {hasForeignCurrency && (
               <>
-                <Text style={{ ...pdfStyles.tableCell, backgroundColor: mainColor, color: contrastText, fontWeight: 'bold', flex: 1, textAlign: 'right' }}>
+                <Text style={{ ...pdfStyles.tableCell, backgroundColor: mainColor, color: contrastText, fontWeight: 'bold', flex: 1.5, textAlign: 'right' }}>
                   {totalForeignDebits.toLocaleString('en-US', { maximumFractionDigits: 2, minimumFractionDigits: 2 })}
                 </Text>
-                <Text style={{ ...pdfStyles.tableCell, backgroundColor: mainColor, color: contrastText, fontWeight: 'bold', flex: 1, textAlign: 'right' }}>
+                <Text style={{ ...pdfStyles.tableCell, backgroundColor: mainColor, color: contrastText, fontWeight: 'bold', flex: 1.5, textAlign: 'right' }}>
                   {totalForeignCredits.toLocaleString('en-US', { maximumFractionDigits: 2, minimumFractionDigits: 2 })}
                 </Text>
               </>

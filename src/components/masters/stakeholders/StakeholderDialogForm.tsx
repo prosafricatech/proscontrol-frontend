@@ -269,6 +269,8 @@ const StakeholderDialogForm: React.FC<StakeholderDialogFormProps> = ({ stakehold
           <Grid size={{xs: 12, md: 3}}>
             <Div sx={{ mt: 1, mb: 1 }}>
               <CurrencySelector
+                label='Currency (Optional)'
+                required={false}
                 frontError={
                   errors?.currency_id?.message
                     ? { message: errors.currency_id.message }

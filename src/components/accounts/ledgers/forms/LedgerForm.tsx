@@ -411,6 +411,8 @@ export default function LedgerForm({
                 <Grid size={{ xs: 12, md: 6 }}>
                   <Div sx={{ mt: 1 }}>
                     <CurrencySelector
+                      label='Currency (Optional)'
+                      required={false}
                       frontError={
                         errors?.currency_id?.message || serverError?.currency_id?.[0]
                           ? { message: errors?.currency_id?.message || serverError?.currency_id?.[0] }

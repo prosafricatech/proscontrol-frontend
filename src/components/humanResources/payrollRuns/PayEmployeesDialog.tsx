@@ -29,7 +29,7 @@ import {
   Typography,
   useMediaQuery,
 } from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers';
+import { DateTimePicker } from '@mui/x-date-pickers';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { useSnackbar } from 'notistack';
@@ -76,7 +76,7 @@ const PayEmployeesDialog = ({
   const [selected, setSelected] = useState<Record<number, boolean>>({});
   const [amounts, setAmounts] = useState<Record<number, string>>({});
   const [transactionDate, setTransactionDate] = useState(
-    dayjs().format('YYYY-MM-DD')
+    dayjs().toISOString()
   );
 
   const { data, isLoading } = useQuery({
@@ -96,7 +96,7 @@ const PayEmployeesDialog = ({
   // partial mode, editable from there.
   useEffect(() => {
     if (!open) return;
-    setTransactionDate(dayjs().format('YYYY-MM-DD'));
+    setTransactionDate(dayjs().toISOString());
   }, [open]);
 
   useEffect(() => {
@@ -196,11 +196,11 @@ const PayEmployeesDialog = ({
             onChange={(ledger: any) => setCreditLedgerId(ledger?.id || 0)}
           />
 
-          <DatePicker
-            label='Payment Date'
+          <DateTimePicker
+            label='Payment Date & Time'
             value={transactionDate ? dayjs(transactionDate) : null}
             onChange={(val) =>
-              setTransactionDate(val?.format('YYYY-MM-DD') || '')
+              setTransactionDate(val?.toISOString() || '')
             }
             slotProps={{
               textField: { size: 'small', fullWidth: true },

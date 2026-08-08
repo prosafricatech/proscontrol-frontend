@@ -124,7 +124,7 @@ const PaymentFormDialogContent: React.FC<PaymentFormDialogContentProps> = ({
 
   const applyCurrencyLock = (currencyId?: number) => {
     if (!currencyId) {
-      setValue('form_ledger_currency_id', undefined, {
+      setValue('form_ledger_currency_id', undefined as any, {
         shouldValidate: true,
       });
       return;

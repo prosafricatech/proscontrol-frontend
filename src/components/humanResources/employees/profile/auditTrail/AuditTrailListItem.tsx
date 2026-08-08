@@ -10,18 +10,27 @@ interface AuditTrailListItemProps {
   showType?: boolean;
 }
 
+const employeeName = (employee?: { first_name: string; last_name: string } | null) =>
+  employee ? `${employee.first_name} ${employee.last_name}` : undefined;
+
 const AuditTrailListItem = ({ movement, showType = false }: AuditTrailListItemProps) => {
-  const isCostCenter = movement.from_cost_center_id || movement.to_cost_center_id;
+  const isCostCenter = !!(movement.from_cost_center_id || movement.to_cost_center_id);
+  const isManager = !isCostCenter && !!(movement.from_manager_id || movement.to_manager_id);
 
-  const fromName = isCostCenter 
-    ? movement.from_cost_center?.name 
-    : movement.from_department?.name;
-  const toName = isCostCenter 
-    ? movement.to_cost_center?.name 
-    : movement.to_department?.name;
+  const fromName = isCostCenter
+    ? movement.from_cost_center?.name
+    : isManager
+      ? employeeName(movement.from_manager)
+      : movement.from_department?.name;
+  const toName = isCostCenter
+    ? movement.to_cost_center?.name
+    : isManager
+      ? employeeName(movement.to_manager)
+      : movement.to_department?.name;
 
-  const movementType = isCostCenter ? 'Cost Center' : 'Department';
-  
+  const movementType = isCostCenter ? 'Cost Center' : isManager ? 'Manager' : 'Department';
+  const movementColor = isCostCenter ? 'primary' : isManager ? 'success' : 'info';
+
   return (
     <TableRow
       hover
@@ -48,10 +57,10 @@ const AuditTrailListItem = ({ movement, showType = false }: AuditTrailListItemPr
           {fromName || '-'}
         </Typography>
         {showType && (
-          <Chip 
-            label={movementType} 
-            size="small" 
-            color={isCostCenter ? 'primary' : 'info'}
+          <Chip
+            label={movementType}
+            size="small"
+            color={movementColor}
             variant="outlined"
             sx={{ mt: 0.5 }}
           />

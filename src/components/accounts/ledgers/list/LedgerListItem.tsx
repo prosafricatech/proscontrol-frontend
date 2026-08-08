@@ -4,6 +4,15 @@ import React from 'react';
 import { Divider, Grid, Tooltip, Typography } from '@mui/material';
 import LedgerListItemAction from './LedgerListItemAction';
 
+interface Currency {
+  id: number;
+  name: string;
+  code: string;
+  symbol: string;
+  name_plural: string;
+  symbol_native: string;
+}
+
 interface Ledger {
   id: number;
   name: string;
@@ -14,10 +23,15 @@ interface Ledger {
       name: string;
     };
   };
+  currency?: Currency | null;
   balance?: {
     amount: number;
     side: string;
   };
+  foreign_balance?: {
+    amount: number;
+    side: string;
+  } | null;
 }
 
 interface LedgerListItemProps {
@@ -56,13 +70,20 @@ const LedgerListItem: React.FC<LedgerListItemProps> = ({ ledger, type }) => {
           </Tooltip>
         </Grid>
         <Grid size={{xs: 6, md: 3.5}} sx={{ textAlign: { 'md': 'right' } }}>
-          <Tooltip title='Balance'>
+          <Tooltip title={ledger.foreign_balance ? `Balance (${ledger.currency?.code})` : 'Balance'}>
             <Typography variant={"body1"}>
-              {ledger.balance?.amount?.toLocaleString('en-US', {
-                maximumFractionDigits: 2,
-                minimumFractionDigits: 2
-              })}
-              {ledger.balance?.side ? ` ${ledger.balance.side}` : ''}
+              {ledger.foreign_balance
+                ? `${ledger.currency?.symbol ?? ''}${ledger.foreign_balance.amount.toLocaleString('en-US', {
+                    maximumFractionDigits: 2,
+                    minimumFractionDigits: 2
+                  })}`
+                : ledger.balance?.amount?.toLocaleString('en-US', {
+                    maximumFractionDigits: 2,
+                    minimumFractionDigits: 2
+                  })}
+              {(ledger.foreign_balance?.side ?? ledger.balance?.side)
+                ? ` ${ledger.foreign_balance?.side ?? ledger.balance?.side}`
+                : ''}
             </Typography>
           </Tooltip>
         </Grid>

@@ -340,6 +340,12 @@ export async function getMenus(locale: string) {
           icon: icon('employees'),
         },
         {
+          uri: `/${locale}/humanResources/orgChart`,
+          label: sidebar.menuItem.orgChart,
+          type: 'nav-item',
+          icon: icon('accountTree'),
+        },
+        {
           uri: `/${locale}/humanResources/leave-requests`,
           label: sidebar.menuItem.leave_requests,
           type: 'nav-item',

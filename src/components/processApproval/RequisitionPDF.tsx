@@ -94,7 +94,7 @@ function RequisitionPDF({ requisition, organization }: RequisitionPDFProps) {
           </View>
         </View>
 
-        <View style={{ ...pdfStyles.tableRow, marginBottom: 10 }}>
+        <View style={{ ...pdfStyles.tableRow }}>
           <View style={{ flex: 1, padding: 0.5 }}>
             <Text style={{ ...pdfStyles.minInfo, color: mainColor }}>
               Requisition Date
@@ -123,7 +123,7 @@ function RequisitionPDF({ requisition, organization }: RequisitionPDFProps) {
           </View>
         </View>
 
-        <View style={{ ...pdfStyles.table, minHeight: 150, marginBottom: 50 }}>
+        <View style={{ ...pdfStyles.table, minHeight: 230, marginBottom: 50 }}>
           <View style={pdfStyles.tableRow}>
             <Text
               style={{

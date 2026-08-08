@@ -11,12 +11,12 @@ import {
   CheckCircleOutlined,
   DeleteOutlined,
   DoneAllOutlined,
-  MonetizationOnOutlined,
-  PaymentsOutlined,
   PreviewOutlined,
   ReceiptLongOutlined,
   SendOutlined,
 } from '@mui/icons-material';
+import { faMoneyBill1 } from '@fortawesome/free-regular-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   Alert,
   Button,
@@ -32,7 +32,7 @@ import {
   Typography,
   useMediaQuery,
 } from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers';
+import { DateTimePicker } from '@mui/x-date-pickers';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { useSnackbar } from 'notistack';
@@ -135,7 +135,7 @@ export const PayrollRunActions = ({
     salary_expense_ledger_id: 0,
     paye_payable_ledger_id: 0,
     fallback_payable_ledger_id: 0,
-    transaction_date: dayjs().format('YYYY-MM-DD'),
+    transaction_date: dayjs().toISOString(),
   });
   const [bankTransferList, setBankTransferList] =
     useState<SalarySheetType | null>(null);
@@ -373,7 +373,7 @@ export const PayrollRunActions = ({
       salary_expense_ledger_id: 0,
       paye_payable_ledger_id: 0,
       fallback_payable_ledger_id: 0,
-      transaction_date: dayjs().format('YYYY-MM-DD'),
+      transaction_date: dayjs().toISOString(),
     });
   };
 
@@ -504,7 +504,7 @@ export const PayrollRunActions = ({
                 onClick={() => setOpenPayDialog(true)}
                 color='success'
               >
-                <MonetizationOnOutlined fontSize='medium' />
+                <FontAwesomeIcon icon={faMoneyBill1} size='lg' />
               </IconButton>
             </Tooltip>
           )}
@@ -520,7 +520,7 @@ export const PayrollRunActions = ({
                 onClick={() => setOpenPayPayablesDialog(true)}
                 color='secondary'
               >
-                <PaymentsOutlined fontSize='medium' />
+                <FontAwesomeIcon icon={faMoneyBill1} size='lg' />
               </IconButton>
             </Tooltip>
           )}
@@ -696,8 +696,8 @@ export const PayrollRunActions = ({
               }
             />
 
-            <DatePicker
-              label='Transaction Date'
+            <DateTimePicker
+              label='Transaction Date & Time'
               value={
                 postForm.transaction_date
                   ? dayjs(postForm.transaction_date)
@@ -706,7 +706,7 @@ export const PayrollRunActions = ({
               onChange={(val) =>
                 setPostForm((state) => ({
                   ...state,
-                  transaction_date: val?.format('YYYY-MM-DD'),
+                  transaction_date: val?.toISOString(),
                 }))
               }
               slotProps={{
