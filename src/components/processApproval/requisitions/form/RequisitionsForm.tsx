@@ -311,10 +311,10 @@ function RequisitionsForm({
     () =>
       PROCESS_TYPES.filter(
         (type) =>
+          type !== 'LOAN' &&
           !String(type).includes('LEAVE') &&
           type !== 'IMPREST RETIREMENT' &&
-          type !== 'PAYROLL' &&
-          type !== 'LOAN'
+          type !== 'PAYROLL'
       ),
     []
   );

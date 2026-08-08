@@ -1,6 +1,5 @@
 'use client';
 
-import { useDictionary } from '@/app/[lang]/contexts/DictionaryContext';
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import LedgerGroupProvider from '@/components/accounts/ledgerGroups/LedgerGroupProvider';
 import LedgerSelect from '@/components/accounts/ledgers/forms/LedgerSelect';
@@ -93,7 +92,6 @@ const DeductionTypeForm = ({
 }: DeductionTypeFormProps) => {
   const queryClient = useQueryClient();
   const { enqueueSnackbar } = useSnackbar();
-  const dictionary = useDictionary();
   const { ungroupedLedgerOptions } = useLedgerSelect();
   const { organizationHasSubscribed, checkOrganizationPermission } =
     useJumboAuth();
