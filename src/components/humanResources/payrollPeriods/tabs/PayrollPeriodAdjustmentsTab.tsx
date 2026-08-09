@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  AccessTimeOutlined,
   AddCircleOutline,
   CheckCircleOutline,
   ClearOutlined,
@@ -17,6 +18,7 @@ import {
 import {
   Alert,
   alpha,
+  Autocomplete,
   Box,
   Button,
   Chip,
@@ -42,11 +44,17 @@ import {
   TextField,
   Tooltip,
   Typography,
+  useMediaQuery,
   useTheme,
 } from '@mui/material';
+import { DatePicker } from '@mui/x-date-pickers';
 import { useMutation, useQuery } from '@tanstack/react-query';
+import dayjs from 'dayjs';
 import { useSnackbar } from 'notistack';
 import React, { ChangeEvent, useState } from 'react';
+import EmployeeSelector from '../../employees/EmployeeSelector';
+import { EmployeesProvider } from '../../employees/EmployeesProvider';
+import { Employee } from '../../employees/EmployeesType';
 import humanResourcesServices from '../../humanResourcesServices';
 
 interface PayrollPeriodAdjustmentsTabProps {
@@ -98,9 +106,34 @@ interface PeriodDeduction {
   };
 }
 
+interface PeriodOvertime {
+  id: number;
+  payroll_period_id: number;
+  employee_id: number;
+  overtime_type_id: number;
+  date: string;
+  hours: number;
+  remarks: string | null;
+  employee: AdjustmentEmployee;
+  // Laravel snake-cases relation names when serializing to JSON, so the
+  // overtimeType() relation comes back as overtime_type, not overtimeType.
+  overtime_type?: {
+    id: number;
+    name: string;
+    multiplier: number;
+  };
+}
+
+interface OvertimeType {
+  id: number;
+  name: string;
+  multiplier: number;
+}
+
 interface PeriodAdjustments {
   allowances: PeriodAllowance[];
   deductions: PeriodDeduction[];
+  overtime: PeriodOvertime[];
 }
 
 interface ImportResult {
@@ -158,6 +191,7 @@ const PayrollPeriodAdjustmentsTab = ({
   month,
 }: PayrollPeriodAdjustmentsTabProps) => {
   const theme = useTheme();
+  const belowLargeScreen = useMediaQuery(theme.breakpoints.down('lg'));
   const { enqueueSnackbar } = useSnackbar();
   const isDark = theme.type === 'dark';
 
@@ -180,8 +214,34 @@ const PayrollPeriodAdjustmentsTab = ({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [deletingType, setDeletingType] = useState<
-    'allowance' | 'deduction' | null
+    'allowance' | 'deduction' | 'overtime' | null
   >(null);
+
+  // Overtime — logged one dated entry at a time (not bulk-uploaded).
+  // Dates are bounded to the period itself — an entry claims to have
+  // happened within the month it's being recovered against.
+  const periodStart = dayjs(new Date(year, month - 1, 1));
+  const periodEnd = periodStart.endOf('month');
+  const defaultOvertimeDate = () => {
+    const today = dayjs();
+    if (today.isAfter(periodEnd)) return periodEnd.toISOString();
+    if (today.isBefore(periodStart)) return periodStart.toISOString();
+    return today.toISOString();
+  };
+
+  const [overtimeSearch, setOvertimeSearch] = useState('');
+  const [overtimeDialogOpen, setOvertimeDialogOpen] = useState(false);
+  const [editingOvertime, setEditingOvertime] =
+    useState<PeriodOvertime | null>(null);
+  const [overtimeEmployee, setOvertimeEmployee] = useState<Employee | null>(
+    null
+  );
+  const [overtimeType, setOvertimeType] = useState<OvertimeType | null>(null);
+  const [overtimeDate, setOvertimeDate] = useState<string>(
+    defaultOvertimeDate()
+  );
+  const [overtimeHours, setOvertimeHours] = useState<number | ''>('');
+  const [overtimeRemarks, setOvertimeRemarks] = useState('');
 
   const monthName = MONTH_NAMES[month] || month;
 
@@ -197,7 +257,14 @@ const PayrollPeriodAdjustmentsTab = ({
   });
 
   const adjustments: PeriodAdjustments = adjustmentsData?.data ||
-    adjustmentsData || { allowances: [], deductions: [] };
+    adjustmentsData || { allowances: [], deductions: [], overtime: [] };
+
+  // Overtime types for the "Log Overtime" dialog's type selector.
+  const { data: overtimeTypesResponse } = useQuery({
+    queryKey: ['overtimeTypesForPeriodOvertime'],
+    queryFn: () => humanResourcesServices.getOvertimeTypesList({ limit: 200 }),
+  });
+  const overtimeTypes: OvertimeType[] = overtimeTypesResponse?.data || [];
 
   // Download template mutation
   const { mutate: downloadTemplate, isPending: isDownloading } = useMutation({
@@ -331,6 +398,122 @@ const PayrollPeriodAdjustmentsTab = ({
     },
   });
 
+  // Add overtime entry mutation
+  const addOvertimeMutation = useMutation({
+    mutationFn: humanResourcesServices.addPeriodOvertime,
+    onSuccess: () => {
+      closeOvertimeDialog();
+      refetchAdjustments();
+      enqueueSnackbar('Overtime entry logged successfully', {
+        variant: 'success',
+      });
+    },
+    onError: (error: any) => {
+      enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
+    },
+  });
+
+  // Edit overtime entry mutation
+  const editOvertimeMutation = useMutation({
+    mutationFn: humanResourcesServices.updatePeriodOvertime,
+    onSuccess: () => {
+      closeOvertimeDialog();
+      refetchAdjustments();
+      enqueueSnackbar('Overtime entry updated successfully', {
+        variant: 'success',
+      });
+    },
+    onError: (error: any) => {
+      enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
+    },
+  });
+
+  // Delete overtime entry mutation
+  const deleteOvertimeMutation = useMutation({
+    mutationFn: (id: number) => humanResourcesServices.deletePeriodOvertime(id),
+    onSuccess: () => {
+      setDeleteDialogOpen(false);
+      setDeletingId(null);
+      setDeletingType(null);
+      refetchAdjustments();
+      enqueueSnackbar('Overtime entry removed successfully', {
+        variant: 'success',
+      });
+    },
+    onError: (error: any) => {
+      setDeleteDialogOpen(false);
+      enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
+    },
+  });
+
+  const closeOvertimeDialog = () => {
+    setOvertimeDialogOpen(false);
+    setEditingOvertime(null);
+    setOvertimeEmployee(null);
+    setOvertimeType(null);
+    setOvertimeDate(defaultOvertimeDate());
+    setOvertimeHours('');
+    setOvertimeRemarks('');
+  };
+
+  const handleOvertimeEditClick = (item: PeriodOvertime) => {
+    setEditingOvertime(item);
+    setOvertimeEmployee(item.employee as unknown as Employee);
+    setOvertimeType(
+      item.overtime_type
+        ? { id: item.overtime_type.id, name: item.overtime_type.name, multiplier: item.overtime_type.multiplier }
+        : null
+    );
+    setOvertimeDate(dayjs(item.date).toISOString());
+    setOvertimeHours(item.hours);
+    setOvertimeRemarks(item.remarks || '');
+    setOvertimeDialogOpen(true);
+  };
+
+  const handleOvertimeSave = () => {
+    if (!overtimeType || !overtimeDate || overtimeHours === '') return;
+
+    if (editingOvertime) {
+      editOvertimeMutation.mutate({
+        id: editingOvertime.id,
+        overtime_type_id: overtimeType.id,
+        date: dayjs(overtimeDate).format('YYYY-MM-DD'),
+        hours: Number(overtimeHours),
+        remarks: overtimeRemarks || undefined,
+      });
+    } else {
+      if (!overtimeEmployee) return;
+      addOvertimeMutation.mutate({
+        payroll_period_id: payrollPeriodId,
+        employee_id: overtimeEmployee.id,
+        overtime_type_id: overtimeType.id,
+        date: dayjs(overtimeDate).format('YYYY-MM-DD'),
+        hours: Number(overtimeHours),
+        remarks: overtimeRemarks || undefined,
+      });
+    }
+  };
+
+  const filterOvertimeEntries = (items: PeriodOvertime[], query: string) => {
+    const q = query.trim().toLowerCase();
+    if (!q) return items;
+
+    return items.filter((item) => {
+      const employee = item.employee;
+      const haystack = [
+        employee?.employee_number,
+        employee?.first_name,
+        employee?.last_name,
+        item.overtime_type?.name,
+        item.remarks,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+      return haystack.includes(q);
+    });
+  };
+
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     setFile(event.target.files?.[0] || null);
     setImportResult(null);
@@ -380,7 +563,10 @@ const PayrollPeriodAdjustmentsTab = ({
     }
   };
 
-  const handleDeleteClick = (id: number, type: 'allowance' | 'deduction') => {
+  const handleDeleteClick = (
+    id: number,
+    type: 'allowance' | 'deduction' | 'overtime'
+  ) => {
     setDeletingId(id);
     setDeletingType(type);
     setDeleteDialogOpen(true);
@@ -390,8 +576,10 @@ const PayrollPeriodAdjustmentsTab = ({
     if (deletingId && deletingType) {
       if (deletingType === 'allowance') {
         deleteAllowanceMutation.mutate(deletingId);
-      } else {
+      } else if (deletingType === 'deduction') {
         deleteDeductionMutation.mutate(deletingId);
+      } else {
+        deleteOvertimeMutation.mutate(deletingId);
       }
     }
   };
@@ -567,6 +755,136 @@ const PayrollPeriodAdjustmentsTab = ({
     );
   };
 
+  const renderOvertimeTable = (searchQuery: string) => {
+    const allItems = adjustments?.overtime || [];
+
+    if (allItems.length === 0) {
+      return (
+        <Alert severity='info' sx={{ borderRadius: 2 }}>
+          No overtime logged for this period yet. Use the "Log Overtime"
+          button to add an entry.
+        </Alert>
+      );
+    }
+
+    const items = filterOvertimeEntries(allItems, searchQuery);
+
+    if (items.length === 0) {
+      return (
+        <Alert severity='info' sx={{ borderRadius: 2 }}>
+          No overtime entries match "{searchQuery}".
+        </Alert>
+      );
+    }
+
+    const totalHours = items.reduce((sum, item) => sum + (item.hours || 0), 0);
+
+    return (
+      <TableContainer
+        component={Paper}
+        variant='outlined'
+        sx={{ borderRadius: 2 }}
+      >
+        <Table size='small'>
+          <TableHead>
+            <TableRow sx={{ bgcolor: isDark ? 'action.hover' : 'grey.50' }}>
+              <TableCell>Employee</TableCell>
+              <TableCell>Type</TableCell>
+              <TableCell>Date</TableCell>
+              <TableCell align='right'>Hours</TableCell>
+              <TableCell>Remarks</TableCell>
+              <TableCell align='center'>Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {items.map((item) => {
+              const employee = item.employee;
+
+              return (
+                <TableRow key={item.id} hover>
+                  <TableCell>
+                    <Typography variant='body2'>
+                      {employee?.employee_number || 'N/A'} —{' '}
+                      {employee?.first_name || ''} {employee?.last_name || ''}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={
+                        item.overtime_type
+                          ? `${item.overtime_type.name} (${Number(item.overtime_type.multiplier).toFixed(2)}x)`
+                          : 'N/A'
+                      }
+                      size='small'
+                      color='info'
+                      variant='outlined'
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant='body2'>
+                      {dayjs(item.date).format('DD MMM YYYY')}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align='right'>
+                    <Typography variant='body2' fontWeight='medium'>
+                      {item.hours}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant='body2' color='text.secondary'>
+                      {item.remarks || '-'}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align='center'>
+                    <Stack direction='row' spacing={0.5} justifyContent='center'>
+                      <Tooltip title='Edit'>
+                        <IconButton
+                          size='small'
+                          onClick={() => handleOvertimeEditClick(item)}
+                          color='primary'
+                        >
+                          <EditOutlined fontSize='small' />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title='Delete'>
+                        <IconButton
+                          size='small'
+                          onClick={() => handleDeleteClick(item.id, 'overtime')}
+                          color='error'
+                        >
+                          <DeleteOutline fontSize='small' />
+                        </IconButton>
+                      </Tooltip>
+                    </Stack>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+          <TableFooter>
+            <TableRow sx={{ bgcolor: isDark ? 'action.hover' : 'grey.50' }}>
+              <TableCell colSpan={3}>
+                <Typography variant='body2' fontWeight={700}>
+                  Total ({items.length}
+                  {items.length !== allItems.length
+                    ? ` of ${allItems.length}`
+                    : ''}
+                  )
+                </Typography>
+              </TableCell>
+              <TableCell align='right'>
+                <Typography variant='body2' fontWeight={700}>
+                  {totalHours.toLocaleString()}
+                </Typography>
+              </TableCell>
+              <TableCell colSpan={2} />
+            </TableRow>
+          </TableFooter>
+        </Table>
+      </TableContainer>
+    );
+  };
+
   return (
     <Box>
       <Box
@@ -609,15 +927,31 @@ const PayrollPeriodAdjustmentsTab = ({
             label='Deductions'
             iconPosition='start'
           />
+          <Tab
+            icon={<AccessTimeOutlined />}
+            label='Overtime'
+            iconPosition='start'
+          />
         </Tabs>
-        <Button
-          variant='contained'
-          startIcon={<UploadOutlined />}
-          onClick={() => setUploadDialogOpen(true)}
-          sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
-        >
-          Upload Adjustments
-        </Button>
+        {tabValue === 2 ? (
+          <Button
+            variant='contained'
+            startIcon={<AccessTimeOutlined />}
+            onClick={() => setOvertimeDialogOpen(true)}
+            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
+          >
+            Log Overtime
+          </Button>
+        ) : (
+          <Button
+            variant='contained'
+            startIcon={<UploadOutlined />}
+            onClick={() => setUploadDialogOpen(true)}
+            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
+          >
+            Upload Adjustments
+          </Button>
+        )}
       </Box>
 
       <TabPanel value={tabValue} index={0}>
@@ -732,12 +1066,69 @@ const PayrollPeriodAdjustmentsTab = ({
         </Stack>
       </TabPanel>
 
+      <TabPanel value={tabValue} index={2}>
+        <Stack spacing={3}>
+          <Alert
+            severity='info'
+            icon={<DescriptionOutlined />}
+            sx={{
+              borderRadius: 2,
+              '& .MuiAlert-icon': {
+                alignItems: 'center',
+              },
+              bgcolor: isDark ? alpha(theme.palette.info.main, 0.1) : undefined,
+            }}
+          >
+            <Typography variant='body2' fontWeight={600} gutterBottom>
+              Logged Overtime — {monthName} {year}
+            </Typography>
+            <Typography variant='body2' color='text.secondary'>
+              Hours logged here for monthly-paid employees are converted to an
+              "Overtime Pay" amount when the payroll run is generated, using
+              each employee's standard hours per month and the selected
+              overtime type's multiplier.
+            </Typography>
+          </Alert>
+
+          <TextField
+            size='small'
+            placeholder='Search by employee number, name, type, or remarks'
+            value={overtimeSearch}
+            onChange={(e) => setOvertimeSearch(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position='start'>
+                  <SearchOutlined fontSize='small' />
+                </InputAdornment>
+              ),
+              endAdornment: overtimeSearch && (
+                <InputAdornment position='end'>
+                  <IconButton size='small' onClick={() => setOvertimeSearch('')}>
+                    <ClearOutlined fontSize='small' />
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+          />
+
+          {isLoadingAdjustments ? (
+            <Box display='flex' justifyContent='center' py={4}>
+              <CircularProgress size={30} />
+            </Box>
+          ) : (
+            renderOvertimeTable(overtimeSearch)
+          )}
+        </Stack>
+      </TabPanel>
+
       {/* Upload Adjustments Dialog */}
       <Dialog
         open={uploadDialogOpen}
         onClose={handleCloseUploadDialog}
         maxWidth='sm'
         fullWidth
+        fullScreen={belowLargeScreen}
+        scroll={belowLargeScreen ? 'body' : 'paper'}
       >
         <MuiDialogTitle>Upload Adjustments</MuiDialogTitle>
         <MuiDialogContent>
@@ -1149,6 +1540,8 @@ const PayrollPeriodAdjustmentsTab = ({
         }}
         maxWidth='sm'
         fullWidth
+        fullScreen={belowLargeScreen}
+        scroll={belowLargeScreen ? 'body' : 'paper'}
       >
         <MuiDialogTitle>
           Edit {editingAllowance ? 'Allowance' : 'Deduction'}
@@ -1206,7 +1599,8 @@ const PayrollPeriodAdjustmentsTab = ({
         <MuiDialogTitle>Confirm Delete</MuiDialogTitle>
         <MuiDialogContent>
           <Typography>
-            Are you sure you want to delete this {deletingType} adjustment? This
+            Are you sure you want to delete this {deletingType}
+            {deletingType === 'overtime' ? ' entry' : ' adjustment'}? This
             action cannot be undone.
           </Typography>
         </MuiDialogContent>
@@ -1218,10 +1612,110 @@ const PayrollPeriodAdjustmentsTab = ({
             variant='contained'
             disabled={
               deleteAllowanceMutation.isPending ||
-              deleteDeductionMutation.isPending
+              deleteDeductionMutation.isPending ||
+              deleteOvertimeMutation.isPending
             }
           >
             Delete
+          </Button>
+        </MuiDialogActions>
+      </Dialog>
+
+      {/* Log/Edit Overtime Dialog */}
+      <Dialog
+        open={overtimeDialogOpen}
+        onClose={closeOvertimeDialog}
+        maxWidth='sm'
+        fullWidth
+        fullScreen={belowLargeScreen}
+        scroll={belowLargeScreen ? 'body' : 'paper'}
+      >
+        <MuiDialogTitle>
+          {editingOvertime ? 'Edit Overtime Entry' : 'Log Overtime Entry'}
+        </MuiDialogTitle>
+        <MuiDialogContent>
+          <Stack spacing={2} sx={{ pt: 2 }}>
+            {!editingOvertime && (
+              <EmployeesProvider>
+                <EmployeeSelector
+                  value={overtimeEmployee || undefined}
+                  onChange={(newValue) => {
+                    setOvertimeEmployee(
+                      newValue && !Array.isArray(newValue) ? newValue : null
+                    );
+                  }}
+                />
+              </EmployeesProvider>
+            )}
+            <Autocomplete
+              size='small'
+              options={overtimeTypes}
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              getOptionLabel={(option) =>
+                `${option.name} (${Number(option.multiplier).toFixed(2)}x)`
+              }
+              value={overtimeType}
+              onChange={(_event, newValue) => setOvertimeType(newValue)}
+              renderInput={(params) => (
+                <TextField {...params} label='Overtime Type' />
+              )}
+            />
+            <DatePicker
+              label='Date'
+              value={overtimeDate ? dayjs(overtimeDate) : null}
+              onChange={(newValue) =>
+                setOvertimeDate(newValue ? newValue.toISOString() : '')
+              }
+              minDate={periodStart}
+              maxDate={periodEnd}
+              slotProps={{
+                textField: {
+                  size: 'small',
+                  fullWidth: true,
+                  helperText: `Must fall within ${monthName} ${year}`,
+                },
+              }}
+            />
+            <TextField
+              label='Hours'
+              size='small'
+              fullWidth
+              type='number'
+              value={overtimeHours}
+              onChange={(e) =>
+                setOvertimeHours(
+                  e.target.value === '' ? '' : Number(e.target.value)
+                )
+              }
+              inputProps={{ min: 0.25, step: 0.25 }}
+            />
+            <TextField
+              label='Remarks'
+              size='small'
+              fullWidth
+              multiline
+              minRows={2}
+              value={overtimeRemarks}
+              onChange={(e) => setOvertimeRemarks(e.target.value)}
+              placeholder='Optional remarks for this entry'
+            />
+          </Stack>
+        </MuiDialogContent>
+        <MuiDialogActions>
+          <Button onClick={closeOvertimeDialog}>Cancel</Button>
+          <Button
+            onClick={handleOvertimeSave}
+            variant='contained'
+            disabled={
+              !overtimeType ||
+              !overtimeDate ||
+              overtimeHours === '' ||
+              (!editingOvertime && !overtimeEmployee) ||
+              addOvertimeMutation.isPending ||
+              editOvertimeMutation.isPending
+            }
+          >
+            Save
           </Button>
         </MuiDialogActions>
       </Dialog>

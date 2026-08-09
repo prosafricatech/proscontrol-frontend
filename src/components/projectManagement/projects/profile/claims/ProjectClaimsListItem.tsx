@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Box, Divider, Grid, Tooltip, Typography } from '@mui/material';
+import { Box, Chip, Divider, Grid, Tooltip, Typography } from '@mui/material';
 import { readableDate } from '@/app/helpers/input-sanitization-helpers';
 import ProjectClaimItemAction from './ProjectClaimItemAction';
 
@@ -16,6 +16,7 @@ interface ProjectClaim {
   remarks?: string;
   amount?: number;
   currency?: Currency;
+  status?: 'draft' | 'invoiced';
 }
 
 interface ProjectClaimsListItemProps {
@@ -56,9 +57,14 @@ const ProjectClaimsListItem: React.FC<ProjectClaimsListItemProps> = ({
         {/* Claim No */}
         <Grid size={{ xs: 6, md: 3, lg: 3 }}>
           <Tooltip title="Claim No.">
-            <Typography noWrap>
-              {claim.claimNo || '-'}
-            </Typography>
+            <Box display="flex" alignItems="center" gap={1}>
+              <Typography noWrap>
+                {claim.claimNo || '-'}
+              </Typography>
+              {claim.status === 'draft' && (
+                <Chip label="Draft" size="small" color="warning" variant="outlined" />
+              )}
+            </Box>
           </Tooltip>
         </Grid>
 

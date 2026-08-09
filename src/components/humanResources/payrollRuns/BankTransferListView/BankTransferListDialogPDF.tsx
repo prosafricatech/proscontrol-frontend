@@ -180,6 +180,16 @@ function BankTransferListDialogPDF({
                 ...pdfStyles.tableHeader,
                 backgroundColor: mainColor,
                 color: contrastText,
+                flex: 1.2,
+              }}
+            >
+              Bank Code
+            </Text>
+            <Text
+              style={{
+                ...pdfStyles.tableHeader,
+                backgroundColor: mainColor,
+                color: contrastText,
                 flex: 1.5,
               }}
             >
@@ -257,6 +267,15 @@ function BankTransferListDialogPDF({
                   }}
                 >
                   {row.branch || '-'}
+                </Text>
+                <Text
+                  style={{
+                    ...pdfStyles.tableCell,
+                    backgroundColor: rowBgColor,
+                    flex: 1.2,
+                  }}
+                >
+                  {row.bank_code || '-'}
                 </Text>
                 <Text
                   style={{

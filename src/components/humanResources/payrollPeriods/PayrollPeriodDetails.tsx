@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Box, Tab, Tabs } from '@mui/material';
 import PayrollPeriodRunsTab from './tabs/PayrollPeriodRunsTab';
 import PayrollPeriodAdjustmentsTab from './tabs/PayrollPeriodAdjustmentsTab';
+import PayrollPeriodAdvancesTab from './tabs/PayrollPeriodAdvancesTab';
 
 interface PayrollPeriodDetailsProps {
   payrollPeriodId: number;
@@ -30,6 +31,7 @@ const PayrollPeriodDetails = ({
         <Tabs value={activeTab} onChange={handleTabChange}>
           <Tab label="Runs" />
           <Tab label="Ad-hoc Adjustments" />
+          <Tab label="Advances" />
         </Tabs>
       </Box>
 
@@ -44,6 +46,13 @@ const PayrollPeriodDetails = ({
         )}
         {activeTab === 1 && (
           <PayrollPeriodAdjustmentsTab
+            payrollPeriodId={payrollPeriodId}
+            year={year}
+            month={month}
+          />
+        )}
+        {activeTab === 2 && (
+          <PayrollPeriodAdvancesTab
             payrollPeriodId={payrollPeriodId}
             year={year}
             month={month}

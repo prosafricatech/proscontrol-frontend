@@ -74,6 +74,7 @@ function ApprovedPurchaseTopInformation({
 
   const { authOrganization, checkOrganizationPermission } = useJumboAuth();
   const cp = { id: null, name: 'Cash Purchase' };
+  const canCashPurchase = checkOrganizationPermission(PERMISSIONS.PURCHASES_INSTANT_PAY);
 
   // Set values from addedStakeholder
   useEffect(() => {
@@ -168,7 +169,7 @@ function ApprovedPurchaseTopInformation({
             <StakeholderSelector
               label='Supplier'
               frontError={errors?.stakeholder_id as any}
-              initialOptions={[cp] as any}
+              initialOptions={(canCashPurchase ? [cp] : []) as any}
               defaultValue={order?.stakeholder?.id}
               addedStakeholder={addedStakeholder}
               onChange={handleStakeholderChange}

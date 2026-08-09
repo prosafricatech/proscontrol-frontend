@@ -15,6 +15,12 @@ export interface user {
   name: string;
 }
 
+export interface Project {
+  id: number;
+  name: string;
+  projectNo?: string;
+}
+
 export interface Outlet {
   id?: number | string;
   name: string;
@@ -23,6 +29,8 @@ export interface Outlet {
   users: user[];
   stores: Store[];
   counters: Counter[];
+  project_id?: number | null;
+  project?: Project | null;
 }
 
 export interface AddOutletResponse {
