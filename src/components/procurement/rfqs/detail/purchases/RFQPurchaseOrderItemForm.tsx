@@ -5,7 +5,6 @@ import CommaSeparatedField from '@/shared/Inputs/CommaSeparatedField';
 import { Div } from '@jumbo/shared';
 import { DisabledByDefault } from '@mui/icons-material';
 import {
-  Divider,
   Grid,
   Checkbox,
   FormControlLabel,
@@ -33,7 +32,6 @@ function RFQPurchaseOrderItemForm({
   totalItems,
   rfqDetails,
 }: RFQPurchaseOrderItemFormProps) {
-  const vat_factor = (item.vat_percentage || 0) * 0.01;
   const productName = item.product?.item_name || item.product?.name || item.product_name || 'Item';
   const unitSymbol = item.measurement_unit?.symbol || item.unit_symbol || '';
   const quantity = Number(item.quantity) || 0;
