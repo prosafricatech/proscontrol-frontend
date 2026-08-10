@@ -158,6 +158,7 @@ function PurchaseOrderDialogForm({ toggleOpen, order = null }) {
     resolver: yupResolver(validationSchema),
     defaultValues: {
       id: order && order.id,
+      displayStoreSelector: false,
       order_date: order_date.toISOString(),
       stakeholder_id: order && order.stakeholder_id,
       currency_id: order?.currency_id ? order.currency_id : 1,
@@ -397,6 +398,28 @@ function PurchaseOrderDialogForm({ toggleOpen, order = null }) {
 
   const instant_pay = watch('instant_pay');
   const instant_receive = watch('instant_receive');
+
+  useEffect(() => {
+    setValue('displayStoreSelector', displayStoreSelector);
+  }, [displayStoreSelector, setValue]);
+
+  useEffect(() => {
+    if (instant_receive && displayStoreSelector && !getValues('store_id')) {
+      setError('store_id', {
+        type: 'manual',
+        message: 'Receiving store is required',
+      });
+      return;
+    }
+
+    clearErrors('store_id');
+  }, [
+    clearErrors,
+    displayStoreSelector,
+    getValues,
+    instant_receive,
+    setError,
+  ]);
 
   useEffect(() => {
     if (!canInstantPay && getValues('instant_pay')) {
