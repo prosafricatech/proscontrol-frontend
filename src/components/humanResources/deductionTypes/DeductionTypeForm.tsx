@@ -13,6 +13,7 @@ import { Div } from '@jumbo/shared';
 import { AddOutlined } from '@mui/icons-material';
 import { LoadingButton } from '@mui/lab';
 import {
+  Alert,
   Button,
   Dialog,
   DialogActions,
@@ -239,12 +240,18 @@ const DeductionTypeForm = ({
       .typeError('Default value must be a number')
       .required('Default value is required')
       .min(0, 'Default value must be 0 or greater'),
-    payable_ledger_id: orgHasSubscribedAccountsAndFinance
-      ? yup
-          .number()
-          .required('This field is required')
-          .positive('This field is required')
-      : yup.number().nullable(),
+    // ABSENT_DEDUCTION always has somewhere to post even unmapped — an
+    // unmapped ledger falls back to the department/fallback Salary Expense
+    // account at posting time (see PayrollPostingService::post()) — so it's
+    // the one type this is never required for.
+    payable_ledger_id:
+      orgHasSubscribedAccountsAndFinance &&
+      deductionType?.code !== 'ABSENT_DEDUCTION'
+        ? yup
+            .number()
+            .required('This field is required')
+            .positive('This field is required')
+        : yup.number().nullable(),
     is_pre_tax: yup.boolean().required(),
     description: yup
       .string()
@@ -280,13 +287,31 @@ const DeductionTypeForm = ({
   });
 
   const applyScope = watch('apply_scope');
-  // The auto-provisioned "Staff Loan Repayment" type is the one deduction
-  // type whose ledger is actually a receivable (money owed TO the company by
-  // employees), not a payable — the field needs a different label and a
-  // different allowed ledger group for this one, or it's impossible to map
-  // correctly (an Accounts Payable ledger is the wrong nature for it).
+  // Two codes don't fit the default "this ledger is a payable" assumption,
+  // so each needs its own label and allowed ledger group, or it's impossible
+  // to map correctly:
+  // - "Staff Loan Repayment" (STAFF_LOAN): the ledger is a receivable (money
+  //   owed TO the company by employees), not a payable.
+  // - "Absence Deduction" (ABSENT_DEDUCTION): nothing is owed to anyone at
+  //   all — the deducted amount was simply never earned, so the ledger here
+  //   is the Salary Expense account it gets credited back into (shrinking
+  //   the expense), not a payable.
   const watchedCode = watch('code');
   const isStaffLoanRepayment = watchedCode === 'STAFF_LOAN';
+  const isAbsenceDeduction = watchedCode === 'ABSENT_DEDUCTION';
+  // These codes are how PayrollService/PayrollPostingService/LoanService
+  // recognize a type — editing its name/code/category/computation
+  // method/default value/pre-tax flag would silently change payroll
+  // behavior (or break the match entirely). Only reachable when editing an
+  // existing one of these; the backend enforces the same restriction
+  // regardless of what the form submits. Only the ledger and description
+  // stay editable — see the "Apply To Employees" section too, which is
+  // hidden below since these types aren't standing per-employee deductions.
+  const isReservedType =
+    !!deductionType?.id &&
+    ['STAFF_LOAN', 'ABSENT_DEDUCTION', 'SALARY_ADVANCE'].includes(
+      watchedCode || ''
+    );
 
   useEffect(() => {
     reset({
@@ -324,6 +349,14 @@ const DeductionTypeForm = ({
       </DialogTitle>
       <DialogContent>
         <form autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
+          {isReservedType && (
+            <Alert severity='info' sx={{ mb: 2 }}>
+              This is a system-provisioned deduction type — payroll matches it
+              by its Code, so Name, Code, Category, Computation Method,
+              Default Value, and Is Pre-tax are locked. Only the ledger
+              mapping and description can be changed here.
+            </Alert>
+          )}
           <Grid container rowSpacing={{ xs: 1, md: 2 }} spacing={2}>
             <Grid size={{ xs: 12, md: 4 }}>
               <Div sx={{ mt: 1 }}>
@@ -331,6 +364,7 @@ const DeductionTypeForm = ({
                   label='Name'
                   size='small'
                   fullWidth
+                  disabled={isReservedType}
                   error={
                     !!errors?.name ||
                     !!getValidationMessage(validationErrors, 'name')
@@ -350,6 +384,7 @@ const DeductionTypeForm = ({
                   label='Code'
                   size='small'
                   fullWidth
+                  disabled={isReservedType}
                   error={
                     !!errors?.code ||
                     !!getValidationMessage(validationErrors, 'code')
@@ -374,6 +409,7 @@ const DeductionTypeForm = ({
                       label='Category'
                       size='small'
                       fullWidth
+                      disabled={isReservedType}
                       value={field.value}
                       onChange={field.onChange}
                       error={
@@ -404,6 +440,7 @@ const DeductionTypeForm = ({
                       label='Computation Method'
                       size='small'
                       fullWidth
+                      disabled={isReservedType}
                       value={field.value}
                       onChange={field.onChange}
                       error={
@@ -444,6 +481,7 @@ const DeductionTypeForm = ({
                       label='Default Value'
                       size='small'
                       fullWidth
+                      disabled={isReservedType}
                       value={formatCommaSeparatedValue(field.value)}
                       onChange={(event) => {
                         const raw = event.target.value.replace(/,/g, '');
@@ -482,6 +520,7 @@ const DeductionTypeForm = ({
                       control={
                         <Switch
                           checked={Boolean(field.value)}
+                          disabled={isReservedType}
                           onChange={(event) =>
                             field.onChange(event.target.checked)
                           }
@@ -499,15 +538,27 @@ const DeductionTypeForm = ({
                 <Div sx={{ my: 1 }}>
                   <LedgerSelect
                     label={
-                      isStaffLoanRepayment ? 'Receivable Ledger' : 'Payable Ledger'
+                      isStaffLoanRepayment
+                        ? 'Receivable Ledger'
+                        : isAbsenceDeduction
+                          ? 'Expense Ledger (credited back)'
+                          : 'Payable Ledger'
                     }
                     allowedGroups={
                       isStaffLoanRepayment
                         ? ['Accounts Receivable']
-                        : ['Accounts Payable']
+                        : isAbsenceDeduction
+                          ? ['Expenses']
+                          : ['Accounts Payable']
                     }
                     frontError={errors.payable_ledger_id}
-                    key={isStaffLoanRepayment ? 'account-receivable-ledger' : 'account-payable-ledger'}
+                    key={
+                      isStaffLoanRepayment
+                        ? 'account-receivable-ledger'
+                        : isAbsenceDeduction
+                          ? 'expense-ledger'
+                          : 'account-payable-ledger'
+                    }
                     value={recentlyAddedPayableLedger || undefined}
                     defaultValue={
                       deductionType?.payable_ledger || defaultValue || undefined
@@ -554,40 +605,61 @@ const DeductionTypeForm = ({
                       payable one.
                     </Typography>
                   )}
+                  {isAbsenceDeduction && (
+                    <Typography
+                      variant='caption'
+                      color='text.secondary'
+                      sx={{ display: 'block', mt: 0.5 }}
+                    >
+                      Absence deductions aren't owed to anyone — the hours were
+                      simply never earned. Optional: leave this blank and
+                      posting automatically credits back whichever Salary
+                      Expense account basic salary was debited to for that
+                      employee (their department's, or the fallback chosen
+                      when posting). Only map a ledger here if you want
+                      absence deductions to post to their own separate
+                      account instead.
+                    </Typography>
+                  )}
                 </Div>
               </Grid>
             )}
 
-            {/* Apply To Employees Dropdown */}
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Div sx={{ mt: 1 }}>
-                <Controller
-                  name='apply_scope'
-                  control={control}
-                  render={({ field }) => (
-                    <TextField
-                      select
-                      label='Apply To Employees'
-                      size='small'
-                      fullWidth
-                      value={field.value || 'none'}
-                      onChange={field.onChange}
-                      helperText={
-                        applyScope !== 'none'
-                          ? 'This will apply to all existing employees'
-                          : 'Select an option to bulk apply this deduction'
-                      }
-                    >
-                      <MenuItem value='none'>None</MenuItem>
-                      <MenuItem value='all'>All Employees</MenuItem>
-                      <MenuItem value='active_contracts'>
-                        Employees With Active Contracts
-                      </MenuItem>
-                    </TextField>
-                  )}
-                />
-              </Div>
-            </Grid>
+            {/* Apply To Employees Dropdown — doesn't apply to reserved types:
+                their amounts are computed per period (loan installments,
+                absence hours, advance recovery), not a flat default_value
+                assigned to employees. */}
+            {!isReservedType && (
+              <Grid size={{ xs: 12, md: 6 }}>
+                <Div sx={{ mt: 1 }}>
+                  <Controller
+                    name='apply_scope'
+                    control={control}
+                    render={({ field }) => (
+                      <TextField
+                        select
+                        label='Apply To Employees'
+                        size='small'
+                        fullWidth
+                        value={field.value || 'none'}
+                        onChange={field.onChange}
+                        helperText={
+                          applyScope !== 'none'
+                            ? 'This will apply to all existing employees'
+                            : 'Select an option to bulk apply this deduction'
+                        }
+                      >
+                        <MenuItem value='none'>None</MenuItem>
+                        <MenuItem value='all'>All Employees</MenuItem>
+                        <MenuItem value='active_contracts'>
+                          Employees With Active Contracts
+                        </MenuItem>
+                      </TextField>
+                    )}
+                  />
+                </Div>
+              </Grid>
+            )}
 
             <Grid size={{ xs: 12 }}>
               <Div sx={{ mt: 1 }}>

@@ -931,6 +931,29 @@ humanResourcesServices.periodAdjustmentReview = async (periodId, params = {}) =>
     });
     return data;
 };
+// ===== add a single hand-entered adjustment (the manual counterpart to the Excel upload) ===== //
+humanResourcesServices.addPeriodAdjustmentAllowance = async (allowanceEntry) => {
+    const { data } = await axios.post('/api/humanResources/payrollPeriods/period-adjustments-template/allowances/add', allowanceEntry);
+    return data;
+}
+humanResourcesServices.addPeriodAdjustmentDeduction = async (deductionEntry) => {
+    const { data } = await axios.post('/api/humanResources/payrollPeriods/period-adjustments-template/deductions/add', deductionEntry);
+    return data;
+}
+humanResourcesServices.addPeriodLeaveEncashment = async (encashmentEntry) => {
+    const { data } = await axios.post('/api/humanResources/payrollPeriods/period-adjustments-template/leave-encashments/add', encashmentEntry);
+    return data;
+}
+humanResourcesServices.deletePeriodLeaveEncashment = async (encashmentId) => {
+    const { data } = await axios.delete(`/api/humanResources/payrollPeriods/period-adjustments-template/leave-encashments/${encashmentId}/delete`);
+    return data;
+}
+humanResourcesServices.getLeaveEncashmentDailyRate = async (employeeId) => {
+    const { data } = await axios.get('/api/humanResources/payrollPeriods/period-adjustments-template/leave-encashments/daily-rate', {
+        params: { employee_id: employeeId },
+    });
+    return data;
+}
 // ===== edit an adjustment ===== //
 humanResourcesServices.updateperiodAdjustmentAllowance = async (adjustmentAllowance) => {
     const { data } = await axios.put(`/api/humanResources/payrollPeriods/period-adjustments-template/allowances/${adjustmentAllowance.id}/update`, adjustmentAllowance)
@@ -961,6 +984,20 @@ humanResourcesServices.updatePeriodOvertime = async (overtimeEntry) => {
 }
 humanResourcesServices.deletePeriodOvertime = async (id) => {
     const { data } = await axios.delete(`/api/humanResources/payrollPeriods/period-adjustments-template/overtime/${id}/delete`);
+    return data;
+}
+
+// ===== period absences (monthly employees, logged one dated entry at a time — deducted pre-tax) ===== //
+humanResourcesServices.addPeriodAbsence = async (absenceEntry) => {
+    const { data } = await axios.post('/api/humanResources/payrollPeriods/period-adjustments-template/absences/add', absenceEntry);
+    return data;
+}
+humanResourcesServices.updatePeriodAbsence = async (absenceEntry) => {
+    const { data } = await axios.put(`/api/humanResources/payrollPeriods/period-adjustments-template/absences/${absenceEntry.id}/update`, absenceEntry);
+    return data;
+}
+humanResourcesServices.deletePeriodAbsence = async (id) => {
+    const { data } = await axios.delete(`/api/humanResources/payrollPeriods/period-adjustments-template/absences/${id}/delete`);
     return data;
 }
 

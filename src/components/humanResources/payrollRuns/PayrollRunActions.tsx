@@ -11,6 +11,7 @@ import {
   CheckCircleOutlined,
   DeleteOutlined,
   DoneAllOutlined,
+  InfoOutlined,
   PreviewOutlined,
   ReceiptLongOutlined,
   SendOutlined,
@@ -664,8 +665,16 @@ export const PayrollRunActions = ({
             </Alert>
 
             <LedgerSelect
-              label='Salary Expense Account'
+              label='Salary Expense Account (fallback)'
               allowedGroups={['Expenses']}
+              startAdornment={
+                <Tooltip
+                  title="Used as the debit account for basic salary and allowances only when no more specific account is mapped — a department's own Salary Expense Account, if set, is used instead; likewise an Allowance Type's own Expense Account, if set, overrides this for that allowance."
+                  arrow
+                >
+                  <InfoOutlined fontSize='small' color='action' sx={{ cursor: 'help' }} />
+                </Tooltip>
+              }
               onChange={(ledger: any) =>
                 setPostForm((state) => ({
                   ...state,

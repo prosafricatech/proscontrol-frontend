@@ -147,6 +147,25 @@ const PayrollPeriodAdvancesTab = ({
 
   const advances: PeriodAdvance[] = advancesData?.data || [];
 
+  // Advances are only ever read by PayrollService::computePayslip() at the
+  // moment a run's payslips are generated — same locked-snapshot concern as
+  // the ad-hoc adjustments tab (see PayrollPeriodAdjustmentsTab.tsx). Once
+  // this period's run has moved past Draft, uploading/editing/deleting an
+  // advance wouldn't be reflected in it, so those actions are disabled here
+  // (the backend enforces this too — see GuardsPayrollPeriodEditability).
+  // Paying/marking-paid an already-uploaded advance is unaffected — that's
+  // independent of whether it ever fed into a payslip.
+  const { data: periodRunsData } = useQuery({
+    queryKey: ['payrollRunsForPeriod', String(payrollPeriodId)],
+    queryFn: () =>
+      humanResourcesServices.getPayrollRunsList({
+        payroll_period_id: payrollPeriodId,
+      }),
+  });
+  const periodRuns: { status: string }[] = periodRunsData?.data || [];
+  const lockedRun = periodRuns.find((run) => run.status !== 'draft');
+  const isPeriodLocked = !!lockedRun;
+
   const { mutate: downloadTemplate, isPending: isDownloading } = useMutation({
     mutationFn: humanResourcesServices.downloadAdvancesTemplate,
     onSuccess: (blob: Blob) => {
@@ -282,6 +301,20 @@ const PayrollPeriodAdvancesTab = ({
   return (
     <Box>
       <Stack spacing={3}>
+        {isPeriodLocked && (
+          <Alert severity='warning' sx={{ borderRadius: 2 }}>
+            <Typography variant='body2' fontWeight={600} gutterBottom>
+              This period's payroll run is already {lockedRun?.status}
+            </Typography>
+            <Typography variant='body2' color='text.secondary'>
+              Uploading, editing, or deleting advances is read-only below —
+              changes here wouldn't be reflected in that run. Generate a new
+              run for this period to apply changes, or make them while a run
+              for it is still in Draft. Paying or marking already-uploaded
+              advances as paid is unaffected.
+            </Typography>
+          </Alert>
+        )}
         <Stack direction='row' spacing={1} justifyContent='flex-end' flexWrap='wrap'>
           <Button
             variant='outlined'
@@ -315,14 +348,25 @@ const PayrollPeriodAdvancesTab = ({
               Mark Advances as Paid
             </Button>
           )}
-          <Button
-            variant='contained'
-            startIcon={<UploadOutlined />}
-            onClick={() => setUploadDialogOpen(true)}
-            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
+          <Tooltip
+            title={
+              isPeriodLocked
+                ? `This period's run is already ${lockedRun?.status} — new advances won't be reflected in it`
+                : ''
+            }
           >
-            Upload Advances
-          </Button>
+            <span>
+              <Button
+                variant='contained'
+                startIcon={<UploadOutlined />}
+                onClick={() => setUploadDialogOpen(true)}
+                disabled={isPeriodLocked}
+                sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
+              >
+                Upload Advances
+              </Button>
+            </span>
+          </Tooltip>
         </Stack>
 
         <Alert
@@ -421,25 +465,41 @@ const PayrollPeriodAdvancesTab = ({
                       </TableCell>
                       <TableCell align='center'>
                         <Stack direction='row' spacing={0.5} justifyContent='center'>
-                          <Tooltip title={advance.paid_at ? 'Already paid — cannot edit' : 'Edit'}>
+                          <Tooltip
+                            title={
+                              advance.paid_at
+                                ? 'Already paid — cannot edit'
+                                : isPeriodLocked
+                                  ? 'Period is locked'
+                                  : 'Edit'
+                            }
+                          >
                             <span>
                               <IconButton
                                 size='small'
                                 onClick={() => handleEditClick(advance)}
                                 color='primary'
-                                disabled={!!advance.paid_at}
+                                disabled={!!advance.paid_at || isPeriodLocked}
                               >
                                 <EditOutlined fontSize='small' />
                               </IconButton>
                             </span>
                           </Tooltip>
-                          <Tooltip title={advance.paid_at ? 'Already paid — cannot delete' : 'Delete'}>
+                          <Tooltip
+                            title={
+                              advance.paid_at
+                                ? 'Already paid — cannot delete'
+                                : isPeriodLocked
+                                  ? 'Period is locked'
+                                  : 'Delete'
+                            }
+                          >
                             <span>
                               <IconButton
                                 size='small'
                                 onClick={() => handleDeleteClick(advance.id)}
                                 color='error'
-                                disabled={!!advance.paid_at}
+                                disabled={!!advance.paid_at || isPeriodLocked}
                               >
                                 <DeleteOutline fontSize='small' />
                               </IconButton>

@@ -13,6 +13,7 @@ import { Div } from '@jumbo/shared';
 import { AddOutlined } from '@mui/icons-material';
 import { LoadingButton } from '@mui/lab';
 import {
+  Alert,
   Button,
   Checkbox,
   Dialog,
@@ -202,6 +203,17 @@ const AllowanceTypeForm = ({
     return allowanceType?.id ? updateAllowanceType : addAllowanceType;
   }, [allowanceType?.id, updateAllowanceType, addAllowanceType]);
 
+  // These codes are how PayrollService/LeaveEncashmentService recognize a
+  // type — editing name/code/is_taxable would silently change payroll
+  // behavior (or break the match entirely). Only the ledger and description
+  // stay editable; the backend enforces the same restriction regardless of
+  // what the form submits.
+  const isReservedType =
+    !!allowanceType?.id &&
+    ['OVERTIME_PAY', 'HOLIDAY_PREMIUM', 'LEAVE_ENCASHMENT'].includes(
+      allowanceType?.code || ''
+    );
+
   const validationErrors =
     error?.response?.data?.validation_errors ||
     updateError?.response?.data?.validation_errors;
@@ -219,6 +231,13 @@ const AllowanceTypeForm = ({
       </DialogTitle>
       <DialogContent>
         <form autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
+          {isReservedType && (
+            <Alert severity='info' sx={{ mb: 2 }}>
+              This is a system-provisioned allowance type — payroll matches it
+              by its Code, so Name, Code, and Is Taxable are locked. Only the
+              ledger mapping and description can be changed here.
+            </Alert>
+          )}
           <Grid container rowSpacing={{ xs: 1, md: 2 }} spacing={2}>
             <Grid size={{ xs: 12, md: 8 }}>
               <Div sx={{ mt: 1, mb: 1 }}>
@@ -226,6 +245,7 @@ const AllowanceTypeForm = ({
                   label='Name'
                   size='small'
                   fullWidth
+                  disabled={isReservedType}
                   error={
                     !!errors?.name ||
                     !!getValidationMessage(validationErrors, 'name')
@@ -245,6 +265,7 @@ const AllowanceTypeForm = ({
                   label='Code'
                   size='small'
                   fullWidth
+                  disabled={isReservedType}
                   error={
                     !!errors?.code ||
                     !!getValidationMessage(validationErrors, 'code')
@@ -336,6 +357,7 @@ const AllowanceTypeForm = ({
                       control={
                         <Checkbox
                           checked={Boolean(field.value)}
+                          disabled={isReservedType}
                           onChange={(event) =>
                             field.onChange(event.target.checked)
                           }
