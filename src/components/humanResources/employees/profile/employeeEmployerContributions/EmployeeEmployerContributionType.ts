@@ -2,6 +2,7 @@ export interface EmployeeEmployerContributionType {
   id: number;
   employee_id: number;
   employer_contribution_type_id: number;
+  member_no?: string | null;
   value: number;
   effective_from: string;
   effective_to?: string | null;

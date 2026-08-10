@@ -15,6 +15,7 @@ export interface Employee {
   contract_start_date?: string | null;
   national_id: string;
   passport_number?: string;
+  tin?: string;
   photo_path?: string;
   department_id?: number;
   cost_center_id?: number | null;

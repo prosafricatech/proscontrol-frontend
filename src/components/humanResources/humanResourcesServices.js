@@ -842,15 +842,69 @@ humanResourcesServices.markPayrollPeriodPaid = async (id) => {
 }
 
 humanResourcesServices.getSalaryComponentsSummary = async (params = {}) => {
-    const { year, month, cost_center_ids = [] } = params;
+    const { from_year, from_month, to_year, to_month, cost_center_ids = [] } = params;
     const queryParams = {
-        year,
-        month,
+        from_year,
+        from_month,
+        to_year,
+        to_month,
         ...(cost_center_ids?.length ? { cost_center_ids } : {}),
     };
     const { data } = await axios.get('/api/humanResources/payroll-reports/salary-components-summary', {
         params: queryParams,
     });
+    return data;
+};
+humanResourcesServices.exportSalaryComponentsSummaryExcel = async (params = {}) => {
+    const { from_year, from_month, to_year, to_month, cost_center_ids = [] } = params;
+    const queryParams = {
+        from_year,
+        from_month,
+        to_year,
+        to_month,
+        ...(cost_center_ids?.length ? { cost_center_ids } : {}),
+    };
+    const { data } = await axios.post(
+        '/api/humanResources/payroll-reports/salary-components-summary-excel',
+        {},
+        { params: queryParams, responseType: 'blob' }
+    );
+    return data;
+};
+
+// ===== leave balances report ===== //
+humanResourcesServices.getLeaveBalancesReport = async (params = {}) => {
+    const { year, employee_id, department_id, leave_type_id } = params;
+    const { data } = await axios.get('/api/humanResources/leave-reports/balances', {
+        params: { year, employee_id, department_id, leave_type_id },
+    });
+    return data;
+};
+humanResourcesServices.exportLeaveBalancesReport = async (params = {}) => {
+    const { year, employee_id, department_id, leave_type_id } = params;
+    const { data } = await axios.post(
+        '/api/humanResources/leave-reports/balances-excel',
+        {},
+        { params: { year, employee_id, department_id, leave_type_id }, responseType: 'blob' }
+    );
+    return data;
+};
+
+// ===== staff loan report ===== //
+humanResourcesServices.getStaffLoansReport = async (params = {}) => {
+    const { employee_id, department_id, cost_center_id, status, only_outstanding } = params;
+    const { data } = await axios.get('/api/humanResources/loan-reports/staff-loans', {
+        params: { employee_id, department_id, cost_center_id, status, only_outstanding },
+    });
+    return data;
+};
+humanResourcesServices.exportStaffLoansReport = async (params = {}) => {
+    const { employee_id, department_id, cost_center_id, status, only_outstanding } = params;
+    const { data } = await axios.post(
+        '/api/humanResources/loan-reports/staff-loans-excel',
+        {},
+        { params: { employee_id, department_id, cost_center_id, status, only_outstanding }, responseType: 'blob' }
+    );
     return data;
 };
 
@@ -951,6 +1005,25 @@ humanResourcesServices.payAdvances = async ({ id, ...payload }) => {
 }
 humanResourcesServices.markAdvancesPaid = async ({ id, ...payload }) => {
     const { data } = await axios.post(`/api/humanResources/payrollPeriods/advances/${id}/mark-paid`, payload);
+    return data;
+}
+
+// ===== statutory schedule (PAYE / Deductions / Contributions) ===== //
+humanResourcesServices.statutorySchedule = async (periodId) => {
+    const { data } = await axios.get(`/api/humanResources/payrollPeriods/${periodId}/statutory-schedule`);
+    return data;
+}
+/**
+ * @param {number} periodId
+ * @param {{ section?: string, typeId?: number }} [options]
+ */
+humanResourcesServices.statutoryScheduleExcel = async (periodId, { section = 'all', typeId } = {}) => {
+    const params = { section };
+    if (typeId) params.type_id = typeId;
+    const { data } = await axios.post(`/api/humanResources/payrollPeriods/${periodId}/statutory-schedule`, {}, {
+        params,
+        responseType: 'blob',
+    });
     return data;
 }
 

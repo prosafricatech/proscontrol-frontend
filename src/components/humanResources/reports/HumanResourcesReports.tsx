@@ -2,11 +2,13 @@
 
 import JumboCardQuick from '@jumbo/components/JumboCardQuick/JumboCardQuick';
 import { useJumboTheme } from '@jumbo/components/JumboTheme/hooks';
-import { AssessmentOutlined } from '@mui/icons-material';
+import { AssessmentOutlined, BeachAccessOutlined, RequestQuoteOutlined } from '@mui/icons-material';
 import { Button, Dialog, DialogActions, Grid, Typography, useMediaQuery } from '@mui/material';
 import { useSearchParams } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 import PayrollSalaryComponentsDashboard from '../payrollPeriods/PayrollSalaryComponents/PayrollSalaryComponentsDashboard';
+import LeaveBalancesReport from './leaveBalances/LeaveBalancesReport';
+import StaffLoanReport from './staffLoans/StaffLoanReport';
 
 type ReportCardItem = {
   key: string;
@@ -21,6 +23,18 @@ const reportCards: ReportCardItem[] = [
     title: 'Salary Components Summary',
     icon: <AssessmentOutlined sx={{ fontSize: '40px' }} />,
     component: <PayrollSalaryComponentsDashboard />,
+  },
+  {
+    key: 'leave-balances',
+    title: 'Leave Balances',
+    icon: <BeachAccessOutlined sx={{ fontSize: '40px' }} />,
+    component: <LeaveBalancesReport />,
+  },
+  {
+    key: 'staff-loans',
+    title: 'Staff Loans',
+    icon: <RequestQuoteOutlined sx={{ fontSize: '40px' }} />,
+    component: <StaffLoanReport />,
   },
 ];
 

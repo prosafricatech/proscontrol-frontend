@@ -52,6 +52,7 @@ export default function PersonalInfoTab() {
         },
         { key: 'nationalId', label: 'National ID', value: employee.national_id, icon: <FingerprintOutlined fontSize='small' /> },
         { key: 'passportNumber', label: 'Passport Number', value: employee.passport_number, icon: <BadgeOutlined fontSize='small' /> },
+        { key: 'tin', label: 'TIN', value: employee.tin, icon: <FingerprintOutlined fontSize='small' /> },
       ],
     },
     {

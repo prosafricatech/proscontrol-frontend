@@ -26,6 +26,7 @@ type SalarySummaryResponse = {
     period?: string;
     total_employees?: number;
     total_payroll_runs?: number;
+    total_employer_cost?: number;
   };
   salary_components?: {
     basic_salary?: {
@@ -78,22 +79,28 @@ export default function PayrollSalarySummaryReportOnScreen({
   return (
     <>
       <Grid container spacing={2} mb={2}>
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1, p: 2, height: '100%' }}>
             <Typography variant='body2' color='text.secondary'>Period</Typography>
             <Typography variant='h6'>{summary?.period || '-'}</Typography>
           </Box>
         </Grid>
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1, p: 2, height: '100%' }}>
             <Typography variant='body2' color='text.secondary'>Employees</Typography>
             <Typography variant='h6'>{formatNumber(summary?.total_employees)}</Typography>
           </Box>
         </Grid>
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1, p: 2, height: '100%' }}>
             <Typography variant='body2' color='text.secondary'>Payroll Runs</Typography>
             <Typography variant='h6'>{formatNumber(summary?.total_payroll_runs)}</Typography>
+          </Box>
+        </Grid>
+        <Grid size={{ xs: 12, md: 3 }}>
+          <Box sx={{ border: '1px solid', borderColor: mainColor, borderRadius: 1, p: 2, height: '100%', bgcolor: `${mainColor}10` }}>
+            <Typography variant='body2' color='text.secondary'>Total Employer Cost</Typography>
+            <Typography variant='h6' sx={{ color: mainColor }}>{formatCurrency(summary?.total_employer_cost)}</Typography>
           </Box>
         </Grid>
       </Grid>
