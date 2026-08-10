@@ -161,6 +161,7 @@ const EmployeeEmployerContributionForm = ({
     employer_contribution_type_id: yup
       .number()
       .required('Contribution type is required'),
+    member_no: yup.string().nullable().max(50),
     value: yup
       .number()
       .typeError('Value must be a number')
@@ -175,6 +176,7 @@ const EmployeeEmployerContributionForm = ({
     control,
     reset,
     setValue,
+    register,
     formState: { errors },
   } = useForm<FormData>({
     resolver: yupResolver(validationSchema) as any,
@@ -183,6 +185,7 @@ const EmployeeEmployerContributionForm = ({
       employee_id: employeeEmployerContribution?.employee_id,
       employer_contribution_type_id:
         employeeEmployerContribution?.employer_contribution_type_id,
+      member_no: employeeEmployerContribution?.member_no || '',
       value: employeeEmployerContribution?.value,
       effective_from: employeeEmployerContribution?.effective_from || '',
       effective_to: employeeEmployerContribution?.effective_to || '',
@@ -195,6 +198,7 @@ const EmployeeEmployerContributionForm = ({
       employee_id: employeeEmployerContribution?.employee_id,
       employer_contribution_type_id:
         employeeEmployerContribution?.employer_contribution_type_id,
+      member_no: employeeEmployerContribution?.member_no || '',
       value: employeeEmployerContribution?.value,
       effective_from: employeeEmployerContribution?.effective_from || '',
       effective_to: employeeEmployerContribution?.effective_to || '',
@@ -295,6 +299,26 @@ const EmployeeEmployerContributionForm = ({
                     )}
                   />
                 )}
+              </Div>
+            </Grid>
+
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Div sx={{ mt: 1, mb: 1 }}>
+                <TextField
+                  label='Member No.'
+                  placeholder='e.g. NSSF No, WCF No'
+                  size='small'
+                  fullWidth
+                  error={
+                    !!errors?.member_no ||
+                    !!getValidationMessage(validationErrors, 'member_no')
+                  }
+                  helperText={
+                    errors.member_no?.message ||
+                    getValidationMessage(validationErrors, 'member_no')
+                  }
+                  {...register('member_no')}
+                />
               </Div>
             </Grid>
 

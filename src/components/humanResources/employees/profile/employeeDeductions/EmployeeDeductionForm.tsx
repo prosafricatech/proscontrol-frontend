@@ -33,6 +33,7 @@ interface FormData {
   id?: number;
   employee_id: number;
   deduction_type_id: number;
+  member_no?: string | null;
   value: string; // Keep as string for input handling
   effective_from: string;
   effective_to?: string | null;
@@ -40,6 +41,7 @@ interface FormData {
 
 const validationSchema = yup.object({
   deduction_type_id: yup.number().required('Deduction type is required'),
+  member_no: yup.string().nullable().max(50),
   value: yup
     .number()
     .typeError('Value must be a number')
@@ -75,6 +77,7 @@ const EmployeeDeductionForm = ({
     setValue,
     watch,
     reset,
+    register,
     formState: { errors },
   } = useForm<FormData>({
     resolver: yupResolver(validationSchema) as any,
@@ -82,6 +85,7 @@ const EmployeeDeductionForm = ({
       id: employeeDeduction?.id,
       employee_id: employeeDeduction?.employee_id || employeeId,
       deduction_type_id: employeeDeduction?.deduction_type_id,
+      member_no: employeeDeduction?.member_no || '',
       value: employeeDeduction?.value?.toString() || '',
       effective_from: employeeDeduction?.effective_from || '',
       effective_to: employeeDeduction?.effective_to || null,
@@ -229,6 +233,18 @@ const EmployeeDeductionForm = ({
                   )}
                 />
               )}
+            </Grid>
+
+            <Grid size={{ xs: 12, md: 6 }}>
+              <TextField
+                label='Member No.'
+                placeholder='e.g. NSSF No, WCF No'
+                fullWidth
+                size='small'
+                error={!!errors.member_no}
+                helperText={errors.member_no?.message}
+                {...register('member_no')}
+              />
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>

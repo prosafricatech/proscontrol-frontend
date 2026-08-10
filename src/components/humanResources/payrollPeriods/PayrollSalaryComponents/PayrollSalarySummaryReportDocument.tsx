@@ -4,21 +4,6 @@ import PdfLogo from '@/components/pdf/PdfLogo';
 import pdfStyles from '@/components/pdf/pdf-styles';
 import { Document, Page, Text, View } from '@react-pdf/renderer';
 
-const monthNames = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-];
-
 type GroupedSummaryItem = {
   type_id?: number | null;
   type_name?: string | null;
@@ -32,6 +17,7 @@ type SalarySummaryResponse = {
     period?: string;
     total_employees?: number;
     total_payroll_runs?: number;
+    total_employer_cost?: number;
   };
   salary_components?: {
     basic_salary?: {
@@ -49,8 +35,7 @@ type SalarySummaryResponse = {
 
 interface PayrollSalarySummaryReportDocumentProps {
   data: SalarySummaryResponse;
-  selectedYear: number;
-  selectedMonth: number;
+  periodLabel: string;
   selectedCostCenters: CostCenter[];
   organization: any;
   userName: string;
@@ -74,8 +59,7 @@ function formatNumber(value: number | string | null | undefined) {
 
 export default function PayrollSalarySummaryReportDocument({
   data,
-  selectedYear,
-  selectedMonth,
+  periodLabel,
   selectedCostCenters,
   organization,
   userName,
@@ -88,7 +72,6 @@ export default function PayrollSalarySummaryReportDocument({
   const deductions = data?.deductions ?? [];
   const employerContributions = data?.employer_contributions ?? [];
   const summary = data?.summary;
-  const periodLabel = summary?.period || `${monthNames[selectedMonth - 1]} ${selectedYear}`;
   const costCentersLabel = selectedCostCenters.length
     ? selectedCostCenters.map((cc) => cc.name).join(', ')
     : `${organization?.name || 'All'} (company wide)`;
@@ -112,17 +95,17 @@ export default function PayrollSalarySummaryReportDocument({
         </View>
 
         <View style={{ ...pdfStyles.tableRow, marginBottom: 10 }}>
-          <View style={{ flex: 1 }}>
-            <Text style={{ ...pdfStyles.minInfo, color: mainColor }}>Year</Text>
-            <Text style={{ ...pdfStyles.minInfo }}>{selectedYear}</Text>
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={{ ...pdfStyles.minInfo, color: mainColor }}>Month</Text>
-            <Text style={{ ...pdfStyles.minInfo }}>{monthNames[selectedMonth - 1]}</Text>
+          <View style={{ flex: 1.5 }}>
+            <Text style={{ ...pdfStyles.minInfo, color: mainColor }}>Period</Text>
+            <Text style={{ ...pdfStyles.minInfo }}>{periodLabel}</Text>
           </View>
           <View style={{ flex: 1 }}>
             <Text style={{ ...pdfStyles.minInfo, color: mainColor }}>Cost Centers</Text>
             <Text style={{ ...pdfStyles.minInfo }}>{costCentersLabel}</Text>
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={{ ...pdfStyles.minInfo, color: mainColor }}>Printed On</Text>
+            <Text style={{ ...pdfStyles.minInfo }}>{readableDate(undefined, true)}</Text>
           </View>
         </View>
 
@@ -136,8 +119,8 @@ export default function PayrollSalarySummaryReportDocument({
             <Text style={{ ...pdfStyles.minInfo }}>{formatNumber(summary?.total_payroll_runs)}</Text>
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={{ ...pdfStyles.minInfo, color: mainColor }}>Printed On</Text>
-            <Text style={{ ...pdfStyles.minInfo }}>{readableDate(undefined, true)}</Text>
+            <Text style={{ ...pdfStyles.minInfo, color: mainColor }}>Total Employer Cost</Text>
+            <Text style={{ ...pdfStyles.minInfo }}>{formatCurrency(summary?.total_employer_cost)}</Text>
           </View>
         </View>
 

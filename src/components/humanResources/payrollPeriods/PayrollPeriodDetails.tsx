@@ -5,6 +5,7 @@ import { Box, Tab, Tabs } from '@mui/material';
 import PayrollPeriodRunsTab from './tabs/PayrollPeriodRunsTab';
 import PayrollPeriodAdjustmentsTab from './tabs/PayrollPeriodAdjustmentsTab';
 import PayrollPeriodAdvancesTab from './tabs/PayrollPeriodAdvancesTab';
+import PayrollPeriodStatutoryTab from './tabs/PayrollPeriodStatutoryTab';
 
 interface PayrollPeriodDetailsProps {
   payrollPeriodId: number;
@@ -32,6 +33,7 @@ const PayrollPeriodDetails = ({
           <Tab label="Runs" />
           <Tab label="Ad-hoc Adjustments" />
           <Tab label="Advances" />
+          <Tab label="Statutory Schedule" />
         </Tabs>
       </Box>
 
@@ -53,6 +55,13 @@ const PayrollPeriodDetails = ({
         )}
         {activeTab === 2 && (
           <PayrollPeriodAdvancesTab
+            payrollPeriodId={payrollPeriodId}
+            year={year}
+            month={month}
+          />
+        )}
+        {activeTab === 3 && (
+          <PayrollPeriodStatutoryTab
             payrollPeriodId={payrollPeriodId}
             year={year}
             month={month}

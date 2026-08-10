@@ -2,6 +2,7 @@ export interface EmployeeDeductionType {
   id: number;
   employee_id: number;
   deduction_type_id: number;
+  member_no?: string | null;
   value: number;
   effective_from: string;
   effective_to?: string | null;

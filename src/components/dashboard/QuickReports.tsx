@@ -13,9 +13,12 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import JumboCardQuick from '@jumbo/components/JumboCardQuick/JumboCardQuick';
 import { useJumboTheme } from '@jumbo/components/JumboTheme/hooks';
 import {
+  AssessmentOutlined,
+  BeachAccessOutlined,
   FeedOutlined,
   ListAltOutlined,
   Money,
+  RequestQuoteOutlined,
   SummarizeOutlined,
   ViewTimelineOutlined,
 } from '@mui/icons-material';
@@ -56,6 +59,15 @@ const SalesManifest = lazy(
 const LedgerSelectProvider = lazy(
   () => import('../accounts/ledgers/forms/LedgerSelectProvider')
 );
+const LeaveBalancesReport = lazy(
+  () => import('../humanResources/reports/leaveBalances/LeaveBalancesReport')
+);
+const StaffLoanReport = lazy(
+  () => import('../humanResources/reports/staffLoans/StaffLoanReport')
+);
+const PayrollSalaryComponentsDashboard = lazy(
+  () => import('../humanResources/payrollPeriods/PayrollSalaryComponents/PayrollSalaryComponentsDashboard')
+);
 
 function QuickReports() {
   const { theme } = useJumboTheme();
@@ -73,6 +85,9 @@ function QuickReports() {
   const [openSalesManifest, setOpenSalesManifest] = useState(false);
   const [openDippingReport, setOpenDippingReport] = useState(false);
   const [fuelVouchersDialogOpen, setFuelVouchersDialogOpen] = useState(false);
+  const [openLeaveBalancesReport, setOpenLeaveBalancesReport] = useState(false);
+  const [openStaffLoanReport, setOpenStaffLoanReport] = useState(false);
+  const [openPayrollComponentsSummary, setOpenPayrollComponentsSummary] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const css = useProsERPStyles();
 
@@ -94,6 +109,9 @@ function QuickReports() {
     setStockMovementDialogOpen(false);
     setOpenSalesManifest(false);
     setFuelVouchersDialogOpen(false);
+    setOpenLeaveBalancesReport(false);
+    setOpenStaffLoanReport(false);
+    setOpenPayrollComponentsSummary(false);
   };
 
   return (
@@ -105,7 +123,10 @@ function QuickReports() {
           stockMovementDialogOpen ||
           openDippingReport ||
           openSalesManifest ||
-          openCashierReport
+          openCashierReport ||
+          openLeaveBalancesReport ||
+          openStaffLoanReport ||
+          openPayrollComponentsSummary
             ? 'lg'
             : fuelVouchersDialogOpen
               ? 'xl'
@@ -121,7 +142,10 @@ function QuickReports() {
           itemMovementDialogOpen ||
           stockMovementDialogOpen ||
           openSalesManifest ||
-          fuelVouchersDialogOpen
+          fuelVouchersDialogOpen ||
+          openLeaveBalancesReport ||
+          openStaffLoanReport ||
+          openPayrollComponentsSummary
         }
       >
         {openSalesAndCashSummary && (
@@ -175,6 +199,15 @@ function QuickReports() {
               />
             </LedgerSelectProvider>
           </StakeholderSelectProvider>
+        )}
+        {openLeaveBalancesReport && (
+          <LeaveBalancesReport onClose={() => setOpenLeaveBalancesReport(false)} />
+        )}
+        {openStaffLoanReport && (
+          <StaffLoanReport onClose={() => setOpenStaffLoanReport(false)} />
+        )}
+        {openPayrollComponentsSummary && (
+          <PayrollSalaryComponentsDashboard onClose={() => setOpenPayrollComponentsSummary(false)} />
         )}
 
         {(debtorsCreditorsDialogOpen ||
@@ -383,6 +416,60 @@ function QuickReports() {
                 <Typography>FV Report</Typography>
               </Grid>
             )}
+            {organizationHasSubscribed(MODULES.HUMAN_RESOURCES) &&
+              checkOrganizationPermission(PERMISSIONS.PAYROLL_READ) && (
+                <Grid
+                  size={{ xs: 6, md: 2, lg: 1.5 }}
+                  p={1}
+                  textAlign={'center'}
+                  sx={{
+                    cursor: 'pointer',
+                    '&:hover': {
+                      bgcolor: 'action.hover',
+                    },
+                  }}
+                  onClick={() => handleOpenDialog(setOpenPayrollComponentsSummary)}
+                >
+                  <AssessmentOutlined sx={{ fontSize: '40px' }} />
+                  <Typography>Payroll Components Summary</Typography>
+                </Grid>
+              )}
+            {organizationHasSubscribed(MODULES.HUMAN_RESOURCES) &&
+              checkOrganizationPermission(PERMISSIONS.LEAVE_ALLOCATIONS_READ) && (
+                <Grid
+                  size={{ xs: 6, md: 2, lg: 1.5 }}
+                  p={1}
+                  textAlign={'center'}
+                  sx={{
+                    cursor: 'pointer',
+                    '&:hover': {
+                      bgcolor: 'action.hover',
+                    },
+                  }}
+                  onClick={() => handleOpenDialog(setOpenLeaveBalancesReport)}
+                >
+                  <BeachAccessOutlined sx={{ fontSize: '40px' }} />
+                  <Typography>Leave Balances</Typography>
+                </Grid>
+              )}
+            {organizationHasSubscribed(MODULES.HUMAN_RESOURCES) &&
+              checkOrganizationPermission(PERMISSIONS.LOANS_READ) && (
+                <Grid
+                  size={{ xs: 6, md: 2, lg: 1.5 }}
+                  p={1}
+                  textAlign={'center'}
+                  sx={{
+                    cursor: 'pointer',
+                    '&:hover': {
+                      bgcolor: 'action.hover',
+                    },
+                  }}
+                  onClick={() => handleOpenDialog(setOpenStaffLoanReport)}
+                >
+                  <RequestQuoteOutlined sx={{ fontSize: '40px' }} />
+                  <Typography>Staff Loans</Typography>
+                </Grid>
+              )}
           </Grid>
         )}
       </JumboCardQuick>
