@@ -23,6 +23,7 @@ import {
   FormControlLabel,
   Grid,
   LinearProgress,
+  MenuItem,
   Switch,
   TextField,
 } from '@mui/material';
@@ -81,6 +82,10 @@ const EMPLOYMENT_OPTIONS: OptionType[] = [
   { label: 'Full Time', value: 'full_time' },
   { label: 'Part Time', value: 'part_time' },
   { label: 'Casual', value: 'casual' },
+];
+const RESIDENCE_STATUS_OPTIONS: OptionType[] = [
+  { label: 'Resident', value: 'resident' },
+  { label: 'Non-Resident', value: 'non_resident' },
 ];
 
 const EmployeeForm = ({
@@ -262,6 +267,7 @@ const EmployeeForm = ({
     national_id: yup.string().nullable().max(50),
     passport_number: yup.string().nullable().max(50),
     tin: yup.string().nullable().max(50),
+    residence_status: yup.string().nullable(),
     department_id: yup.number().nullable(),
     cost_center_id: yup.number().nullable().optional(),
     manager_id: yup.number().nullable().optional(),
@@ -308,6 +314,7 @@ const EmployeeForm = ({
       national_id: '',
       passport_number: '',
       tin: '',
+      residence_status: RESIDENCE_STATUS_OPTIONS[0].value,
       department_id: undefined,
       cost_center_id: null,
       manager_id: null,
@@ -363,6 +370,7 @@ const EmployeeForm = ({
       national_id: employee.national_id || '',
       passport_number: employee.passport_number || '',
       tin: employee.tin || '',
+      residence_status: employee.residence_status || RESIDENCE_STATUS_OPTIONS[0].value,
       department_id: employee.department_id || undefined,
       cost_center_id: employee.cost_center_id ?? null,
       manager_id: employee.manager_id ?? null,
@@ -577,6 +585,24 @@ const EmployeeForm = ({
                 helperText={errors.tin?.message}
                 {...register('tin')}
               />
+            </Grid>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <TextField
+                select
+                label='Residence Status'
+                size='small'
+                fullWidth
+                error={!!errors.residence_status}
+                helperText={errors.residence_status?.message}
+                {...register('residence_status')}
+                defaultValue={RESIDENCE_STATUS_OPTIONS[0].value}
+              >
+                {RESIDENCE_STATUS_OPTIONS.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </TextField>
             </Grid>
 
             {/* Employment Details */}

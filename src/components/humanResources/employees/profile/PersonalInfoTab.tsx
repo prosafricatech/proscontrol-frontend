@@ -16,7 +16,7 @@ import type { ReactElement } from 'react';
 import { readableDate } from '@/app/helpers/input-sanitization-helpers';
 import { useEmployeeProfile } from './EmployeeProfileProvider';
 
-const formatEmploymentType = (employmentType?: string | null) => {
+const formatEnumLabel = (employmentType?: string | null) => {
   if (!employmentType) return '';
   return employmentType
     .replace(/_/g, ' ')
@@ -53,6 +53,12 @@ export default function PersonalInfoTab() {
         { key: 'nationalId', label: 'National ID', value: employee.national_id, icon: <FingerprintOutlined fontSize='small' /> },
         { key: 'passportNumber', label: 'Passport Number', value: employee.passport_number, icon: <BadgeOutlined fontSize='small' /> },
         { key: 'tin', label: 'TIN', value: employee.tin, icon: <FingerprintOutlined fontSize='small' /> },
+        {
+          key: 'residenceStatus',
+          label: 'Residence Status',
+          value: formatEnumLabel(employee.residence_status),
+          icon: <BadgeOutlined fontSize='small' />,
+        },
       ],
     },
     {
@@ -70,7 +76,7 @@ export default function PersonalInfoTab() {
         {
           key: 'employmentType',
           label: 'Employment Type',
-          value: formatEmploymentType(employee.employment_type),
+          value: formatEnumLabel(employee.employment_type),
           icon: <WorkOutlineOutlined fontSize='small' />,
         },
         {
