@@ -96,7 +96,6 @@ function RFQDetail({ rfqId: rfqIdProp }: RFQDetailProps) {
   const [openEdit, setOpenEdit] = useState(false);
   const [openResponseForm, setOpenResponseForm] = useState(false);
   const [selectedStakeholder, setSelectedStakeholder] = useState<any | null>(null);
-  const [selectedQuoteByItem, setSelectedQuoteByItem] = useState<Record<number, any>>({});
   const [openPurchaseOrderDialog, setOpenPurchaseOrderDialog] = useState(false);
   const [openPrintDialog, setOpenPrintDialog] = useState(false);
   const [printSupplier, setPrintSupplier] = useState<any | null>(null);
@@ -237,8 +236,6 @@ function RFQDetail({ rfqId: rfqIdProp }: RFQDetailProps) {
         // All orders processed
         setPendingOrders([]);
         setCurrentOrderIndex(0);
-        // Clear selected quotes
-        setSelectedQuoteByItem({});
         // Refresh data
         queryClient.invalidateQueries({ queryKey: ['rfq', rfqId] });
         queryClient.invalidateQueries({ queryKey: ['rfqComparison', rfqId] });

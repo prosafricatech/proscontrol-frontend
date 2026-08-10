@@ -37,12 +37,8 @@ interface RFQPurchaseOrderTopInformationProps {
 }
 
 function RFQPurchaseOrderTopInformation({
-  setAddedStakeholder,
-  addedStakeholder,
-  setStakeholderQuickAddDisplay,
   order,
   order_date,
-  stakeholderQuickAddDisplay,
   rfqDetails,
   setValue,
   watch,

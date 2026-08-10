@@ -1,3 +1,13 @@
+import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
+import { CostCenter } from '@/components/masters/costCenters/CostCenterType';
+import { Currency } from '@/components/masters/Currencies/CurrencyType';
+import { MeasurementUnit } from '@/components/masters/measurementUnits/MeasurementUnitType';
+import { Stakeholder } from '@/components/masters/stakeholders/StakeholderType';
+import { Product } from '@/components/productAndServices/products/ProductType';
+import { getErrorMessage } from '@/utilities/helpers/errorHandler';
+import { yupResolver } from '@hookform/resolvers/yup';
+import { Div } from '@jumbo/shared';
+import { LoadingButton } from '@mui/lab';
 import {
   Autocomplete,
   Button,
@@ -10,22 +20,13 @@ import {
   Typography,
 } from '@mui/material';
 import { DateTimePicker } from '@mui/x-date-pickers';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import dayjs, { Dayjs } from 'dayjs';
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import posServices from '../../../../../pos-services';
-import { yupResolver } from '@hookform/resolvers/yup';
-import { useForm } from 'react-hook-form';
-import { LoadingButton } from '@mui/lab';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
-import { Div } from '@jumbo/shared';
-import { Product } from '@/components/productAndServices/products/ProductType';
-import { MeasurementUnit } from '@/components/masters/measurementUnits/MeasurementUnitType';
-import { Currency } from '@/components/masters/Currencies/CurrencyType';
-import { Stakeholder } from '@/components/masters/stakeholders/StakeholderType';
-import { CostCenter } from '@/components/masters/costCenters/CostCenterType';
 import SaleAdjustmentItemForm from './SaleAdjustmentItemForm';
 import SaleAdjustmentItemRow from './SaleAdjustmentItemRow';
 
@@ -90,7 +91,11 @@ interface SalesInvoiceAdjustmentProps {
   isEdit?: boolean;
 }
 
-function SalesInvoiceAdjustment({ isEdit, invoiceData, toggleOpen }: SalesInvoiceAdjustmentProps) {
+function SalesInvoiceAdjustment({
+  isEdit,
+  invoiceData,
+  toggleOpen,
+}: SalesInvoiceAdjustmentProps) {
   const [transaction_date] = useState<Dayjs>(
     isEdit ? dayjs(invoiceData.transaction_date) : dayjs()
   );
@@ -121,8 +126,8 @@ function SalesInvoiceAdjustment({ isEdit, invoiceData, toggleOpen }: SalesInvoic
       queryClient.invalidateQueries({ queryKey: ['counterSales'] });
     },
     onError: (error: any) => {
-      error?.response?.data?.message &&
-        enqueueSnackbar(error.response.data.message, { variant: 'error' });
+      // error?.response?.data?.message &&
+      enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
     },
   });
 
@@ -137,8 +142,8 @@ function SalesInvoiceAdjustment({ isEdit, invoiceData, toggleOpen }: SalesInvoic
       queryClient.invalidateQueries({ queryKey: ['counterSales'] });
     },
     onError: (error: any) => {
-      error?.response?.data?.message &&
-        enqueueSnackbar(error.response.data.message, { variant: 'error' });
+      // error?.response?.data?.message &&
+      enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
     },
   });
 
@@ -148,40 +153,59 @@ function SalesInvoiceAdjustment({ isEdit, invoiceData, toggleOpen }: SalesInvoic
   );
 
   const validationSchema = yup.object({
-    transaction_date: yup.string().required('Invoice Date is required').typeError('Invoice Date is required'),
-    note_type: yup.string().required('Note Type is required').typeError('Note Type is required'),
-    narration: yup.string().required('Narration is required').typeError('Narration is required'),
+    transaction_date: yup
+      .string()
+      .required('Invoice Date is required')
+      .typeError('Invoice Date is required'),
+    note_type: yup
+      .string()
+      .required('Note Type is required')
+      .typeError('Note Type is required'),
+    narration: yup
+      .string()
+      .required('Narration is required')
+      .typeError('Narration is required'),
     items: yup.array().of(
-      yup.object({
-        complement_ledger_id: yup.number().required('Complement Ledger is required').min(1, 'Select a valid Complement Ledger').typeError('Complement Ledger is required'),
-        measurement_unit_id: yup
-          .number()
-          .nullable()
-          .when(['product_id', 'description'], {
-            is: (product_id: number | null, description: string) => !product_id && !!description,
-            then: (schema) => schema.required('Measurement Unit is required').typeError('Measurement Unit is required'),
-            otherwise: (schema) => schema.notRequired().nullable(),
-          }),
-        product_id: yup.number().nullable().notRequired(),
-        quantity: yup
-          .number()
-          .required('Quantity is required')
-          .typeError('Quantity must be a number')
-          .positive('Quantity must be positive')
-          .typeError('Quantity is required'),
-        rate: yup
-          .number()
-          .required('Rate is required')
-          .typeError('Rate must be a number')
-          .positive('Rate must be positive')
-          .typeError('Rate is required'),
-        description: yup.string().nullable().notRequired(),
-        isSelected: yup.boolean().required(),
-      }).test(
-        'product-or-description',
-        'Either Product or Description must be provided',
-        (value) => !!(value.product_id || value.description)
-      )
+      yup
+        .object({
+          complement_ledger_id: yup
+            .number()
+            .required('Complement Ledger is required')
+            .min(1, 'Select a valid Complement Ledger')
+            .typeError('Complement Ledger is required'),
+          measurement_unit_id: yup
+            .number()
+            .nullable()
+            .when(['product_id', 'description'], {
+              is: (product_id: number | null, description: string) =>
+                !product_id && !!description,
+              then: (schema) =>
+                schema
+                  .required('Measurement Unit is required')
+                  .typeError('Measurement Unit is required'),
+              otherwise: (schema) => schema.notRequired().nullable(),
+            }),
+          product_id: yup.number().nullable().notRequired(),
+          quantity: yup
+            .number()
+            .required('Quantity is required')
+            .typeError('Quantity must be a number')
+            .positive('Quantity must be positive')
+            .typeError('Quantity is required'),
+          rate: yup
+            .number()
+            .required('Rate is required')
+            .typeError('Rate must be a number')
+            .positive('Rate must be positive')
+            .typeError('Rate is required'),
+          description: yup.string().nullable().notRequired(),
+          isSelected: yup.boolean().required(),
+        })
+        .test(
+          'product-or-description',
+          'Either Product or Description must be provided',
+          (value) => !!(value.product_id || value.description)
+        )
     ),
   });
 
@@ -211,7 +235,9 @@ function SalesInvoiceAdjustment({ isEdit, invoiceData, toggleOpen }: SalesInvoic
         quantity: item.quantity,
         rate: item.rate,
         description: item.description || '',
-        complement_ledger_id: isEdit ? item.complement_ledger_id : item?.product?.category?.income_ledger_id || null,
+        complement_ledger_id: isEdit
+          ? item.complement_ledger_id
+          : item?.product?.category?.income_ledger_id || null,
         isSelected: isEdit || item.isSelected || false,
       })),
     },
@@ -223,7 +249,8 @@ function SalesInvoiceAdjustment({ isEdit, invoiceData, toggleOpen }: SalesInvoic
     let total = 0;
     sale_items.forEach((item, index) => {
       if (formValues.items?.[index]?.isSelected) {
-        const quantity = parseFloat(formValues.items?.[index]?.quantity as any) || 0;
+        const quantity =
+          parseFloat(formValues.items?.[index]?.quantity as any) || 0;
         const rate = parseFloat(formValues.items?.[index]?.rate as any) || 0;
         total += quantity * rate;
       }
@@ -237,7 +264,8 @@ function SalesInvoiceAdjustment({ isEdit, invoiceData, toggleOpen }: SalesInvoic
           Number(item.product?.vat_exempted) !== 1
       )
       .reduce((sum, item, index) => {
-        const quantity = parseFloat(formValues.items?.[index]?.quantity as any) || 0;
+        const quantity =
+          parseFloat(formValues.items?.[index]?.quantity as any) || 0;
         const rate = parseFloat(formValues.items?.[index]?.rate as any) || 0;
         const vatPercentage = item.vat_percentage || 0;
         return sum + (quantity * rate * vatPercentage) / 100;
@@ -303,16 +331,16 @@ function SalesInvoiceAdjustment({ isEdit, invoiceData, toggleOpen }: SalesInvoic
       <DialogTitle>
         <Grid container columnSpacing={2}>
           <Grid size={12} mb={3} textAlign={'center'}>
-            <Typography variant="h3">{headerText}</Typography>
+            <Typography variant='h3'>{headerText}</Typography>
           </Grid>
 
-          <Grid size={{xs: 12, md: 9}} mb={2}>
-            <form autoComplete="off">
+          <Grid size={{ xs: 12, md: 9 }} mb={2}>
+            <form autoComplete='off'>
               <Grid container columnSpacing={1} rowSpacing={2}>
-                <Grid size={{xs: 12, md: 4}}>
+                <Grid size={{ xs: 12, md: 4 }}>
                   <Div sx={{ mt: 0.3 }}>
                     <DateTimePicker
-                      label="Note Date"
+                      label='Note Date'
                       minDate={dayjs(organization?.recording_start_date)}
                       defaultValue={transaction_date}
                       slotProps={{
@@ -334,10 +362,10 @@ function SalesInvoiceAdjustment({ isEdit, invoiceData, toggleOpen }: SalesInvoic
                     />
                   </Div>
                 </Grid>
-                <Grid size={{xs: 12, md: 4}}>
+                <Grid size={{ xs: 12, md: 4 }}>
                   <Div sx={{ mt: 0.3 }}>
                     <Autocomplete
-                      id="checkboxes-noteType"
+                      id='checkboxes-noteType'
                       options={noteType}
                       isOptionEqualToValue={(option, value) =>
                         option.value === value.value
@@ -352,8 +380,8 @@ function SalesInvoiceAdjustment({ isEdit, invoiceData, toggleOpen }: SalesInvoic
                       renderInput={(params) => (
                         <TextField
                           {...params}
-                          label="Note Type"
-                          size="small"
+                          label='Note Type'
+                          size='small'
                           fullWidth
                           error={!!errors.note_type}
                           helperText={errors.note_type?.message}
@@ -368,11 +396,11 @@ function SalesInvoiceAdjustment({ isEdit, invoiceData, toggleOpen }: SalesInvoic
                     />
                   </Div>
                 </Grid>
-                <Grid size={{xs: 12, md: 4}}>
+                <Grid size={{ xs: 12, md: 4 }}>
                   <Div sx={{ mt: 0.3 }}>
                     <TextField
-                      size="small"
-                      label="Narration"
+                      size='small'
+                      label='Narration'
                       fullWidth
                       multiline
                       minRows={2}
@@ -386,21 +414,21 @@ function SalesInvoiceAdjustment({ isEdit, invoiceData, toggleOpen }: SalesInvoic
             </form>
           </Grid>
 
-          <Grid size={{xs: 12, md: 3}}>
+          <Grid size={{ xs: 12, md: 3 }}>
             <Grid container columnSpacing={1}>
               <Grid size={12}>
-                <Typography align="center" variant="h3">
+                <Typography align='center' variant='h3'>
                   Summary
                 </Typography>
                 <Divider />
               </Grid>
               <Grid size={6}>
-                <Typography align="left" variant="body2">
+                <Typography align='left' variant='body2'>
                   Total:
                 </Typography>
               </Grid>
               <Grid size={6}>
-                <Typography align="right" variant="h5">
+                <Typography align='right' variant='h5'>
                   {totalAmount?.toLocaleString('en-US', {
                     style: 'currency',
                     currency: currencyCode,
@@ -410,12 +438,12 @@ function SalesInvoiceAdjustment({ isEdit, invoiceData, toggleOpen }: SalesInvoic
               {vat_registered && (
                 <>
                   <Grid size={6}>
-                    <Typography align="left" variant="body2">
+                    <Typography align='left' variant='body2'>
                       VAT Amount:
                     </Typography>
                   </Grid>
                   <Grid size={6}>
-                    <Typography align="right" variant="h5">
+                    <Typography align='right' variant='h5'>
                       {vatableAmount?.toLocaleString('en-US', {
                         style: 'currency',
                         currency: currencyCode,
@@ -423,12 +451,12 @@ function SalesInvoiceAdjustment({ isEdit, invoiceData, toggleOpen }: SalesInvoic
                     </Typography>
                   </Grid>
                   <Grid size={6}>
-                    <Typography align="left" variant="body2">
+                    <Typography align='left' variant='body2'>
                       Grand Total:
                     </Typography>
                   </Grid>
                   <Grid size={6}>
-                    <Typography align="right" variant="h5">
+                    <Typography align='right' variant='h5'>
                       {(totalAmount + vatableAmount).toLocaleString('en-US', {
                         style: 'currency',
                         currency: currencyCode,
@@ -443,7 +471,10 @@ function SalesInvoiceAdjustment({ isEdit, invoiceData, toggleOpen }: SalesInvoic
       </DialogTitle>
 
       <DialogContent>
-        <SaleAdjustmentItemForm items={sale_items as any} setItems={setSale_items as any} />
+        <SaleAdjustmentItemForm
+          items={sale_items as any}
+          setItems={setSale_items as any}
+        />
         {sale_items.map((item: any, index) => (
           <SaleAdjustmentItemRow
             key={index}
@@ -464,16 +495,20 @@ function SalesInvoiceAdjustment({ isEdit, invoiceData, toggleOpen }: SalesInvoic
       </DialogContent>
 
       <DialogActions>
-        <Button size="small" onClick={() => toggleOpen(false)}>
+        <Button size='small' onClick={() => toggleOpen(false)}>
           Cancel
         </Button>
         <LoadingButton
-          loading={invoiceAdjustment.isPending || updateInvoiceAdjustment.isPending}
-          size="small"
-          type="submit"
-          variant="contained"
+          loading={
+            invoiceAdjustment.isPending || updateInvoiceAdjustment.isPending
+          }
+          size='small'
+          type='submit'
+          variant='contained'
           onClick={handleSubmit(onSubmit)}
-          disabled={formValues.items?.filter((item) => item?.isSelected).length === 0}
+          disabled={
+            formValues.items?.filter((item) => item?.isSelected).length === 0
+          }
         >
           Submit
         </LoadingButton>

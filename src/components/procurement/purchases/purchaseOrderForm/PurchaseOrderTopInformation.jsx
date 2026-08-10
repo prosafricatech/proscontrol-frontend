@@ -76,8 +76,8 @@ function PurchaseOrderTopInformation({setValue, errors, clearErrors, watch, regi
                             shouldTouch:true,
                         });
                         setValue('vrn', newValue ? newValue.vrn : null);
-                        setValue('instant_pay', !newValue?.id ? true : false);
-                        setValue('instant_receive', !newValue?.id ? true : false);
+                        setValue('instant_pay', !newValue?.id ? checkOrganizationPermission(PERMISSIONS.PURCHASES_INSTANT_PAY) : false);
+                        setValue('instant_receive', !newValue?.id ? checkOrganizationPermission(PERMISSIONS.PURCHASES_INSTANT_RECEIVE) : false);
                         if(!newValue?.id){
                             setValue('instant_invoice',false,{
                             shouldDirty: true,

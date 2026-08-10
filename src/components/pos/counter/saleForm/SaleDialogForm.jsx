@@ -5,6 +5,7 @@ import stakeholderServices from '@/components/masters/stakeholders/stakeholder-s
 import { useVFD } from '@/components/vfd/VFDProvider';
 import { MODULE_SETTINGS } from '@/utilities/constants/moduleSettings';
 import { PERMISSIONS } from '@/utilities/constants/permissions';
+import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useJumboTheme } from '@jumbo/components/JumboTheme/hooks';
 import { HighlightOff, Link, LinkOff } from '@mui/icons-material';
@@ -256,8 +257,8 @@ function SaleDialogForm({ toggleOpen, sale = null }) {
       queryClient.invalidateQueries({ queryKey: ['counterSales'] });
     },
     onError: (error) => {
-      error?.response?.data?.message &&
-        enqueueSnackbar(error.response.data.message, { variant: 'error' });
+      // error?.response?.data?.message &&
+      enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
     },
   });
 
@@ -270,7 +271,7 @@ function SaleDialogForm({ toggleOpen, sale = null }) {
     },
     onError: (error) => {
       error?.response?.data?.message &&
-        enqueueSnackbar(error.response.data.message, { variant: 'error' });
+        enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
     },
   });
 

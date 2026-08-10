@@ -5,6 +5,7 @@ import ProjectSelector from '@/components/projectManagement/projects/ProjectSele
 import StoreSelector from '@/components/procurement/stores/StoreSelector';
 import UsersSelector from '@/components/sharedComponents/UsersSelector';
 import { User } from '@/types/auth-types';
+import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { MODULES } from '@/utilities/constants/modules';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Div } from '@jumbo/shared';
@@ -158,18 +159,7 @@ const OutletFormDialog: React.FC<OutletFormProps> = ({
       setOpenDialog(false);
     },
     onError: (error: unknown) => {
-      let message = 'Something went wrong';
-
-      if (
-        typeof error === 'object' &&
-        error !== null &&
-        'response' in error &&
-        typeof (error as any).response?.data?.message === 'string'
-      ) {
-        message = (error as any).response.data.message;
-      } else if (error instanceof Error) {
-        message = error.message;
-      }
+      let message = getErrorMessage(error);
 
       enqueueSnackbar(message, { variant: 'error' });
     },
@@ -187,18 +177,7 @@ const OutletFormDialog: React.FC<OutletFormProps> = ({
       setOpenDialog(false);
     },
     onError: (error: unknown) => {
-      let message = 'Something went wrong';
-
-      if (
-        typeof error === 'object' &&
-        error !== null &&
-        'response' in error &&
-        typeof (error as any).response?.data?.message === 'string'
-      ) {
-        message = (error as any).response.data.message;
-      } else if (error instanceof Error) {
-        message = error.message;
-      }
+      let message = getErrorMessage(error);
 
       enqueueSnackbar(message, { variant: 'error' });
     },

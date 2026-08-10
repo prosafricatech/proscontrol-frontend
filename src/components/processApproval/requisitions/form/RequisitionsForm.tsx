@@ -5,6 +5,7 @@ import { useCurrencySelect } from '@/components/masters/Currencies/CurrencySelec
 import CommaSeparatedField from '@/shared/Inputs/CommaSeparatedField';
 import { PERMISSIONS } from '@/utilities/constants/permissions';
 import { PROCESS_TYPES } from '@/utilities/constants/processTypes';
+import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Div } from '@jumbo/shared';
 import { HighlightOff } from '@mui/icons-material';
@@ -281,7 +282,7 @@ function RequisitionsForm({
     },
     onError: (error: any) => {
       error?.response?.data?.message &&
-        enqueueSnackbar(error.response.data.message, { variant: 'error' });
+        enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
     },
   });
 
@@ -296,7 +297,7 @@ function RequisitionsForm({
     },
     onError: (error: any) => {
       error?.response?.data?.message &&
-        enqueueSnackbar(error.response.data.message, { variant: 'error' });
+        enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
     },
   });
 
@@ -329,30 +330,24 @@ function RequisitionsForm({
     () => extractList(myLedgersResponse) as ImprestLedgerOption[],
     [myLedgersResponse]
   );
-  
-  const notAllowedImprestLedgers = React.useMemo(
-    () => {
-      const allImprestLedgerIds = Array.from(
-        new Set(
-          imprestLedgerOptions
-            .filter(
-              (item) =>
-                String(item.type || '').toLowerCase() === 'imprest' ||
-                !item.type
-            )
-            .map((item) => Number(item.ledger_id || item.ledger?.id || 0))
-            .filter((id) => Number.isFinite(id) && id > 0)
-        )
-      );
 
-      const selectedImprestLedgerId = watch('imprest_ledger_id');
+  const notAllowedImprestLedgers = React.useMemo(() => {
+    const allImprestLedgerIds = Array.from(
+      new Set(
+        imprestLedgerOptions
+          .filter(
+            (item) =>
+              String(item.type || '').toLowerCase() === 'imprest' || !item.type
+          )
+          .map((item) => Number(item.ledger_id || item.ledger?.id || 0))
+          .filter((id) => Number.isFinite(id) && id > 0)
+      )
+    );
 
-      return allImprestLedgerIds.filter(
-        (id) => id !== selectedImprestLedgerId
-      );
-    },
-    [imprestLedgerOptions, watch('imprest_ledger_id')]
-  );
+    const selectedImprestLedgerId = watch('imprest_ledger_id');
+
+    return allImprestLedgerIds.filter((id) => id !== selectedImprestLedgerId);
+  }, [imprestLedgerOptions, watch('imprest_ledger_id')]);
 
   const saveMutation = React.useMemo(() => {
     return requisition && !isDuplicate ? updateRequisition : addRequisition;

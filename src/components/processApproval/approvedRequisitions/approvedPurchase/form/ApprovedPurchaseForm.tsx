@@ -10,6 +10,8 @@ import PurchaseOrderPaymentAndReceive from '@/components/procurement/purchases/p
 import PurchaseOrderSummary from '@/components/procurement/purchases/purchaseOrderForm/PurchaseOrderSummary';
 import { Product } from '@/components/productAndServices/products/ProductType';
 import CommaSeparatedField from '@/shared/Inputs/CommaSeparatedField';
+import { PERMISSIONS } from '@/utilities/constants/permissions';
+import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { yupResolver } from '@hookform/resolvers/yup';
 import {
   AddOutlined,
@@ -152,7 +154,7 @@ const ApprovedPurchaseForm: React.FC<ApprovedPurchaseFormProps> = ({
   order,
   prevApprovedDetails,
 }) => {
-  const { authOrganization } = useJumboAuth();
+  const { authOrganization, checkOrganizationPermission } = useJumboAuth();
   const [totalAmount, setTotalAmount] = useState(0);
   const [vatableAmount, setVatableAmount] = useState(0);
   const [order_date] = useState(
@@ -166,6 +168,12 @@ const ApprovedPurchaseForm: React.FC<ApprovedPurchaseFormProps> = ({
     useState(false);
   const [addedStakeholder, setAddedStakeholder] = useState<any>(null);
   const [activeTab, setActiveTab] = useState(0);
+  const canInstantPay = checkOrganizationPermission(
+    PERMISSIONS.PURCHASES_INSTANT_PAY
+  );
+  const canInstantReceive = checkOrganizationPermission(
+    PERMISSIONS.PURCHASES_INSTANT_RECEIVE
+  );
 
   const approvedAdditionalCostsSource =
     approvedDetails?.additional_costs ||
@@ -244,10 +252,13 @@ const ApprovedPurchaseForm: React.FC<ApprovedPurchaseFormProps> = ({
           // If we have prevApprovedDetails, check the original fulfillment_type
           if (prevApprovedDetails?.items) {
             const prevItem = prevApprovedDetails.items.find(
-              (prev: any) => 
+              (prev: any) =>
                 prev.id === orderItem.requisition_approval_product_item_id
             );
-            return prevItem?.fulfillment_type === 'PURCHASE' || approvedDetails?.process_type === 'PURCHASE';
+            return (
+              prevItem?.fulfillment_type === 'PURCHASE' ||
+              approvedDetails?.process_type === 'PURCHASE'
+            );
           }
           // If no prevApprovedDetails, check the order item's data
           // The order item might have a flag or we assume it's from previous filter
@@ -270,16 +281,17 @@ const ApprovedPurchaseForm: React.FC<ApprovedPurchaseFormProps> = ({
             fulfillment_type: 'PURCHASE',
           };
         });
-    } 
+    }
     // If creating a new order from approvedDetails
     else if (approvedDetails?.items) {
       // Filter only PURCHASE items with unordered_quantity > 0
       const purchaseItems = approvedDetails.items.filter(
-        (item: any) => 
-          item.unordered_quantity > 0 && 
-          item.fulfillment_type === 'PURCHASE' || approvedDetails?.process_type === 'PURCHASE'
+        (item: any) =>
+          (item.unordered_quantity > 0 &&
+            item.fulfillment_type === 'PURCHASE') ||
+          approvedDetails?.process_type === 'PURCHASE'
       );
-      
+
       return purchaseItems.map((item: any) => ({
         ...item,
         quantity: item.unordered_quantity,
@@ -368,14 +380,18 @@ const ApprovedPurchaseForm: React.FC<ApprovedPurchaseFormProps> = ({
       vat_registered: !!authOrganization?.organization.settings?.vat_registered,
       reference: order?.reference || '',
       stakeholder_id: order?.stakeholder?.id || null,
-      store_id: order?.instant_receive && order?.store ? order.store.id : null,
+      store_id:
+        order?.instant_receive && canInstantReceive && order?.store
+          ? order.store.id
+          : null,
       date_required: order?.date_required,
       remarks: order?.remarks,
       terms_of_payment: order?.terms_of_payment,
-      instant_pay: getBool(order?.instant_pay, true),
-      instant_receive: getBool(order?.instant_receive, false),
+      instant_pay: getBool(order?.instant_pay, canInstantPay) && canInstantPay,
+      instant_receive:
+        getBool(order?.instant_receive, false) && canInstantReceive,
       credit_ledger_id:
-        order?.instant_pay && order?.credit_ledger
+        order?.instant_pay && canInstantPay && order?.credit_ledger
           ? order.credit_ledger.id
           : null,
       cost_centers: approvedRequisition
@@ -397,6 +413,7 @@ const ApprovedPurchaseForm: React.FC<ApprovedPurchaseFormProps> = ({
 
   const {
     setValue,
+    getValues,
     handleSubmit,
     watch,
     register,
@@ -451,6 +468,34 @@ const ApprovedPurchaseForm: React.FC<ApprovedPurchaseFormProps> = ({
   }, [items]);
 
   useEffect(() => {
+    if (!canInstantPay && getValues('instant_pay')) {
+      setValue('instant_pay', false, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+      setValue('credit_ledger_id', null, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+      setValue('stakeholder_ledger_id', null, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+    }
+
+    if (!canInstantReceive && getValues('instant_receive')) {
+      setValue('instant_receive', false, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+      setValue('store_id', null, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+    }
+  }, [canInstantPay, canInstantReceive, getValues, setValue]);
+
+  useEffect(() => {
     setValue(
       'additional_costs',
       additionalCosts.map((cost) => ({
@@ -495,7 +540,7 @@ const ApprovedPurchaseForm: React.FC<ApprovedPurchaseFormProps> = ({
     },
     onError: (error: any) => {
       error?.response?.data?.message &&
-        enqueueSnackbar(error.response.data.message, { variant: 'error' });
+        enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
     },
   });
 
@@ -509,7 +554,7 @@ const ApprovedPurchaseForm: React.FC<ApprovedPurchaseFormProps> = ({
     },
     onError: (error: any) => {
       error?.response?.data?.message &&
-        enqueueSnackbar(error.response.data.message, { variant: 'error' });
+        enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
     },
   });
 
@@ -549,7 +594,11 @@ const ApprovedPurchaseForm: React.FC<ApprovedPurchaseFormProps> = ({
       });
     } else if (approvedDetails?.items) {
       sourceItems = approvedDetails.items
-        .filter((item: any) => item.fulfillment_type === 'PURCHASE' || approvedDetails?.process_type === 'PURCHASE')
+        .filter(
+          (item: any) =>
+            item.fulfillment_type === 'PURCHASE' ||
+            approvedDetails?.process_type === 'PURCHASE'
+        )
         .map((item: any) => ({
           ...item,
           quantity: sanitizedNumber(item.unordered_quantity),

@@ -3,6 +3,7 @@ import StakeholderQuickAdd from '@/components/masters/stakeholders/StakeholderQu
 import { Stakeholder } from '@/components/masters/stakeholders/StakeholderType';
 import { MODULE_SETTINGS } from '@/utilities/constants/moduleSettings';
 import { PERMISSIONS } from '@/utilities/constants/permissions';
+import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Div } from '@jumbo/shared';
 import { AddOutlined, HighlightOff } from '@mui/icons-material';
@@ -172,7 +173,7 @@ function ProformaForm({ toggleOpen, proforma = null }: ProformaFormProps) {
   // Alert when currency changes and items exist
   useEffect(() => {
     const previousCurrencyId = previousCurrencyIdRef.current;
-    
+
     // Check if currency has actually changed
     if (previousCurrencyId !== currentCurrencyId && items.length > 0) {
       setShowCurrencyChangeAlert(true);
@@ -180,7 +181,7 @@ function ProformaForm({ toggleOpen, proforma = null }: ProformaFormProps) {
       // Hide alert if currency reverts to previous
       setShowCurrencyChangeAlert(false);
     }
-    
+
     // Update the ref after checking
     previousCurrencyIdRef.current = currentCurrencyId;
   }, [currentCurrencyId, items.length, proforma]);
@@ -254,8 +255,8 @@ function ProformaForm({ toggleOpen, proforma = null }: ProformaFormProps) {
       queryClient.invalidateQueries({ queryKey: ['proformaInvoices'] });
     },
     onError: (error: any) => {
-      error?.response?.data?.message &&
-        enqueueSnackbar(error.response.data.message, { variant: 'error' });
+      // error?.response?.data?.message &&
+      enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
     },
   });
 
@@ -268,8 +269,8 @@ function ProformaForm({ toggleOpen, proforma = null }: ProformaFormProps) {
       queryClient.invalidateQueries({ queryKey: ['proformaDetails'] });
     },
     onError: (error: any) => {
-      error?.response?.data?.message &&
-        enqueueSnackbar(error.response.data.message, { variant: 'error' });
+      // error?.response?.data?.message &&
+      enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
     },
   });
 
@@ -308,7 +309,7 @@ function ProformaForm({ toggleOpen, proforma = null }: ProformaFormProps) {
     setClearFormKey((prev) => prev + 1);
   };
 
-  const selectedCurrencyId = watch("currency_id");
+  const selectedCurrencyId = watch('currency_id');
 
   return (
     <React.Fragment>
@@ -645,14 +646,15 @@ function ProformaForm({ toggleOpen, proforma = null }: ProformaFormProps) {
 
           {/* Currency Change Alert */}
           {showCurrencyChangeAlert && items.length > 0 && (
-            <Alert 
-              severity="warning" 
+            <Alert
+              severity='warning'
               onClose={() => setShowCurrencyChangeAlert(false)}
               sx={{ mb: 1 }}
             >
-              <Typography variant="body2">
-                <strong>Currency Changed!</strong> You have {items.length} item(s) already added with the previous currency. 
-                Please review all item prices to ensure they are correct for the new currency.
+              <Typography variant='body2'>
+                <strong>Currency Changed!</strong> You have {items.length}{' '}
+                item(s) already added with the previous currency. Please review
+                all item prices to ensure they are correct for the new currency.
               </Typography>
             </Alert>
           )}

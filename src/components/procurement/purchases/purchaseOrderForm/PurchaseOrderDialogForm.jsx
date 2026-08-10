@@ -1,5 +1,6 @@
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import { useCurrencySelect } from '@/components/masters/Currencies/CurrencySelectProvider';
+import { PERMISSIONS } from '@/utilities/constants/permissions';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { HighlightOff } from '@mui/icons-material';
 import { LoadingButton } from '@mui/lab';
@@ -30,7 +31,7 @@ import PurchaseOrderSummary from './PurchaseOrderSummary';
 import PurchaseOrderTopInformation from './PurchaseOrderTopInformation';
 
 function PurchaseOrderDialogForm({ toggleOpen, order = null }) {
-  const { authOrganization } = useJumboAuth();
+  const { authOrganization, checkOrganizationPermission } = useJumboAuth();
   const costCenters = authOrganization?.costCenters;
   const [totalAmount, setTotalAmount] = useState(0);
   const [vatableAmount, setVatableAmount] = useState(0);
@@ -50,6 +51,12 @@ function PurchaseOrderDialogForm({ toggleOpen, order = null }) {
   const [clearFormKey, setClearFormKey] = useState(0);
   const [submitItemForm, setSubmitItemForm] = useState(false);
   const { currencies = [] } = useCurrencySelect();
+  const canInstantPay = checkOrganizationPermission(
+    PERMISSIONS.PURCHASES_INSTANT_PAY
+  );
+  const canInstantReceive = checkOrganizationPermission(
+    PERMISSIONS.PURCHASES_INSTANT_RECEIVE
+  );
 
   const getExchangeRateByCurrencyId = (currencyId) => {
     if (!currencyId) return 1;
@@ -159,11 +166,12 @@ function PurchaseOrderDialogForm({ toggleOpen, order = null }) {
       reference: order && order.reference,
       stakeholder_ledger_id: null,
       date_required: order && order.date_required,
-      instant_pay: order ? !!order.instant_pay : true,
-      instant_receive: order ? !!order.instant_receive : false,
+      instant_pay: order ? !!order.instant_pay && canInstantPay : canInstantPay,
+      instant_receive: order ? !!order.instant_receive && canInstantReceive : false,
       credit_ledger_id:
-        order && order.instant_pay ? order.credit_ledger.id : null,
-      store_id: order && !!order.instant_receive ? order.store.id : null,
+        order && order.instant_pay && canInstantPay ? order.credit_ledger.id : null,
+      store_id:
+        order && !!order.instant_receive && canInstantReceive ? order.store.id : null,
       cost_centers: order?.cost_centers
         ? order.cost_centers
         : costCenters?.length === 1
@@ -389,6 +397,34 @@ function PurchaseOrderDialogForm({ toggleOpen, order = null }) {
 
   const instant_pay = watch('instant_pay');
   const instant_receive = watch('instant_receive');
+
+  useEffect(() => {
+    if (!canInstantPay && getValues('instant_pay')) {
+      setValue('instant_pay', false, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+      setValue('credit_ledger_id', null, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+      setValue('stakeholder_ledger_id', null, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+    }
+
+    if (!canInstantReceive && getValues('instant_receive')) {
+      setValue('instant_receive', false, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+      setValue('store_id', null, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+    }
+  }, [canInstantPay, canInstantReceive, getValues, setValue]);
 
   const onSubmit = handleSubmit((formData) => {
     if (items.length === 0) {
