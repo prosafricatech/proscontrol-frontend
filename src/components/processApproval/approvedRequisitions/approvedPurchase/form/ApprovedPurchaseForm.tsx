@@ -10,6 +10,7 @@ import PurchaseOrderPaymentAndReceive from '@/components/procurement/purchases/p
 import PurchaseOrderSummary from '@/components/procurement/purchases/purchaseOrderForm/PurchaseOrderSummary';
 import { Product } from '@/components/productAndServices/products/ProductType';
 import CommaSeparatedField from '@/shared/Inputs/CommaSeparatedField';
+import { PERMISSIONS } from '@/utilities/constants/permissions';
 import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { yupResolver } from '@hookform/resolvers/yup';
 import {
@@ -153,7 +154,7 @@ const ApprovedPurchaseForm: React.FC<ApprovedPurchaseFormProps> = ({
   order,
   prevApprovedDetails,
 }) => {
-  const { authOrganization } = useJumboAuth();
+  const { authOrganization, checkOrganizationPermission } = useJumboAuth();
   const [totalAmount, setTotalAmount] = useState(0);
   const [vatableAmount, setVatableAmount] = useState(0);
   const [order_date] = useState(
@@ -167,6 +168,12 @@ const ApprovedPurchaseForm: React.FC<ApprovedPurchaseFormProps> = ({
     useState(false);
   const [addedStakeholder, setAddedStakeholder] = useState<any>(null);
   const [activeTab, setActiveTab] = useState(0);
+  const canInstantPay = checkOrganizationPermission(
+    PERMISSIONS.PURCHASES_INSTANT_PAY
+  );
+  const canInstantReceive = checkOrganizationPermission(
+    PERMISSIONS.PURCHASES_INSTANT_RECEIVE
+  );
 
   const approvedAdditionalCostsSource =
     approvedDetails?.additional_costs ||
@@ -373,14 +380,18 @@ const ApprovedPurchaseForm: React.FC<ApprovedPurchaseFormProps> = ({
       vat_registered: !!authOrganization?.organization.settings?.vat_registered,
       reference: order?.reference || '',
       stakeholder_id: order?.stakeholder?.id || null,
-      store_id: order?.instant_receive && order?.store ? order.store.id : null,
+      store_id:
+        order?.instant_receive && canInstantReceive && order?.store
+          ? order.store.id
+          : null,
       date_required: order?.date_required,
       remarks: order?.remarks,
       terms_of_payment: order?.terms_of_payment,
-      instant_pay: getBool(order?.instant_pay, true),
-      instant_receive: getBool(order?.instant_receive, false),
+      instant_pay: getBool(order?.instant_pay, canInstantPay) && canInstantPay,
+      instant_receive:
+        getBool(order?.instant_receive, false) && canInstantReceive,
       credit_ledger_id:
-        order?.instant_pay && order?.credit_ledger
+        order?.instant_pay && canInstantPay && order?.credit_ledger
           ? order.credit_ledger.id
           : null,
       cost_centers: approvedRequisition
@@ -402,6 +413,7 @@ const ApprovedPurchaseForm: React.FC<ApprovedPurchaseFormProps> = ({
 
   const {
     setValue,
+    getValues,
     handleSubmit,
     watch,
     register,
@@ -454,6 +466,34 @@ const ApprovedPurchaseForm: React.FC<ApprovedPurchaseFormProps> = ({
   React.useEffect(() => {
     orderTotalAmount();
   }, [items]);
+
+  useEffect(() => {
+    if (!canInstantPay && getValues('instant_pay')) {
+      setValue('instant_pay', false, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+      setValue('credit_ledger_id', null, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+      setValue('stakeholder_ledger_id', null, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+    }
+
+    if (!canInstantReceive && getValues('instant_receive')) {
+      setValue('instant_receive', false, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+      setValue('store_id', null, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+    }
+  }, [canInstantPay, canInstantReceive, getValues, setValue]);
 
   useEffect(() => {
     setValue(

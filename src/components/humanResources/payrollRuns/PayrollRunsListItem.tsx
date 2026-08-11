@@ -12,8 +12,8 @@ import {
   AccordionSummary,
   Box,
   Chip,
-  Grid,
   LinearProgress,
+  Stack,
   Tab,
   Tabs,
   Typography,
@@ -317,10 +317,11 @@ const PayrollRunsListItem = ({
         <AccordionSummary
           expandIcon={expanded ? <RemoveIcon /> : <AddIcon />}
           sx={{
-            px: 3,
+            px: { xs: 1.5, sm: 3 },
             flexDirection: 'row-reverse',
             '.MuiAccordionSummary-content': {
               alignItems: 'center',
+              minWidth: 0,
               '&.Mui-expanded': { margin: '12px 0' },
             },
             '.MuiAccordionSummary-expandIconWrapper': {
@@ -329,6 +330,7 @@ const PayrollRunsListItem = ({
               color: 'text.secondary',
               transform: 'none',
               mr: 1,
+              flexShrink: 0,
               '&.Mui-expanded': {
                 transform: 'none',
                 color: 'primary.main',
@@ -338,48 +340,48 @@ const PayrollRunsListItem = ({
             },
           }}
         >
-          <Grid container spacing={1} width='100%' sx={{ px: 1 }}>
-            <Grid size={{ xs: 12, md: 8 }}>
-              <Box display='flex' alignItems='center' gap={1}>
-                <ReceiptLongOutlined fontSize='small' color='action' />
-                <Typography variant='body2'>{runLabel}</Typography>
-                {payrollRun.employee && (
-                  <Typography variant='caption' color='text.secondary'>
-                    ({payrollRun.employee.employee_number})
-                  </Typography>
-                )}
-              </Box>
-            </Grid>
-            <Grid size={{ xs: 12, md: 4 }}>
-              <Box
-                display='flex'
-                alignItems='center'
-                justifyContent={{ xs: 'flex-start', md: 'flex-end' }}
-                gap={1}
-              >
-                <Chip
-                  label={
-                    payrollRun.status_label || payrollRun.status || 'draft'
-                  }
-                  color={statusColor(payrollRun.status || '')}
-                  size='small'
-                  sx={{
-                    textTransform: 'capitalize',
-                    color:
-                      chipColor === 'default'
-                        ? theme.palette.info.contrastText
-                        : chipColor === 'info'
-                          ? theme.palette.info.contrastText
-                          : chipColor === 'warning'
-                            ? theme.palette.warning.contrastText
-                            : chipColor === 'success'
-                              ? theme.palette.success.contrastText
-                              : theme.palette.secondary.contrastText,
-                  }}
-                />
-              </Box>
-            </Grid>
-          </Grid>
+          <Stack
+            direction='row'
+            spacing={1}
+            alignItems='center'
+            flexWrap='wrap'
+            useFlexGap
+            width='100%'
+            sx={{ px: 1 }}
+          >
+            <ReceiptLongOutlined fontSize='small' color='action' />
+            <Typography variant='body2' sx={{ mr: 'auto' }}>
+              {runLabel}
+              {payrollRun.employee && (
+                <Typography
+                  component='span'
+                  variant='caption'
+                  color='text.secondary'
+                  sx={{ ml: 0.5 }}
+                >
+                  ({payrollRun.employee.employee_number})
+                </Typography>
+              )}
+            </Typography>
+            <Chip
+              label={payrollRun.status_label || payrollRun.status || 'draft'}
+              color={statusColor(payrollRun.status || '')}
+              size='small'
+              sx={{
+                textTransform: 'capitalize',
+                color:
+                  chipColor === 'default'
+                    ? theme.palette.info.contrastText
+                    : chipColor === 'info'
+                      ? theme.palette.info.contrastText
+                      : chipColor === 'warning'
+                        ? theme.palette.warning.contrastText
+                        : chipColor === 'success'
+                          ? theme.palette.success.contrastText
+                          : theme.palette.secondary.contrastText,
+              }}
+            />
+          </Stack>
         </AccordionSummary>
 
         <AccordionDetails sx={{ backgroundColor: 'background.paper', mb: 2 }}>
@@ -408,7 +410,23 @@ const PayrollRunsListItem = ({
               />
 
               <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                <Tabs value={tabValue} onChange={(_, v) => setTabValue(v)}>
+                <Tabs
+                  value={tabValue}
+                  onChange={(_, v) => setTabValue(v)}
+                  variant='scrollable'
+                  scrollButtons='auto'
+                  allowScrollButtonsMobile
+                  sx={{
+                    minHeight: { xs: 40, sm: 48 },
+                    '& .MuiTab-root': {
+                      minHeight: { xs: 40, sm: 48 },
+                      minWidth: 'auto',
+                      px: { xs: 1.5, sm: 2 },
+                      fontSize: { xs: '0.8125rem', sm: '0.875rem' },
+                      textTransform: 'none',
+                    },
+                  }}
+                >
                   <Tab label='Summary' />
                   {hasApprovalsTab && <Tab label='Approvals' />}
                   {hasPaymentsTabs && <Tab label='Payments' />}

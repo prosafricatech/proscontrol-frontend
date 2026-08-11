@@ -227,6 +227,11 @@ projectsServices.updateClaim = async (claim) => {
     return data;
 }
 
+projectsServices.invoiceClaim = async (id) => {
+    const { data } = await axios.post(`/api/projectManagement/project/${id}/invoiceClaim`)
+    return data;
+}
+
 projectsServices.updateProjectUpdates = async (update) => {
     const { data } = await axios.put(`/api/projectManagement/project/${update.id}/updateProjectUpdates`, update)
     return data;
@@ -401,6 +406,11 @@ projectsServices.deleteSubContract = async (id) => {
 
 projectsServices.deleteCertificate = async (id) => {
     const { data } = await axios.delete(`/api/projectManagement/project/${id}/deleteCertificate`);
+    return data;
+};
+
+projectsServices.invoiceCertificate = async (id) => {
+    const { data } = await axios.post(`/api/projectManagement/project/${id}/invoiceCertificate`);
     return data;
 };
 

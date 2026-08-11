@@ -16,6 +16,7 @@ import React, { useEffect } from 'react'
 function PurchaseOrderTopInformation({setValue, errors, clearErrors, watch, register, order, setStakeholderQuickAddDisplay, setAddedStakeholder, stakeholderQuickAddDisplay, addedStakeholder, order_date, costCenters, lockedCurrencyId = null, isCurrencyLocked = false}) {
     const {authOrganization,checkOrganizationPermission} = useJumboAuth();
     const cp = {id:null,name: 'Cash Purchase'};
+    const canCashPurchase = checkOrganizationPermission(PERMISSIONS.PURCHASES_INSTANT_PAY);
 
     // setvalues from coming addedStakeholder
     useEffect(() => {
@@ -65,7 +66,7 @@ function PurchaseOrderTopInformation({setValue, errors, clearErrors, watch, regi
                         frontError={errors?.stakeholder_id}
                         defaultValue={order && order.stakeholder.id}
                         addedStakeholder={addedStakeholder}
-                        initialOptions={[cp]}
+                        initialOptions={canCashPurchase ? [cp] : []}
                         onChange={(newValue) => {
                         setValue('stakeholder_id', newValue ? newValue.id: null,{
                             shouldDirty: true,
@@ -75,8 +76,8 @@ function PurchaseOrderTopInformation({setValue, errors, clearErrors, watch, regi
                             shouldTouch:true,
                         });
                         setValue('vrn', newValue ? newValue.vrn : null);
-                        setValue('instant_pay', !newValue?.id ? true : false);
-                        setValue('instant_receive', !newValue?.id ? true : false);
+                        setValue('instant_pay', !newValue?.id ? checkOrganizationPermission(PERMISSIONS.PURCHASES_INSTANT_PAY) : false);
+                        setValue('instant_receive', !newValue?.id ? checkOrganizationPermission(PERMISSIONS.PURCHASES_INSTANT_RECEIVE) : false);
                         if(!newValue?.id){
                             setValue('instant_invoice',false,{
                             shouldDirty: true,

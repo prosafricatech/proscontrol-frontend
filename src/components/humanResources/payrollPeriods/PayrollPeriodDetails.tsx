@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { Box, Tab, Tabs } from '@mui/material';
 import PayrollPeriodRunsTab from './tabs/PayrollPeriodRunsTab';
 import PayrollPeriodAdjustmentsTab from './tabs/PayrollPeriodAdjustmentsTab';
+import PayrollPeriodAdvancesTab from './tabs/PayrollPeriodAdvancesTab';
+import PayrollPeriodStatutoryTab from './tabs/PayrollPeriodStatutoryTab';
 
 interface PayrollPeriodDetailsProps {
   payrollPeriodId: number;
@@ -27,9 +29,27 @@ const PayrollPeriodDetails = ({
   return (
     <Box>
       <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-        <Tabs value={activeTab} onChange={handleTabChange}>
+        <Tabs
+          value={activeTab}
+          onChange={handleTabChange}
+          variant='scrollable'
+          scrollButtons='auto'
+          allowScrollButtonsMobile
+          sx={{
+            minHeight: { xs: 40, sm: 48 },
+            '& .MuiTab-root': {
+              minHeight: { xs: 40, sm: 48 },
+              minWidth: 'auto',
+              px: { xs: 1.5, sm: 2 },
+              fontSize: { xs: '0.8125rem', sm: '0.875rem' },
+              textTransform: 'none',
+            },
+          }}
+        >
           <Tab label="Runs" />
           <Tab label="Ad-hoc Adjustments" />
+          <Tab label="Advances" />
+          <Tab label="Statutory Schedule" />
         </Tabs>
       </Box>
 
@@ -44,6 +64,20 @@ const PayrollPeriodDetails = ({
         )}
         {activeTab === 1 && (
           <PayrollPeriodAdjustmentsTab
+            payrollPeriodId={payrollPeriodId}
+            year={year}
+            month={month}
+          />
+        )}
+        {activeTab === 2 && (
+          <PayrollPeriodAdvancesTab
+            payrollPeriodId={payrollPeriodId}
+            year={year}
+            month={month}
+          />
+        )}
+        {activeTab === 3 && (
+          <PayrollPeriodStatutoryTab
             payrollPeriodId={payrollPeriodId}
             year={year}
             month={month}

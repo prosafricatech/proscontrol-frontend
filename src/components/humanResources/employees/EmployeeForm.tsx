@@ -8,6 +8,7 @@ import CostCenterSelector from '@/components/masters/costCenters/CostCenterSelec
 import { CostCenter } from '@/components/masters/costCenters/CostCenterType';
 import organizationServices from '@/components/organizations/organizationServices';
 import UsersSelector from '@/components/sharedComponents/UsersSelector';
+import { MODULES } from '@/utilities/constants/modules';
 import { PERMISSIONS } from '@/utilities/constants/permissions';
 import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -22,6 +23,7 @@ import {
   FormControlLabel,
   Grid,
   LinearProgress,
+  MenuItem,
   Switch,
   TextField,
 } from '@mui/material';
@@ -81,6 +83,10 @@ const EMPLOYMENT_OPTIONS: OptionType[] = [
   { label: 'Part Time', value: 'part_time' },
   { label: 'Casual', value: 'casual' },
 ];
+const RESIDENCE_STATUS_OPTIONS: OptionType[] = [
+  { label: 'Resident', value: 'resident' },
+  { label: 'Non-Resident', value: 'non_resident' },
+];
 
 const EmployeeForm = ({
   setOpenDialog,
@@ -88,8 +94,12 @@ const EmployeeForm = ({
 }: EmployeeFormProps) => {
   const queryClient = useQueryClient();
   const { enqueueSnackbar } = useSnackbar();
-  const { checkOrganizationPermission, authOrganization, hasOrganizationRole } =
-    useJumboAuth();
+  const {
+    checkOrganizationPermission,
+    authOrganization,
+    hasOrganizationRole,
+    organizationHasSubscribed,
+  } = useJumboAuth();
   const organization = authOrganization?.organization;
   const { designations, isFetching: fetchingDesignations } = useDesignations();
   const designationsData = (designations || []) as Designation[];
@@ -246,6 +256,8 @@ const EmployeeForm = ({
     date_of_birth: yup.string().nullable(),
     national_id: yup.string().nullable().max(50),
     passport_number: yup.string().nullable().max(50),
+    tin: yup.string().nullable().max(50),
+    residence_status: yup.string().nullable(),
     department_id: yup.number().nullable(),
     cost_center_id: yup.number().nullable().optional(),
     manager_id: yup.number().nullable().optional(),
@@ -291,6 +303,8 @@ const EmployeeForm = ({
       date_of_birth: '',
       national_id: '',
       passport_number: '',
+      tin: '',
+      residence_status: RESIDENCE_STATUS_OPTIONS[0].value,
       department_id: undefined,
       cost_center_id: null,
       manager_id: null,
@@ -347,6 +361,8 @@ const EmployeeForm = ({
       date_of_birth: normalizedDateOfBirth,
       national_id: employee.national_id || '',
       passport_number: employee.passport_number || '',
+      tin: employee.tin || '',
+      residence_status: employee.residence_status || RESIDENCE_STATUS_OPTIONS[0].value,
       department_id: employee.department_id || undefined,
       cost_center_id: employee.cost_center_id ?? null,
       manager_id: employee.manager_id ?? null,
@@ -551,6 +567,34 @@ const EmployeeForm = ({
                 helperText={errors.passport_number?.message}
                 {...register('passport_number')}
               />
+            </Grid>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <TextField
+                label='TIN'
+                size='small'
+                fullWidth
+                error={!!errors.tin}
+                helperText={errors.tin?.message}
+                {...register('tin')}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <TextField
+                select
+                label='Residence Status'
+                size='small'
+                fullWidth
+                error={!!errors.residence_status}
+                helperText={errors.residence_status?.message}
+                {...register('residence_status')}
+                defaultValue={RESIDENCE_STATUS_OPTIONS[0].value}
+              >
+                {RESIDENCE_STATUS_OPTIONS.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </TextField>
             </Grid>
 
             {/* Employment Details */}
@@ -786,10 +830,11 @@ const EmployeeForm = ({
               />
             </Grid>
 
-            {/* Accounting Settings */}
-            {checkOrganizationPermission(
-              PERMISSIONS.ACCOUNTS_MASTERS_CREATE
-            ) && (
+            {/* Accounting Settings — no ledger to pick from without Accounts & Finance */}
+            {organizationHasSubscribed(MODULES.ACCOUNTS_AND_FINANCE) &&
+              checkOrganizationPermission(
+                PERMISSIONS.ACCOUNTS_MASTERS_CREATE
+              ) && (
               <>
                 <Grid size={12}>
                   <Div sx={{ mt: 2, mb: 1, fontWeight: 600 }}>

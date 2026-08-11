@@ -35,6 +35,13 @@ const EmployeeEmployerContributionsListItem = ({
                 `Type #${employeeEmployerContribution.employer_contribution_type_id}`}
             </Typography>
           </Tooltip>
+          {employeeEmployerContribution.member_no && (
+            <Tooltip title='Member No.'>
+              <Typography variant='caption' color='text.secondary' display='block'>
+                No: {employeeEmployerContribution.member_no}
+              </Typography>
+            </Tooltip>
+          )}
         </Grid>
 
         <Grid size={{ xs: 12, md: 2.0 }}>

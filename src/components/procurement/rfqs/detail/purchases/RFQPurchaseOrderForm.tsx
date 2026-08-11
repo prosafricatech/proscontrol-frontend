@@ -10,6 +10,7 @@ import purchaseServices from '@/components/procurement/purchases/purchase-servic
 import PurchaseOrderPaymentAndReceive from '@/components/procurement/purchases/purchaseOrderForm/PurchaseOrderPaymentAndReceive';
 import PurchaseOrderSummary from '@/components/procurement/purchases/purchaseOrderForm/PurchaseOrderSummary';
 import { Product } from '@/components/productAndServices/products/ProductType';
+import { PERMISSIONS } from '@/utilities/constants/permissions';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { LoadingButton } from '@mui/lab';
 import {
@@ -107,7 +108,7 @@ const RFQPurchaseOrderForm: React.FC<RFQPurchaseOrderFormProps> = ({
   rfqId,
   totalOrders = 1
 }) => {
-  const { authOrganization }= useJumboAuth();
+  const { authOrganization, checkOrganizationPermission }= useJumboAuth();
   const [totalAmount, setTotalAmount]= useState(0);
   const [vatableAmount, setVatableAmount]= useState(0);
   const [order_date]= useState(
@@ -120,6 +121,12 @@ const RFQPurchaseOrderForm: React.FC<RFQPurchaseOrderFormProps> = ({
   const [addedStakeholder, setAddedStakeholder]= useState<any>(null);
   const [activeTab, setActiveTab]= useState(0);
   const [items, setItems]= useState<any[]>(order?.items || []);
+  const canInstantPay = checkOrganizationPermission(
+    PERMISSIONS.PURCHASES_INSTANT_PAY
+  );
+  const canInstantReceive = checkOrganizationPermission(
+    PERMISSIONS.PURCHASES_INSTANT_RECEIVE
+  );
 
   // Get currency from RFQ response
   const getResponseCurrency = () => {
@@ -211,14 +218,18 @@ const RFQPurchaseOrderForm: React.FC<RFQPurchaseOrderFormProps> = ({
       vat_registered: !!authOrganization?.organization.settings?.vat_registered,
       reference: order?.reference || '',
       stakeholder_id: order?.stakeholder_id || order?.stakeholder?.id || null,
-      store_id: order?.instant_receive && order?.store ? order.store.id : null,
+      store_id:
+        order?.instant_receive && canInstantReceive && order?.store
+          ? order.store.id
+          : null,
       date_required: order?.date_required,
       remarks: order?.remarks,
       terms_of_payment: order?.terms_of_payment,
-      instant_pay: getBool(order?.instant_pay, true),
-      instant_receive: getBool(order?.instant_receive, false),
+      instant_pay: getBool(order?.instant_pay, canInstantPay) && canInstantPay,
+      instant_receive:
+        getBool(order?.instant_receive, false) && canInstantReceive,
       credit_ledger_id:
-        order?.instant_pay && order?.credit_ledger
+        order?.instant_pay && canInstantPay && order?.credit_ledger
           ? order.credit_ledger.id
           : null,
       cost_centers: order?.cost_centers || [],
@@ -228,6 +239,7 @@ const RFQPurchaseOrderForm: React.FC<RFQPurchaseOrderFormProps> = ({
 
   const {
     setValue,
+    getValues,
     handleSubmit,
     watch,
     register,
@@ -255,6 +267,34 @@ const RFQPurchaseOrderForm: React.FC<RFQPurchaseOrderFormProps> = ({
   useEffect(() => {
     orderTotalAmount();
   }, [items]);
+
+  useEffect(() => {
+    if (!canInstantPay && getValues('instant_pay')) {
+      setValue('instant_pay', false, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+      setValue('credit_ledger_id', null, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+      setValue('stakeholder_ledger_id', null, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+    }
+
+    if (!canInstantReceive && getValues('instant_receive')) {
+      setValue('instant_receive', false, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+      setValue('store_id', null, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+    }
+  }, [canInstantPay, canInstantReceive, getValues, setValue]);
 
   const stakeholder_id = watch('stakeholder_id');
   const { data: stakeholderPayableLedgers } = useQuery({

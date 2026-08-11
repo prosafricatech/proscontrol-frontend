@@ -36,6 +36,7 @@ import { COUNTRIES } from '@/utilities/constants/countries';
 import { PERMISSIONS } from '@/utilities/constants/permissions';
 import { CURRENCIES } from '@/utilities/constants/currencies';
 import { PROS_CONTROL_PERMISSIONS } from '@/utilities/constants/prosControlPermissions';
+import { MODULES } from '@/utilities/constants/modules';
 import { useDictionary } from '@/app/[lang]/contexts/DictionaryContext';
 import { useLanguage } from '@/app/[lang]/contexts/LanguageContext';
 import { Organization } from '@/types/auth-types';
@@ -71,6 +72,9 @@ interface FormValues {
   vat_registered: boolean;
   vrn?: string | null;
   vat_percentage?: number;
+  defer_grn_billing?: boolean;
+  defer_project_certificate_invoicing?: boolean;
+  standard_hours_per_month?: number | null;
   symbol_path?: string | null;
   main_color: string;
   light_color: string;
@@ -91,7 +95,9 @@ const OrganizationForm: React.FC<OrganizationFormProps> = ({ organization = null
     const validation = dictForm.errors.validation;
 
     const { enqueueSnackbar } = useSnackbar();
-    const { configAuth, authUser, checkPermission, checkOrganizationPermission } = useJumboAuth();
+    const { configAuth, authUser, checkPermission, checkOrganizationPermission, organizationHasSubscribed } = useJumboAuth();
+    const hasProjectManagement = organizationHasSubscribed(MODULES.PROJECT_MANAGEMENT);
+    const hasProcurementAndSupply = organizationHasSubscribed(MODULES.PROCUREMENT_AND_SUPPLY);
     const router = useRouter();
     const queryClient = useQueryClient();
     const theme = useTheme();
@@ -188,6 +194,13 @@ const OrganizationForm: React.FC<OrganizationFormProps> = ({ organization = null
             .string()
             .max(50, validation.tagline.max)
             .nullable(),
+        defer_grn_billing: yup.boolean(),
+        defer_project_certificate_invoicing: yup.boolean(),
+        standard_hours_per_month: yup
+            .number()
+            .typeError('Standard hours per month must be a number')
+            .positive('Standard hours per month must be greater than 0')
+            .nullable(),
     });
 
     const {
@@ -214,6 +227,9 @@ const OrganizationForm: React.FC<OrganizationFormProps> = ({ organization = null
         vat_percentage: organization?.settings?.vat_percentage
             ? organization.settings.vat_percentage
             : 18,
+        defer_grn_billing: !!organization?.settings?.defer_grn_billing,
+        defer_project_certificate_invoicing: !!organization?.settings?.defer_project_certificate_invoicing,
+        standard_hours_per_month: organization?.settings?.standard_hours_per_month ?? null,
         symbol_path: organization?.settings?.symbol_path
             ? organization.settings.symbol_path
             : null,
@@ -575,6 +591,72 @@ const OrganizationForm: React.FC<OrganizationFormProps> = ({ organization = null
                   endAdornment: '%',
                 }}
                 {...register('vat_percentage')}
+              />
+            </Grid>
+            <Grid size={{ xs: 12 }} sx={{ m: 1, mt: 3 }}>
+              <Typography variant="body1">
+                Workflow Settings
+              </Typography>
+              <Divider />
+            </Grid>
+            {hasProcurementAndSupply && (
+              <Grid size={{ xs: 12, md: 6 }}>
+                <Box display="flex" alignItems="center">
+                  <Checkbox
+                    checked={!!watch('defer_grn_billing')}
+                    size="small"
+                    onChange={(e) => {
+                      setValue('defer_grn_billing', e.target.checked, {
+                        shouldDirty: true,
+                      });
+                    }}
+                  />
+                  <Typography variant="body2">
+                    Bill suppliers separately from GRNs (credits an Unbilled Goods
+                    account on receipt; a Purchase Bill later moves the balance
+                    to the supplier)
+                  </Typography>
+                </Box>
+              </Grid>
+            )}
+            {hasProjectManagement && (
+              <Grid size={{ xs: 12, md: 6 }}>
+                <Box display="flex" alignItems="center">
+                  <Checkbox
+                    checked={!!watch('defer_project_certificate_invoicing')}
+                    size="small"
+                    onChange={(e) => {
+                      setValue(
+                        'defer_project_certificate_invoicing',
+                        e.target.checked,
+                        { shouldDirty: true }
+                      );
+                    }}
+                  />
+                  <Typography variant="body2">
+                    Project Certificates start as drafts and only debit the
+                    customer once explicitly invoiced
+                  </Typography>
+                </Box>
+              </Grid>
+            )}
+            <Grid size={{ xs: 12 }} sx={{ m: 1, mt: 3 }}>
+              <Typography variant="body1">
+                Payroll Settings
+              </Typography>
+              <Divider />
+            </Grid>
+            <Grid size={{ xs: 12, md: 4 }}>
+              <TextField
+                fullWidth
+                label="Standard Hours per Month"
+                size="small"
+                error={!!errors?.standard_hours_per_month}
+                helperText={
+                  errors?.standard_hours_per_month?.message ||
+                  'Default used to derive monthly-paid employees’ hourly rate for overtime — overridable per employee contract'
+                }
+                {...register('standard_hours_per_month')}
               />
             </Grid>
             <Grid size={{ xs: 12 }} sx={{ m: 1, mt: 3 }}>

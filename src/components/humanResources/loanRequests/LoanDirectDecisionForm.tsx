@@ -1,6 +1,7 @@
 'use client';
 
 import { sanitizedNumber } from '@/app/helpers/input-sanitization-helpers';
+import CommaSeparatedField from '@/shared/Inputs/CommaSeparatedField';
 import { LoadingButton } from '@mui/lab';
 import {
   Button,
@@ -146,6 +147,7 @@ const LoanDirectDecisionForm = ({
                     loanRequest.amount
                   ).toLocaleString()} requested`
                 }
+                InputProps={{ inputComponent: CommaSeparatedField as any }}
                 onChange={(e: any) => {
                   setAmountError('');
                   setAmountApproved(

@@ -430,6 +430,37 @@ humanResourcesServices.deleteDeductionType = async (id) => {
 }
 
 // ============================================
+// OVERTIME TYPES
+// ============================================
+humanResourcesServices.getOvertimeTypesList = async (params = {}) => {
+    const { page = 1, limit = 50, ...queryParams } = params;
+    const { data } = await axios.get('/api/humanResources/overtimeTypes', {
+        params: { page, limit, ...queryParams }
+    });
+    return data;
+};
+
+humanResourcesServices.addOvertimeType = async (overtimeType) => {
+    const { data } = await axios.post('/api/humanResources/overtimeTypes/add', overtimeType);
+    return data;
+}
+
+humanResourcesServices.updateOvertimeType = async (overtimeType) => {
+    const { data } = await axios.put(`/api/humanResources/overtimeTypes/${overtimeType.id}/update`, overtimeType);
+    return data;
+}
+
+humanResourcesServices.showOvertimeType = async (id) => {
+    const { data } = await axios.get(`/api/humanResources/overtimeTypes/${id}`);
+    return data;
+}
+
+humanResourcesServices.deleteOvertimeType = async (id) => {
+    const { data } = await axios.delete(`/api/humanResources/overtimeTypes/${id}/delete`);
+    return data;
+}
+
+// ============================================
 // EMPLOYER CONTRIBUTION TYPES
 // ============================================
 humanResourcesServices.getEmployerContributionTypesList = async (params = {}) => {
@@ -811,15 +842,69 @@ humanResourcesServices.markPayrollPeriodPaid = async (id) => {
 }
 
 humanResourcesServices.getSalaryComponentsSummary = async (params = {}) => {
-    const { year, month, cost_center_ids = [] } = params;
+    const { from_year, from_month, to_year, to_month, cost_center_ids = [] } = params;
     const queryParams = {
-        year,
-        month,
+        from_year,
+        from_month,
+        to_year,
+        to_month,
         ...(cost_center_ids?.length ? { cost_center_ids } : {}),
     };
     const { data } = await axios.get('/api/humanResources/payroll-reports/salary-components-summary', {
         params: queryParams,
     });
+    return data;
+};
+humanResourcesServices.exportSalaryComponentsSummaryExcel = async (params = {}) => {
+    const { from_year, from_month, to_year, to_month, cost_center_ids = [] } = params;
+    const queryParams = {
+        from_year,
+        from_month,
+        to_year,
+        to_month,
+        ...(cost_center_ids?.length ? { cost_center_ids } : {}),
+    };
+    const { data } = await axios.post(
+        '/api/humanResources/payroll-reports/salary-components-summary-excel',
+        {},
+        { params: queryParams, responseType: 'blob' }
+    );
+    return data;
+};
+
+// ===== leave balances report ===== //
+humanResourcesServices.getLeaveBalancesReport = async (params = {}) => {
+    const { year, employee_id, department_id, leave_type_id } = params;
+    const { data } = await axios.get('/api/humanResources/leave-reports/balances', {
+        params: { year, employee_id, department_id, leave_type_id },
+    });
+    return data;
+};
+humanResourcesServices.exportLeaveBalancesReport = async (params = {}) => {
+    const { year, employee_id, department_id, leave_type_id } = params;
+    const { data } = await axios.post(
+        '/api/humanResources/leave-reports/balances-excel',
+        {},
+        { params: { year, employee_id, department_id, leave_type_id }, responseType: 'blob' }
+    );
+    return data;
+};
+
+// ===== staff loan report ===== //
+humanResourcesServices.getStaffLoansReport = async (params = {}) => {
+    const { employee_id, department_id, cost_center_id, status, only_outstanding } = params;
+    const { data } = await axios.get('/api/humanResources/loan-reports/staff-loans', {
+        params: { employee_id, department_id, cost_center_id, status, only_outstanding },
+    });
+    return data;
+};
+humanResourcesServices.exportStaffLoansReport = async (params = {}) => {
+    const { employee_id, department_id, cost_center_id, status, only_outstanding } = params;
+    const { data } = await axios.post(
+        '/api/humanResources/loan-reports/staff-loans-excel',
+        {},
+        { params: { employee_id, department_id, cost_center_id, status, only_outstanding }, responseType: 'blob' }
+    );
     return data;
 };
 
@@ -846,6 +931,29 @@ humanResourcesServices.periodAdjustmentReview = async (periodId, params = {}) =>
     });
     return data;
 };
+// ===== add a single hand-entered adjustment (the manual counterpart to the Excel upload) ===== //
+humanResourcesServices.addPeriodAdjustmentAllowance = async (allowanceEntry) => {
+    const { data } = await axios.post('/api/humanResources/payrollPeriods/period-adjustments-template/allowances/add', allowanceEntry);
+    return data;
+}
+humanResourcesServices.addPeriodAdjustmentDeduction = async (deductionEntry) => {
+    const { data } = await axios.post('/api/humanResources/payrollPeriods/period-adjustments-template/deductions/add', deductionEntry);
+    return data;
+}
+humanResourcesServices.addPeriodLeaveEncashment = async (encashmentEntry) => {
+    const { data } = await axios.post('/api/humanResources/payrollPeriods/period-adjustments-template/leave-encashments/add', encashmentEntry);
+    return data;
+}
+humanResourcesServices.deletePeriodLeaveEncashment = async (encashmentId) => {
+    const { data } = await axios.delete(`/api/humanResources/payrollPeriods/period-adjustments-template/leave-encashments/${encashmentId}/delete`);
+    return data;
+}
+humanResourcesServices.getLeaveEncashmentDailyRate = async (employeeId) => {
+    const { data } = await axios.get('/api/humanResources/payrollPeriods/period-adjustments-template/leave-encashments/daily-rate', {
+        params: { employee_id: employeeId },
+    });
+    return data;
+}
 // ===== edit an adjustment ===== //
 humanResourcesServices.updateperiodAdjustmentAllowance = async (adjustmentAllowance) => {
     const { data } = await axios.put(`/api/humanResources/payrollPeriods/period-adjustments-template/allowances/${adjustmentAllowance.id}/update`, adjustmentAllowance)
@@ -862,6 +970,97 @@ humanResourcesServices.deleteperiodAdjustmentAllowance = async (allowanceId) => 
 }
 humanResourcesServices.deleteperiodAdjustmentDeduction = async (deductionId) => {
     const { data } = await axios.delete(`/api/humanResources/payrollPeriods/period-adjustments-template/deductions/${deductionId}/delete`);
+    return data;
+}
+
+// ===== period overtime (monthly employees, logged one dated entry at a time) ===== //
+humanResourcesServices.addPeriodOvertime = async (overtimeEntry) => {
+    const { data } = await axios.post('/api/humanResources/payrollPeriods/period-adjustments-template/overtime/add', overtimeEntry);
+    return data;
+}
+humanResourcesServices.updatePeriodOvertime = async (overtimeEntry) => {
+    const { data } = await axios.put(`/api/humanResources/payrollPeriods/period-adjustments-template/overtime/${overtimeEntry.id}/update`, overtimeEntry);
+    return data;
+}
+humanResourcesServices.deletePeriodOvertime = async (id) => {
+    const { data } = await axios.delete(`/api/humanResources/payrollPeriods/period-adjustments-template/overtime/${id}/delete`);
+    return data;
+}
+
+// ===== period absences (monthly employees, logged one dated entry at a time — deducted pre-tax) ===== //
+humanResourcesServices.addPeriodAbsence = async (absenceEntry) => {
+    const { data } = await axios.post('/api/humanResources/payrollPeriods/period-adjustments-template/absences/add', absenceEntry);
+    return data;
+}
+humanResourcesServices.updatePeriodAbsence = async (absenceEntry) => {
+    const { data } = await axios.put(`/api/humanResources/payrollPeriods/period-adjustments-template/absences/${absenceEntry.id}/update`, absenceEntry);
+    return data;
+}
+humanResourcesServices.deletePeriodAbsence = async (id) => {
+    const { data } = await axios.delete(`/api/humanResources/payrollPeriods/period-adjustments-template/absences/${id}/delete`);
+    return data;
+}
+
+// ===== salary advances (bulk-uploaded against one period) ===== //
+humanResourcesServices.getPeriodAdvances = async (periodId) => {
+    const { data } = await axios.get(`/api/humanResources/payrollPeriods/advances/${periodId}`);
+    return data;
+}
+humanResourcesServices.downloadAdvancesTemplate = async () => {
+    const { data } = await axios.post('/api/humanResources/payrollPeriods/advances/template/download', {}, {
+        responseType: 'blob',
+    });
+    return data;
+}
+humanResourcesServices.importPeriodAdvances = async (periodId, file) => {
+    const { data } = await axios.post(`/api/humanResources/payrollPeriods/advances/${periodId}/upload`, file, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return data;
+}
+humanResourcesServices.updatePeriodAdvance = async (advance) => {
+    const { data } = await axios.put(`/api/humanResources/payrollPeriods/advances/${advance.id}/update`, advance);
+    return data;
+}
+humanResourcesServices.deletePeriodAdvance = async (id) => {
+    const { data } = await axios.delete(`/api/humanResources/payrollPeriods/advances/${id}/delete`);
+    return data;
+}
+humanResourcesServices.advanceTransferSheet = async (periodId) => {
+    const { data } = await axios.get(`/api/humanResources/payrollPeriods/advances/${periodId}/transfer-sheet`);
+    return data;
+}
+humanResourcesServices.advanceTransferSheetExcel = async (periodId) => {
+    const { data } = await axios.post(`/api/humanResources/payrollPeriods/advances/${periodId}/transfer-sheet`, {}, {
+        responseType: 'blob',
+    });
+    return data;
+}
+humanResourcesServices.payAdvances = async ({ id, ...payload }) => {
+    const { data } = await axios.post(`/api/humanResources/payrollPeriods/advances/${id}/pay`, payload);
+    return data;
+}
+humanResourcesServices.markAdvancesPaid = async ({ id, ...payload }) => {
+    const { data } = await axios.post(`/api/humanResources/payrollPeriods/advances/${id}/mark-paid`, payload);
+    return data;
+}
+
+// ===== statutory schedule (PAYE / Deductions / Contributions) ===== //
+humanResourcesServices.statutorySchedule = async (periodId) => {
+    const { data } = await axios.get(`/api/humanResources/payrollPeriods/${periodId}/statutory-schedule`);
+    return data;
+}
+/**
+ * @param {number} periodId
+ * @param {{ section?: string, typeId?: number }} [options]
+ */
+humanResourcesServices.statutoryScheduleExcel = async (periodId, { section = 'all', typeId } = {}) => {
+    const params = { section };
+    if (typeId) params.type_id = typeId;
+    const { data } = await axios.post(`/api/humanResources/payrollPeriods/${periodId}/statutory-schedule`, {}, {
+        params,
+        responseType: 'blob',
+    });
     return data;
 }
 

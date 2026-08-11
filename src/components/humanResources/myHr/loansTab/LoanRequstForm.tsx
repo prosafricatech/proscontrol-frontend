@@ -1,4 +1,6 @@
 'use client';
+import { sanitizedNumber } from '@/app/helpers/input-sanitization-helpers';
+import CommaSeparatedField from '@/shared/Inputs/CommaSeparatedField';
 import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { LoadingButton } from '@mui/lab';
@@ -108,9 +110,6 @@ const LoanRequstForm = ({
     },
   });
 
-  const formatCurrency = (value: number | null | undefined) =>
-    value ? value.toLocaleString() : '';
-
   const onSubmit = (data: FormData) => {
     submitLoan(data);
   };
@@ -136,14 +135,15 @@ const LoanRequstForm = ({
                 label='Amount'
                 size='small'
                 fullWidth
-                value={formatCurrency(watch('amount'))}
+                value={watch('amount') ?? ''}
                 onChange={(e) => {
-                  const val = e.target.value.replace(/,/g, '');
-                  setValue('amount', val ? Number(val) : null, {
+                  const val = sanitizedNumber(e.target.value);
+                  setValue('amount', Number.isNaN(val) ? null : val, {
                     shouldValidate: true,
                     shouldDirty: true,
                   });
                 }}
+                InputProps={{ inputComponent: CommaSeparatedField as any }}
                 error={!!errors.amount}
                 helperText={errors.amount?.message}
               />

@@ -1,5 +1,7 @@
 import LedgerSelect from '@/components/accounts/ledgers/forms/LedgerSelect';
+import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import { useProductsSelect } from '@/components/productAndServices/products/ProductsSelectProvider';
+import { PERMISSIONS } from '@/utilities/constants/permissions';
 import { Checkbox, FormControlLabel, Grid, TextField } from '@mui/material';
 import React, { useState } from 'react';
 import StoreSelector from '../../stores/StoreSelector';
@@ -19,6 +21,13 @@ function PurchaseOrderPaymentAndReceive({
 }) {
   const [storeOptions, setStoreOptions] = useState([]);
   const { productOptions } = useProductsSelect();
+  const { checkOrganizationPermission } = useJumboAuth();
+  const canInstantPay = checkOrganizationPermission(
+    PERMISSIONS.PURCHASES_INSTANT_PAY
+  );
+  const canInstantReceive = checkOrganizationPermission(
+    PERMISSIONS.PURCHASES_INSTANT_RECEIVE
+  );
 
   //Get Store options
   React.useEffect(() => {
@@ -45,10 +54,42 @@ function PurchaseOrderPaymentAndReceive({
 
     if (!displayStoreSelector && !watch(`stakeholder_id`)) {
       setValue('instant_receive', false);
-    } else if (displayStoreSelector && !watch(`stakeholder_id`)) {
+    } else if (
+      displayStoreSelector &&
+      !watch(`stakeholder_id`) &&
+      canInstantReceive
+    ) {
       setValue('instant_receive', true);
     }
-  }, [items, displayStoreSelector, watch(`stakeholder_id`)]);
+  }, [items, displayStoreSelector, watch(`stakeholder_id`), canInstantReceive]);
+
+  React.useEffect(() => {
+    if (!canInstantPay && instant_pay) {
+      setValue('instant_pay', false, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+      setValue('credit_ledger_id', null, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+      setValue('stakeholder_ledger_id', null, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    }
+
+    if (!canInstantReceive && instant_receive) {
+      setValue('instant_receive', false, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+      setValue('store_id', null, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    }
+  }, [canInstantPay, canInstantReceive, instant_pay, instant_receive, setValue]);
 
   return (
     <Grid container spacing={1} paddingTop={1} width={'100%'}>
@@ -79,23 +120,25 @@ function PurchaseOrderPaymentAndReceive({
       <Grid size={{ xs: 12, md: 6 }}>
         <Grid container columnSpacing={1} rowSpacing={1}>
           <Grid size={{ xs: 12, md: 6 }}>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={instant_pay}
-                  disabled={!watch('stakeholder_id')}
-                  onChange={(e) => {
-                    const checked = e.target.checked;
-                    setValue('instant_pay', checked, {
-                      shouldDirty: true,
-                      shouldValidate: true,
-                    });
-                  }}
-                  name='instant_pay'
-                />
-              }
-              label='Instant Payment'
-            />
+            {canInstantPay && (
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={instant_pay}
+                    disabled={!watch('stakeholder_id')}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setValue('instant_pay', checked, {
+                        shouldDirty: true,
+                        shouldValidate: true,
+                      });
+                    }}
+                    name='instant_pay'
+                  />
+                }
+                label='Instant Payment'
+              />
+            )}
             {instant_pay && (
               <LedgerSelect
                 label='Pay from'
@@ -112,13 +155,13 @@ function PurchaseOrderPaymentAndReceive({
             )}
           </Grid>
 
-          {displayStoreSelector && (
+          {displayStoreSelector && canInstantReceive && (
             <Grid size={{ xs: 12, md: 6 }}>
               <FormControlLabel
                 control={
                   <Checkbox
                     checked={instant_receive}
-                    disabled={!watch('stakeholder_id')}
+                    disabled={!watch('stakeholder_id') || !canInstantReceive}
                     onChange={(e) => {
                       setValue('instant_receive', e.target.checked, {
                         shouldDirty: true,

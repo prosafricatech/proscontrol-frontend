@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  AccessTimeOutlined,
   AddCircleOutline,
   CheckCircleOutline,
   ClearOutlined,
@@ -9,6 +10,8 @@ import {
   DownloadOutlined,
   EditOutlined,
   ErrorOutline,
+  EventAvailableOutlined,
+  EventBusyOutlined,
   InsertDriveFileOutlined,
   RemoveCircleOutline,
   SearchOutlined,
@@ -17,6 +20,7 @@ import {
 import {
   Alert,
   alpha,
+  Autocomplete,
   Box,
   Button,
   Chip,
@@ -42,11 +46,19 @@ import {
   TextField,
   Tooltip,
   Typography,
+  useMediaQuery,
   useTheme,
 } from '@mui/material';
+import { DatePicker } from '@mui/x-date-pickers';
 import { useMutation, useQuery } from '@tanstack/react-query';
+import dayjs from 'dayjs';
 import { useSnackbar } from 'notistack';
-import React, { ChangeEvent, useState } from 'react';
+import React, { ChangeEvent, useEffect, useState } from 'react';
+import { sanitizedNumber } from '@/app/helpers/input-sanitization-helpers';
+import CommaSeparatedField from '@/shared/Inputs/CommaSeparatedField';
+import EmployeeSelector from '../../employees/EmployeeSelector';
+import { EmployeesProvider } from '../../employees/EmployeesProvider';
+import { Employee } from '../../employees/EmployeesType';
 import humanResourcesServices from '../../humanResourcesServices';
 
 interface PayrollPeriodAdjustmentsTabProps {
@@ -98,9 +110,76 @@ interface PeriodDeduction {
   };
 }
 
+interface PeriodOvertime {
+  id: number;
+  payroll_period_id: number;
+  employee_id: number;
+  overtime_type_id: number;
+  date: string;
+  hours: number;
+  remarks: string | null;
+  employee: AdjustmentEmployee;
+  // Laravel snake-cases relation names when serializing to JSON, so the
+  // overtimeType() relation comes back as overtime_type, not overtimeType.
+  overtime_type?: {
+    id: number;
+    name: string;
+    multiplier: number;
+  };
+}
+
+interface OvertimeType {
+  id: number;
+  name: string;
+  multiplier: number;
+}
+
+interface AllowanceTypeOption {
+  id: number;
+  name: string;
+}
+
+interface DeductionTypeOption {
+  id: number;
+  name: string;
+}
+
+interface PeriodAbsence {
+  id: number;
+  payroll_period_id: number;
+  employee_id: number;
+  date: string;
+  hours: number;
+  remarks: string | null;
+  employee: AdjustmentEmployee;
+}
+
+interface LeaveTypeOption {
+  id: number;
+  name: string;
+}
+
+interface PeriodLeaveEncashment {
+  id: number;
+  payroll_period_id: number;
+  employee_id: number;
+  leave_type_id: number;
+  days_bought: number;
+  amount: number;
+  remarks: string | null;
+  employee: AdjustmentEmployee;
+  leave_type?: {
+    id: number;
+    name: string;
+  };
+}
+
 interface PeriodAdjustments {
   allowances: PeriodAllowance[];
   deductions: PeriodDeduction[];
+  overtime: PeriodOvertime[];
+  absences: PeriodAbsence[];
+  leaveEncashments: PeriodLeaveEncashment[];
 }
 
 interface ImportResult {
@@ -158,6 +237,7 @@ const PayrollPeriodAdjustmentsTab = ({
   month,
 }: PayrollPeriodAdjustmentsTabProps) => {
   const theme = useTheme();
+  const belowLargeScreen = useMediaQuery(theme.breakpoints.down('lg'));
   const { enqueueSnackbar } = useSnackbar();
   const isDark = theme.type === 'dark';
 
@@ -180,8 +260,95 @@ const PayrollPeriodAdjustmentsTab = ({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [deletingType, setDeletingType] = useState<
+    | 'allowance'
+    | 'deduction'
+    | 'overtime'
+    | 'absence'
+    | 'leaveEncashment'
+    | null
+  >(null);
+
+  // Overtime — logged one dated entry at a time (not bulk-uploaded).
+  // Dates are bounded to the period itself — an entry claims to have
+  // happened within the month it's being recovered against.
+  const periodStart = dayjs(new Date(year, month - 1, 1));
+  const periodEnd = periodStart.endOf('month');
+  const defaultOvertimeDate = () => {
+    const today = dayjs();
+    if (today.isAfter(periodEnd)) return periodEnd.toISOString();
+    if (today.isBefore(periodStart)) return periodStart.toISOString();
+    return today.toISOString();
+  };
+
+  const [overtimeSearch, setOvertimeSearch] = useState('');
+  const [overtimeDialogOpen, setOvertimeDialogOpen] = useState(false);
+  const [editingOvertime, setEditingOvertime] =
+    useState<PeriodOvertime | null>(null);
+  const [overtimeEmployee, setOvertimeEmployee] = useState<Employee | null>(
+    null
+  );
+  const [overtimeType, setOvertimeType] = useState<OvertimeType | null>(null);
+  const [overtimeDate, setOvertimeDate] = useState<string>(
+    defaultOvertimeDate()
+  );
+  const [overtimeHours, setOvertimeHours] = useState<number | ''>('');
+  const [overtimeRemarks, setOvertimeRemarks] = useState('');
+
+  // Absent hours — same dated-entry shape as Overtime above, but the amount
+  // it produces at payslip time is a pre-tax deduction, not extra pay. No
+  // "type" selector: an absent hour is just an absent hour.
+  const [absenceSearch, setAbsenceSearch] = useState('');
+  const [absenceDialogOpen, setAbsenceDialogOpen] = useState(false);
+  const [editingAbsence, setEditingAbsence] = useState<PeriodAbsence | null>(
+    null
+  );
+  const [absenceEmployee, setAbsenceEmployee] = useState<Employee | null>(
+    null
+  );
+  const [absenceDate, setAbsenceDate] = useState<string>(
+    defaultOvertimeDate()
+  );
+  const [absenceHours, setAbsenceHours] = useState<number | ''>('');
+  const [absenceRemarks, setAbsenceRemarks] = useState('');
+
+  // Leave Encashment — "employer buys back unused leave days". A single-entry
+  // form only (no bulk upload, no edit): each save pairs a taxable payroll
+  // allowance with a decrement of the employee's leave_allocations balance,
+  // so changing days/amount after the fact means delete-and-redo, the same
+  // way the balance-affecting Leave Request flow works.
+  const [leaveEncashmentSearch, setLeaveEncashmentSearch] = useState('');
+  const [leaveEncashmentDialogOpen, setLeaveEncashmentDialogOpen] =
+    useState(false);
+  const [leaveEncashmentEmployee, setLeaveEncashmentEmployee] =
+    useState<Employee | null>(null);
+  const [leaveEncashmentType, setLeaveEncashmentType] =
+    useState<LeaveTypeOption | null>(null);
+  const [leaveEncashmentDaysBought, setLeaveEncashmentDaysBought] = useState<
+    number | ''
+  >('');
+  const [leaveEncashmentAmount, setLeaveEncashmentAmount] = useState<
+    number | ''
+  >('');
+  // Once HR edits Amount directly, auto-fill stops overwriting it — days
+  // bought or employee changing after that no longer recomputes it.
+  const [leaveEncashmentAmountTouched, setLeaveEncashmentAmountTouched] =
+    useState(false);
+  const [leaveEncashmentRemarks, setLeaveEncashmentRemarks] = useState('');
+
+  // Add Allowance / Add Deduction — the manual, single-entry counterpart to
+  // the Excel upload, for when HR only has a couple of adjustments to make.
+  const [addAdjustmentDialogType, setAddAdjustmentDialogType] = useState<
     'allowance' | 'deduction' | null
   >(null);
+  const [addAdjustmentEmployee, setAddAdjustmentEmployee] =
+    useState<Employee | null>(null);
+  const [addAdjustmentType, setAddAdjustmentType] = useState<
+    AllowanceTypeOption | DeductionTypeOption | null
+  >(null);
+  const [addAdjustmentAmount, setAddAdjustmentAmount] = useState<number | ''>(
+    ''
+  );
+  const [addAdjustmentRemarks, setAddAdjustmentRemarks] = useState('');
 
   const monthName = MONTH_NAMES[month] || month;
 
@@ -197,7 +364,117 @@ const PayrollPeriodAdjustmentsTab = ({
   });
 
   const adjustments: PeriodAdjustments = adjustmentsData?.data ||
-    adjustmentsData || { allowances: [], deductions: [] };
+    adjustmentsData || {
+      allowances: [],
+      deductions: [],
+      overtime: [],
+      absences: [],
+      leaveEncashments: [],
+    };
+
+  // Ad-hoc entries here are only ever read by PayrollService::computePayslip()
+  // at the moment a run's payslips are generated — a locked snapshot from
+  // then on. Once this period's run has moved past Draft, adding/editing/
+  // deleting one silently wouldn't apply to it, so the forms are disabled
+  // rather than letting HR submit something that quietly does nothing (the
+  // backend enforces this too — see GuardsPayrollPeriodEditability).
+  const { data: periodRunsData } = useQuery({
+    queryKey: ['payrollRunsForPeriod', String(payrollPeriodId)],
+    queryFn: () =>
+      humanResourcesServices.getPayrollRunsList({
+        payroll_period_id: payrollPeriodId,
+      }),
+  });
+  const periodRuns: { status: string }[] = periodRunsData?.data || [];
+  const lockedRun = periodRuns.find((run) => run.status !== 'draft');
+  const isPeriodLocked = !!lockedRun;
+
+  // Overtime types for the "Log Overtime" dialog's type selector.
+  const { data: overtimeTypesResponse } = useQuery({
+    queryKey: ['overtimeTypesForPeriodOvertime'],
+    queryFn: () => humanResourcesServices.getOvertimeTypesList({ limit: 200 }),
+  });
+  const overtimeTypes: OvertimeType[] = overtimeTypesResponse?.data || [];
+
+  // Allowance/Deduction types for the "Add Allowance"/"Add Deduction" dialog's
+  // type selector.
+  const { data: allowanceTypesResponse } = useQuery({
+    queryKey: ['allowanceTypesForPeriodAdjustments'],
+    queryFn: () => humanResourcesServices.getAllowanceTypesList({ limit: 200 }),
+    enabled: addAdjustmentDialogType === 'allowance',
+  });
+  const allowanceTypeOptions: AllowanceTypeOption[] =
+    allowanceTypesResponse?.data || [];
+
+  const { data: deductionTypesResponse } = useQuery({
+    queryKey: ['deductionTypesForPeriodAdjustments'],
+    queryFn: () => humanResourcesServices.getDeductionTypesList({ limit: 200 }),
+    enabled: addAdjustmentDialogType === 'deduction',
+  });
+  const deductionTypeOptions: DeductionTypeOption[] =
+    deductionTypesResponse?.data || [];
+
+  // Leave types for the "Buy Leave" dialog's type selector.
+  const { data: leaveTypesResponse } = useQuery({
+    queryKey: ['leaveTypesForLeaveEncashment'],
+    queryFn: () => humanResourcesServices.getAllLeaveTypes(),
+    enabled: leaveEncashmentDialogOpen,
+  });
+  const leaveTypeOptions: LeaveTypeOption[] = leaveTypesResponse?.data || [];
+
+  // The employee's remaining balance for the selected leave type/year, shown
+  // as a live check before HR commits to a days-bought figure — the backend
+  // re-validates this anyway, but surfacing it here avoids a round-trip.
+  const { data: leaveEncashmentAllocationsResponse } = useQuery({
+    queryKey: [
+      'leaveAllocationsForLeaveEncashment',
+      leaveEncashmentEmployee?.id,
+      year,
+    ],
+    queryFn: () =>
+      humanResourcesServices.getLeaveAllocationsList({
+        employee_id: leaveEncashmentEmployee?.id,
+        year,
+        limit: 200,
+      }),
+    enabled: leaveEncashmentDialogOpen && !!leaveEncashmentEmployee,
+  });
+  const leaveEncashmentAllocation = (
+    leaveEncashmentAllocationsResponse?.data || []
+  ).find((a: any) => a.leave_type_id === leaveEncashmentType?.id);
+
+  // The employee's daily rate (basic_salary / standard_hours_per_month *
+  // standard_hours_per_day — same derivation PayrollService uses for
+  // overtime/absence), used to auto-fill Amount as days_bought * rate so HR
+  // isn't typing arithmetic the system already has every input for.
+  const { data: leaveEncashmentDailyRateResponse } = useQuery({
+    queryKey: ['leaveEncashmentDailyRate', leaveEncashmentEmployee?.id],
+    queryFn: () =>
+      humanResourcesServices.getLeaveEncashmentDailyRate(
+        leaveEncashmentEmployee?.id
+      ),
+    enabled: leaveEncashmentDialogOpen && !!leaveEncashmentEmployee,
+    retry: false,
+  });
+  const leaveEncashmentDailyRate: number | null =
+    leaveEncashmentDailyRateResponse?.daily_rate ?? null;
+
+  useEffect(() => {
+    if (
+      leaveEncashmentAmountTouched ||
+      leaveEncashmentDaysBought === '' ||
+      leaveEncashmentDailyRate === null
+    )
+      return;
+
+    setLeaveEncashmentAmount(
+      Math.round(Number(leaveEncashmentDaysBought) * leaveEncashmentDailyRate * 100) / 100
+    );
+  }, [
+    leaveEncashmentDaysBought,
+    leaveEncashmentDailyRate,
+    leaveEncashmentAmountTouched,
+  ]);
 
   // Download template mutation
   const { mutate: downloadTemplate, isPending: isDownloading } = useMutation({
@@ -331,6 +608,374 @@ const PayrollPeriodAdjustmentsTab = ({
     },
   });
 
+  // Add overtime entry mutation
+  const addOvertimeMutation = useMutation({
+    mutationFn: humanResourcesServices.addPeriodOvertime,
+    onSuccess: () => {
+      closeOvertimeDialog();
+      refetchAdjustments();
+      enqueueSnackbar('Overtime entry logged successfully', {
+        variant: 'success',
+      });
+    },
+    onError: (error: any) => {
+      enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
+    },
+  });
+
+  // Edit overtime entry mutation
+  const editOvertimeMutation = useMutation({
+    mutationFn: humanResourcesServices.updatePeriodOvertime,
+    onSuccess: () => {
+      closeOvertimeDialog();
+      refetchAdjustments();
+      enqueueSnackbar('Overtime entry updated successfully', {
+        variant: 'success',
+      });
+    },
+    onError: (error: any) => {
+      enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
+    },
+  });
+
+  // Delete overtime entry mutation
+  const deleteOvertimeMutation = useMutation({
+    mutationFn: (id: number) => humanResourcesServices.deletePeriodOvertime(id),
+    onSuccess: () => {
+      setDeleteDialogOpen(false);
+      setDeletingId(null);
+      setDeletingType(null);
+      refetchAdjustments();
+      enqueueSnackbar('Overtime entry removed successfully', {
+        variant: 'success',
+      });
+    },
+    onError: (error: any) => {
+      setDeleteDialogOpen(false);
+      enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
+    },
+  });
+
+  // Add absence entry mutation
+  const addAbsenceMutation = useMutation({
+    mutationFn: humanResourcesServices.addPeriodAbsence,
+    onSuccess: () => {
+      closeAbsenceDialog();
+      refetchAdjustments();
+      enqueueSnackbar('Absence entry logged successfully', {
+        variant: 'success',
+      });
+    },
+    onError: (error: any) => {
+      enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
+    },
+  });
+
+  // Edit absence entry mutation
+  const editAbsenceMutation = useMutation({
+    mutationFn: humanResourcesServices.updatePeriodAbsence,
+    onSuccess: () => {
+      closeAbsenceDialog();
+      refetchAdjustments();
+      enqueueSnackbar('Absence entry updated successfully', {
+        variant: 'success',
+      });
+    },
+    onError: (error: any) => {
+      enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
+    },
+  });
+
+  // Delete absence entry mutation
+  const deleteAbsenceMutation = useMutation({
+    mutationFn: (id: number) => humanResourcesServices.deletePeriodAbsence(id),
+    onSuccess: () => {
+      setDeleteDialogOpen(false);
+      setDeletingId(null);
+      setDeletingType(null);
+      refetchAdjustments();
+      enqueueSnackbar('Absence entry removed successfully', {
+        variant: 'success',
+      });
+    },
+    onError: (error: any) => {
+      setDeleteDialogOpen(false);
+      enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
+    },
+  });
+
+  // Add leave encashment mutation
+  const addLeaveEncashmentMutation = useMutation({
+    mutationFn: humanResourcesServices.addPeriodLeaveEncashment,
+    onSuccess: () => {
+      closeLeaveEncashmentDialog();
+      refetchAdjustments();
+      enqueueSnackbar('Leave encashment added successfully', {
+        variant: 'success',
+      });
+    },
+    onError: (error: any) => {
+      enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
+    },
+  });
+
+  // Delete leave encashment mutation
+  const deleteLeaveEncashmentMutation = useMutation({
+    mutationFn: (id: number) =>
+      humanResourcesServices.deletePeriodLeaveEncashment(id),
+    onSuccess: () => {
+      setDeleteDialogOpen(false);
+      setDeletingId(null);
+      setDeletingType(null);
+      refetchAdjustments();
+      enqueueSnackbar('Leave encashment removed and days restored to balance', {
+        variant: 'success',
+      });
+    },
+    onError: (error: any) => {
+      setDeleteDialogOpen(false);
+      enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
+    },
+  });
+
+  // Add allowance/deduction mutations — the single-entry counterpart to the
+  // Excel upload.
+  const addAllowanceMutation = useMutation({
+    mutationFn: humanResourcesServices.addPeriodAdjustmentAllowance,
+    onSuccess: () => {
+      closeAddAdjustmentDialog();
+      refetchAdjustments();
+      enqueueSnackbar('Allowance added successfully', { variant: 'success' });
+    },
+    onError: (error: any) => {
+      enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
+    },
+  });
+
+  const addDeductionMutation = useMutation({
+    mutationFn: humanResourcesServices.addPeriodAdjustmentDeduction,
+    onSuccess: () => {
+      closeAddAdjustmentDialog();
+      refetchAdjustments();
+      enqueueSnackbar('Deduction added successfully', { variant: 'success' });
+    },
+    onError: (error: any) => {
+      enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
+    },
+  });
+
+  const closeOvertimeDialog = () => {
+    setOvertimeDialogOpen(false);
+    setEditingOvertime(null);
+    setOvertimeEmployee(null);
+    setOvertimeType(null);
+    setOvertimeDate(defaultOvertimeDate());
+    setOvertimeHours('');
+    setOvertimeRemarks('');
+  };
+
+  const handleOvertimeEditClick = (item: PeriodOvertime) => {
+    setEditingOvertime(item);
+    setOvertimeEmployee(item.employee as unknown as Employee);
+    setOvertimeType(
+      item.overtime_type
+        ? { id: item.overtime_type.id, name: item.overtime_type.name, multiplier: item.overtime_type.multiplier }
+        : null
+    );
+    setOvertimeDate(dayjs(item.date).toISOString());
+    setOvertimeHours(item.hours);
+    setOvertimeRemarks(item.remarks || '');
+    setOvertimeDialogOpen(true);
+  };
+
+  const handleOvertimeSave = () => {
+    if (!overtimeType || !overtimeDate || overtimeHours === '') return;
+
+    if (editingOvertime) {
+      editOvertimeMutation.mutate({
+        id: editingOvertime.id,
+        overtime_type_id: overtimeType.id,
+        date: dayjs(overtimeDate).format('YYYY-MM-DD'),
+        hours: Number(overtimeHours),
+        remarks: overtimeRemarks || undefined,
+      });
+    } else {
+      if (!overtimeEmployee) return;
+      addOvertimeMutation.mutate({
+        payroll_period_id: payrollPeriodId,
+        employee_id: overtimeEmployee.id,
+        overtime_type_id: overtimeType.id,
+        date: dayjs(overtimeDate).format('YYYY-MM-DD'),
+        hours: Number(overtimeHours),
+        remarks: overtimeRemarks || undefined,
+      });
+    }
+  };
+
+  const filterOvertimeEntries = (items: PeriodOvertime[], query: string) => {
+    const q = query.trim().toLowerCase();
+    if (!q) return items;
+
+    return items.filter((item) => {
+      const employee = item.employee;
+      const haystack = [
+        employee?.employee_number,
+        employee?.first_name,
+        employee?.last_name,
+        item.overtime_type?.name,
+        item.remarks,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+      return haystack.includes(q);
+    });
+  };
+
+  const closeAbsenceDialog = () => {
+    setAbsenceDialogOpen(false);
+    setEditingAbsence(null);
+    setAbsenceEmployee(null);
+    setAbsenceDate(defaultOvertimeDate());
+    setAbsenceHours('');
+    setAbsenceRemarks('');
+  };
+
+  const handleAbsenceEditClick = (item: PeriodAbsence) => {
+    setEditingAbsence(item);
+    setAbsenceEmployee(item.employee as unknown as Employee);
+    setAbsenceDate(dayjs(item.date).toISOString());
+    setAbsenceHours(item.hours);
+    setAbsenceRemarks(item.remarks || '');
+    setAbsenceDialogOpen(true);
+  };
+
+  const handleAbsenceSave = () => {
+    if (!absenceDate || absenceHours === '') return;
+
+    if (editingAbsence) {
+      editAbsenceMutation.mutate({
+        id: editingAbsence.id,
+        date: dayjs(absenceDate).format('YYYY-MM-DD'),
+        hours: Number(absenceHours),
+        remarks: absenceRemarks || undefined,
+      });
+    } else {
+      if (!absenceEmployee) return;
+      addAbsenceMutation.mutate({
+        payroll_period_id: payrollPeriodId,
+        employee_id: absenceEmployee.id,
+        date: dayjs(absenceDate).format('YYYY-MM-DD'),
+        hours: Number(absenceHours),
+        remarks: absenceRemarks || undefined,
+      });
+    }
+  };
+
+  const filterAbsenceEntries = (items: PeriodAbsence[], query: string) => {
+    const q = query.trim().toLowerCase();
+    if (!q) return items;
+
+    return items.filter((item) => {
+      const employee = item.employee;
+      const haystack = [
+        employee?.employee_number,
+        employee?.first_name,
+        employee?.last_name,
+        item.remarks,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+      return haystack.includes(q);
+    });
+  };
+
+  const closeLeaveEncashmentDialog = () => {
+    setLeaveEncashmentDialogOpen(false);
+    setLeaveEncashmentEmployee(null);
+    setLeaveEncashmentType(null);
+    setLeaveEncashmentDaysBought('');
+    setLeaveEncashmentAmount('');
+    setLeaveEncashmentAmountTouched(false);
+    setLeaveEncashmentRemarks('');
+  };
+
+  const handleLeaveEncashmentSave = () => {
+    if (
+      !leaveEncashmentEmployee ||
+      !leaveEncashmentType ||
+      leaveEncashmentDaysBought === '' ||
+      leaveEncashmentAmount === ''
+    )
+      return;
+
+    addLeaveEncashmentMutation.mutate({
+      payroll_period_id: payrollPeriodId,
+      employee_id: leaveEncashmentEmployee.id,
+      leave_type_id: leaveEncashmentType.id,
+      year,
+      days_bought: Number(leaveEncashmentDaysBought),
+      amount: Number(leaveEncashmentAmount),
+      remarks: leaveEncashmentRemarks || undefined,
+    });
+  };
+
+  const filterLeaveEncashmentEntries = (
+    items: PeriodLeaveEncashment[],
+    query: string
+  ) => {
+    const q = query.trim().toLowerCase();
+    if (!q) return items;
+
+    return items.filter((item) => {
+      const employee = item.employee;
+      const haystack = [
+        employee?.employee_number,
+        employee?.first_name,
+        employee?.last_name,
+        item.leave_type?.name,
+        item.remarks,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+      return haystack.includes(q);
+    });
+  };
+
+  const closeAddAdjustmentDialog = () => {
+    setAddAdjustmentDialogType(null);
+    setAddAdjustmentEmployee(null);
+    setAddAdjustmentType(null);
+    setAddAdjustmentAmount('');
+    setAddAdjustmentRemarks('');
+  };
+
+  const handleAddAdjustmentSave = () => {
+    if (!addAdjustmentEmployee || !addAdjustmentType || addAdjustmentAmount === '')
+      return;
+
+    const payload = {
+      payroll_period_id: payrollPeriodId,
+      employee_id: addAdjustmentEmployee.id,
+      amount: Number(addAdjustmentAmount),
+      remarks: addAdjustmentRemarks || undefined,
+    };
+
+    if (addAdjustmentDialogType === 'allowance') {
+      addAllowanceMutation.mutate({
+        ...payload,
+        allowance_type_id: addAdjustmentType.id,
+      });
+    } else if (addAdjustmentDialogType === 'deduction') {
+      addDeductionMutation.mutate({
+        ...payload,
+        deduction_type_id: addAdjustmentType.id,
+      });
+    }
+  };
+
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     setFile(event.target.files?.[0] || null);
     setImportResult(null);
@@ -380,7 +1025,10 @@ const PayrollPeriodAdjustmentsTab = ({
     }
   };
 
-  const handleDeleteClick = (id: number, type: 'allowance' | 'deduction') => {
+  const handleDeleteClick = (
+    id: number,
+    type: 'allowance' | 'deduction' | 'overtime' | 'absence' | 'leaveEncashment'
+  ) => {
     setDeletingId(id);
     setDeletingType(type);
     setDeleteDialogOpen(true);
@@ -390,8 +1038,14 @@ const PayrollPeriodAdjustmentsTab = ({
     if (deletingId && deletingType) {
       if (deletingType === 'allowance') {
         deleteAllowanceMutation.mutate(deletingId);
-      } else {
+      } else if (deletingType === 'deduction') {
         deleteDeductionMutation.mutate(deletingId);
+      } else if (deletingType === 'overtime') {
+        deleteOvertimeMutation.mutate(deletingId);
+      } else if (deletingType === 'absence') {
+        deleteAbsenceMutation.mutate(deletingId);
+      } else {
+        deleteLeaveEncashmentMutation.mutate(deletingId);
       }
     }
   };
@@ -501,23 +1155,29 @@ const PayrollPeriodAdjustmentsTab = ({
             </TableCell>
             <TableCell align='center'>
               <Stack direction='row' spacing={0.5} justifyContent='center'>
-                <Tooltip title='Edit'>
-                  <IconButton
-                    size='small'
-                    onClick={() => handleEditClick(item, type)}
-                    color='primary'
-                  >
-                    <EditOutlined fontSize='small' />
-                  </IconButton>
+                <Tooltip title={isPeriodLocked ? 'Period is locked' : 'Edit'}>
+                  <span>
+                    <IconButton
+                      size='small'
+                      onClick={() => handleEditClick(item, type)}
+                      disabled={isPeriodLocked}
+                      color='primary'
+                    >
+                      <EditOutlined fontSize='small' />
+                    </IconButton>
+                  </span>
                 </Tooltip>
-                <Tooltip title='Delete'>
-                  <IconButton
-                    size='small'
-                    onClick={() => handleDeleteClick(item.id, type)}
-                    color='error'
-                  >
-                    <DeleteOutline fontSize='small' />
-                  </IconButton>
+                <Tooltip title={isPeriodLocked ? 'Period is locked' : 'Delete'}>
+                  <span>
+                    <IconButton
+                      size='small'
+                      onClick={() => handleDeleteClick(item.id, type)}
+                      disabled={isPeriodLocked}
+                      color='error'
+                    >
+                      <DeleteOutline fontSize='small' />
+                    </IconButton>
+                  </span>
                 </Tooltip>
               </Stack>
             </TableCell>
@@ -567,28 +1227,448 @@ const PayrollPeriodAdjustmentsTab = ({
     );
   };
 
+  const renderOvertimeTable = (searchQuery: string) => {
+    const allItems = adjustments?.overtime || [];
+
+    if (allItems.length === 0) {
+      return (
+        <Alert severity='info' sx={{ borderRadius: 2 }}>
+          No overtime logged for this period yet. Use the "Log Overtime"
+          button to add an entry.
+        </Alert>
+      );
+    }
+
+    const items = filterOvertimeEntries(allItems, searchQuery);
+
+    if (items.length === 0) {
+      return (
+        <Alert severity='info' sx={{ borderRadius: 2 }}>
+          No overtime entries match "{searchQuery}".
+        </Alert>
+      );
+    }
+
+    const totalHours = items.reduce((sum, item) => sum + (item.hours || 0), 0);
+
+    return (
+      <TableContainer
+        component={Paper}
+        variant='outlined'
+        sx={{ borderRadius: 2 }}
+      >
+        <Table size='small'>
+          <TableHead>
+            <TableRow sx={{ bgcolor: isDark ? 'action.hover' : 'grey.50' }}>
+              <TableCell>Employee</TableCell>
+              <TableCell>Type</TableCell>
+              <TableCell>Date</TableCell>
+              <TableCell align='right'>Hours</TableCell>
+              <TableCell>Remarks</TableCell>
+              <TableCell align='center'>Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {items.map((item) => {
+              const employee = item.employee;
+
+              return (
+                <TableRow key={item.id} hover>
+                  <TableCell>
+                    <Typography variant='body2'>
+                      {employee?.employee_number || 'N/A'} —{' '}
+                      {employee?.first_name || ''} {employee?.last_name || ''}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={
+                        item.overtime_type
+                          ? `${item.overtime_type.name} (${Number(item.overtime_type.multiplier).toFixed(2)}x)`
+                          : 'N/A'
+                      }
+                      size='small'
+                      color='info'
+                      variant='outlined'
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant='body2'>
+                      {dayjs(item.date).format('DD MMM YYYY')}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align='right'>
+                    <Typography variant='body2' fontWeight='medium'>
+                      {item.hours}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant='body2' color='text.secondary'>
+                      {item.remarks || '-'}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align='center'>
+                    <Stack direction='row' spacing={0.5} justifyContent='center'>
+                      <Tooltip title={isPeriodLocked ? 'Period is locked' : 'Edit'}>
+                        <span>
+                          <IconButton
+                            size='small'
+                            onClick={() => handleOvertimeEditClick(item)}
+                            disabled={isPeriodLocked}
+                            color='primary'
+                          >
+                            <EditOutlined fontSize='small' />
+                          </IconButton>
+                        </span>
+                      </Tooltip>
+                      <Tooltip title={isPeriodLocked ? 'Period is locked' : 'Delete'}>
+                        <span>
+                          <IconButton
+                            size='small'
+                            onClick={() => handleDeleteClick(item.id, 'overtime')}
+                            disabled={isPeriodLocked}
+                            color='error'
+                          >
+                            <DeleteOutline fontSize='small' />
+                          </IconButton>
+                        </span>
+                      </Tooltip>
+                    </Stack>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+          <TableFooter>
+            <TableRow sx={{ bgcolor: isDark ? 'action.hover' : 'grey.50' }}>
+              <TableCell colSpan={3}>
+                <Typography variant='body2' fontWeight={700}>
+                  Total ({items.length}
+                  {items.length !== allItems.length
+                    ? ` of ${allItems.length}`
+                    : ''}
+                  )
+                </Typography>
+              </TableCell>
+              <TableCell align='right'>
+                <Typography variant='body2' fontWeight={700}>
+                  {totalHours.toLocaleString()}
+                </Typography>
+              </TableCell>
+              <TableCell colSpan={2} />
+            </TableRow>
+          </TableFooter>
+        </Table>
+      </TableContainer>
+    );
+  };
+
+  const renderAbsenceTable = (searchQuery: string) => {
+    const allItems = adjustments?.absences || [];
+
+    if (allItems.length === 0) {
+      return (
+        <Alert severity='info' sx={{ borderRadius: 2 }}>
+          No absences logged for this period yet. Use the "Log Absence"
+          button to add an entry.
+        </Alert>
+      );
+    }
+
+    const items = filterAbsenceEntries(allItems, searchQuery);
+
+    if (items.length === 0) {
+      return (
+        <Alert severity='info' sx={{ borderRadius: 2 }}>
+          No absence entries match "{searchQuery}".
+        </Alert>
+      );
+    }
+
+    const totalHours = items.reduce((sum, item) => sum + (item.hours || 0), 0);
+
+    return (
+      <TableContainer
+        component={Paper}
+        variant='outlined'
+        sx={{ borderRadius: 2 }}
+      >
+        <Table size='small'>
+          <TableHead>
+            <TableRow sx={{ bgcolor: isDark ? 'action.hover' : 'grey.50' }}>
+              <TableCell>Employee</TableCell>
+              <TableCell>Date</TableCell>
+              <TableCell align='right'>Hours</TableCell>
+              <TableCell>Remarks</TableCell>
+              <TableCell align='center'>Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {items.map((item) => {
+              const employee = item.employee;
+
+              return (
+                <TableRow key={item.id} hover>
+                  <TableCell>
+                    <Typography variant='body2'>
+                      {employee?.employee_number || 'N/A'} —{' '}
+                      {employee?.first_name || ''} {employee?.last_name || ''}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant='body2'>
+                      {dayjs(item.date).format('DD MMM YYYY')}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align='right'>
+                    <Typography variant='body2' fontWeight='medium'>
+                      {item.hours}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant='body2' color='text.secondary'>
+                      {item.remarks || '-'}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align='center'>
+                    <Stack direction='row' spacing={0.5} justifyContent='center'>
+                      <Tooltip title={isPeriodLocked ? 'Period is locked' : 'Edit'}>
+                        <span>
+                          <IconButton
+                            size='small'
+                            onClick={() => handleAbsenceEditClick(item)}
+                            disabled={isPeriodLocked}
+                            color='primary'
+                          >
+                            <EditOutlined fontSize='small' />
+                          </IconButton>
+                        </span>
+                      </Tooltip>
+                      <Tooltip title={isPeriodLocked ? 'Period is locked' : 'Delete'}>
+                        <span>
+                          <IconButton
+                            size='small'
+                            onClick={() => handleDeleteClick(item.id, 'absence')}
+                            disabled={isPeriodLocked}
+                            color='error'
+                          >
+                            <DeleteOutline fontSize='small' />
+                          </IconButton>
+                        </span>
+                      </Tooltip>
+                    </Stack>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+          <TableFooter>
+            <TableRow sx={{ bgcolor: isDark ? 'action.hover' : 'grey.50' }}>
+              <TableCell>
+                <Typography variant='body2' fontWeight={700}>
+                  Total ({items.length}
+                  {items.length !== allItems.length
+                    ? ` of ${allItems.length}`
+                    : ''}
+                  )
+                </Typography>
+              </TableCell>
+              <TableCell />
+              <TableCell align='right'>
+                <Typography variant='body2' fontWeight={700}>
+                  {totalHours.toLocaleString()}
+                </Typography>
+              </TableCell>
+              <TableCell colSpan={2} />
+            </TableRow>
+          </TableFooter>
+        </Table>
+      </TableContainer>
+    );
+  };
+
+  const renderLeaveEncashmentTable = (searchQuery: string) => {
+    const allItems = adjustments?.leaveEncashments || [];
+
+    if (allItems.length === 0) {
+      return (
+        <Alert severity='info' sx={{ borderRadius: 2 }}>
+          No leave has been bought back for this period yet. Use the "Buy
+          Leave" button to add an entry.
+        </Alert>
+      );
+    }
+
+    const items = filterLeaveEncashmentEntries(allItems, searchQuery);
+
+    if (items.length === 0) {
+      return (
+        <Alert severity='info' sx={{ borderRadius: 2 }}>
+          No leave encashment entries match "{searchQuery}".
+        </Alert>
+      );
+    }
+
+    const totalDays = items.reduce(
+      (sum, item) => sum + (item.days_bought || 0),
+      0
+    );
+    const totalAmount = items.reduce(
+      (sum, item) => sum + (item.amount || 0),
+      0
+    );
+
+    return (
+      <TableContainer
+        component={Paper}
+        variant='outlined'
+        sx={{ borderRadius: 2 }}
+      >
+        <Table size='small'>
+          <TableHead>
+            <TableRow sx={{ bgcolor: isDark ? 'action.hover' : 'grey.50' }}>
+              <TableCell>Employee</TableCell>
+              <TableCell>Leave Type</TableCell>
+              <TableCell align='right'>Days Bought</TableCell>
+              <TableCell align='right'>Amount</TableCell>
+              <TableCell>Remarks</TableCell>
+              <TableCell align='center'>Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {items.map((item) => {
+              const employee = item.employee;
+
+              return (
+                <TableRow key={item.id} hover>
+                  <TableCell>
+                    <Typography variant='body2'>
+                      {employee?.employee_number || 'N/A'} —{' '}
+                      {employee?.first_name || ''} {employee?.last_name || ''}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={item.leave_type?.name || 'N/A'}
+                      size='small'
+                      color='success'
+                      variant='outlined'
+                    />
+                  </TableCell>
+                  <TableCell align='right'>
+                    <Typography variant='body2' fontWeight='medium'>
+                      {item.days_bought}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align='right'>
+                    <Typography variant='body2' fontWeight='medium'>
+                      {item.amount.toLocaleString()}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant='body2' color='text.secondary'>
+                      {item.remarks || '-'}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align='center'>
+                    <Tooltip
+                      title={
+                        isPeriodLocked
+                          ? 'Period is locked'
+                          : 'Delete (restores bought days to balance)'
+                      }
+                    >
+                      <span>
+                        <IconButton
+                          size='small'
+                          onClick={() =>
+                            handleDeleteClick(item.id, 'leaveEncashment')
+                          }
+                          disabled={isPeriodLocked}
+                          color='error'
+                        >
+                          <DeleteOutline fontSize='small' />
+                        </IconButton>
+                      </span>
+                    </Tooltip>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+          <TableFooter>
+            <TableRow sx={{ bgcolor: isDark ? 'action.hover' : 'grey.50' }}>
+              <TableCell colSpan={2}>
+                <Typography variant='body2' fontWeight={700}>
+                  Total ({items.length}
+                  {items.length !== allItems.length
+                    ? ` of ${allItems.length}`
+                    : ''}
+                  )
+                </Typography>
+              </TableCell>
+              <TableCell align='right'>
+                <Typography variant='body2' fontWeight={700}>
+                  {totalDays.toLocaleString()}
+                </Typography>
+              </TableCell>
+              <TableCell align='right'>
+                <Typography variant='body2' fontWeight={700}>
+                  {totalAmount.toLocaleString()}
+                </Typography>
+              </TableCell>
+              <TableCell colSpan={2} />
+            </TableRow>
+          </TableFooter>
+        </Table>
+      </TableContainer>
+    );
+  };
+
   return (
     <Box>
+      {isPeriodLocked && (
+        <Alert severity='warning' sx={{ borderRadius: 2, mb: 2 }}>
+          <Typography variant='body2' fontWeight={600} gutterBottom>
+            This period's payroll run is already {lockedRun?.status}
+          </Typography>
+          <Typography variant='body2' color='text.secondary'>
+            Adjustments, overtime, absences, and leave encashments are
+            read-only below — anything added or changed here wouldn't be
+            reflected in that run. Generate a new run for this period to
+            apply changes, or make them while a run for it is still in
+            Draft.
+          </Typography>
+        </Alert>
+      )}
       <Box
         sx={{
           display: 'flex',
-          alignItems: 'center',
-          gap: 2,
+          flexDirection: { xs: 'column', md: 'row' },
+          alignItems: { xs: 'stretch', md: 'center' },
+          gap: { xs: 1, md: 2 },
           borderBottom: 1,
           borderColor: 'divider',
+          pb: { xs: 1, md: 0 },
         }}
       >
         <Tabs
           value={tabValue}
           onChange={handleTabChange}
+          variant='scrollable'
+          scrollButtons='auto'
+          allowScrollButtonsMobile
           sx={{
             flex: 1,
             minWidth: 0,
             '& .MuiTab-root': {
               textTransform: 'none',
               fontWeight: 500,
-              py: 2,
-              minHeight: 48,
+              py: { xs: 1, md: 2 },
+              minHeight: { xs: 40, md: 48 },
+              minWidth: 'auto',
+              px: { xs: 1.25, md: 2 },
+              fontSize: { xs: '0.8125rem', md: '0.875rem' },
               '&.Mui-selected': {
                 color: theme.palette.primary.main,
               },
@@ -609,15 +1689,151 @@ const PayrollPeriodAdjustmentsTab = ({
             label='Deductions'
             iconPosition='start'
           />
+          <Tab
+            icon={<AccessTimeOutlined />}
+            label='Overtime'
+            iconPosition='start'
+          />
+          <Tab
+            icon={<EventBusyOutlined />}
+            label='Absent'
+            iconPosition='start'
+          />
+          <Tab
+            icon={<EventAvailableOutlined />}
+            label='Leave Encashment'
+            iconPosition='start'
+          />
         </Tabs>
-        <Button
-          variant='contained'
-          startIcon={<UploadOutlined />}
-          onClick={() => setUploadDialogOpen(true)}
-          sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
-        >
-          Upload Adjustments
-        </Button>
+        {tabValue === 2 ? (
+          <Tooltip
+            title={
+              isPeriodLocked
+                ? `This period's run is already ${lockedRun?.status} — new overtime entries won't be reflected in it`
+                : ''
+            }
+          >
+            <span>
+              <Button
+                variant='contained'
+                startIcon={<AccessTimeOutlined />}
+                onClick={() => setOvertimeDialogOpen(true)}
+                disabled={isPeriodLocked}
+                sx={{
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  width: { xs: '100%', md: 'auto' },
+                }}
+              >
+                Log Overtime
+              </Button>
+            </span>
+          </Tooltip>
+        ) : tabValue === 3 ? (
+          <Tooltip
+            title={
+              isPeriodLocked
+                ? `This period's run is already ${lockedRun?.status} — new absence entries won't be reflected in it`
+                : ''
+            }
+          >
+            <span>
+              <Button
+                variant='contained'
+                startIcon={<EventBusyOutlined />}
+                onClick={() => setAbsenceDialogOpen(true)}
+                disabled={isPeriodLocked}
+                sx={{
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  width: { xs: '100%', md: 'auto' },
+                }}
+              >
+                Log Absence
+              </Button>
+            </span>
+          </Tooltip>
+        ) : tabValue === 4 ? (
+          <Tooltip
+            title={
+              isPeriodLocked
+                ? `This period's run is already ${lockedRun?.status} — new leave encashments won't be reflected in it`
+                : ''
+            }
+          >
+            <span>
+              <Button
+                variant='contained'
+                startIcon={<EventAvailableOutlined />}
+                onClick={() => setLeaveEncashmentDialogOpen(true)}
+                disabled={isPeriodLocked}
+                sx={{
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  width: { xs: '100%', md: 'auto' },
+                }}
+              >
+                Buy Leave
+              </Button>
+            </span>
+          </Tooltip>
+        ) : (
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+            <Tooltip
+              title={
+                isPeriodLocked
+                  ? `This period's run is already ${lockedRun?.status} — new adjustments won't be reflected in it`
+                  : ''
+              }
+            >
+              <span>
+                <Button
+                  variant='outlined'
+                  startIcon={<AddCircleOutline />}
+                  onClick={() =>
+                    setAddAdjustmentDialogType(tabValue === 0 ? 'allowance' : 'deduction')
+                  }
+                  disabled={isPeriodLocked}
+                  sx={{
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    width: { xs: '100%', sm: 'auto' },
+                  }}
+                >
+                  Add {tabValue === 0 ? 'Allowance' : 'Deduction'}
+                </Button>
+              </span>
+            </Tooltip>
+            <Tooltip
+              title={
+                isPeriodLocked
+                  ? `This period's run is already ${lockedRun?.status} — new adjustments won't be reflected in it`
+                  : ''
+              }
+            >
+              <span>
+                <Button
+                  variant='contained'
+                  startIcon={<UploadOutlined />}
+                  onClick={() => setUploadDialogOpen(true)}
+                  disabled={isPeriodLocked}
+                  sx={{
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    width: { xs: '100%', sm: 'auto' },
+                  }}
+                >
+                  Upload Adjustments
+                </Button>
+              </span>
+            </Tooltip>
+          </Stack>
+        )}
       </Box>
 
       <TabPanel value={tabValue} index={0}>
@@ -732,12 +1948,182 @@ const PayrollPeriodAdjustmentsTab = ({
         </Stack>
       </TabPanel>
 
+      <TabPanel value={tabValue} index={2}>
+        <Stack spacing={3}>
+          <Alert
+            severity='info'
+            icon={<DescriptionOutlined />}
+            sx={{
+              borderRadius: 2,
+              '& .MuiAlert-icon': {
+                alignItems: 'center',
+              },
+              bgcolor: isDark ? alpha(theme.palette.info.main, 0.1) : undefined,
+            }}
+          >
+            <Typography variant='body2' fontWeight={600} gutterBottom>
+              Logged Overtime — {monthName} {year}
+            </Typography>
+            <Typography variant='body2' color='text.secondary'>
+              Hours logged here for monthly-paid employees are converted to an
+              "Overtime Pay" amount when the payroll run is generated, using
+              each employee's standard hours per month and the selected
+              overtime type's multiplier.
+            </Typography>
+          </Alert>
+
+          <TextField
+            size='small'
+            placeholder='Search by employee number, name, type, or remarks'
+            value={overtimeSearch}
+            onChange={(e) => setOvertimeSearch(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position='start'>
+                  <SearchOutlined fontSize='small' />
+                </InputAdornment>
+              ),
+              endAdornment: overtimeSearch && (
+                <InputAdornment position='end'>
+                  <IconButton size='small' onClick={() => setOvertimeSearch('')}>
+                    <ClearOutlined fontSize='small' />
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+          />
+
+          {isLoadingAdjustments ? (
+            <Box display='flex' justifyContent='center' py={4}>
+              <CircularProgress size={30} />
+            </Box>
+          ) : (
+            renderOvertimeTable(overtimeSearch)
+          )}
+        </Stack>
+      </TabPanel>
+
+      <TabPanel value={tabValue} index={3}>
+        <Stack spacing={3}>
+          <Alert
+            severity='info'
+            icon={<DescriptionOutlined />}
+            sx={{
+              borderRadius: 2,
+              '& .MuiAlert-icon': {
+                alignItems: 'center',
+              },
+              bgcolor: isDark ? alpha(theme.palette.info.main, 0.1) : undefined,
+            }}
+          >
+            <Typography variant='body2' fontWeight={600} gutterBottom>
+              Logged Absences — {monthName} {year}
+            </Typography>
+            <Typography variant='body2' color='text.secondary'>
+              Hours logged here for monthly-paid employees are converted to a
+              pre-tax "Absence Deduction" amount when the payroll run is
+              generated, using each employee's standard hours per month —
+              deducted from basic salary before PAYE, the reverse of Overtime.
+            </Typography>
+          </Alert>
+
+          <TextField
+            size='small'
+            placeholder='Search by employee number, name, or remarks'
+            value={absenceSearch}
+            onChange={(e) => setAbsenceSearch(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position='start'>
+                  <SearchOutlined fontSize='small' />
+                </InputAdornment>
+              ),
+              endAdornment: absenceSearch && (
+                <InputAdornment position='end'>
+                  <IconButton size='small' onClick={() => setAbsenceSearch('')}>
+                    <ClearOutlined fontSize='small' />
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+          />
+
+          {isLoadingAdjustments ? (
+            <Box display='flex' justifyContent='center' py={4}>
+              <CircularProgress size={30} />
+            </Box>
+          ) : (
+            renderAbsenceTable(absenceSearch)
+          )}
+        </Stack>
+      </TabPanel>
+
+      <TabPanel value={tabValue} index={4}>
+        <Stack spacing={3}>
+          <Alert
+            severity='info'
+            icon={<DescriptionOutlined />}
+            sx={{
+              borderRadius: 2,
+              '& .MuiAlert-icon': {
+                alignItems: 'center',
+              },
+              bgcolor: isDark ? alpha(theme.palette.info.main, 0.1) : undefined,
+            }}
+          >
+            <Typography variant='body2' fontWeight={600} gutterBottom>
+              Leave Encashment — {monthName} {year}
+            </Typography>
+            <Typography variant='body2' color='text.secondary'>
+              Employer-bought leave days. Each entry pays out as a taxable
+              "Leave Encashment" allowance on this period's payslip and
+              deducts the days bought from the employee's leave balance for
+              the year. Deleting an entry restores the days.
+            </Typography>
+          </Alert>
+
+          <TextField
+            size='small'
+            placeholder='Search by employee number, name, leave type, or remarks'
+            value={leaveEncashmentSearch}
+            onChange={(e) => setLeaveEncashmentSearch(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position='start'>
+                  <SearchOutlined fontSize='small' />
+                </InputAdornment>
+              ),
+              endAdornment: leaveEncashmentSearch && (
+                <InputAdornment position='end'>
+                  <IconButton
+                    size='small'
+                    onClick={() => setLeaveEncashmentSearch('')}
+                  >
+                    <ClearOutlined fontSize='small' />
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+          />
+
+          {isLoadingAdjustments ? (
+            <Box display='flex' justifyContent='center' py={4}>
+              <CircularProgress size={30} />
+            </Box>
+          ) : (
+            renderLeaveEncashmentTable(leaveEncashmentSearch)
+          )}
+        </Stack>
+      </TabPanel>
+
       {/* Upload Adjustments Dialog */}
       <Dialog
         open={uploadDialogOpen}
         onClose={handleCloseUploadDialog}
         maxWidth='sm'
         fullWidth
+        fullScreen={belowLargeScreen}
+        scroll={belowLargeScreen ? 'body' : 'paper'}
       >
         <MuiDialogTitle>Upload Adjustments</MuiDialogTitle>
         <MuiDialogContent>
@@ -1149,6 +2535,8 @@ const PayrollPeriodAdjustmentsTab = ({
         }}
         maxWidth='sm'
         fullWidth
+        fullScreen={belowLargeScreen}
+        scroll={belowLargeScreen ? 'body' : 'paper'}
       >
         <MuiDialogTitle>
           Edit {editingAllowance ? 'Allowance' : 'Deduction'}
@@ -1157,13 +2545,12 @@ const PayrollPeriodAdjustmentsTab = ({
           <Box sx={{ pt: 2 }}>
             <TextField
               label='Amount'
-              type='number'
               fullWidth
               value={editAmount}
-              onChange={(e) => setEditAmount(Number(e.target.value))}
+              onChange={(e) => setEditAmount(sanitizedNumber(e.target.value) || 0)}
               sx={{ mb: 2 }}
               required
-              inputProps={{ min: 0, step: 0.01 }}
+              InputProps={{ inputComponent: CommaSeparatedField as any }}
             />
             <TextField
               label='Remarks'
@@ -1206,8 +2593,18 @@ const PayrollPeriodAdjustmentsTab = ({
         <MuiDialogTitle>Confirm Delete</MuiDialogTitle>
         <MuiDialogContent>
           <Typography>
-            Are you sure you want to delete this {deletingType} adjustment? This
-            action cannot be undone.
+            Are you sure you want to delete this{' '}
+            {deletingType === 'leaveEncashment' ? 'leave encashment' : deletingType}
+            {deletingType === 'overtime' ||
+            deletingType === 'absence' ||
+            deletingType === 'leaveEncashment'
+              ? ' entry'
+              : ' adjustment'}
+            ? This action cannot be undone
+            {deletingType === 'leaveEncashment'
+              ? ' (the bought days will be restored to the leave balance)'
+              : ''}
+            .
           </Typography>
         </MuiDialogContent>
         <MuiDialogActions>
@@ -1218,10 +2615,415 @@ const PayrollPeriodAdjustmentsTab = ({
             variant='contained'
             disabled={
               deleteAllowanceMutation.isPending ||
-              deleteDeductionMutation.isPending
+              deleteDeductionMutation.isPending ||
+              deleteOvertimeMutation.isPending ||
+              deleteAbsenceMutation.isPending ||
+              deleteLeaveEncashmentMutation.isPending
             }
           >
             Delete
+          </Button>
+        </MuiDialogActions>
+      </Dialog>
+
+      {/* Log/Edit Overtime Dialog */}
+      <Dialog
+        open={overtimeDialogOpen}
+        onClose={closeOvertimeDialog}
+        maxWidth='sm'
+        fullWidth
+        fullScreen={belowLargeScreen}
+        scroll={belowLargeScreen ? 'body' : 'paper'}
+      >
+        <MuiDialogTitle>
+          {editingOvertime ? 'Edit Overtime Entry' : 'Log Overtime Entry'}
+        </MuiDialogTitle>
+        <MuiDialogContent>
+          <Stack spacing={2} sx={{ pt: 2 }}>
+            {!editingOvertime && (
+              <EmployeesProvider>
+                <EmployeeSelector
+                  value={overtimeEmployee || undefined}
+                  onChange={(newValue) => {
+                    setOvertimeEmployee(
+                      newValue && !Array.isArray(newValue) ? newValue : null
+                    );
+                  }}
+                />
+              </EmployeesProvider>
+            )}
+            <Autocomplete
+              size='small'
+              options={overtimeTypes}
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              getOptionLabel={(option) =>
+                `${option.name} (${Number(option.multiplier).toFixed(2)}x)`
+              }
+              value={overtimeType}
+              onChange={(_event, newValue) => setOvertimeType(newValue)}
+              renderInput={(params) => (
+                <TextField {...params} label='Overtime Type' />
+              )}
+            />
+            <DatePicker
+              label='Date'
+              value={overtimeDate ? dayjs(overtimeDate) : null}
+              onChange={(newValue) =>
+                setOvertimeDate(newValue ? newValue.toISOString() : '')
+              }
+              minDate={periodStart}
+              maxDate={periodEnd}
+              slotProps={{
+                textField: {
+                  size: 'small',
+                  fullWidth: true,
+                  helperText: `Must fall within ${monthName} ${year}`,
+                },
+              }}
+            />
+            <TextField
+              label='Hours'
+              size='small'
+              fullWidth
+              type='number'
+              value={overtimeHours}
+              onChange={(e) =>
+                setOvertimeHours(
+                  e.target.value === '' ? '' : Number(e.target.value)
+                )
+              }
+              inputProps={{ min: 0.25, step: 0.25 }}
+            />
+            <TextField
+              label='Remarks'
+              size='small'
+              fullWidth
+              multiline
+              minRows={2}
+              value={overtimeRemarks}
+              onChange={(e) => setOvertimeRemarks(e.target.value)}
+              placeholder='Optional remarks for this entry'
+            />
+          </Stack>
+        </MuiDialogContent>
+        <MuiDialogActions>
+          <Button onClick={closeOvertimeDialog}>Cancel</Button>
+          <Button
+            onClick={handleOvertimeSave}
+            variant='contained'
+            disabled={
+              !overtimeType ||
+              !overtimeDate ||
+              overtimeHours === '' ||
+              (!editingOvertime && !overtimeEmployee) ||
+              addOvertimeMutation.isPending ||
+              editOvertimeMutation.isPending
+            }
+          >
+            Save
+          </Button>
+        </MuiDialogActions>
+      </Dialog>
+
+      {/* Log/Edit Absence Dialog */}
+      <Dialog
+        open={absenceDialogOpen}
+        onClose={closeAbsenceDialog}
+        maxWidth='sm'
+        fullWidth
+        fullScreen={belowLargeScreen}
+        scroll={belowLargeScreen ? 'body' : 'paper'}
+      >
+        <MuiDialogTitle>
+          {editingAbsence ? 'Edit Absence Entry' : 'Log Absence Entry'}
+        </MuiDialogTitle>
+        <MuiDialogContent>
+          <Stack spacing={2} sx={{ pt: 2 }}>
+            {!editingAbsence && (
+              <EmployeesProvider>
+                <EmployeeSelector
+                  value={absenceEmployee || undefined}
+                  onChange={(newValue) => {
+                    setAbsenceEmployee(
+                      newValue && !Array.isArray(newValue) ? newValue : null
+                    );
+                  }}
+                />
+              </EmployeesProvider>
+            )}
+            <DatePicker
+              label='Date'
+              value={absenceDate ? dayjs(absenceDate) : null}
+              onChange={(newValue) =>
+                setAbsenceDate(newValue ? newValue.toISOString() : '')
+              }
+              minDate={periodStart}
+              maxDate={periodEnd}
+              slotProps={{
+                textField: {
+                  size: 'small',
+                  fullWidth: true,
+                  helperText: `Must fall within ${monthName} ${year}`,
+                },
+              }}
+            />
+            <TextField
+              label='Hours'
+              size='small'
+              fullWidth
+              type='number'
+              value={absenceHours}
+              onChange={(e) =>
+                setAbsenceHours(
+                  e.target.value === '' ? '' : Number(e.target.value)
+                )
+              }
+              inputProps={{ min: 0.25, step: 0.25 }}
+            />
+            <TextField
+              label='Remarks'
+              size='small'
+              fullWidth
+              multiline
+              minRows={2}
+              value={absenceRemarks}
+              onChange={(e) => setAbsenceRemarks(e.target.value)}
+              placeholder='Optional remarks for this entry'
+            />
+          </Stack>
+        </MuiDialogContent>
+        <MuiDialogActions>
+          <Button onClick={closeAbsenceDialog}>Cancel</Button>
+          <Button
+            onClick={handleAbsenceSave}
+            variant='contained'
+            disabled={
+              !absenceDate ||
+              absenceHours === '' ||
+              (!editingAbsence && !absenceEmployee) ||
+              addAbsenceMutation.isPending ||
+              editAbsenceMutation.isPending
+            }
+          >
+            Save
+          </Button>
+        </MuiDialogActions>
+      </Dialog>
+
+      {/* Add Allowance / Add Deduction Dialog — the single-entry counterpart
+          to the Excel upload. */}
+      <Dialog
+        open={!!addAdjustmentDialogType}
+        onClose={closeAddAdjustmentDialog}
+        maxWidth='sm'
+        fullWidth
+        fullScreen={belowLargeScreen}
+        scroll={belowLargeScreen ? 'body' : 'paper'}
+      >
+        <MuiDialogTitle>
+          Add {addAdjustmentDialogType === 'allowance' ? 'Allowance' : 'Deduction'}
+        </MuiDialogTitle>
+        <MuiDialogContent>
+          <Stack spacing={2} sx={{ pt: 2 }}>
+            <EmployeesProvider>
+              <EmployeeSelector
+                value={addAdjustmentEmployee || undefined}
+                onChange={(newValue) => {
+                  setAddAdjustmentEmployee(
+                    newValue && !Array.isArray(newValue) ? newValue : null
+                  );
+                }}
+              />
+            </EmployeesProvider>
+            <Autocomplete
+              size='small'
+              options={
+                addAdjustmentDialogType === 'allowance'
+                  ? allowanceTypeOptions
+                  : deductionTypeOptions
+              }
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              getOptionLabel={(option) => option.name}
+              value={addAdjustmentType}
+              onChange={(_event, newValue) => setAddAdjustmentType(newValue)}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label={
+                    addAdjustmentDialogType === 'allowance'
+                      ? 'Allowance Type'
+                      : 'Deduction Type'
+                  }
+                />
+              )}
+            />
+            <TextField
+              label='Amount'
+              size='small'
+              fullWidth
+              value={addAdjustmentAmount}
+              onChange={(e) => {
+                const sanitized = sanitizedNumber(e.target.value);
+                setAddAdjustmentAmount(Number.isNaN(sanitized) ? '' : sanitized);
+              }}
+              InputProps={{ inputComponent: CommaSeparatedField as any }}
+            />
+            <TextField
+              label='Remarks'
+              size='small'
+              fullWidth
+              multiline
+              minRows={2}
+              value={addAdjustmentRemarks}
+              onChange={(e) => setAddAdjustmentRemarks(e.target.value)}
+              placeholder='Optional remarks for this adjustment'
+            />
+          </Stack>
+        </MuiDialogContent>
+        <MuiDialogActions>
+          <Button onClick={closeAddAdjustmentDialog}>Cancel</Button>
+          <Button
+            onClick={handleAddAdjustmentSave}
+            variant='contained'
+            disabled={
+              !addAdjustmentEmployee ||
+              !addAdjustmentType ||
+              addAdjustmentAmount === '' ||
+              addAllowanceMutation.isPending ||
+              addDeductionMutation.isPending
+            }
+          >
+            Save
+          </Button>
+        </MuiDialogActions>
+      </Dialog>
+
+      {/* Buy Leave (Leave Encashment) Dialog */}
+      <Dialog
+        open={leaveEncashmentDialogOpen}
+        onClose={closeLeaveEncashmentDialog}
+        maxWidth='sm'
+        fullWidth
+        fullScreen={belowLargeScreen}
+        scroll={belowLargeScreen ? 'body' : 'paper'}
+      >
+        <MuiDialogTitle>Buy Leave (Leave Encashment)</MuiDialogTitle>
+        <MuiDialogContent>
+          <Stack spacing={2} sx={{ pt: 2 }}>
+            <EmployeesProvider>
+              <EmployeeSelector
+                value={leaveEncashmentEmployee || undefined}
+                onChange={(newValue) => {
+                  setLeaveEncashmentEmployee(
+                    newValue && !Array.isArray(newValue) ? newValue : null
+                  );
+                  setLeaveEncashmentType(null);
+                  setLeaveEncashmentAmountTouched(false);
+                }}
+              />
+            </EmployeesProvider>
+            <Autocomplete
+              size='small'
+              options={leaveTypeOptions}
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              getOptionLabel={(option) => option.name}
+              value={leaveEncashmentType}
+              onChange={(_event, newValue) => setLeaveEncashmentType(newValue)}
+              renderInput={(params) => (
+                <TextField {...params} label='Leave Type' />
+              )}
+            />
+            {leaveEncashmentEmployee && leaveEncashmentType && (
+              <Alert
+                severity={
+                  leaveEncashmentAllocation ? 'info' : 'warning'
+                }
+                sx={{ borderRadius: 2 }}
+              >
+                {leaveEncashmentAllocation
+                  ? `Remaining balance for ${year}: ${leaveEncashmentAllocation.remaining_days} day(s)`
+                  : `No leave allocation found for this employee/leave type in ${year}.`}
+              </Alert>
+            )}
+            <TextField
+              label='Days Bought'
+              size='small'
+              fullWidth
+              type='number'
+              value={leaveEncashmentDaysBought}
+              onChange={(e) =>
+                setLeaveEncashmentDaysBought(
+                  e.target.value === '' ? '' : Number(e.target.value)
+                )
+              }
+              inputProps={{ min: 0.5, step: 0.5 }}
+              error={
+                !!leaveEncashmentAllocation &&
+                leaveEncashmentDaysBought !== '' &&
+                Number(leaveEncashmentDaysBought) >
+                  leaveEncashmentAllocation.remaining_days
+              }
+              helperText={
+                leaveEncashmentAllocation &&
+                leaveEncashmentDaysBought !== '' &&
+                Number(leaveEncashmentDaysBought) >
+                  leaveEncashmentAllocation.remaining_days
+                  ? `Exceeds remaining balance of ${leaveEncashmentAllocation.remaining_days} day(s)`
+                  : ' '
+              }
+            />
+            <TextField
+              label='Amount'
+              size='small'
+              fullWidth
+              value={leaveEncashmentAmount}
+              onChange={(e) => {
+                const sanitized = sanitizedNumber(e.target.value);
+                setLeaveEncashmentAmountTouched(true);
+                setLeaveEncashmentAmount(
+                  Number.isNaN(sanitized) ? '' : sanitized
+                );
+              }}
+              InputProps={{ inputComponent: CommaSeparatedField as any }}
+              helperText={
+                leaveEncashmentAmountTouched
+                  ? 'The taxable cash value paid out for the days bought — manually set'
+                  : leaveEncashmentDailyRate !== null
+                    ? `Auto-calculated: ${leaveEncashmentDailyRate.toLocaleString()}/day × days bought — edit to override`
+                    : leaveEncashmentEmployee
+                      ? "Couldn't derive a daily rate for this employee — enter the amount manually"
+                      : 'The taxable cash value paid out for the days bought'
+              }
+            />
+            <TextField
+              label='Remarks'
+              size='small'
+              fullWidth
+              multiline
+              minRows={2}
+              value={leaveEncashmentRemarks}
+              onChange={(e) => setLeaveEncashmentRemarks(e.target.value)}
+              placeholder='Optional remarks for this entry'
+            />
+          </Stack>
+        </MuiDialogContent>
+        <MuiDialogActions>
+          <Button onClick={closeLeaveEncashmentDialog}>Cancel</Button>
+          <Button
+            onClick={handleLeaveEncashmentSave}
+            variant='contained'
+            disabled={
+              !leaveEncashmentEmployee ||
+              !leaveEncashmentType ||
+              leaveEncashmentDaysBought === '' ||
+              leaveEncashmentAmount === '' ||
+              (!!leaveEncashmentAllocation &&
+                Number(leaveEncashmentDaysBought) >
+                  leaveEncashmentAllocation.remaining_days) ||
+              addLeaveEncashmentMutation.isPending
+            }
+          >
+            Save
           </Button>
         </MuiDialogActions>
       </Dialog>

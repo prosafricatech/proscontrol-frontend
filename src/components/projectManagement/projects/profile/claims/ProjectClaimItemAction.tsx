@@ -14,6 +14,7 @@ import {
   EditOutlined,
   HighlightOff,
   MoreHorizOutlined,
+  ReceiptLongOutlined,
   VisibilityOutlined,
 } from '@mui/icons-material';
 import {
@@ -235,13 +236,43 @@ const ProjectClaimItemAction: React.FC<ProjectClaimItemActionProps> = ({
     },
   });
 
+  const { mutate: invoiceClaim } = useMutation({
+    mutationFn: (id: number) => projectsServices.invoiceClaim(id),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({
+        queryKey: ['projectProjectClaims'],
+      });
+      enqueueSnackbar(data.message, { variant: 'success' });
+    },
+    onError: (error: any) => {
+      enqueueSnackbar(error?.response?.data?.message || 'Failed to create invoice', {
+        variant: 'error',
+      });
+    },
+  });
+
+  // Editing is only locked once a claim is invoiced AND the organization
+  // actually uses the deferred workflow — orgs that don't defer invoicing
+  // have every claim marked 'invoiced' immediately and have always been
+  // able to edit freely, so status alone can't gate this.
+  const deferredInvoicing = !!organization?.settings?.defer_project_certificate_invoicing;
+  const isDraft = claim.status === 'draft';
+  const isLocked = deferredInvoicing && claim.status === 'invoiced';
+
   const menuItems = [
     { icon: <VisibilityOutlined />, title: 'View', action: 'view' },
-    checkOrganizationPermission(PERMISSIONS.PROJECT_CLAIMS_UPDATE) && {
-      icon: <EditOutlined />,
-      title: 'Edit',
-      action: 'edit',
-    },
+    !isLocked &&
+      checkOrganizationPermission(PERMISSIONS.PROJECT_CLAIMS_UPDATE) && {
+        icon: <EditOutlined />,
+        title: 'Edit',
+        action: 'edit',
+      },
+    isDraft &&
+      checkOrganizationPermission(PERMISSIONS.PROJECT_CLAIMS_UPDATE) && {
+        icon: <ReceiptLongOutlined />,
+        title: 'Create Invoice',
+        action: 'invoice',
+      },
     checkOrganizationPermission(PERMISSIONS.PROJECT_CLAIMS_DELETE) && {
       icon: <DeleteOutlined color='error' />,
       title: 'Delete',
@@ -257,6 +288,20 @@ const ProjectClaimItemAction: React.FC<ProjectClaimItemActionProps> = ({
 
       case 'edit':
         setOpenEditDialog(true);
+        break;
+
+      case 'invoice':
+        showDialog({
+          title: 'Create Customer Invoice',
+          content:
+            'This will post the Certificate to the customer and it can no longer be edited. Continue?',
+          variant: 'confirm',
+          onYes: () => {
+            hideDialog();
+            invoiceClaim(claim.id);
+          },
+          onNo: hideDialog,
+        });
         break;
 
       case 'delete':

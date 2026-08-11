@@ -157,7 +157,16 @@ const SalarySheetDialog = ({
     }
   };
 
-  const unique_deductions_types = getUniqueTypes(employeeDeductions);
+  // PAYE is stored as a deduction line with deduction_type_id === null and
+  // category === 'tax' (see PayrollService::computePayslip()), and gets its
+  // own dedicated column below — excluded here so the "Deductions" group
+  // header's colspan (driven by this array's length) matches the actual
+  // number of per-type columns rendered. Other null-typed system deductions
+  // (e.g. Absence Deduction, which also has no backing DeductionType) are
+  // NOT excluded — category is what singles PAYE out, not a null type_id.
+  const unique_deductions_types = getUniqueTypes(employeeDeductions).filter(
+    (type: any) => type.category !== 'tax'
+  );
   const unique_allowances_types = getUniqueTypes(employeeAllowance);
   const unique_contributions_types = getUniqueTypes(employeecontributions);
 
@@ -171,9 +180,15 @@ const SalarySheetDialog = ({
     type: 'deduction' | 'allowance' | 'contribution'
   ) => {
     if (type === 'allowance') {
+      // type_id !== null matches by id; system-computed lines (Overtime Pay,
+      // Holiday Premium — no backing AllowanceType) share a null type_id, so
+      // those must match by label instead, or two different null-typed
+      // lines for the same employee would get conflated.
       return employeeAllowance?.reduce(
         (sum, item) =>
-          item.allowance_type_id === type_id || item.label === typeObj.label
+          (type_id !== null
+            ? item.allowance_type_id === type_id
+            : item.label === typeObj.label)
             ? sum + item?.amount
             : sum,
         0
@@ -181,8 +196,11 @@ const SalarySheetDialog = ({
     }
     if (type === 'deduction') {
       return employeeDeductions?.reduce((sum, item) => {
-        return item.deduction_type_id === type_id ||
-          item.label === typeObj.label
+        return (
+          type_id !== null
+            ? item.deduction_type_id === type_id
+            : item.label === typeObj.label
+        )
           ? sum + item?.amount
           : sum;
       }, 0);
@@ -360,7 +378,7 @@ const SalarySheetDialog = ({
                         </TableCell>
                         <TableCell
                           colSpan={
-                            4 +
+                            6 +
                             (hasAllowances
                               ? unique_allowances_types.length
                               : 0) +
@@ -460,6 +478,17 @@ const SalarySheetDialog = ({
                           Gross
                         </TableCell>
 
+                        <TableCell
+                          align='right'
+                          sx={{
+                            fontWeight: 500,
+                            border: '1px solid',
+                            borderColor: 'divider',
+                          }}
+                        >
+                          Taxable Salary
+                        </TableCell>
+
                         {hasDeductions && (
                           <TableCell
                             colSpan={unique_deductions_types.length}
@@ -473,6 +502,17 @@ const SalarySheetDialog = ({
                             Deductions
                           </TableCell>
                         )}
+
+                        <TableCell
+                          align='right'
+                          sx={{
+                            fontWeight: 500,
+                            border: '1px solid',
+                            borderColor: 'divider',
+                          }}
+                        >
+                          PAYE
+                        </TableCell>
 
                         <TableCell
                           align='right'
@@ -559,32 +599,32 @@ const SalarySheetDialog = ({
                           }}
                         />
 
-                        {unique_deductions_types.map((type, idx) => {
-                          if (type.deduction_type_id !== null) {
-                            return (
-                              <TableCell
-                                key={`deduction-header-${type.deduction_type_id || type.label}-${idx}`}
-                                sx={{
-                                  border: '1px solid',
-                                  borderColor: 'divider',
-                                  fontWeight: 450,
-                                }}
-                              >
-                                {type?.label || 'Deduction'}
-                              </TableCell>
-                            );
-                          }
-                        })}
+                        <TableCell
+                          sx={{
+                            border: '1px solid',
+                            borderColor: 'divider',
+                          }}
+                        />
+
+                        {unique_deductions_types.map((type, idx) => (
+                          <TableCell
+                            key={`deduction-header-${type.deduction_type_id || type.label}-${idx}`}
+                            sx={{
+                              border: '1px solid',
+                              borderColor: 'divider',
+                              fontWeight: 450,
+                            }}
+                          >
+                            {type?.label || 'Deduction'}
+                          </TableCell>
+                        ))}
 
                         <TableCell
                           sx={{
                             border: '1px solid',
                             borderColor: 'divider',
-                            fontWeight: 450,
                           }}
-                        >
-                          PAYE
-                        </TableCell>
+                        />
 
                         <TableCell
                           sx={{
@@ -715,9 +755,10 @@ const SalarySheetDialog = ({
                                     (itm) =>
                                       itm.employee_contract_id ===
                                         entry.run.employee?.id &&
-                                      (itm.label === type.label ||
-                                        itm.allowance_type_id ===
-                                          type.allowance_type_id)
+                                      (type.allowance_type_id !== null
+                                        ? itm.allowance_type_id ===
+                                          type.allowance_type_id
+                                        : itm.label === type.label)
                                   )?.amount ?? 0
                                 )}
                               </TableCell>
@@ -734,31 +775,39 @@ const SalarySheetDialog = ({
                               {fmt(computed.grossSalary)}
                             </TableCell>
 
-                            {unique_deductions_types.map((type, typeIdx) => {
-                              if (type.deduction_type_id !== null) {
-                                return (
-                                  <TableCell
-                                    key={`deduction-value-${run.id || index}-${type.deduction_type_id || type.label}-${typeIdx}`}
-                                    align='right'
-                                    sx={{
-                                      border: '1px solid',
-                                      borderColor: 'divider',
-                                    }}
-                                  >
-                                    {fmt(
-                                      employeeDeductions.find(
-                                        (itm) =>
-                                          itm.employee_contract_id ===
-                                            entry.run.employee?.id &&
-                                          (itm.label === type.label ||
-                                            itm.deduction_type_id ===
-                                              type.deduction_type_id)
-                                      )?.amount ?? 0
-                                    )}
-                                  </TableCell>
-                                );
-                              }
-                            })}
+                            <TableCell
+                              align='right'
+                              sx={{
+                                fontWeight: 400,
+                                border: '1px solid',
+                                borderColor: 'divider',
+                              }}
+                            >
+                              {fmt(computed.taxableIncome)}
+                            </TableCell>
+
+                            {unique_deductions_types.map((type, typeIdx) => (
+                              <TableCell
+                                key={`deduction-value-${run.id || index}-${type.deduction_type_id || type.label}-${typeIdx}`}
+                                align='right'
+                                sx={{
+                                  border: '1px solid',
+                                  borderColor: 'divider',
+                                }}
+                              >
+                                {fmt(
+                                  employeeDeductions.find(
+                                    (itm) =>
+                                      itm.employee_contract_id ===
+                                        entry.run.employee?.id &&
+                                      (type.deduction_type_id !== null
+                                        ? itm.deduction_type_id ===
+                                          type.deduction_type_id
+                                        : itm.label === type.label)
+                                  )?.amount ?? 0
+                                )}
+                              </TableCell>
+                            ))}
 
                             <TableCell
                               align='right'
@@ -889,30 +938,38 @@ const SalarySheetDialog = ({
                           {fmt(totals.grossSalary)}
                         </TableCell>
 
-                        {unique_deductions_types.map((type: any) => {
-                          if (type.deduction_type_id !== null) {
-                            return (
-                              <TableCell
-                                key={`deduction-total-${type.deduction_type_id}`}
-                                align='right'
-                                sx={{
-                                  fontWeight: 700,
-                                  borderTop: '2px solid',
-                                  borderColor: 'divider',
-                                  borderRight: '0.001px solid white',
-                                }}
-                              >
-                                {fmt(
-                                  calculateTotalAmtByType(
-                                    type,
-                                    type.deduction_type_id,
-                                    'deduction'
-                                  )
-                                )}
-                              </TableCell>
-                            );
-                          }
-                        })}
+                        <TableCell
+                          align='right'
+                          sx={{
+                            fontWeight: 700,
+                            borderTop: '2px solid',
+                            borderColor: 'divider',
+                            borderRight: '0.001px solid white',
+                          }}
+                        >
+                          {fmt(totals.taxableSalary)}
+                        </TableCell>
+
+                        {unique_deductions_types.map((type: any) => (
+                          <TableCell
+                            key={`deduction-total-${type.deduction_type_id}`}
+                            align='right'
+                            sx={{
+                              fontWeight: 700,
+                              borderTop: '2px solid',
+                              borderColor: 'divider',
+                              borderRight: '0.001px solid white',
+                            }}
+                          >
+                            {fmt(
+                              calculateTotalAmtByType(
+                                type,
+                                type.deduction_type_id,
+                                'deduction'
+                              )
+                            )}
+                          </TableCell>
+                        ))}
 
                         <TableCell
                           align='right'

@@ -32,6 +32,13 @@ const EmployeeDeductionsListItem = ({
           <Tooltip title='Deduction Type'>
             <Typography>{employeeDeduction.deduction_type?.name || `Type #${employeeDeduction.deduction_type_id}`}</Typography>
           </Tooltip>
+          {employeeDeduction.member_no && (
+            <Tooltip title='Member No.'>
+              <Typography variant='caption' color='text.secondary' display='block'>
+                No: {employeeDeduction.member_no}
+              </Typography>
+            </Tooltip>
+          )}
         </Grid>
 
         <Grid size={{ xs: 12, md: 2.0 }}>

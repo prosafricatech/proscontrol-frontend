@@ -1,34 +1,17 @@
 'use client';
 
 import { useJumboTheme } from '@jumbo/components/JumboTheme/hooks';
-import {
-  AccountBalanceWalletOutlined,
-  Add,
-  ReceiptLongOutlined,
-  VerifiedRounded,
-} from '@mui/icons-material';
+import { ReceiptLongOutlined } from '@mui/icons-material';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
-  Alert,
   Badge,
-  Box,
   Chip,
-  CircularProgress,
   Dialog,
-  Grid,
-  IconButton,
   Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Tooltip,
   Typography,
   useMediaQuery,
 } from '@mui/material';
@@ -36,9 +19,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import humanResourcesServices from '../humanResourcesServices';
 import PayrollRunForm from '../payrollRuns/PayrollRunForm';
-import PayrollRunItemAction from '../payrollRuns/PayrollRunItemAction';
 import { PayrollRunType } from '../payrollRuns/PayrollRunType';
-import PayrollPeriodItemAction from './PayrollPeriodItemAction';
 import { PayrollPeriodType } from './PayrollPeriodType';
 import PayrollPeriodDetails from './PayrollPeriodDetails';
 
@@ -77,24 +58,6 @@ const statusColor = (
   }
 };
 
-const runStatusColor = (
-  status: string
-): 'success' | 'warning' | 'error' | 'info' | 'default' => {
-  switch (status?.toLowerCase()) {
-    case 'paid':
-      return 'success';
-    case 'approved':
-      return 'info';
-    case 'submitted':
-      return 'warning';
-    case 'rejected':
-    case 'cancelled':
-      return 'error';
-    default:
-      return 'default';
-  }
-};
-
 interface PayrollPeriodsListItemProps {
   payrollPeriod: PayrollPeriodType;
 }
@@ -111,7 +74,6 @@ const PayrollPeriodsListItem = ({
 
   const {
     data: runsData,
-    isLoading: isLoadingRuns,
     refetch: refetchRuns,
   } = useQuery({
     queryKey: ['payrollRunsForPeriod', String(payrollPeriod.id)],
@@ -149,10 +111,11 @@ const PayrollPeriodsListItem = ({
         <AccordionSummary
           expandIcon={expanded ? <RemoveIcon /> : <AddIcon />}
           sx={{
-            px: 3,
+            px: { xs: 1.5, sm: 3 },
             flexDirection: 'row-reverse',
             '.MuiAccordionSummary-content': {
               alignItems: 'center',
+              minWidth: 0,
               '&.Mui-expanded': { margin: '12px 0' },
             },
             '.MuiAccordionSummary-expandIconWrapper': {
@@ -161,6 +124,7 @@ const PayrollPeriodsListItem = ({
               color: 'text.secondary',
               transform: 'none',
               mr: 1,
+              flexShrink: 0,
               '&.Mui-expanded': {
                 transform: 'none',
                 color: 'primary.main',
@@ -170,27 +134,28 @@ const PayrollPeriodsListItem = ({
             },
           }}
         >
-          <Grid container spacing={1} width='100%' sx={{ px: 1 }}>
-            <Grid size={{ xs: 12, md: 3 }}>
-              <Typography variant='body2'>{payrollPeriod.year}</Typography>
-            </Grid>
-            <Grid size={{ xs: 12, md: 3 }}>
-              <Typography variant='body2'>{monthName}</Typography>
-            </Grid>
-            <Grid size={{ xs: 12, md: 3 }}>
-              <Chip
-                label={payrollPeriod.status || 'active'}
-                color={statusColor(payrollPeriod.status || '')}
-                size='small'
-                sx={{ textTransform: 'capitalize' }}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 3 }}>
-              <Badge badgeContent={runCount} color='info' showZero>
-                <ReceiptLongOutlined fontSize='small' color='action' />
-              </Badge>
-            </Grid>
-          </Grid>
+          <Stack
+            direction='row'
+            spacing={1.5}
+            alignItems='center'
+            flexWrap='wrap'
+            useFlexGap
+            width='100%'
+            sx={{ px: 1 }}
+          >
+            <Typography variant='body1' fontWeight={600} sx={{ mr: 'auto' }}>
+              {monthName} {payrollPeriod.year}
+            </Typography>
+            <Chip
+              label={payrollPeriod.status || 'active'}
+              color={statusColor(payrollPeriod.status || '')}
+              size='small'
+              sx={{ textTransform: 'capitalize' }}
+            />
+            <Badge badgeContent={runCount} color='info' showZero>
+              <ReceiptLongOutlined fontSize='small' color='action' />
+            </Badge>
+          </Stack>
         </AccordionSummary>
 
         <AccordionDetails sx={{ bgcolor: 'background.paper', mb: 3 }}>

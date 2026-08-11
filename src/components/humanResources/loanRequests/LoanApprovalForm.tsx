@@ -1,6 +1,7 @@
 'use client';
 
 import { sanitizedNumber } from '@/app/helpers/input-sanitization-helpers';
+import CommaSeparatedField from '@/shared/Inputs/CommaSeparatedField';
 import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { LoadingButton } from '@mui/lab';
 import {
@@ -162,11 +163,12 @@ const LoanApprovalForm = ({
             label='Amount Approved'
             size='small'
             fullWidth
-            value={amountApproved.toLocaleString('en-US')}
+            value={amountApproved}
             error={!!amountError}
             helperText={
               amountError || `Max ${Number(ceilingAmount).toLocaleString()}`
             }
+            InputProps={{ inputComponent: CommaSeparatedField as any }}
             onChange={(e: any) => {
               setAmountError('');
               setAmountApproved(
