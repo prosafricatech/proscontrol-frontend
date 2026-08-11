@@ -315,13 +315,23 @@ const PayrollPeriodAdvancesTab = ({
             </Typography>
           </Alert>
         )}
-        <Stack direction='row' spacing={1} justifyContent='flex-end' flexWrap='wrap'>
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          spacing={1}
+          justifyContent='flex-end'
+          flexWrap='wrap'
+        >
           <Button
             variant='outlined'
             startIcon={<ReceiptLongOutlined />}
             onClick={() => fetchTransferSheet()}
             disabled={advances.length === 0 || isLoadingTransferSheet}
-            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
+            sx={{
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 600,
+              width: { xs: '100%', sm: 'auto' },
+            }}
           >
             Generate Transfer Sheet
           </Button>
@@ -332,7 +342,12 @@ const PayrollPeriodAdvancesTab = ({
               startIcon={<AccountBalanceOutlined />}
               onClick={() => setPayDialogOpen(true)}
               disabled={!hasUnpaid}
-              sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
+              sx={{
+                borderRadius: 2,
+                textTransform: 'none',
+                fontWeight: 600,
+                width: { xs: '100%', sm: 'auto' },
+              }}
             >
               Pay Advances
             </Button>
@@ -343,7 +358,12 @@ const PayrollPeriodAdvancesTab = ({
               startIcon={<AccountBalanceOutlined />}
               onClick={() => setMarkPaidDialogOpen(true)}
               disabled={!hasUnpaid}
-              sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
+              sx={{
+                borderRadius: 2,
+                textTransform: 'none',
+                fontWeight: 600,
+                width: { xs: '100%', sm: 'auto' },
+              }}
             >
               Mark Advances as Paid
             </Button>
@@ -361,7 +381,12 @@ const PayrollPeriodAdvancesTab = ({
                 startIcon={<UploadOutlined />}
                 onClick={() => setUploadDialogOpen(true)}
                 disabled={isPeriodLocked}
-                sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
+                sx={{
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  width: { xs: '100%', sm: 'auto' },
+                }}
               >
                 Upload Advances
               </Button>

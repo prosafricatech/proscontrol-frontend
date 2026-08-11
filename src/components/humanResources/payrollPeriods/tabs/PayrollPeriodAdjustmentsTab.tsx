@@ -1644,23 +1644,31 @@ const PayrollPeriodAdjustmentsTab = ({
       <Box
         sx={{
           display: 'flex',
-          alignItems: 'center',
-          gap: 2,
+          flexDirection: { xs: 'column', md: 'row' },
+          alignItems: { xs: 'stretch', md: 'center' },
+          gap: { xs: 1, md: 2 },
           borderBottom: 1,
           borderColor: 'divider',
+          pb: { xs: 1, md: 0 },
         }}
       >
         <Tabs
           value={tabValue}
           onChange={handleTabChange}
+          variant='scrollable'
+          scrollButtons='auto'
+          allowScrollButtonsMobile
           sx={{
             flex: 1,
             minWidth: 0,
             '& .MuiTab-root': {
               textTransform: 'none',
               fontWeight: 500,
-              py: 2,
-              minHeight: 48,
+              py: { xs: 1, md: 2 },
+              minHeight: { xs: 40, md: 48 },
+              minWidth: 'auto',
+              px: { xs: 1.25, md: 2 },
+              fontSize: { xs: '0.8125rem', md: '0.875rem' },
               '&.Mui-selected': {
                 color: theme.palette.primary.main,
               },
@@ -1711,7 +1719,12 @@ const PayrollPeriodAdjustmentsTab = ({
                 startIcon={<AccessTimeOutlined />}
                 onClick={() => setOvertimeDialogOpen(true)}
                 disabled={isPeriodLocked}
-                sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
+                sx={{
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  width: { xs: '100%', md: 'auto' },
+                }}
               >
                 Log Overtime
               </Button>
@@ -1731,7 +1744,12 @@ const PayrollPeriodAdjustmentsTab = ({
                 startIcon={<EventBusyOutlined />}
                 onClick={() => setAbsenceDialogOpen(true)}
                 disabled={isPeriodLocked}
-                sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
+                sx={{
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  width: { xs: '100%', md: 'auto' },
+                }}
               >
                 Log Absence
               </Button>
@@ -1751,14 +1769,19 @@ const PayrollPeriodAdjustmentsTab = ({
                 startIcon={<EventAvailableOutlined />}
                 onClick={() => setLeaveEncashmentDialogOpen(true)}
                 disabled={isPeriodLocked}
-                sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
+                sx={{
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  width: { xs: '100%', md: 'auto' },
+                }}
               >
                 Buy Leave
               </Button>
             </span>
           </Tooltip>
         ) : (
-          <Stack direction='row' spacing={1}>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
             <Tooltip
               title={
                 isPeriodLocked
@@ -1774,7 +1797,12 @@ const PayrollPeriodAdjustmentsTab = ({
                     setAddAdjustmentDialogType(tabValue === 0 ? 'allowance' : 'deduction')
                   }
                   disabled={isPeriodLocked}
-                  sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
+                  sx={{
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    width: { xs: '100%', sm: 'auto' },
+                  }}
                 >
                   Add {tabValue === 0 ? 'Allowance' : 'Deduction'}
                 </Button>
@@ -1793,7 +1821,12 @@ const PayrollPeriodAdjustmentsTab = ({
                   startIcon={<UploadOutlined />}
                   onClick={() => setUploadDialogOpen(true)}
                   disabled={isPeriodLocked}
-                  sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
+                  sx={{
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    width: { xs: '100%', sm: 'auto' },
+                  }}
                 >
                   Upload Adjustments
                 </Button>

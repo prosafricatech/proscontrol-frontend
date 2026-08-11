@@ -45,10 +45,18 @@ export const SimulationDialog = ({
   onClose,
   data,
 }: SimulationDialogProps) => {
+  const { theme } = useJumboTheme();
+  const belowMediumScreen = useMediaQuery(theme.breakpoints.down('md'));
   const simulationRow = data?.row || data?.data?.row || data;
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth='md'>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      fullWidth
+      fullScreen={belowMediumScreen}
+      maxWidth='md'
+    >
       <DialogTitle sx={{ textAlign: 'center' }}>
         <Typography variant='h5' component='div'>
           Employee Simulation

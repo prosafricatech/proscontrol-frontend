@@ -29,7 +29,23 @@ const PayrollPeriodDetails = ({
   return (
     <Box>
       <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-        <Tabs value={activeTab} onChange={handleTabChange}>
+        <Tabs
+          value={activeTab}
+          onChange={handleTabChange}
+          variant='scrollable'
+          scrollButtons='auto'
+          allowScrollButtonsMobile
+          sx={{
+            minHeight: { xs: 40, sm: 48 },
+            '& .MuiTab-root': {
+              minHeight: { xs: 40, sm: 48 },
+              minWidth: 'auto',
+              px: { xs: 1.5, sm: 2 },
+              fontSize: { xs: '0.8125rem', sm: '0.875rem' },
+              textTransform: 'none',
+            },
+          }}
+        >
           <Tab label="Runs" />
           <Tab label="Ad-hoc Adjustments" />
           <Tab label="Advances" />
