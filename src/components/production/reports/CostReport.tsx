@@ -644,32 +644,12 @@ const CostReport: FC<CostReportProps> = ({
       <Stack
         direction={{ xs: 'column', md: 'row' }}
         justifyContent='space-between'
-        alignItems={{ xs: 'flex-start', md: 'center' }}
+        alignItems={{ xs: 'end' }}
         spacing={2}
       >
         <Box></Box>
         <Stack direction='row' spacing={1}>
-          {/* <Tooltip title='Excel export is not available yet for the cost report.' arrow>
-            <span>
-              <Button
-                size='small'
-                variant='outlined'
-                startIcon={<FileDownloadOutlined />}
-                disabled
-              >
-                Export Excel
-              </Button>
-            </span>
-          </Tooltip> */}
           <Tooltip title='Preview cost report PDF' arrow>
-            {/* <Button
-              size='small'
-              variant='outlined'
-              startIcon={<PictureAsPdfOutlined />}
-              onClick={() => setOpenCostPdf(true)}
-            >
-              Export PDF
-            </Button> */}
             <IconButton size='small' onClick={() => setOpenCostPdf(true)}>
               <VisibilityOutlined />
             </IconButton>

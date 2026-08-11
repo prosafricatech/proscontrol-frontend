@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useMutation } from '@tanstack/react-query';
 import axios from '@/lib/services/config';
 import { ASSET_IMAGES } from '@/utilities/constants/paths';
@@ -14,15 +15,18 @@ import {
 } from '@mui/material';
 import Link from 'next/link';
 import { useSnackbar } from 'notistack';
+import ResetPasswordForm from '@/components/forgotPassword/ResetPasswordForm';
 
 export default function ResetPassword() {
   const { enqueueSnackbar } = useSnackbar();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
+  const token = searchParams.get('token');
 
   const mutation = useMutation({
     mutationFn: async (email: string) => {
       return axios
-        .post('/api/auth/reset-password', { email })
+        .post('/api/auth/recover-email', { email })
         .then((response) => {
           if (response.status === 200) {
             return response.data;
@@ -52,6 +56,11 @@ export default function ResetPassword() {
     }
     mutation.mutate(email);
   };
+
+  // If token is present in URL, show the password reset form
+  if (token) {
+    return <ResetPasswordForm />;
+  }
 
   return (
     <Div

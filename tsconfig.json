@@ -1,12 +1,18 @@
 {
   "compilerOptions": {
     "target": "es5",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
-    "types": ["node"],
+    "types": [
+      "node"
+    ],
     "esModuleInterop": true,
     "module": "esnext",
     "moduleResolution": "bundler",
@@ -20,11 +26,20 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"],
-      "@jumbo/*": ["./@jumbo/*"],
-      "@assets/*": ["./@assets/*"]
+      "@/*": [
+        "./src/*"
+      ],
+      "@jumbo/*": [
+        "./@jumbo/*"
+      ],
+      "@assets/*": [
+        "./@assets/*"
+      ]
     },
-    "typeRoots": ["./node_modules/@types", "./@jumbo/types"]
+    "typeRoots": [
+      "./node_modules/@types",
+      "./@jumbo/types"
+    ]
   },
   "include": [
     "**/*.d.ts",
@@ -250,7 +265,7 @@
     "src/components/projectManagement/projects/profile/updates/UpdatesForm.jsx",
     "src/components/projectManagement/projects/profile/updates/Updates.jsx",
     "src/components/projectManagement/projects/profile/updates/UpdateItemAction.jsx",
-    "src/components/projectManagement/projects/profile/updates/tab/DescriptionTab.jsx",
+    "src/components/projectManagement/projects/profile/updates/tab/DescriptionTab.tsx",
     "src/components/projectManagement/projects/profile/updates/tab/taskProgress/TaskProgressRow.jsx",
     "src/components/projectManagement/projects/profile/updates/tab/taskProgress/TaskProgress.jsx",
     "src/components/projectManagement/projects/profile/updates/tab/taskProgress/taskProgressTab/MaterialIssued/MaterialIssuedRow.jsx",
@@ -325,20 +340,9 @@
     "src/components/projectManagement/projects/profile/subcontracts/tabs/certificatesTab/CertificateItemAction.tsx",
     "src/components/projectManagement/projects/profile/subcontracts/tabs/certificatesTab/preview/CertificatePDF.tsx",
     "src/components/projectManagement/projects/profile/subcontracts/tabs/certificatesTab/preview/CertificateOnScreen.jsx",
-    ".next/dev/types/**/*.ts",
-    "src/components/projectManagement/projects/profile/claims/form/tab/adjustments/ProjectClaimsAdjustments.tsx",
-    "src/components/projectManagement/projects/profile/deliverables/tab/DeliverableSummary.jsx",
-    "src/components/fuelStation/shifts/preview/SalesShiftPDF.jsx",
-    "src/components/fuelStation/shifts/preview/SalesShiftOnScreen.jsx",
-    "src/components/fuelStation/shifts/tabs/adjustments/Adjustments.jsx",
-    "src/components/fuelStation/shifts/tabs/adjustments/AdjustmentsRow.jsx",
-    "src/components/fuelStation/shifts/tabs/fuelVouchers/AdjustmentsTab.jsx",
-    "src/components/fuelStation/shifts/SaleShiftForm2/ShiftSummary.jsx",
-    "src/components/accounts/budgets/budgets-services.tsx",
-    "src/components/production/reports/ProductionReports.tsx",
-    "src/components/production/reports/OutputReport.tsx",
-    "src/components/production/reports/CostReport.tsx",
-    "src/components/production/reports/productionReportsServices.ts"
-  ],
-  "exclude": ["node_modules"]
+    ".next/dev/types/**/*.ts"
+, "src/components/projectManagement/projects/profile/claims/form/tab/adjustments/ProjectClaimsAdjustments.tsx", "src/components/projectManagement/projects/profile/deliverables/tab/DeliverableSummary.jsx", "src/components/fuelStation/shifts/preview/SalesShiftPDF.jsx", "src/components/fuelStation/shifts/preview/SalesShiftOnScreen.jsx", "src/components/fuelStation/shifts/tabs/adjustments/Adjustments.jsx", "src/components/fuelStation/shifts/tabs/adjustments/AdjustmentsRow.jsx", "src/components/fuelStation/shifts/tabs/fuelVouchers/AdjustmentsTab.jsx", "src/components/fuelStation/shifts/SaleShiftForm2/ShiftSummary.jsx", "src/components/fuelStation/reports/dippingReport/DippingReportPDF.jsx", "src/app/global-errorrtsx"  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

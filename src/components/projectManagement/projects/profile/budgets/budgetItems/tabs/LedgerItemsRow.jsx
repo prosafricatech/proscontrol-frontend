@@ -31,6 +31,23 @@ function LedgerItemsRow({
     });
   };
 
+  const formatTaskLabel = (task) => {
+    if (!task) return '';
+    const code = String(task.code || '').trim();
+    const name = String(task.name || task.label || '').trim();
+
+    if (code && name) {
+      return `${code} - ${name}`;
+    }
+
+    return name;
+  };
+
+  const boundTask =
+    ledgerItem.selectedItemable ||
+    allTasks?.find((task) => task.id === ledgerItem?.budget_itemable_id) ||
+    null;
+
   return (
     <React.Fragment>
       <Divider/>
@@ -52,19 +69,19 @@ function LedgerItemsRow({
                 primary={
                   <>
                     <Tooltip title="Expense name">
-                      <Typography component="span">{ledger?.name || '-'}</Typography>
+                      <Typography component="span">{ledger?.name}</Typography>
                     </Tooltip>
                     <br />
                     <Tooltip title="Bound To Task">
-                      <Typography component="span" color="primary">
-                        {ledgerItem.selectedItemable?.name || ledgerItem.selectedItemable?.label || allTasks?.find(task => task.id === ledgerItem?.budget_itemable_id)?.label}
+                      <Typography component="span">
+                        {formatTaskLabel(boundTask)}
                       </Typography>
                     </Tooltip>
                   </>
                 }
                 secondary={
                   <Tooltip title="Description">
-                    <Typography component="span">{ledgerItem.description || '-'}</Typography>
+                    <Typography component="span">{ledgerItem.description}</Typography>
                   </Tooltip>
                 }
               />
@@ -80,7 +97,7 @@ function LedgerItemsRow({
                   <Typography>{Number(ledgerItem.rate || 0).toLocaleString('en-US', 
                     {
                       style: 'currency',
-                      currency: ledgerItem.currency?.code || 'USD',
+                      currency: ledgerItem.currency?.code,
                     })}
                   </Typography>
                   {Number(ledgerItem?.exchange_rate || 1) !== 1 && (
@@ -96,7 +113,7 @@ function LedgerItemsRow({
                 <Typography>{(Number(ledgerItem.quantity || 0) * Number(ledgerItem.rate || 0)).toLocaleString('en-US', 
                   {
                     style: 'currency',
-                    currency: ledgerItem.currency?.code || 'USD',
+                    currency: ledgerItem.currency?.code,
                   })}
                 </Typography>
               </Tooltip>

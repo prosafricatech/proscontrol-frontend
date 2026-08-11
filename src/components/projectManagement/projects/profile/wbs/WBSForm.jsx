@@ -99,13 +99,29 @@ const WBSForm = ({ setOpenDialog, timelineActivity=null, parentActivity=null}) =
     }
   };
 
-  const validationSchema = yup.object({
+ const validationSchema = yup.object({
     name: yup.string().required("Activity name is required").typeError('Activity name is required'),
     weighted_percentage: yup
     .number()
     .required('Weighted percentage is required')
     .typeError('Weighted percentage is required')
-    .min(1, 'Weight Percentage must be greater than 0')
+    .test("greater-than-zero", "Weight Percentage must be greater than 0", function (value) {
+      // Check if value is a valid number
+      if (isNaN(value)) {
+        return this.createError({
+          message: "Weight Percentage must be a valid number"
+        });
+      }
+      
+      // Reject 0 and negative numbers
+      if (value <= 0) {
+        return this.createError({
+          message: "Weight Percentage must be greater than 0"
+        });
+      }
+      
+      return true;
+    })
     .max(100, "Weight Percentage must be less than or equal to 100")
     .test('check-total', function (value) {
       const context = this.options.context || {};
@@ -114,7 +130,7 @@ const WBSForm = ({ setOpenDialog, timelineActivity=null, parentActivity=null}) =
       if (!sameLevelActivities) return true;
 
       const totalWeightPercentages = sameLevelActivities.reduce(
-          (total, grp) => total + (timelineActivity && grp.position_index === timelineActivity.position_index ? 0 : grp.weighted_percentage),
+          (total, grp) => total + (timelineActivity && grp.position_index === timelineActivity.position_index ? 0 : (grp.weighted_percentage || 0)),
           0
       );
 

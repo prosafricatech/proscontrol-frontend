@@ -9,7 +9,6 @@ import CurrencySelector from '@/components/masters/Currencies/CurrencySelector';
 import { Currency } from '@/components/masters/Currencies/CurrencyType';
 import CommaSeparatedField from '@/shared/Inputs/CommaSeparatedField';
 import { PERMISSIONS } from '@/utilities/constants/permissions';
-import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Div } from '@jumbo/shared';
 import { LoadingButton } from '@mui/lab';
@@ -99,27 +98,18 @@ const ApprovedPaymentForm: React.FC<ApprovedPaymentFormProps> = ({
 }) => {
   const { authOrganization, checkOrganizationPermission } = useJumboAuth();
   const queryClient = useQueryClient();
-  const [serverError, setServerError] = useState<Record<
-    string,
-    string | string[]
-  > | null>(null);
+  const [serverError, setServerError] = useState<Record<string, string | string[]> | null>(
+    null
+  );
   const { enqueueSnackbar } = useSnackbar();
-  const resolvedApprovedDetails =
-    approvedDetails || prevApprovedDetails || null;
-  const isImprestPayment =
-    approvedRequisition?.process_type === 'IMPREST' ||
-    resolvedApprovedDetails?.process_type === 'IMPREST' ||
-    approvedDetails?.process_type === 'MATERIAL';
+  const resolvedApprovedDetails = approvedDetails || prevApprovedDetails || null;
+  const isImprestPayment= approvedRequisition?.process_type === 'IMPREST' || resolvedApprovedDetails?.process_type === 'IMPREST' || approvedDetails?.process_type === 'MATERIAL';
   const isMaterialPayment = React.useMemo(() => {
     if (payment) {
-      return payment.items.some(
-        (item: any) => item.fulfillment_type === 'PURCHASE'
-      );
+      return payment.items.some((item: any) => item.fulfillment_type === 'PURCHASE');
     }
-    return (
-      approvedRequisition?.process_type === 'MATERIAL' ||
-      resolvedApprovedDetails?.process_type === 'MATERIAL'
-    );
+    return approvedRequisition?.process_type === 'MATERIAL' || 
+           resolvedApprovedDetails?.process_type === 'MATERIAL';
   }, [payment, approvedRequisition, resolvedApprovedDetails]);
 
   const imprestLedger =
@@ -162,16 +152,13 @@ const ApprovedPaymentForm: React.FC<ApprovedPaymentFormProps> = ({
 
         if (payItem?.debit_ledger_id) {
           prevItem = previousItems.find(
-            (item: any) =>
-              Number(item?.ledger?.id) === Number(payItem?.debit_ledger_id)
+            (item: any) => Number(item?.ledger?.id) === Number(payItem?.debit_ledger_id)
           );
         }
 
         if (!prevItem && payItem?.requisition_approval_ledger_item_id) {
           prevItem = previousItems.find(
-            (item: any) =>
-              Number(item?.id) ===
-              Number(payItem?.requisition_approval_ledger_item_id)
+            (item: any) => Number(item?.id) === Number(payItem?.requisition_approval_ledger_item_id)
           );
         }
 
@@ -182,8 +169,7 @@ const ApprovedPaymentForm: React.FC<ApprovedPaymentFormProps> = ({
         const unpaidAmount = isMaterialPayment
           ? 0
           : prevItem
-            ? Number(payItem?.amount || 0) +
-              Number(prevItem?.unpaid_amount || 0)
+            ? Number(payItem?.amount || 0) + Number(prevItem?.unpaid_amount || 0)
             : 0;
 
         const forcedImprestLedger = imprestLedger
@@ -193,23 +179,20 @@ const ApprovedPaymentForm: React.FC<ApprovedPaymentFormProps> = ({
             }
           : null;
 
-        const ledgerName =
-          payItem?.debitLedgerName ||
-          payItem?.ledger?.name ||
-          prevItem?.ledger?.name ||
-          forcedImprestLedger?.name ||
-          '';
+        const ledgerName = payItem?.debitLedgerName ||
+                          payItem?.ledger?.name ||
+                          prevItem?.ledger?.name ||
+                          forcedImprestLedger?.name ||
+                          '';
 
-        const ledgerId =
-          payItem?.debit_ledger_id ||
-          payItem?.ledger?.id ||
-          prevItem?.ledger?.id ||
-          forcedImprestLedger?.id ||
-          0;
+        const ledgerId = payItem?.debit_ledger_id ||
+                        payItem?.ledger?.id ||
+                        prevItem?.ledger?.id ||
+                        forcedImprestLedger?.id ||
+                        0;
 
         // Get credit ledger if exists
-        const creditLedgerId =
-          payItem?.credit_ledger_id || payItem?.credit_ledger?.id || null;
+        const creditLedgerId = payItem?.credit_ledger_id || payItem?.credit_ledger?.id || null;
         const creditLedgerName = payItem?.credit_ledger?.name || '';
 
         return {
@@ -221,12 +204,10 @@ const ApprovedPaymentForm: React.FC<ApprovedPaymentFormProps> = ({
           },
           credit_ledger_id: creditLedgerId,
           debitLedgerName: payItem.debitLedgerName,
-          credit_ledger: creditLedgerId
-            ? {
-                id: creditLedgerId,
-                name: creditLedgerName,
-              }
-            : undefined,
+          credit_ledger: creditLedgerId ? {
+            id: creditLedgerId,
+            name: creditLedgerName,
+          } : undefined,
           amount: Number(payItem?.amount || 0),
           unpaid_amount: unpaidAmount,
           description: buildItemDescription(
@@ -234,17 +215,15 @@ const ApprovedPaymentForm: React.FC<ApprovedPaymentFormProps> = ({
             ledgerName
           ),
           requisition_approval_ledger_item_id:
-            payItem?.requisition_approval_ledger_item_id ||
-            prevItem?.id ||
-            undefined,
-          fulfillment_type:
-            prevItem?.fulfillment_type ||
-            (isImprestPayment ? 'IMPREST' : 'PURCHASE'),
+            payItem?.requisition_approval_ledger_item_id || prevItem?.id || undefined,
+          fulfillment_type: prevItem?.fulfillment_type ||
+                            (isImprestPayment ? 'IMPREST' : 'PURCHASE'),
           quantity: payItem?.quantity || prevItem?.quantity || 0,
           rate: payItem?.rate || prevItem?.rate || 0,
         };
       });
-    } else if (approvedDetails) {
+    }
+    else if (approvedDetails) {
       return approvedDetails.items
         .filter((item: any) => {
           if (isMaterialPayment) {
@@ -257,14 +236,11 @@ const ApprovedPaymentForm: React.FC<ApprovedPaymentFormProps> = ({
           const ledgerName = item.ledger?.name || item.ledger_name || '';
           const vatFactor = (item.vat_percentage || 0) * 0.01;
           const derivedAmount = isMaterialPayment
-            ? Number(item.quantity || 0) *
-              Number(item.rate || 0) *
-              (1 + vatFactor)
-            : item.unpaid_amount || 0;
+            ? Number(item.quantity || 0) * Number(item.rate || 0) * (1 + vatFactor)
+            : (item.unpaid_amount || 0);
 
           // Get credit ledger if exists
-          const creditLedgerId =
-            item.credit_ledger_id || item.credit_ledger?.id || null;
+          const creditLedgerId = item.credit_ledger_id || item.credit_ledger?.id || null;
           const creditLedgerName = item.credit_ledger?.name || '';
 
           return {
@@ -275,16 +251,12 @@ const ApprovedPaymentForm: React.FC<ApprovedPaymentFormProps> = ({
               name: ledgerName,
             },
             credit_ledger_id: creditLedgerId,
-            credit_ledger: creditLedgerId
-              ? {
-                  id: creditLedgerId,
-                  name: creditLedgerName,
-                }
-              : undefined,
+            credit_ledger: creditLedgerId ? {
+              id: creditLedgerId,
+              name: creditLedgerName,
+            } : undefined,
             amount: derivedAmount,
-            unpaid_amount: isMaterialPayment
-              ? derivedAmount
-              : item.unpaid_amount,
+            unpaid_amount: isMaterialPayment ? derivedAmount : item.unpaid_amount,
             description: buildItemDescription(
               item?.description || item?.remarks || '',
               ledgerName
@@ -312,7 +284,7 @@ const ApprovedPaymentForm: React.FC<ApprovedPaymentFormProps> = ({
         if (error.response.status === 400) {
           setServerError(error.response?.data?.validation_errors);
         } else {
-          enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
+          enqueueSnackbar(error.response?.data?.message, { variant: 'error' });
         }
       }
     },
@@ -330,9 +302,9 @@ const ApprovedPaymentForm: React.FC<ApprovedPaymentFormProps> = ({
       if (error.response) {
         if (error.response.status === 400) {
           setServerError(error.response?.data?.validation_errors);
-          enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
+          enqueueSnackbar(error.response?.data?.message, { variant: 'error' });
         } else {
-          enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
+          enqueueSnackbar(error.response?.data?.message, { variant: 'error' });
         }
       }
     },
@@ -449,14 +421,12 @@ const ApprovedPaymentForm: React.FC<ApprovedPaymentFormProps> = ({
       items: items
         .filter((item) => isMaterialPayment || item.unpaid_amount > 0)
         .map((item) => {
-          const itemIdKey = isMaterialPayment
-            ? 'requisition_approval_product_item_id'
+          const itemIdKey = isMaterialPayment 
+            ? 'requisition_approval_product_item_id' 
             : 'requisition_approval_ledger_item_id';
-
+          
           const result: any = {
-            debit_ledger_id: imprestLedger
-              ? imprestLedger.id
-              : item.debit_ledger_id,
+            debit_ledger_id: imprestLedger ? imprestLedger.id : item.debit_ledger_id,
             [itemIdKey]: item.requisition_approval_ledger_item_id,
             amount: Number.isFinite(Number(item.amount))
               ? Number(item.amount)

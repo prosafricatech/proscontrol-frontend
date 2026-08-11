@@ -25,6 +25,18 @@ function SubContractTasksRow({
     });
   };
 
+  const formatTaskLabel = (task) => {
+    if (!task) return '';
+    const code = String(task.code || '').trim();
+    const name = String(task.name || task.label || '').trim();
+
+    if (code && name) {
+      return `${code} - ${name}`;
+    }
+
+    return name;
+  };
+
   return (
     <React.Fragment>
       <Divider/>
@@ -45,7 +57,7 @@ function SubContractTasksRow({
             <ListItemText
               primary={
                 <Tooltip title="Task name">
-                  <Typography component="span">{subContractItem.project_task?.name || subContractItem.project_task?.label}</Typography>
+                  <Typography component="span">{formatTaskLabel(subContractItem.project_task)}</Typography>
                 </Tooltip>
               }
               secondary={

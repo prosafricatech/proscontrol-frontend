@@ -104,8 +104,22 @@ const DeliverableGroupForm = ({ setOpenDialog, deliverableGroup = null, parentGr
         if (value === null || value === undefined || value === '') {
           return true;
         }
-        // Only reject if value is exactly 0
-        return value > 0;
+        
+        // Check if value is a valid number
+        if (isNaN(value)) {
+          return this.createError({
+            message: "Weight Percentage must be a valid number"
+          });
+        }
+        
+        // Reject 0 and negative numbers
+        if (value <= 0) {
+          return this.createError({
+            message: "Weight Percentage must be greater than 0"
+          });
+        }
+        
+        return true;
       })
       .max(100, "Weight Percentage must be less than or equal to 100")
       .test("check-total", function (value) {
@@ -116,7 +130,7 @@ const DeliverableGroupForm = ({ setOpenDialog, deliverableGroup = null, parentGr
 
         const totalWeightPercentages = sameLevelGroups.reduce(
           (total, grp) =>
-            total + (deliverableGroup && grp.position_index === deliverableGroup.position_index ? 0 : grp.weighted_percentage),
+            total + (deliverableGroup && grp.position_index === deliverableGroup.position_index ? 0 : (grp.weighted_percentage || 0)),
           0
         );
 

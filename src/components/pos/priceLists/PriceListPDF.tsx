@@ -69,10 +69,6 @@ const PriceListPDF: React.FC<PriceListPDFProps> = ({
             </View>
           )}
           <View style={{ flex: 1, padding: 2 }}>
-            <Text style={{ ...pdfStyles.minInfo, color: mainColor }}>Currency</Text>
-            <Text style={pdfStyles.minInfo}>{priceList.currency?.name}</Text>
-          </View>
-          <View style={{ flex: 1, padding: 2 }}>
             <Text style={{ ...pdfStyles.minInfo, color: mainColor }}>Printed By</Text>
             <Text style={pdfStyles.minInfo}>{user.name}</Text>
           </View>

@@ -13,7 +13,7 @@
 /test.*
 
 # next.js
-.next/
+/.next/
 /out/
 
 # production
@@ -44,8 +44,3 @@ package-lock.json
 
 # error-wrapper
 /src/app/error-wrapper.tsx
-
-HR_API_DOCUMENTATION.md
-/.augment
-NOTIFICATIONS_FEATURE.MD
-NOTIFICATIONS_AND_CALENDAR_IMPLEMENTATION.md

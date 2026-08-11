@@ -25,6 +25,11 @@ const UpdatesAccordion = ({ accordionExpanded, handleChange, update }) => {
 
   const taskProgressItems = updateDetails?.task_executions || [];
 
+  const formatTaskLabel = (task) => {
+    if (!task) return '';
+    return task.code ? `${task.code} - ${task.name}` : task.name;
+  };
+
   const renderTaskProgress = () => {
     if (taskProgressItems.length === 0) {
       return <Typography color="text.secondary">No task progress recorded.</Typography>;
@@ -45,7 +50,7 @@ const UpdatesAccordion = ({ accordionExpanded, handleChange, update }) => {
                 </Grid>
                 <Grid size={{ xs: 12, md: 5 }}>
                   <Tooltip title="Task Name">
-                    <Typography>{taskProgressItem.task?.name}</Typography>
+                    <Typography>{formatTaskLabel(taskProgressItem.task)}</Typography>
                   </Tooltip>
                   {taskProgressItem.project_subcontract?.subcontractor?.name && taskProgressItem.project_subcontract?.subcontractNo && (
                     <Tooltip title="Subcontract">

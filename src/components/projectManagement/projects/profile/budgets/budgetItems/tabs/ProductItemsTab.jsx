@@ -65,6 +65,18 @@ function ProductItemsTab({
       null
   );
 
+  const formatTaskOptionLabel = (option) => {
+    if (!option) return '';
+    const code = String(option.code || '').trim();
+    const name = String(option.name || option.label || '').trim();
+
+    if (code && name) {
+      return `${code} - ${name}`;
+    }
+
+    return name;
+  };
+
   // Define validation schema
   const validationSchema = yup.object({
     product_id: yup
@@ -320,7 +332,7 @@ function ProductItemsTab({
                       isOptionEqualToValue={(option, value) =>
                         option.id === value?.id
                       }
-                      getOptionLabel={(option) => option.label}
+                      getOptionLabel={(option) => formatTaskOptionLabel(option)}
                       value={selectedItemable}
                       renderInput={(params) => (
                         <TextField
@@ -332,11 +344,12 @@ function ProductItemsTab({
                       )}
                       onChange={(e, newValue) => {
                         setSelectedItemable(newValue);
+                        console.log(newValue);
                         setValue('budget_itemable_id', newValue?.id ?? null);
                       }}
                       renderOption={(props, option) => (
                         <li {...props} key={option.id}>
-                          {option.label}
+                          {formatTaskOptionLabel(option)}
                         </li>
                       )}
                     />

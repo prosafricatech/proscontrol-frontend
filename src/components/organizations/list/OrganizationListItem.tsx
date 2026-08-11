@@ -42,6 +42,7 @@ export const OrganizationListItem: React.FC<OrganizationListItemProps> = ({ orga
   const roles = organization.roles || [];
   const rolesCount = roles.length;
 
+
   React.useEffect(() => {
     if (authUser?.user === null) {
       signOut({ callbackUrl: `/${lang}/auth/signin` });
@@ -50,7 +51,6 @@ export const OrganizationListItem: React.FC<OrganizationListItemProps> = ({ orga
 
   const onLoad = async () => {
     setIsLoading(true);
-    
     if (authOrganization?.organization?.id !== organization.id) {
       await loadOrganization(
         organization.id,
@@ -61,15 +61,6 @@ export const OrganizationListItem: React.FC<OrganizationListItemProps> = ({ orga
               variant: 'success'
             }
           );
-          
-          // Clear query cache
-          queryClient.clear();
-          
-          // Navigate to dashboard
-          const dashboardPath = `/${lang}/dashboard`;
-          
-          // Use window.location.href to navigate and reload in one go
-          window.location.href = dashboardPath;
         },
         (error: Error) => {
           enqueueSnackbar(
@@ -78,14 +69,12 @@ export const OrganizationListItem: React.FC<OrganizationListItemProps> = ({ orga
               variant: 'error'
             }
           );
-          setIsLoading(false);
         }
       );
-    } else {
-      // If already the active organization, just navigate to dashboard
-      router.replace(`/${lang}/dashboard`);
+      queryClient.clear();
       setIsLoading(false);
     }
+    router.replace(`/${lang}/dashboard`);
   };
 
   if (isLoading) {

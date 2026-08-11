@@ -353,35 +353,6 @@ const procurementConfigs = [
     },
   },
   {
-    type: 'rfq',
-    label: 'RFQ',
-    access: { orgPermissions: [PERMISSIONS.RFQS_READ], modules: [MODULES.PROCUREMENT_AND_SUPPLY] },
-    search: async (query: string) => {
-      try {
-        const rfqServices = (await import('@/components/procurement/rfqs/rfq-services')).default;
-        const data = await rfqServices.getList({ keyword: query, limit: 5 });
-        const menuItem = '/en-US/procurement/rfqs';
-        return Array.isArray(data?.data)
-          ? data.data
-              .filter((item: any) =>
-                (item.rfqNo && item.rfqNo.toLowerCase().includes(query.toLowerCase())) ||
-                'request for quotation'.includes(query.toLowerCase()) ||
-                query.toLowerCase().includes('rfq')
-              )
-              .map((item: any) => ({
-                id: item.id,
-                label: item.rfqNo || item.id,
-                type: 'RFQ',
-                url: `${menuItem}?search=${encodeURIComponent(item.rfqNo || query)}`,
-                description: 'RFQ',
-              }))
-          : [];
-      } catch {
-        return [];
-      }
-    },
-  },
-  {
     type: 'report',
     label: 'Procurement Reports',
     access: { orgPermissions: [PERMISSIONS.PURCHASES_REPORTS], modules: [MODULES.PROCUREMENT_AND_SUPPLY] },

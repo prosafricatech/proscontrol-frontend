@@ -18,8 +18,8 @@ function StockAdjustmentPDF({stockAdjustment,authObject}) {
 
   return (
     <Document
-        title={`${stockAdjustment.adjustmentNo} | ${organization.name}`}
-        author={stockAdjustment.creator.name}
+        title={`${stockAdjustment.adjustmentNo} | ${organization?.name}`}
+        author={stockAdjustment.creator?.name}
         subject={'Stock Adjustment Document'}
         keywords={stockAdjustment.narration}
         creator={`${user && user.name} | Powered By ProsERP`}
@@ -42,11 +42,11 @@ function StockAdjustmentPDF({stockAdjustment,authObject}) {
             </View>
             <View style={{ flex: 1, padding: 2 }}>
               <Text style={{...pdfStyles.minInfo, color: mainColor }}>Store</Text>
-              <Text style={{...pdfStyles.minInfo }}>{stockAdjustment.store.name}</Text>
+              <Text style={{...pdfStyles.minInfo }}>{stockAdjustment.store?.name}</Text>
             </View>
             <View style={{ flex: 1, padding: 2 }}>
               <Text style={{...pdfStyles.minInfo, color: mainColor }}>Cost Center</Text>
-              <Text style={{...pdfStyles.minInfo }}>{stockAdjustment.cost_center.name}</Text>
+              <Text style={{...pdfStyles.minInfo }}>{stockAdjustment.cost_center?.name}</Text>
             </View>
           </View>
           <View style={{...pdfStyles.table, minHeight: 230,marginTop: 10 }}>
@@ -72,7 +72,7 @@ function StockAdjustmentPDF({stockAdjustment,authObject}) {
                 return (
                   <View key={index} style={pdfStyles.tableRow}>
                     <Text style={{ ...pdfStyles.tableCell,backgroundColor: index % 2 === 0 ? '#FFFFFF' : lightColor, flex : 0.5 }}>{index+1}</Text>
-                    <Text style={{ ...pdfStyles.tableCell,backgroundColor: index % 2 === 0 ? '#FFFFFF' : lightColor, flex : 4 }}>{movement.product.name}</Text>
+                    <Text style={{ ...pdfStyles.tableCell,backgroundColor: index % 2 === 0 ? '#FFFFFF' : lightColor, flex : 4 }}>{movement.product?.name}</Text>
                     <Text style={{ ...pdfStyles.tableCell,backgroundColor: index % 2 === 0 ? '#FFFFFF' : lightColor, flex : 0.5 }}>{movement.product.measurement_unit.symbol}</Text>
                     <Text style={{ ...pdfStyles.tableCell,backgroundColor: index % 2 === 0 ? '#FFFFFF' : lightColor, flex : 1, textAlign : 'right' }}>{movement.balance_before}</Text>
                     <Text style={{ ...pdfStyles.tableCell,backgroundColor: index % 2 === 0 ? '#FFFFFF' : lightColor, flex : 1, textAlign : 'right' }}>{movement.actual_stock}</Text>
@@ -103,7 +103,7 @@ function StockAdjustmentPDF({stockAdjustment,authObject}) {
             </View>
             <View style={{ flex: 1, padding: 2 }}>
               <Text style={{...pdfStyles.minInfo, color: mainColor }}>Posted By</Text>
-              <Text style={{...pdfStyles.minInfo }}>{stockAdjustment.creator.name}</Text>
+              <Text style={{...pdfStyles.minInfo }}>{stockAdjustment.creator?.name}</Text>
             </View>
           </View>
         </Page>

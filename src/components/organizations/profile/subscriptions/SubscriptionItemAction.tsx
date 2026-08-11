@@ -49,6 +49,7 @@ const SubscriptionItemAction: React.FC<SubscriptionItemActionProps> = ({ subscri
     onSuccess: (data: { message: string }) => {
       enqueueSnackbar(data.message || subsDict.messages.deleteSuccess, { variant: 'success' });
       queryClient.invalidateQueries({ queryKey: ['subscriptions'] })
+      window.location.reload();
     },
     onError: (error: { response?: { data?: { message: string } } }) => {
       enqueueSnackbar(
