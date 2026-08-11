@@ -199,7 +199,7 @@ const PayrollPeriodRunsTab = ({
                       />
                     </TableCell>
                     <TableCell align="center">
-                      <Badge badgeContent={run.employee_count || 0} color="default" />
+                      <Badge badgeContent={run.payslips_count || 0} color="default" />
                     </TableCell>
                     <TableCell align="right">
                       <Stack
