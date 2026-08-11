@@ -1,6 +1,7 @@
 'use client';
 
 import { sanitizedNumber } from '@/app/helpers/input-sanitization-helpers';
+import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { LoadingButton } from '@mui/lab';
 import {
   Alert,
@@ -88,10 +89,7 @@ const LoanApprovalForm = ({
       onClose();
     },
     onError: (error: any) => {
-      enqueueSnackbar(
-        error?.response?.data?.message || 'Something went wrong',
-        { variant: 'error' }
-      );
+      enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
     },
   });
 

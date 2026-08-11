@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { HighlightOff } from '@mui/icons-material';
 import { LoadingButton } from '@mui/lab';
@@ -17,6 +18,7 @@ import {
 } from '@mui/material';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
+import { useSnackbar } from 'notistack';
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import * as yup from 'yup';
@@ -34,6 +36,7 @@ function UpdatesForm({
   update,
   setIsUpdateFormOpen = () => {},
 }) {
+  const { enqueueSnackbar } = useSnackbar();
   const { project } = useProjectProfile();
   const queryClient = useQueryClient();
 
@@ -75,6 +78,9 @@ function UpdatesForm({
       }
       queryClient.invalidateQueries({ queryKey: ['projectUpdates'] });
     },
+    onError: (err) => {
+      enqueueSnackbar(getErrorMessage(err), { variant: 'error' });
+    },
   });
 
   const updateMutation = useMutation({
@@ -82,6 +88,9 @@ function UpdatesForm({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projectUpdates'] });
       queryClient.invalidateQueries({ queryKey: ['editProjectUpdate'] });
+    },
+    onError: (err) => {
+      enqueueSnackbar(getErrorMessage(err), { variant: 'error' });
     },
   });
 

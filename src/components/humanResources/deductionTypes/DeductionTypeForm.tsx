@@ -180,17 +180,17 @@ const DeductionTypeForm = ({
       return;
     }
 
-    let message = 'Something went wrong';
-    if (
-      typeof mutationError === 'object' &&
-      mutationError !== null &&
-      'response' in mutationError &&
-      typeof (mutationError as any).response?.data?.message === 'string'
-    ) {
-      message = (mutationError as any).response.data.message;
-    } else if (mutationError instanceof Error) {
-      message = mutationError.message;
-    }
+    // let message = 'Something went wrong';
+    // if (
+    //   typeof mutationError === 'object' &&
+    //   mutationError !== null &&
+    //   'response' in mutationError &&
+    //   typeof (mutationError as any).response?.data?.message === 'string'
+    // ) {
+    //   message = (mutationError as any).response.data.message;
+    // } else if (mutationError instanceof Error) {
+    //   message = mutationError.message;
+    // }
     enqueueSnackbar(getErrorMessage(mutationError), { variant: 'error' });
   };
 
@@ -499,7 +499,9 @@ const DeductionTypeForm = ({
                 <Div sx={{ my: 1 }}>
                   <LedgerSelect
                     label={
-                      isStaffLoanRepayment ? 'Receivable Ledger' : 'Payable Ledger'
+                      isStaffLoanRepayment
+                        ? 'Receivable Ledger'
+                        : 'Payable Ledger'
                     }
                     allowedGroups={
                       isStaffLoanRepayment
@@ -507,7 +509,11 @@ const DeductionTypeForm = ({
                         : ['Accounts Payable']
                     }
                     frontError={errors.payable_ledger_id}
-                    key={isStaffLoanRepayment ? 'account-receivable-ledger' : 'account-payable-ledger'}
+                    key={
+                      isStaffLoanRepayment
+                        ? 'account-receivable-ledger'
+                        : 'account-payable-ledger'
+                    }
                     value={recentlyAddedPayableLedger || undefined}
                     defaultValue={
                       deductionType?.payable_ledger || defaultValue || undefined

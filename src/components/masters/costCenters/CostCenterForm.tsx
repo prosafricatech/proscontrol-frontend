@@ -1,13 +1,21 @@
+import { getErrorMessage } from '@/utilities/helpers/errorHandler';
+import { yupResolver } from '@hookform/resolvers/yup';
+import { LoadingButton } from '@mui/lab';
+import {
+  Button,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Grid,
+  TextField,
+} from '@mui/material';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSnackbar } from 'notistack';
 import React from 'react';
 import { useForm } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
-import { useSnackbar } from 'notistack';
-import { Button, DialogActions, DialogContent, DialogTitle, Grid, TextField } from '@mui/material';
-import { LoadingButton } from '@mui/lab';
 import * as yup from 'yup';
-import costCenterservices from './cost-center-services';
 import UsersSelector from '../../sharedComponents/UsersSelector';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import costCenterservices from './cost-center-services';
 import { CostCenter } from './CostCenterType';
 
 interface User {
@@ -29,7 +37,10 @@ interface CostCenterResponse {
   message: string;
 }
 
-const CostCenterForm: React.FC<CostCenterFormProps> = ({ setOpenDialog, costCenter }) => {
+const CostCenterForm: React.FC<CostCenterFormProps> = ({
+  setOpenDialog,
+  costCenter,
+}) => {
   const queryClient = useQueryClient();
   const { enqueueSnackbar } = useSnackbar();
 
@@ -41,7 +52,7 @@ const CostCenterForm: React.FC<CostCenterFormProps> = ({ setOpenDialog, costCent
       queryClient.invalidateQueries({ queryKey: ['costCenters'] });
     },
     onError: (error: any) => {
-      enqueueSnackbar(error.response?.data?.message || 'Failed to create cost center', {
+      enqueueSnackbar(getErrorMessage(error), {
         variant: 'error',
       });
     },
@@ -55,7 +66,7 @@ const CostCenterForm: React.FC<CostCenterFormProps> = ({ setOpenDialog, costCent
       queryClient.invalidateQueries({ queryKey: ['costCenters'] });
     },
     onError: (error: any) => {
-      enqueueSnackbar(error.response?.data?.message || 'Failed to update cost center', {
+      enqueueSnackbar(getErrorMessage(error), {
         variant: 'error',
       });
     },
@@ -64,14 +75,17 @@ const CostCenterForm: React.FC<CostCenterFormProps> = ({ setOpenDialog, costCent
   const validationSchema = yup.object({
     name: yup.string().required('Cost Center Name is required'),
     description: yup.string().nullable(),
-    user_ids: yup.array().of(yup.number()).min(1, 'At least one user is required'),
+    user_ids: yup
+      .array()
+      .of(yup.number())
+      .min(1, 'At least one user is required'),
   });
 
-  const { 
-    register, 
-    handleSubmit, 
+  const {
+    register,
+    handleSubmit,
     setValue,
-    formState: { errors } 
+    formState: { errors },
   } = useForm<FormData>({
     resolver: yupResolver(validationSchema) as any,
     defaultValues: {
@@ -96,7 +110,7 @@ const CostCenterForm: React.FC<CostCenterFormProps> = ({ setOpenDialog, costCent
   return (
     <>
       <DialogTitle>
-        <Grid container justifyContent="center">
+        <Grid container justifyContent='center'>
           {costCenter ? `Edit ${costCenter.name}` : 'Create New Cost Center'}
         </Grid>
       </DialogTitle>
@@ -105,10 +119,10 @@ const CostCenterForm: React.FC<CostCenterFormProps> = ({ setOpenDialog, costCent
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid size={12}>
               <TextField
-                label="Cost Center name"
+                label='Cost Center name'
                 fullWidth
                 size='small'
-                variant="outlined"
+                variant='outlined'
                 error={!!errors.name}
                 helperText={errors.name?.message}
                 {...register('name')}
@@ -117,16 +131,22 @@ const CostCenterForm: React.FC<CostCenterFormProps> = ({ setOpenDialog, costCent
 
             <Grid size={12}>
               <UsersSelector
-                label="Cost Center Users"
+                label='Cost Center Users'
                 multiple={true}
                 defaultValue={costCenter?.users}
                 onChange={(value: User | User[] | null) => {
-                  const usersArray = value 
-                    ? (Array.isArray(value) ? value : [value])
+                  const usersArray = value
+                    ? Array.isArray(value)
+                      ? value
+                      : [value]
                     : [];
-                  setValue('user_ids', usersArray.map(u => Number(u.id)), {
-                    shouldValidate: true
-                  });
+                  setValue(
+                    'user_ids',
+                    usersArray.map((u) => Number(u.id)),
+                    {
+                      shouldValidate: true,
+                    }
+                  );
                 }}
                 frontError={errors.user_ids}
               />
@@ -134,22 +154,24 @@ const CostCenterForm: React.FC<CostCenterFormProps> = ({ setOpenDialog, costCent
 
             <Grid size={12}>
               <TextField
-                label="Description"
+                label='Description'
                 fullWidth
                 size='small'
                 multiline
                 rows={2}
-                variant="outlined"
+                variant='outlined'
                 {...register('description')}
               />
             </Grid>
           </Grid>
 
           <DialogActions sx={{ mt: 2 }}>
-            <Button size='small' onClick={() => setOpenDialog(false)}>Cancel</Button>
+            <Button size='small' onClick={() => setOpenDialog(false)}>
+              Cancel
+            </Button>
             <LoadingButton
-              type="submit"
-              variant="contained"
+              type='submit'
+              variant='contained'
               size='small'
               loading={isPending || updateIsLoading}
             >

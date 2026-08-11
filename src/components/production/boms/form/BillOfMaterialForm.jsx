@@ -5,6 +5,7 @@ import ProductSelect from '@/components/productAndServices/products/ProductSelec
 import { useProductsSelect } from '@/components/productAndServices/products/ProductsSelectProvider';
 import CommaSeparatedField from '@/shared/Inputs/CommaSeparatedField';
 import { PERMISSIONS } from '@/utilities/constants/permissions';
+import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { AddOutlined, HighlightOff } from '@mui/icons-material';
 import { LoadingButton } from '@mui/lab';
@@ -151,8 +152,8 @@ function BillOfMaterialForm({ toggleOpen, billOfMaterial }) {
       queryClient.invalidateQueries({ queryKey: ['billOfMaterials'] });
     },
     onError: (error) => {
-      error?.response?.data?.message &&
-        enqueueSnackbar(error.response.data.message, { variant: 'error' });
+      // error?.response?.data?.message &&
+      enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
     },
   });
 
@@ -164,8 +165,8 @@ function BillOfMaterialForm({ toggleOpen, billOfMaterial }) {
       queryClient.invalidateQueries({ queryKey: ['billOfMaterials'] });
     },
     onError: (error) => {
-      error?.response?.data?.message &&
-        enqueueSnackbar(error.response.data.message, { variant: 'error' });
+      // error?.response?.data?.message &&
+      enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
     },
   });
 

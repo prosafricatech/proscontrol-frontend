@@ -2,6 +2,7 @@ import { sanitizedNumber } from '@/app/helpers/input-sanitization-helpers';
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import MeasurementUnitForm from '@/components/masters/measurementUnits/MeasurementUnitForm';
 import CommaSeparatedField from '@/shared/Inputs/CommaSeparatedField';
+import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useJumboTheme } from '@jumbo/components/JumboTheme/hooks';
 import { Div } from '@jumbo/shared';
@@ -187,17 +188,18 @@ const ProductFormDialogContent = ({
 
     // Helper function to handle server validation errors
     const handleServerErrors = (error) => {
-      const errorData = error?.response?.data;
-      
+      // const errorData = error?.response?.data;
+      const errorData = getErrorMessage(error);
+
       if (errorData?.validation_errors) {
         const validationErrors = errorData.validation_errors;
-        
+
         // Set errors for each field
         Object.keys(validationErrors).forEach((field) => {
-          const errorMessage = Array.isArray(validationErrors[field]) 
-            ? validationErrors[field][0] 
+          const errorMessage = Array.isArray(validationErrors[field])
+            ? validationErrors[field][0]
             : validationErrors[field];
-          
+
           // Map backend field names to form field names if needed
           let formField = field;
           // Handle special cases where backend field name differs from form field
@@ -206,23 +208,23 @@ const ProductFormDialogContent = ({
           } else if (field === 'product_category') {
             formField = 'product_category_id';
           }
-          
+
           setError(formField, {
             type: 'server',
             message: errorMessage,
           });
         });
-        
+
         // Show general error message
-        enqueueSnackbar(errorData.message || 'Please check the information you submitted', {
-          variant: 'error',
-        });
+        enqueueSnackbar(
+          errorData.message || 'Please check the information you submitted',
+          {
+            variant: 'error',
+          }
+        );
       } else {
         // Handle other errors
-        enqueueSnackbar(
-          error?.response?.data?.message || 'Failed to save product',
-          { variant: 'error' }
-        );
+        enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
       }
     };
 
@@ -252,7 +254,9 @@ const ProductFormDialogContent = ({
 
     const saveMutation = React.useMemo(
       () => (data) => {
-        return product?.id ? updateProduct.mutate(data) : addProduct.mutate(data);
+        return product?.id
+          ? updateProduct.mutate(data)
+          : addProduct.mutate(data);
       },
       [updateProduct, addProduct, product]
     );

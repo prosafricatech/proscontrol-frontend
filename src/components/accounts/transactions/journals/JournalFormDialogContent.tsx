@@ -6,6 +6,7 @@ import CurrencySelector from '@/components/masters/Currencies/CurrencySelector';
 import { useCurrencySelect } from '@/components/masters/Currencies/CurrencySelectProvider';
 import CommaSeparatedField from '@/shared/Inputs/CommaSeparatedField';
 import { PERMISSIONS } from '@/utilities/constants/permissions';
+import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Div } from '@jumbo/shared';
 import { HighlightOff } from '@mui/icons-material';
@@ -31,10 +32,10 @@ import { useSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import * as yup from 'yup';
+import { useLedgerSelect } from '../../ledgers/forms/LedgerSelectProvider';
 import journalServices from './journal-services';
 import JournalItemForm from './JournalItemForm';
 import JournalItemRow from './JournalItemRow';
-import { useLedgerSelect } from '../../ledgers/forms/LedgerSelectProvider';
 
 type JournalItem = {
   debit_ledger_id?: number;
@@ -66,7 +67,7 @@ type JournalData = {
   reference?: string;
   narration?: string;
   currency_id?: number;
-  currency: any
+  currency: any;
   exchange_rate?: number;
   cost_centers?: CostCenter[];
   transaction_date?: string;
@@ -110,11 +111,15 @@ function JournalFormDialogContent({
   const [clearFormKey, setClearFormKey] = useState(0);
   const [prevKey, setPrevKey] = useState(0);
   const [submitItemForm, setSubmitItemForm] = useState(false);
-  const [lockedJournalCurrencyId, setLockedJournalCurrencyId] = useState<number | null>(null);
+  const [lockedJournalCurrencyId, setLockedJournalCurrencyId] = useState<
+    number | null
+  >(null);
 
   const getExchangeRateByCurrencyId = (currencyId?: number) => {
     if (!currencyId) return 1;
-    const foundCurrency = currencies.find((currency) => currency.id === currencyId);
+    const foundCurrency = currencies.find(
+      (currency) => currency.id === currencyId
+    );
     return foundCurrency?.exchangeRate || 1;
   };
 
@@ -139,7 +144,7 @@ function JournalFormDialogContent({
   // Helper function to find currency ID for a ledger
   const findLedgerCurrencyId = (ledgerId?: number): number | undefined => {
     if (!ledgerId) return undefined;
-    const ledger = ungroupedLedgerOptions.find(l => l.id === ledgerId);
+    const ledger = ungroupedLedgerOptions.find((l) => l.id === ledgerId);
     return ledger?.currency?.id;
   };
 
@@ -149,9 +154,11 @@ function JournalFormDialogContent({
     return journal.items.map((item: JournalItem) => ({
       ...item,
       // Find the currency IDs from the ledger options
-      debit_ledger_currency_id: item.debit_ledger_currency_id || 
+      debit_ledger_currency_id:
+        item.debit_ledger_currency_id ||
         findLedgerCurrencyId(item.debit_ledger_id),
-      credit_ledger_currency_id: item.credit_ledger_currency_id || 
+      credit_ledger_currency_id:
+        item.credit_ledger_currency_id ||
         findLedgerCurrencyId(item.credit_ledger_id),
     }));
   };
@@ -166,20 +173,25 @@ function JournalFormDialogContent({
       setOpen(false);
     },
     onError: (error: Error & { response?: any }) => {
-      if (error.response) {
-        const validationErrors = error.response?.data?.validation_errors;
-        if (validationErrors?.currency_id?.[0]) {
-          setError('currency_id', {
-            type: 'manual',
-            message: validationErrors.currency_id[0],
-          });
-        }
-        if (error.response.status === 400 || error.response.status === 422) {
-          setServerError(validationErrors);
-        } else {
-          enqueueSnackbar(error.response?.data?.message, { variant: 'error' });
-        }
-      }
+      const message = getErrorMessage(error);
+      setServerError(message);
+      enqueueSnackbar(message, {
+        variant: 'error',
+      });
+      // if (error.response) {
+      //   const validationErrors = error.response?.data?.validation_errors;
+      //   if (validationErrors?.currency_id?.[0]) {
+      //     setError('currency_id', {
+      //       type: 'manual',
+      //       message: validationErrors.currency_id[0],
+      //     });
+      //   }
+      //   if (error.response.status === 400 || error.response.status === 422) {
+      //     setServerError(validationErrors);
+      //   } else {
+      //     enqueueSnackbar(error.response?.data?.message, { variant: 'error' });
+      //   }
+      // }
     },
   });
 
@@ -191,20 +203,25 @@ function JournalFormDialogContent({
       setOpen(false);
     },
     onError: (error: Error & { response?: any }) => {
-      if (error.response) {
-        const validationErrors = error.response?.data?.validation_errors;
-        if (validationErrors?.currency_id?.[0]) {
-          setError('currency_id', {
-            type: 'manual',
-            message: validationErrors.currency_id[0],
-          });
-        }
-        if (error.response.status === 400 || error.response.status === 422) {
-          setServerError(validationErrors);
-        } else {
-          enqueueSnackbar(error.response?.data?.message, { variant: 'error' });
-        }
-      }
+      const message = getErrorMessage(error);
+      setServerError(message);
+      enqueueSnackbar(message, {
+        variant: 'error',
+      });
+      // if (error.response) {
+      //   const validationErrors = error.response?.data?.validation_errors;
+      //   if (validationErrors?.currency_id?.[0]) {
+      //     setError('currency_id', {
+      //       type: 'manual',
+      //       message: validationErrors.currency_id[0],
+      //     });
+      //   }
+      //   if (error.response.status === 400 || error.response.status === 422) {
+      //     setServerError(validationErrors);
+      //   } else {
+      //     enqueueSnackbar(error.response?.data?.message, { variant: 'error' });
+      //   }
+      // }
     },
   });
 
@@ -263,9 +280,13 @@ function JournalFormDialogContent({
   useEffect(() => {
     setValue('items', items);
 
-    const detectedForeignCurrencyId = items.find(
-      (entry) => entry.debit_ledger_currency_id || entry.credit_ledger_currency_id
-    )?.debit_ledger_currency_id || items.find((entry) => entry.credit_ledger_currency_id)?.credit_ledger_currency_id;
+    const detectedForeignCurrencyId =
+      items.find(
+        (entry) =>
+          entry.debit_ledger_currency_id || entry.credit_ledger_currency_id
+      )?.debit_ledger_currency_id ||
+      items.find((entry) => entry.credit_ledger_currency_id)
+        ?.credit_ledger_currency_id;
 
     if (detectedForeignCurrencyId) {
       applyJournalCurrencyLock(detectedForeignCurrencyId);
@@ -327,28 +348,28 @@ function JournalFormDialogContent({
       setError('currency_id', {
         type: 'manual',
         message:
-          "Entries between two different foreign currencies are not supported directly. Post through a base-currency clearing entry instead.",
+          'Entries between two different foreign currencies are not supported directly. Post through a base-currency clearing entry instead.',
       });
       return;
     }
 
-    const updatedData = { 
-      ...data, 
-      items: items.map(item => ({
+    const updatedData = {
+      ...data,
+      items: items.map((item) => ({
         debit_ledger_id: item.debit_ledger_id,
         debit_ledger_currency_id: item.debit_ledger_currency_id,
         credit_ledger_id: item.credit_ledger_id,
         credit_ledger_currency_id: item.credit_ledger_currency_id,
         amount: item.amount,
         description: item.description,
-      }))
+      })),
     };
     await saveJournal.mutate(updatedData);
   };
-  
+
   // Get the current selected currency ID
   const selectedCurrencyId = watch('currency_id');
-  
+
   return (
     <>
       <DialogTitle textAlign={'center'}>
@@ -508,7 +529,9 @@ function JournalFormDialogContent({
           items={items}
           setItems={setItems}
           selectedCurrencyId={selectedCurrencyId || undefined}
-          onLedgerCurrencyDetected={(currencyId) => applyJournalCurrencyLock(currencyId)}
+          onLedgerCurrencyDetected={(currencyId) =>
+            applyJournalCurrencyLock(currencyId)
+          }
         />
 
         {errors?.items?.message && items.length < 1 && (

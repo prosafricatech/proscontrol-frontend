@@ -7,6 +7,7 @@ import { useCurrencySelect } from '@/components/masters/Currencies/CurrencySelec
 import { Currency } from '@/components/masters/Currencies/CurrencyType';
 import CommaSeparatedField from '@/shared/Inputs/CommaSeparatedField';
 import { PERMISSIONS } from '@/utilities/constants/permissions';
+import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Div } from '@jumbo/shared';
 import { AddOutlined, HighlightOff } from '@mui/icons-material';
@@ -129,7 +130,9 @@ function ReceiptFormDialogContent({
 
   const getExchangeRateByCurrencyId = (currencyId?: number) => {
     if (!currencyId) return 1;
-    const foundCurrency = currencies.find((currency) => currency.id === currencyId);
+    const foundCurrency = currencies.find(
+      (currency) => currency.id === currencyId
+    );
     return foundCurrency?.exchangeRate || 1;
   };
 
@@ -158,7 +161,7 @@ function ReceiptFormDialogContent({
   // Helper function to find currency ID for a ledger
   const findLedgerCurrencyId = (ledgerId?: number): number | undefined => {
     if (!ledgerId) return undefined;
-    const ledger = ungroupedLedgerOptions.find(l => l.id === ledgerId);
+    const ledger = ungroupedLedgerOptions.find((l) => l.id === ledgerId);
     return ledger?.currency?.id;
   };
 
@@ -168,7 +171,8 @@ function ReceiptFormDialogContent({
     return receipt.items.map((item: ReceiptItem) => ({
       ...item,
       // Find the currency ID from the ledger options
-      item_form_ledger_currency_id: item.item_form_ledger_currency_id || 
+      item_form_ledger_currency_id:
+        item.item_form_ledger_currency_id ||
         findLedgerCurrencyId(item.credit_ledger_id),
     }));
   };
@@ -183,21 +187,27 @@ function ReceiptFormDialogContent({
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
     },
     onError: (error: Error & { response?: any }) => {
-      if (error.response) {
-        const validationErrors = error.response?.data?.validation_errors;
-        if (validationErrors?.currency_id?.[0]) {
-          setError('currency_id', {
-            type: 'manual',
-            message: validationErrors.currency_id[0],
-          });
-        }
+      const message = getErrorMessage(error);
+      setServerError(message);
+      enqueueSnackbar(message, {
+        variant: 'error',
+      });
 
-        if (error.response.status === 400 || error.response.status === 422) {
-          setServerError(validationErrors);
-        } else {
-          enqueueSnackbar(error.response?.data?.message, { variant: 'error' });
-        }
-      }
+      // if (error.response) {
+      //   const validationErrors = error.response?.data?.validation_errors;
+      //   if (validationErrors?.currency_id?.[0]) {
+      //     setError('currency_id', {
+      //       type: 'manual',
+      //       message: validationErrors.currency_id[0],
+      //     });
+      //   }
+
+      //   if (error.response.status === 400 || error.response.status === 422) {
+      //     setServerError(validationErrors);
+      //   } else {
+      //     enqueueSnackbar(error.response?.data?.message, { variant: 'error' });
+      //   }
+      // }
     },
   });
 
@@ -209,21 +219,26 @@ function ReceiptFormDialogContent({
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
     },
     onError: (error: Error & { response?: any }) => {
-      if (error.response) {
-        const validationErrors = error.response?.data?.validation_errors;
-        if (validationErrors?.currency_id?.[0]) {
-          setError('currency_id', {
-            type: 'manual',
-            message: validationErrors.currency_id[0],
-          });
-        }
+      const message = getErrorMessage(error);
+      setServerError(message);
+      enqueueSnackbar(message, {
+        variant: 'error',
+      });
+      // if (error.response) {
+      //   const validationErrors = error.response?.data?.validation_errors;
+      //   if (validationErrors?.currency_id?.[0]) {
+      //     setError('currency_id', {
+      //       type: 'manual',
+      //       message: validationErrors.currency_id[0],
+      //     });
+      //   }
 
-        if (error.response.status === 400 || error.response.status === 422) {
-          setServerError(validationErrors);
-        } else {
-          enqueueSnackbar(error.response?.data?.message, { variant: 'error' });
-        }
-      }
+      //   if (error.response.status === 400 || error.response.status === 422) {
+      //     setServerError(validationErrors);
+      //   } else {
+      //     enqueueSnackbar(error.response?.data?.message, { variant: 'error' });
+      //   }
+      // }
     },
   });
 
@@ -504,7 +519,7 @@ function ReceiptFormDialogContent({
                   helperText={errors?.exchange_rate?.message}
                   InputProps={{
                     inputComponent: CommaSeparatedField,
-                    disabled: !!watch('form_ledger_currency_id')
+                    disabled: !!watch('form_ledger_currency_id'),
                   }}
                   value={watch('exchange_rate')}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
@@ -558,7 +573,9 @@ function ReceiptFormDialogContent({
           setItems={setItems as any}
           isReceipt={true}
           selectedCurrencyId={watch('currency_id') as any}
-          onLedgerCurrencyDetected={(currencyId) => applyCurrencyLock(currencyId)}
+          onLedgerCurrencyDetected={(currencyId) =>
+            applyCurrencyLock(currencyId)
+          }
         />
 
         {errors?.items?.message && items.length < 1 && (

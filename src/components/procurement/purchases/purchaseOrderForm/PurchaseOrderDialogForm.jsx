@@ -1,5 +1,6 @@
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import { useCurrencySelect } from '@/components/masters/Currencies/CurrencySelectProvider';
+import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { HighlightOff } from '@mui/icons-material';
 import { LoadingButton } from '@mui/lab';
@@ -53,7 +54,9 @@ function PurchaseOrderDialogForm({ toggleOpen, order = null }) {
 
   const getExchangeRateByCurrencyId = (currencyId) => {
     if (!currencyId) return 1;
-    const foundCurrency = currencies.find((currency) => currency.id === currencyId);
+    const foundCurrency = currencies.find(
+      (currency) => currency.id === currencyId
+    );
     return foundCurrency?.exchangeRate || 1;
   };
 
@@ -167,8 +170,8 @@ function PurchaseOrderDialogForm({ toggleOpen, order = null }) {
       cost_centers: order?.cost_centers
         ? order.cost_centers
         : costCenters?.length === 1
-        ? costCenters
-        : [],
+          ? costCenters
+          : [],
       items: order ? order.purchase_order_items : [itemTemplate],
       terms_of_payment: order && order.terms_of_payment,
       remarks: order && order.remarks,
@@ -243,15 +246,21 @@ function PurchaseOrderDialogForm({ toggleOpen, order = null }) {
   const currentStakeholderLedgerId = watch('stakeholder_ledger_id');
 
   const selectedStakeholderLedger =
-    stakeholderPayableLedgers.find((ledger) => ledger.id === currentStakeholderLedgerId) ||
+    stakeholderPayableLedgers.find(
+      (ledger) => ledger.id === currentStakeholderLedgerId
+    ) ||
     stakeholderPayableLedgers[0] ||
     null;
 
   const lockedSupplierCurrencyId =
-    selectedStakeholderLedger?.currency_id || selectedStakeholderLedger?.currency?.id || null;
+    selectedStakeholderLedger?.currency_id ||
+    selectedStakeholderLedger?.currency?.id ||
+    null;
 
   const baseCurrencyId = React.useMemo(() => {
-    const baseByFlag = currencies.find((currency) => Number(currency?.is_base) === 1);
+    const baseByFlag = currencies.find(
+      (currency) => Number(currency?.is_base) === 1
+    );
     if (baseByFlag?.id) return baseByFlag.id;
 
     const baseCode = authOrganization?.organization?.base_currency?.code;
@@ -314,7 +323,8 @@ function PurchaseOrderDialogForm({ toggleOpen, order = null }) {
   ]);
 
   useEffect(() => {
-    const hasActiveSupplierContext = !!stakeholder_id && stakeholderPayableLedgers.length > 0;
+    const hasActiveSupplierContext =
+      !!stakeholder_id && stakeholderPayableLedgers.length > 0;
     if (!hasActiveSupplierContext) {
       return;
     }
@@ -352,14 +362,15 @@ function PurchaseOrderDialogForm({ toggleOpen, order = null }) {
       queryClient.invalidateQueries({ queryKey: ['purchaseOrders'] });
     },
     onError: (error) => {
-      const currencyError = error?.response?.data?.validation_errors?.currency_id?.[0];
+      const currencyError =
+        error?.response?.data?.validation_errors?.currency_id?.[0];
       if (currencyError) {
         setError('currency_id', {
           type: 'manual',
           message: currencyError,
         });
       }
-      enqueueSnackbar(error?.response?.data?.message, { variant: 'error' });
+      enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
     },
   });
 
@@ -372,14 +383,15 @@ function PurchaseOrderDialogForm({ toggleOpen, order = null }) {
       queryClient.invalidateQueries({ queryKey: ['purchaseOrderGrns'] });
     },
     onError: (error) => {
-      const currencyError = error?.response?.data?.validation_errors?.currency_id?.[0];
+      const currencyError =
+        error?.response?.data?.validation_errors?.currency_id?.[0];
       if (currencyError) {
         setError('currency_id', {
           type: 'manual',
           message: currencyError,
         });
       }
-      enqueueSnackbar(error?.response?.data?.message, { variant: 'error' });
+      enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
     },
   });
 

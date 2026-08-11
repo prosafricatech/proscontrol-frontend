@@ -6,6 +6,7 @@ import StakeholderSelector from '@/components/masters/stakeholders/StakeholderSe
 import StoreSelector from '@/components/procurement/stores/StoreSelector';
 import CommaSeparatedField from '@/shared/Inputs/CommaSeparatedField';
 import { PERMISSIONS } from '@/utilities/constants/permissions';
+import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Div } from '@jumbo/shared';
 import { AddOutlined } from '@mui/icons-material';
@@ -49,7 +50,7 @@ function SubcontractForm({ setOpenDialog, subContract = null }) {
       queryClient.invalidateQueries({ queryKey: ['subcontracts'] });
     },
     onError: (error) => {
-      enqueueSnackbar(error.response.data.message, {
+      enqueueSnackbar(getErrorMessage(error), {
         variant: 'error',
       });
     },
@@ -64,7 +65,7 @@ function SubcontractForm({ setOpenDialog, subContract = null }) {
         queryClient.invalidateQueries({ queryKey: ['subcontracts'] });
       },
       onError: (error) => {
-        enqueueSnackbar(error.response.data.message, {
+        enqueueSnackbar(getErrorMessage(error), {
           variant: 'error',
         });
       },

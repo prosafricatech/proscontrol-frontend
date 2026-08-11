@@ -1,5 +1,6 @@
 'use client';
 
+import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Div } from '@jumbo/shared';
 import { LoadingButton } from '@mui/lab';
@@ -97,29 +98,34 @@ const LeaveTypeForm = ({ setOpenDialog, leaveType }: LeaveTypeFormProp) => {
 
   const handleErrorResponse = (mutationError: any) => {
     const responseData = mutationError?.response?.data;
-    
+
     // Check if this is a bulk update confirmation error
-    if (responseData?.would_update !== undefined || responseData?.would_create !== undefined) {
+    if (
+      responseData?.would_update !== undefined ||
+      responseData?.would_create !== undefined
+    ) {
       setConfirmDialog({
         open: true,
-        data: mutationError?.config?.data ? JSON.parse(mutationError.config.data) : null,
+        data: mutationError?.config?.data
+          ? JSON.parse(mutationError.config.data)
+          : null,
         wouldUpdate: responseData.would_update || 0,
         wouldCreate: responseData.would_create || 0,
       });
       return;
     }
 
-    let message = 'Something went wrong';
-    if (
-      typeof mutationError === 'object' &&
-      mutationError !== null &&
-      'response' in mutationError &&
-      typeof (mutationError as any).response?.data?.message === 'string'
-    ) {
-      message = (mutationError as any).response.data.message;
-    } else if (mutationError instanceof Error) {
-      message = mutationError.message;
-    }
+    let message = getErrorMessage(mutationError);
+    // if (
+    //   typeof mutationError === 'object' &&
+    //   mutationError !== null &&
+    //   'response' in mutationError &&
+    //   typeof (mutationError as any).response?.data?.message === 'string'
+    // ) {
+    //   message = (mutationError as any).response.data.message;
+    // } else if (mutationError instanceof Error) {
+    //   message = mutationError.message;
+    // }
     enqueueSnackbar(message, { variant: 'error' });
   };
 
@@ -131,11 +137,21 @@ const LeaveTypeForm = ({ setOpenDialog, leaveType }: LeaveTypeFormProp) => {
       };
       saveMutation(dataWithForce);
     }
-    setConfirmDialog({ open: false, data: null, wouldUpdate: 0, wouldCreate: 0 });
+    setConfirmDialog({
+      open: false,
+      data: null,
+      wouldUpdate: 0,
+      wouldCreate: 0,
+    });
   };
 
   const handleCancelBulkUpdate = () => {
-    setConfirmDialog({ open: false, data: null, wouldUpdate: 0, wouldCreate: 0 });
+    setConfirmDialog({
+      open: false,
+      data: null,
+      wouldUpdate: 0,
+      wouldCreate: 0,
+    });
   };
 
   const validationSchema = yup.object({
@@ -309,25 +325,38 @@ const LeaveTypeForm = ({ setOpenDialog, leaveType }: LeaveTypeFormProp) => {
         </DialogTitle>
         <DialogContent>
           <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
-            This action will allocate {confirmDialog.data?.days_per_year || 0} leave days to multiple employees:
+            This action will allocate {confirmDialog.data?.days_per_year || 0}{' '}
+            leave days to multiple employees:
           </Typography>
           <Grid container spacing={1}>
             <Grid size={12}>
               <Typography variant='body2'>
-                <strong>Will Update:</strong> {confirmDialog.wouldUpdate} employees
+                <strong>Will Update:</strong> {confirmDialog.wouldUpdate}{' '}
+                employees
                 {confirmDialog.wouldUpdate > 0 && (
-                  <Typography variant='caption' display='block' color='text.secondary'>
-                    (Employees who already have this leave type will have their allocation updated)
+                  <Typography
+                    variant='caption'
+                    display='block'
+                    color='text.secondary'
+                  >
+                    (Employees who already have this leave type will have their
+                    allocation updated)
                   </Typography>
                 )}
               </Typography>
             </Grid>
             <Grid size={12}>
               <Typography variant='body2'>
-                <strong>Will Create:</strong> {confirmDialog.wouldCreate} new employees
+                <strong>Will Create:</strong> {confirmDialog.wouldCreate} new
+                employees
                 {confirmDialog.wouldCreate > 0 && (
-                  <Typography variant='caption' display='block' color='text.secondary'>
-                    (Employees who don't have this leave type will get it allocated)
+                  <Typography
+                    variant='caption'
+                    display='block'
+                    color='text.secondary'
+                  >
+                    (Employees who don't have this leave type will get it
+                    allocated)
                   </Typography>
                 )}
               </Typography>
@@ -341,7 +370,11 @@ const LeaveTypeForm = ({ setOpenDialog, leaveType }: LeaveTypeFormProp) => {
           <Button onClick={handleCancelBulkUpdate} variant='outlined'>
             Cancel
           </Button>
-          <Button onClick={handleConfirmBulkUpdate} variant='contained' color='warning'>
+          <Button
+            onClick={handleConfirmBulkUpdate}
+            variant='contained'
+            color='warning'
+          >
             Continue
           </Button>
         </DialogActions>

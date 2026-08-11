@@ -610,8 +610,8 @@ function ApprovalForm({
       queryClient.invalidateQueries({ queryKey: ['requisitions'] });
     },
     onError: (error: any) => {
-      error?.response?.data?.message &&
-        enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
+      // error?.response?.data?.message &&
+      enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
     },
   });
 
@@ -623,8 +623,8 @@ function ApprovalForm({
       queryClient.invalidateQueries({ queryKey: ['requisitions'] });
     },
     onError: (error: any) => {
-      error?.response?.data?.message &&
-        enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
+      // error?.response?.data?.message &&
+      enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
     },
   });
 

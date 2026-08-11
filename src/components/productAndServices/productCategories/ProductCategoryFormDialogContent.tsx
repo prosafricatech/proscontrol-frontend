@@ -1,6 +1,7 @@
 import { useDictionary } from '@/app/[lang]/contexts/DictionaryContext';
 import LedgerGroupProvider from '@/components/accounts/ledgerGroups/LedgerGroupProvider';
 import QuickAddLedger from '@/components/accounts/ledgers/forms/QuickAddLedger';
+import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { AddOutlined } from '@mui/icons-material';
 import { LoadingButton } from '@mui/lab';
@@ -75,10 +76,7 @@ const ProductCategoryFormDialogContent: React.FC<
       queryClient.invalidateQueries({ queryKey: ['productCategories'] });
     },
     onError: (error: any) => {
-      enqueueSnackbar(
-        dictionary.productCategories.form.errors.messages.createResponse,
-        { variant: 'error' }
-      );
+      enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
     },
   });
 
@@ -94,10 +92,7 @@ const ProductCategoryFormDialogContent: React.FC<
       queryClient.invalidateQueries({ queryKey: ['productCategories'] });
     },
     onError: (error: any) => {
-      enqueueSnackbar(
-        dictionary.productCategories.form.errors.messages.updateResponse,
-        { variant: 'error' }
-      );
+      enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
     },
   });
 

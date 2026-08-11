@@ -4,6 +4,7 @@ import StakeholderSelector from '@/components/masters/stakeholders/StakeholderSe
 import StakeholderSelectProvider from '@/components/masters/stakeholders/StakeholderSelectProvider';
 import { Stakeholder } from '@/components/masters/stakeholders/StakeholderType';
 import ProductsSelectProvider from '@/components/productAndServices/products/ProductsSelectProvider';
+import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { LoadingButton } from '@mui/lab';
 import {
@@ -118,33 +119,37 @@ function RFQDialogFormContent({ toggleOpen, rfq }: RFQDialogFormProps) {
   }, [rfq, setValue]);
 
   useEffect(() => {
-    const shouldAutoSetSent = 
-      selectedStakeholders.length > 0 && 
+    const shouldAutoSetSent =
+      selectedStakeholders.length > 0 &&
       (currentStatus === 'draft' || !currentStatus);
-    
+
     // Also auto-set if we're creating a new RFQ (not edit mode)
     const isNewRFQ = !rfq?.id;
-    
+
     if (shouldAutoSetSent && isNewRFQ) {
-      setValue('status', 'sent', { 
-        shouldDirty: true, 
-        shouldValidate: true 
+      setValue('status', 'sent', {
+        shouldDirty: true,
+        shouldValidate: true,
       });
     }
-    
+
     // For edit mode: If there are stakeholders and status is 'draft', update to 'sent'
     if (shouldAutoSetSent && isEditMode && currentStatus === 'draft') {
-      setValue('status', 'sent', { 
-        shouldDirty: true, 
-        shouldValidate: true 
+      setValue('status', 'sent', {
+        shouldDirty: true,
+        shouldValidate: true,
       });
     }
-    
+
     // If no stakeholders and status is 'sent', revert to 'draft' (optional)
-    if (selectedStakeholders.length === 0 && currentStatus === 'sent' && !rfq?.id) {
-      setValue('status', 'draft', { 
-        shouldDirty: true, 
-        shouldValidate: true 
+    if (
+      selectedStakeholders.length === 0 &&
+      currentStatus === 'sent' &&
+      !rfq?.id
+    ) {
+      setValue('status', 'draft', {
+        shouldDirty: true,
+        shouldValidate: true,
       });
     }
   }, [selectedStakeholders, currentStatus, rfq?.id, setValue, isEditMode]);
@@ -163,13 +168,9 @@ function RFQDialogFormContent({ toggleOpen, rfq }: RFQDialogFormProps) {
         error?.response?.data?.message ||
           'Please check the information you submitted'
       );
-      enqueueSnackbar(
-        error?.response?.data?.message ||
-          'Please check the information you submitted',
-        {
-          variant: 'error',
-        }
-      );
+      enqueueSnackbar(getErrorMessage(error), {
+        variant: 'error',
+      });
     },
   });
 
@@ -192,11 +193,7 @@ function RFQDialogFormContent({ toggleOpen, rfq }: RFQDialogFormProps) {
         error?.response?.data?.message ||
           'Please check the information you submitted'
       );
-      enqueueSnackbar(
-        error?.response?.data?.message ||
-          'Please check the information you submitted',
-        { variant: 'error' }
-      );
+      enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
     },
   });
 
@@ -218,7 +215,7 @@ function RFQDialogFormContent({ toggleOpen, rfq }: RFQDialogFormProps) {
 
     // Determine final status
     let finalStatus = formData.status || 'draft';
-    
+
     // If there are stakeholders and status is 'draft', automatically set to 'sent'
     if (selectedStakeholders.length > 0 && finalStatus === 'draft') {
       finalStatus = 'sent';
