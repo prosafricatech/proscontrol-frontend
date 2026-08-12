@@ -1,7 +1,6 @@
 import { sanitizedNumber } from '@/app/helpers/input-sanitization-helpers';
 import StoreSelector from '@/components/procurement/stores/StoreSelector';
 import CommaSeparatedField from '@/shared/Inputs/CommaSeparatedField';
-import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { LoadingButton } from '@mui/lab';
 import {
   Alert,
@@ -66,7 +65,7 @@ function ApprovedIssueForm({
   }, [approvedDetails]);
 
   const [items, setItems] = React.useState<any[]>(stockItems);
-  console.log(items, 'items');
+  console.log(items, 'items')
 
   React.useEffect(() => {
     setItems(stockItems);
@@ -89,7 +88,10 @@ function ApprovedIssueForm({
       toggleOpen(false);
     },
     onError: (error: any) => {
-      enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
+      enqueueSnackbar(
+        error?.response?.data?.message || 'Failed to issue approved items',
+        { variant: 'error' }
+      );
     },
   });
 
@@ -191,11 +193,12 @@ function ApprovedIssueForm({
             {items.map((item, index) => (
               <React.Fragment key={item.id}>
                 <Grid size={12}>
-                  <Divider />
+                  <Divider/>
                 </Grid>
                 <Grid size={{ xs: 12, md: 4 }}>
                   <Typography variant='body2'>
-                    {index + 1}. {item?.product?.name}
+                    {index + 1}.{' '}
+                    {item?.product?.name}
                   </Typography>
                 </Grid>
                 <Grid size={{ xs: 12, md: 4 }}>

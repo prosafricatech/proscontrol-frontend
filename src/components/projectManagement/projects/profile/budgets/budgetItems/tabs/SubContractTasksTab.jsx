@@ -35,6 +35,18 @@ function SubContractTasksTab({
   const [boundToOption, setBoundToOption] = useState(() => initialBoundTo);
   const [selectedItemable, setSelectedItemable] = useState(allTasks.find(task => task.id === subContractItem?.project_task_id) ?? null);
 
+  const formatTaskOptionLabel = (option) => {
+    if (!option) return '';
+    const code = String(option.code || '').trim();
+    const name = String(option.name || option.label || '').trim();
+
+    if (code && name) {
+      return `${code} - ${name}`;
+    }
+
+    return name;
+  };
+
   const validationSchema = yup.object({
     bound_to: yup.string().required('Bound to is required'),
     project_task_id: yup
@@ -180,7 +192,7 @@ function SubContractTasksTab({
           <Autocomplete
             options={boundToOption === 'Task' ? allTasks : []}
             isOptionEqualToValue={(option, value) => option.id === value?.id}
-            getOptionLabel={(option) => option.label}
+            getOptionLabel={(option) => formatTaskOptionLabel(option)}
             value={selectedItemable}
             renderInput={(params) => (
               <TextField
@@ -199,7 +211,7 @@ function SubContractTasksTab({
             }}
             renderOption={(props, option) => (
               <li {...props} key={option.id}>
-                {option.label}
+                {formatTaskOptionLabel(option)}
               </li>
             )}
           />

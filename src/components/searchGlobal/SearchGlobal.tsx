@@ -68,7 +68,6 @@ const SearchGlobal = ({ wrapperSx, sx }: SearchGlobalProps) => {
     'Cost Centers': { orgPermissions: [PERMISSIONS.ACCOUNTS_MASTERS_READ], modules: [MODULES.ACCOUNTS_AND_FINANCE] },
     'Approved Purchases': { orgPermissions: [PERMISSIONS.APPROVED_REQUISITIONS_READ], modules: [MODULES.PROCUREMENT_AND_SUPPLY] },
     'Purchases': { orgPermissions: [PERMISSIONS.PURCHASES_READ], modules: [MODULES.PROCUREMENT_AND_SUPPLY] },
-    'RFQs': { orgPermissions: [PERMISSIONS.RFQS_READ], modules: [MODULES.PROCUREMENT_AND_SUPPLY] },
     'Consumptions': { orgPermissions: [PERMISSIONS.INVENTORY_CONSUMPTIONS_READ], modules: [MODULES.PROCUREMENT_AND_SUPPLY] },
     'Procurement Reports': { orgPermissions: [PERMISSIONS.PURCHASES_REPORTS], modules: [MODULES.PROCUREMENT_AND_SUPPLY] },
     'Product Categories': { orgPermissions: [PERMISSIONS.PRODUCT_CATEGORIES_READ], modules: [MODULES.PROCUREMENT_AND_SUPPLY] },
@@ -85,7 +84,6 @@ const SearchGlobal = ({ wrapperSx, sx }: SearchGlobalProps) => {
     'SMS': { permissions: ['ProsAfricans:Read', 'ProsAfricans:Manage'] },
     'Organizations': {},
     'Invitations': {},
-    'Audit Trail': { orgPermissions: [PERMISSIONS.AUDIT_READ] },
     // Human Resources
     'Employees': { modules: [MODULES.HUMAN_RESOURCES] },
     'Leave Requests': { modules: [MODULES.HUMAN_RESOURCES] },

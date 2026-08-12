@@ -13,15 +13,9 @@ import {
 } from '@/components/processApproval/RequisitionType';
 import CommaSeparatedField from '@/shared/Inputs/CommaSeparatedField';
 import { PERMISSIONS } from '@/utilities/constants/permissions';
-import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Div } from '@jumbo/shared';
-import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import ContentCopyOutlined from '@mui/icons-material/ContentCopyOutlined';
-import HighlightOffIcon from '@mui/icons-material/HighlightOff';
-import PauseCircleOutlineIcon from '@mui/icons-material/PauseCircleOutline';
-import UndoIcon from '@mui/icons-material/Undo';
+import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { LoadingButton } from '@mui/lab';
 import {
   Alert,
@@ -45,6 +39,12 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import ContentCopyOutlined from '@mui/icons-material/ContentCopyOutlined';
+import PauseCircleOutlineIcon from '@mui/icons-material/PauseCircleOutline';
+import HighlightOffIcon from '@mui/icons-material/HighlightOff';
+import UndoIcon from '@mui/icons-material/Undo';
 import { DateTimePicker } from '@mui/x-date-pickers';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import dayjs, { Dayjs } from 'dayjs';
@@ -139,104 +139,97 @@ function ApprovalForm({
     }));
   };
 
-  const getInitialLedgerItems = (): RequisitionItem[] => {
-    const items = approval?.items || requisitionItems;
-
-    // Check if we have an approval (meaning it's an edit or next approval)
-    const hasApproval = !!approval;
-
-    // If there's no approval, it's a new approval
-    if (!hasApproval) {
-      return items.map((item: RequisitionItem) => ({
-        ...item,
-        id: item.requisition_ledger_item?.id || item.id,
-        ledger: item.ledger || item.requisition_ledger_item?.ledger,
-        measurement_unit:
-          item.measurement_unit ||
-          item.requisition_ledger_item?.measurement_unit,
-        quantity: item.quantity || 0,
-        rate: item.rate || 0,
-        remarks: item.remarks || '',
-        relatable: (item as any).relatable || null,
-        relatable_type: (item as any).relatable_type || null,
-        splits: [],
-      }));
+const getInitialLedgerItems = (): RequisitionItem[] => {
+  const items = approval?.items || requisitionItems;
+  
+  // Check if we have an approval (meaning it's an edit or next approval)
+  const hasApproval = !!approval;
+  
+  // If there's no approval, it's a new approval
+  if (!hasApproval) {
+    return items.map((item: RequisitionItem) => ({
+      ...item,
+      id: item.requisition_ledger_item?.id || item.id,
+      ledger: item.ledger || item.requisition_ledger_item?.ledger,
+      measurement_unit:
+        item.measurement_unit || item.requisition_ledger_item?.measurement_unit,
+      quantity: item.quantity || 0,
+      rate: item.rate || 0,
+      remarks: item.remarks || '',
+      relatable: (item as any).relatable || null,
+      relatable_type: (item as any).relatable_type || null,
+      splits: [],
+    }));
+  }
+  
+  // For edit mode (when approval exists), group items by requisition_ledger_item_id
+  const groupedItems: Record<number, any[]> = {};
+  
+  items.forEach((item: any) => {
+    const parentId = item.requisition_ledger_item?.id || item.requisition_ledger_item_id;
+    if (!groupedItems[parentId]) {
+      groupedItems[parentId] = [];
     }
+    groupedItems[parentId].push(item);
+  });
 
-    // For edit mode (when approval exists), group items by requisition_ledger_item_id
-    const groupedItems: Record<number, any[]> = {};
+  // Build the structure with main items and their splits
+  const result: RequisitionItem[] = [];
 
-    items.forEach((item: any) => {
-      const parentId =
-        item.requisition_ledger_item?.id || item.requisition_ledger_item_id;
-      if (!groupedItems[parentId]) {
-        groupedItems[parentId] = [];
-      }
-      groupedItems[parentId].push(item);
-    });
+  Object.values(groupedItems).forEach((group: any[]) => {
+    // Find the main item (credit_ledger_id is null)
+    const mainItem = group.find((item: any) => !item.credit_ledger_id);
+    // Find all split items (credit_ledger_id is not null)
+    const splitItems = group.filter((item: any) => item.credit_ledger_id);
 
-    // Build the structure with main items and their splits
-    const result: RequisitionItem[] = [];
+    if (mainItem) {
+      // Create the main item with its splits
+      const mainLedgerItem = {
+        id: mainItem.requisition_ledger_item?.id || mainItem.id,
+        ledger: mainItem.requisition_ledger_item?.ledger || mainItem.ledger,
+        measurement_unit: mainItem.measurement_unit || mainItem.requisition_ledger_item?.measurement_unit,
+        quantity: mainItem.quantity || 0,
+        rate: mainItem.rate || 0,
+        remarks: mainItem.remarks || '',
+        relatable: mainItem.relatable || null,
+        relatable_type: mainItem.relatable_type || null,
+        splits: splitItems.map((split: any) => ({
+          credit_ledger_id: split.credit_ledger_id,
+          ledger: split.credit_ledger,
+          quantity: split.quantity || 0,
+          rate: split.rate || 0,
+          amount: (split.quantity || 0) * (split.rate || 0),
+          remarks: split.remarks || '',
+        })),
+      };
+      result.push(mainLedgerItem as any);
+    } else if (splitItems.length > 0) {
+      // If there's no main item, create one from the first split
+      const firstSplit = splitItems[0];
+      const mainLedgerItem = {
+        id: firstSplit.requisition_ledger_item?.id || firstSplit.id,
+        ledger: firstSplit.requisition_ledger_item?.ledger || firstSplit.ledger,
+        measurement_unit: firstSplit.measurement_unit || firstSplit.requisition_ledger_item?.measurement_unit,
+        quantity: firstSplit.quantity || 0,
+        rate: firstSplit.rate || 0,
+        remarks: firstSplit.remarks || '',
+        relatable: firstSplit.relatable || null,
+        relatable_type: firstSplit.relatable_type || null,
+        splits: splitItems.map((split: any) => ({
+          credit_ledger_id: split.credit_ledger_id,
+          ledger: split.credit_ledger,
+          quantity: split.quantity || 0,
+          rate: split.rate || 0,
+          amount: (split.quantity || 0) * (split.rate || 0),
+          remarks: split.remarks || '',
+        })),
+      };
+      result.push(mainLedgerItem as any);
+    }
+  });
 
-    Object.values(groupedItems).forEach((group: any[]) => {
-      // Find the main item (credit_ledger_id is null)
-      const mainItem = group.find((item: any) => !item.credit_ledger_id);
-      // Find all split items (credit_ledger_id is not null)
-      const splitItems = group.filter((item: any) => item.credit_ledger_id);
-
-      if (mainItem) {
-        // Create the main item with its splits
-        const mainLedgerItem = {
-          id: mainItem.requisition_ledger_item?.id || mainItem.id,
-          ledger: mainItem.requisition_ledger_item?.ledger || mainItem.ledger,
-          measurement_unit:
-            mainItem.measurement_unit ||
-            mainItem.requisition_ledger_item?.measurement_unit,
-          quantity: mainItem.quantity || 0,
-          rate: mainItem.rate || 0,
-          remarks: mainItem.remarks || '',
-          relatable: mainItem.relatable || null,
-          relatable_type: mainItem.relatable_type || null,
-          splits: splitItems.map((split: any) => ({
-            credit_ledger_id: split.credit_ledger_id,
-            ledger: split.credit_ledger,
-            quantity: split.quantity || 0,
-            rate: split.rate || 0,
-            amount: (split.quantity || 0) * (split.rate || 0),
-            remarks: split.remarks || '',
-          })),
-        };
-        result.push(mainLedgerItem as any);
-      } else if (splitItems.length > 0) {
-        // If there's no main item, create one from the first split
-        const firstSplit = splitItems[0];
-        const mainLedgerItem = {
-          id: firstSplit.requisition_ledger_item?.id || firstSplit.id,
-          ledger:
-            firstSplit.requisition_ledger_item?.ledger || firstSplit.ledger,
-          measurement_unit:
-            firstSplit.measurement_unit ||
-            firstSplit.requisition_ledger_item?.measurement_unit,
-          quantity: firstSplit.quantity || 0,
-          rate: firstSplit.rate || 0,
-          remarks: firstSplit.remarks || '',
-          relatable: firstSplit.relatable || null,
-          relatable_type: firstSplit.relatable_type || null,
-          splits: splitItems.map((split: any) => ({
-            credit_ledger_id: split.credit_ledger_id,
-            ledger: split.credit_ledger,
-            quantity: split.quantity || 0,
-            rate: split.rate || 0,
-            amount: (split.quantity || 0) * (split.rate || 0),
-            remarks: split.remarks || '',
-          })),
-        };
-        result.push(mainLedgerItem as any);
-      }
-    });
-
-    return result;
-  };
+  return result;
+};
 
   const getInitialAdditionalCosts = () => {
     const source =
@@ -298,13 +291,11 @@ function ApprovalForm({
         // Main item amount
         const mainAmount = Number(item.quantity || 0) * Number(item.rate || 0);
         total += mainAmount;
-
+        
         // Split amounts
         const splits: any[] = (item as any).splits || [];
         splits.forEach((split) => {
-          const splitAmount =
-            Number(split.amount || 0) ||
-            Number(split.quantity || 0) * Number(split.rate || 0);
+          const splitAmount = Number(split.amount || 0) || (Number(split.quantity || 0) * Number(split.rate || 0));
           total += splitAmount;
         });
       });
@@ -389,32 +380,21 @@ function ApprovalForm({
   // Not offered for leave requests, which use a separate approval mechanism.
   const canReturn = !isLeaveType;
   const [returnMode, setReturnMode] = useState(false);
-  const [returnTargetId, setReturnTargetId] = useState<
-    number | 'requester' | ''
-  >('');
+  const [returnTargetId, setReturnTargetId] = useState<number | 'requester' | ''>('');
 
   // Approve stays the one prominent button (it's the common case); Hold,
   // Reject and Return collapse into a menu next to it — keeps the action bar
   // to two elements instead of up to five, which is what actually matters for
   // fitting on a phone screen without wrapping.
-  const [actionMenuAnchor, setActionMenuAnchor] = useState<null | HTMLElement>(
-    null
-  );
+  const [actionMenuAnchor, setActionMenuAnchor] = useState<null | HTMLElement>(null);
   const closeActionMenu = () => setActionMenuAnchor(null);
 
-  const { data: approvalChainLevels = [], isLoading: levelsLoading } = useQuery(
-    {
-      queryKey: [
-        'approvalChainLevels',
-        { approvalChainId: requisition?.approval_chain?.id },
-      ],
-      queryFn: () =>
-        approvalChainsServices.getApprovalChainLevels(
-          requisition.approval_chain.id
-        ),
-      enabled: canReturn && !!requisition?.approval_chain?.id,
-    }
-  );
+  const { data: approvalChainLevels = [], isLoading: levelsLoading } = useQuery({
+    queryKey: ['approvalChainLevels', { approvalChainId: requisition?.approval_chain?.id }],
+    queryFn: () =>
+      approvalChainsServices.getApprovalChainLevels(requisition.approval_chain.id),
+    enabled: canReturn && !!requisition?.approval_chain?.id,
+  });
 
   const actingLevelId = isEdit
     ? approval?.approval_chain_level_id
@@ -610,7 +590,6 @@ function ApprovalForm({
       queryClient.invalidateQueries({ queryKey: ['requisitions'] });
     },
     onError: (error: any) => {
-      // error?.response?.data?.message &&
       enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
     },
   });
@@ -623,7 +602,6 @@ function ApprovalForm({
       queryClient.invalidateQueries({ queryKey: ['requisitions'] });
     },
     onError: (error: any) => {
-      // error?.response?.data?.message &&
       enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
     },
   });
@@ -759,12 +737,12 @@ function ApprovalForm({
   // Flatten splits for submission
   const flattenLedgerItems = (items: any[]) => {
     if (!items) return [];
-
+    
     const result: any[] = [];
-
+    
     items.forEach((item) => {
       const splits = item.splits || [];
-
+      
       // Main line without splits
       const mainLine = {
         requisition_ledger_item_id: item.requisition_ledger_item_id,
@@ -775,7 +753,7 @@ function ApprovalForm({
         measurement_unit_id: item.measurement_unit_id,
       };
       result.push(mainLine);
-
+      
       // Split lines
       splits.forEach((split: any) => {
         result.push({
@@ -789,7 +767,7 @@ function ApprovalForm({
         });
       });
     });
-
+    
     return result;
   };
 
@@ -813,8 +791,7 @@ function ApprovalForm({
     saveMutation(payload);
   };
 
-  const canConfirmReturn =
-    returnTargetId !== '' && !!(watch('remarks') || '').trim();
+  const canConfirmReturn = returnTargetId !== '' && !!(watch('remarks') || '').trim();
 
   // A return is an instruction, not a decision — it carries no line items, so it
   // deliberately bypasses the item-level yup schema (rate/quantity requirements

@@ -40,7 +40,9 @@ const withPWA = withPWAInit({
 const nextConfig = {
   reactStrictMode: true,
 
-  turbopack: {},
+  turbopack: {
+    root: __dirname,
+  },
 
   env: {
     REACT_APP_IMAGES_PATH: '/assets/images',

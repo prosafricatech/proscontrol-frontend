@@ -4,7 +4,6 @@ import stakeholderServices from '@/components/masters/stakeholders/stakeholder-s
 import StakeholderSelector from '@/components/masters/stakeholders/StakeholderSelector';
 import PhotoThumbnail from '@/components/productAndServices/products/PhotoCard';
 import productServices from '@/components/productAndServices/products/productServices';
-import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Div } from '@jumbo/shared';
 import { LoadingButton } from '@mui/lab';
@@ -63,8 +62,8 @@ function ProformaSaleForm({ proforma, toggleOpen }) {
       queryClient.invalidateQueries({ queryKey: ['proformaInvoices'] });
     },
     onError: (error) => {
-      // error?.response?.data?.message &&
-      enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
+      error?.response?.data?.message &&
+        enqueueSnackbar(error.response.data.message, { variant: 'error' });
     },
   });
 
@@ -154,7 +153,7 @@ function ProformaSaleForm({ proforma, toggleOpen }) {
       })),
     },
     context: { instant_sale: checkedForInstantSale },
-  });
+  }); 
 
   useEffect(() => {
     if (Array.isArray(counters) && counters.length > 0) {
@@ -350,9 +349,7 @@ function ProformaSaleForm({ proforma, toggleOpen }) {
                     <StakeholderSelector
                       label='Client'
                       frontError={errors?.stakeholder_id}
-                      defaultValue={
-                        proforma?.stakeholder?.id ?? proforma?.stakeholder_id
-                      }
+                      defaultValue={proforma?.stakeholder?.id ?? proforma?.stakeholder_id}
                       onChange={(newValue) => {
                         setValue(`stakeholder_id`, newValue?.id ?? null, {
                           shouldValidate: true,

@@ -10,6 +10,10 @@ export interface PayrollRunType {
   total_allowances?: number;
   total_deductions?: number;
   payslip_count?: number;
+  // From PayrollRunController::index()'s ->withCount('payslips') — the
+  // number of employees with a payslip on this run. employee_count below
+  // is never actually sent by the API; keep using this one.
+  payslips_count?: number;
   created_by_user?: {
     first_name: string;
     last_name: string;

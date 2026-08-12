@@ -13,7 +13,6 @@ function SaleItemRow({
     item,
     index,
     vat_percentage = 0,
-    selectedCurrencyId,
     items = [],
     setItems = () => {},
     getLastPriceItems,
@@ -107,7 +106,7 @@ function SaleItemRow({
                         </Grid>
                     </Grid>
                 ) : (
-                    <SaleItemForm salesDate={salesDate} selectedCurrencyId={selectedCurrencyId} checkedForInstantSale={checkedForInstantSale} setClearFormKey={setClearFormKey} submitMainForm={submitMainForm} setSubmitItemForm={setSubmitItemForm} submitItemForm={submitItemForm} setIsDirty={setIsDirty} item={item} setShowForm={setShowForm} index={index} items={items} setItems={setItems} vat_percentage={vat_percentage} checkedForSuggestPrice={checkedForSuggestPrice} getLastPriceItems={getLastPriceItems}/>
+                    <SaleItemForm salesDate={salesDate} checkedForInstantSale={checkedForInstantSale} setClearFormKey={setClearFormKey} submitMainForm={submitMainForm} setSubmitItemForm={setSubmitItemForm} submitItemForm={submitItemForm} setIsDirty={setIsDirty} item={item} setShowForm={setShowForm} index={index} items={items} setItems={setItems} vat_percentage={vat_percentage} checkedForSuggestPrice={checkedForSuggestPrice} getLastPriceItems={getLastPriceItems}/>
                 )
             }
         </React.Fragment>

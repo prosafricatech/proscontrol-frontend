@@ -29,6 +29,23 @@ function ProductItemsRow({
     const alternativeProducts = productItem?.alternative_products || [];
     const currencyCode = productItem?.currency?.code;
 
+        const formatTaskLabel = (task) => {
+            if (!task) return '';
+            const code = String(task.code || '').trim();
+            const name = String(task.name || task.label || '').trim();
+
+            if (code && name) {
+                return `${code} - ${name}`;
+            }
+
+            return name;
+        };
+
+        const boundTask =
+            productItem.selectedItemable ||
+            allTasks?.find((task) => task.id === productItem?.budget_itemable_id) ||
+            null;
+
   return (
     <React.Fragment>
         <Divider/>
@@ -54,15 +71,15 @@ function ProductItemsRow({
                             </Tooltip>
                             <br />
                             <Tooltip title="Bound To Task">
-                                <Typography component="span" color="primary">
-                                    {productItem.selectedItemable?.name || productItem.selectedItemable?.label || allTasks?.find(task => task.id === productItem?.budget_itemable_id)?.label}
+                                <Typography component="span">
+                                    {formatTaskLabel(boundTask)}
                                 </Typography>
                             </Tooltip>
                         </>
                         }
                         secondary={
                             <Tooltip title="Description">
-                               <Typography component="span">{productItem.description || '-'}</Typography>
+                               <Typography component="span">{productItem.description}</Typography>
                             </Tooltip>
                         }
                     />

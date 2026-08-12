@@ -70,6 +70,11 @@ function TaskProgressRow({ taskProgressItem, index }) {
     });
   };
 
+  const formatTaskLabel = (task) => {
+    if (!task) return '';
+    return task.code ? `${task.code} - ${task.name}` : task.name;
+  };
+
   return (
     <Accordion
       key={index}
@@ -132,7 +137,7 @@ function TaskProgressRow({ taskProgressItem, index }) {
             <Grid size={{ xs: 6, md: 3 }}>
               <Tooltip title="Task Name">
                 <Typography>
-                  {taskProgressItem.task?.name}
+                  {formatTaskLabel(taskProgressItem.task)}
                 </Typography>
               </Tooltip>
               {taskProgressItem.project_subcontract?.subcontractor?.name && taskProgressItem.project_subcontract?.subcontractNo && (

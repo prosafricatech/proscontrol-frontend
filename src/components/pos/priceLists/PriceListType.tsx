@@ -38,10 +38,6 @@ export interface PriceListItem {
 export interface PriceList {
   id: number;
   effective_date: string;
-  currency_id: number;
-  currency?: {
-    name: string;
-  };
   narration: string | null;
   created_by: number;
   created_at: string;

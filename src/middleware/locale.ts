@@ -1,4 +1,4 @@
-import { activeLocale } from '@/middleware';
+import { activeLocale } from '@/proxy';
 import Negotiator from 'negotiator';
 import { NextRequest } from 'next/server';
 

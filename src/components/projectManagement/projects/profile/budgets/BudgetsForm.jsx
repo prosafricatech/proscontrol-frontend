@@ -136,17 +136,6 @@ const BudgetsForm = ({
     setSubContractItems(budget?.subcontract_task_items || []);
   }, [budget]);
 
-  // const validationSchema = yup.object({
-  //   name: yup.string().required('Budget name is required'),
-  //   start_date: yup.string().required('Start Date is required'),
-  //   end_date: yup.string().required('End Date is required'),
-  //   cost_center_id: yup
-  //     .number()
-  //     .required('Cost Center is required')
-  //     .positive('Cost Center is Required')
-  //     .typeError('Cost Center is Required'),
-  // });
-
   const validationSchema = yup.object({
     name: yup.string().required('Budget name is required'),
     start_date: yup.string().required('Start Date is required'),
@@ -228,6 +217,7 @@ const BudgetsForm = ({
         id: task.id,
         label: task.name,
         handlers: task.handlers,
+        code: task.code,
         dependencies: task.dependencies,
         quantity: task.quantity,
         measurement_unit: task.measurement_unit,
@@ -404,7 +394,6 @@ const BudgetsForm = ({
             : 'New Budget'}
       </DialogTitle>
       <DialogContent>
-        {/* Restore dialog should be rendered at the top level, not inside Grid */}
         <Dialog
           open={showRestoreDialog}
           onClose={() => setShowRestoreDialog(false)}
@@ -511,30 +500,6 @@ const BudgetsForm = ({
           </Grid>
 
           <Grid size={{ xs: 12, md: 4 }}>
-            {/* <DateTimePicker
-              label='End Date'
-              fullWidth
-              minDate={dayjs(watch('start_date'))}
-              defaultValue={
-                budget && !isDuplicate ? dayjs(budget.end_date) : null
-              }
-              slotProps={{
-                textField: {
-                  size: 'small',
-                  fullWidth: true,
-                  readOnly: true,
-                  error: !!errors?.end_date,
-                  helperText: errors?.end_date?.message,
-                },
-              }}
-              onChange={(newValue) => {
-                setServerError(null);
-                setValue('end_date', newValue ? newValue.toISOString() : null, {
-                  shouldValidate: true,
-                  shouldDirty: true,
-                });
-              }}
-            /> */}
             <DateTimePicker
               label='End Date'
               fullWidth

@@ -36,7 +36,9 @@ import {
   TableRow,
   Tooltip,
   Typography,
+  useMediaQuery,
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import { FC, Fragment, JSX, ReactNode, useState } from 'react';
 import ProductionOutputReportPdf from './ProductionOutputReportPdf';
 import productionReportsServices, {
@@ -84,6 +86,11 @@ interface OutputReportProps {
   contrastText: string;
   lightColor: string;
   isDark: boolean;
+}
+
+interface MobileDetailItemProps {
+  label: string;
+  value: ReactNode;
 }
 
 function SummaryCard({
@@ -168,6 +175,19 @@ function OutputReportDialog({
   );
 }
 
+function MobileDetailItem({ label, value }: MobileDetailItemProps): JSX.Element {
+  return (
+    <Stack spacing={0.25}>
+      <Typography variant='caption' color='text.secondary'>
+        {label}
+      </Typography>
+      <Typography variant='body2' fontWeight={600}>
+        {value}
+      </Typography>
+    </Stack>
+  );
+}
+
 const OutputReport: FC<OutputReportProps> = ({
   report,
   isLoading,
@@ -179,6 +199,8 @@ const OutputReport: FC<OutputReportProps> = ({
 }): JSX.Element => {
   const { authOrganization, authUser } = useJumboAuth();
   const user = authUser?.user;
+  const theme = useTheme();
+  const isXs = useMediaQuery(theme.breakpoints.only('xs'));
 
   const [expandedBatches, setExpandedBatches] = useState<
     Record<string, boolean>
@@ -213,7 +235,7 @@ const OutputReport: FC<OutputReportProps> = ({
     <>
       <Stack spacing={3}>
         <Stack
-          direction={{ xs: 'column', md: 'row' }}
+          direction={{ xs: 'row' }}
           justifyContent='space-between'
           alignItems={{ xs: 'flex-start', md: 'center' }}
           spacing={2}
@@ -308,8 +330,12 @@ const OutputReport: FC<OutputReportProps> = ({
             </Stack>
           </AccordionSummary>
           <AccordionDetails>
-            <TableContainer component={Paper} variant='outlined'>
-              <Table size='small'>
+            <TableContainer
+              component={Paper}
+              variant='outlined'
+              sx={{ overflowX: 'auto' }}
+            >
+              <Table size='small' sx={{ minWidth: 720 }}>
                 <TableHead>
                   <TableRow sx={{ backgroundColor: headerColor }}>
                     <TableCell sx={{ color: contrastText, fontWeight: 700 }}>
@@ -428,33 +454,78 @@ const OutputReport: FC<OutputReportProps> = ({
                     },
                   }}
                 >
-                  <Grid
-                    container
-                    size={12}
-                    width='100%'
-                    ml={2}
-                    alignItems='center'
-                  >
-                    <Grid size={2}>{batch.batchNo}</Grid>
-                    <Grid size={2}>{readableDate(batch.start_date, true)}</Grid>
-                    <Grid size={2}>{readableDate(batch.end_date, true)}</Grid>
-                    <Grid size={2}>
-                      <Stack spacing={0.5}>
-                        <Typography variant='body2'>
-                          {batch.work_center?.name}
-                        </Typography>
-                        <Typography variant='caption' color='text.secondary'>
-                          {batch.work_center?.cost_center?.name}
-                        </Typography>
-                      </Stack>
+                  {isXs ? (
+                    <Stack spacing={1.25} sx={{ width: '100%', ml: 2, pr: 1 }}>
+                      <Typography fontWeight={700}>{batch.batchNo}</Typography>
+                      <Grid container spacing={1}>
+                        <Grid size={6}>
+                          <MobileDetailItem
+                            label='Start Date'
+                            value={readableDate(batch.start_date, true)}
+                          />
+                        </Grid>
+                        <Grid size={6}>
+                          <MobileDetailItem
+                            label='End Date'
+                            value={readableDate(batch.end_date, true)}
+                          />
+                        </Grid>
+                        <Grid size={12}>
+                          <Stack spacing={0.25}>
+                            <Typography variant='caption' color='text.secondary'>
+                              Work Center
+                            </Typography>
+                            <Typography variant='body2' fontWeight={600}>
+                              {batch.work_center?.name}
+                            </Typography>
+                            <Typography variant='caption' color='text.secondary'>
+                              {batch.work_center?.cost_center?.name}
+                            </Typography>
+                          </Stack>
+                        </Grid>
+                        <Grid size={6}>
+                          <MobileDetailItem
+                            label='Output Value'
+                            value={formatCurrency(batch.total_output_value)}
+                          />
+                        </Grid>
+                        <Grid size={6}>
+                          <MobileDetailItem
+                            label='By-Product Value'
+                            value={formatCurrency(batch.total_by_product_value)}
+                          />
+                        </Grid>
+                      </Grid>
+                    </Stack>
+                  ) : (
+                    <Grid
+                      container
+                      size={12}
+                      width='100%'
+                      ml={2}
+                      alignItems='center'
+                    >
+                      <Grid size={{ xs: 6, md: 2 }}>{batch.batchNo}</Grid>
+                      <Grid size={{ xs: 6, md: 2 }}>{readableDate(batch.start_date, true)}</Grid>
+                      <Grid size={{ xs: 6, md: 2 }}>{readableDate(batch.end_date, true)}</Grid>
+                      <Grid size={{ xs: 6, md: 2 }}>
+                        <Stack spacing={0.5}>
+                          <Typography variant='body2'>
+                            {batch.work_center?.name}
+                          </Typography>
+                          <Typography variant='caption' color='text.secondary'>
+                            {batch.work_center?.cost_center?.name}
+                          </Typography>
+                        </Stack>
+                      </Grid>
+                      <Grid size={{ xs: 6, md: 2 }}>
+                        {formatCurrency(batch.total_output_value)}
+                      </Grid>
+                      <Grid size={{ xs: 6, md: 2 }}>
+                        {formatCurrency(batch.total_by_product_value)}
+                      </Grid>
                     </Grid>
-                    <Grid size={2}>
-                      {formatCurrency(batch.total_output_value)}
-                    </Grid>
-                    <Grid size={2}>
-                      {formatCurrency(batch.total_by_product_value)}
-                    </Grid>
-                  </Grid>
+                  )}
                 </AccordionSummary>
                 <AccordionDetails>
                   <Table sx={{ width: '100%' }}>
@@ -484,55 +555,104 @@ const OutputReport: FC<OutputReportProps> = ({
                                 >
                                   Outputs
                                 </Typography>
-                                <TableContainer
-                                  component={Paper}
-                                  variant='outlined'
-                                >
-                                  <Table size='small'>
-                                    <TableHead>
-                                      <TableRow>
-                                        <TableCell>Product</TableCell>
-                                        <TableCell>Unit</TableCell>
-                                        <TableCell align='right'>Qty</TableCell>
-                                        <TableCell align='right'>
-                                          Unit Cost
-                                        </TableCell>
-                                        <TableCell align='right'>
-                                          Total Value
-                                        </TableCell>
-                                        <TableCell align='right'>
-                                          Value %
-                                        </TableCell>
-                                      </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                      {(batch.outputs || []).map((output) => (
-                                        <TableRow key={output.id}>
-                                          <TableCell>
-                                            {output.product?.name}
-                                          </TableCell>
-                                          <TableCell>
-                                            {output.measurement_unit?.symbol}
+                                {isXs ? (
+                                  <Stack spacing={1.5}>
+                                    {(batch.outputs || []).map((output) => (
+                                      <Card key={output.id} variant='outlined'>
+                                        <CardContent sx={{ py: 1.5, '&:last-child': { pb: 1.5 } }}>
+                                          <Stack spacing={1}>
+                                            <Typography variant='subtitle2' fontWeight={700}>
+                                              {output.product?.name}
+                                            </Typography>
+                                            <Grid container spacing={1}>
+                                              <Grid size={6}>
+                                                <MobileDetailItem
+                                                  label='Unit'
+                                                  value={output.measurement_unit?.symbol || '-'}
+                                                />
+                                              </Grid>
+                                              <Grid size={6}>
+                                                <MobileDetailItem
+                                                  label='Qty'
+                                                  value={formatQuantity(output.quantity)}
+                                                />
+                                              </Grid>
+                                              <Grid size={6}>
+                                                <MobileDetailItem
+                                                  label='Unit Cost'
+                                                  value={formatUnitCost(output.unit_cost)}
+                                                />
+                                              </Grid>
+                                              <Grid size={6}>
+                                                <MobileDetailItem
+                                                  label='Value %'
+                                                  value={formatQuantity(output.value_percentage)}
+                                                />
+                                              </Grid>
+                                              <Grid size={12}>
+                                                <MobileDetailItem
+                                                  label='Total Value'
+                                                  value={formatCurrency(output.total_value)}
+                                                />
+                                              </Grid>
+                                            </Grid>
+                                          </Stack>
+                                        </CardContent>
+                                      </Card>
+                                    ))}
+                                  </Stack>
+                                ) : (
+                                  <TableContainer
+                                    component={Paper}
+                                    variant='outlined'
+                                    sx={{ overflowX: 'auto' }}
+                                  >
+                                    <Table size='small' sx={{ minWidth: 680 }}>
+                                      <TableHead>
+                                        <TableRow>
+                                          <TableCell>Product</TableCell>
+                                          <TableCell>Unit</TableCell>
+                                          <TableCell align='right'>Qty</TableCell>
+                                          <TableCell align='right'>
+                                            Unit Cost
                                           </TableCell>
                                           <TableCell align='right'>
-                                            {formatQuantity(output.quantity)}
+                                            Total Value
                                           </TableCell>
                                           <TableCell align='right'>
-                                            {formatUnitCost(output.unit_cost)}
-                                          </TableCell>
-                                          <TableCell align='right'>
-                                            {formatCurrency(output.total_value)}
-                                          </TableCell>
-                                          <TableCell align='right'>
-                                            {formatQuantity(
-                                              output.value_percentage
-                                            )}
+                                            Value %
                                           </TableCell>
                                         </TableRow>
-                                      ))}
-                                    </TableBody>
-                                  </Table>
-                                </TableContainer>
+                                      </TableHead>
+                                      <TableBody>
+                                        {(batch.outputs || []).map((output) => (
+                                          <TableRow key={output.id}>
+                                            <TableCell>
+                                              {output.product?.name}
+                                            </TableCell>
+                                            <TableCell>
+                                              {output.measurement_unit?.symbol}
+                                            </TableCell>
+                                            <TableCell align='right'>
+                                              {formatQuantity(output.quantity)}
+                                            </TableCell>
+                                            <TableCell align='right'>
+                                              {formatUnitCost(output.unit_cost)}
+                                            </TableCell>
+                                            <TableCell align='right'>
+                                              {formatCurrency(output.total_value)}
+                                            </TableCell>
+                                            <TableCell align='right'>
+                                              {formatQuantity(
+                                                output.value_percentage
+                                              )}
+                                            </TableCell>
+                                          </TableRow>
+                                        ))}
+                                      </TableBody>
+                                    </Table>
+                                  </TableContainer>
+                                )}
                               </Box>
 
                               <Box>
@@ -547,60 +667,106 @@ const OutputReport: FC<OutputReportProps> = ({
                                   By-Products
                                 </Typography>
                                 {(batch.by_products || []).length ? (
-                                  <TableContainer
-                                    component={Paper}
-                                    variant='outlined'
-                                  >
-                                    <Table size='small'>
-                                      <TableHead>
-                                        <TableRow>
-                                          <TableCell>Product</TableCell>
-                                          <TableCell>Unit</TableCell>
-                                          <TableCell align='right'>
-                                            Qty
-                                          </TableCell>
-                                          <TableCell align='right'>
-                                            Market Value / Unit
-                                          </TableCell>
-                                          <TableCell align='right'>
-                                            Total Market Value
-                                          </TableCell>
-                                        </TableRow>
-                                      </TableHead>
-                                      <TableBody>
-                                        {(batch.by_products || []).map(
-                                          (byProduct) => (
-                                            <TableRow key={byProduct.id}>
-                                              <TableCell>
+                                  isXs ? (
+                                    <Stack spacing={1.5}>
+                                      {(batch.by_products || []).map((byProduct) => (
+                                        <Card key={byProduct.id} variant='outlined'>
+                                          <CardContent sx={{ py: 1.5, '&:last-child': { pb: 1.5 } }}>
+                                            <Stack spacing={1}>
+                                              <Typography variant='subtitle2' fontWeight={700}>
                                                 {byProduct.product?.name}
-                                              </TableCell>
-                                              <TableCell>
-                                                {
-                                                  byProduct.measurement_unit
-                                                    ?.symbol
-                                                }
-                                              </TableCell>
-                                              <TableCell align='right'>
-                                                {formatQuantity(
-                                                  byProduct.quantity
-                                                )}
-                                              </TableCell>
-                                              <TableCell align='right'>
-                                                {formatCurrency(
-                                                  byProduct.market_value_per_unit
-                                                )}
-                                              </TableCell>
-                                              <TableCell align='right'>
-                                                {formatCurrency(
-                                                  byProduct.total_market_value
-                                                )}
-                                              </TableCell>
-                                            </TableRow>
-                                          )
-                                        )}
-                                      </TableBody>
-                                    </Table>
-                                  </TableContainer>
+                                              </Typography>
+                                              <Grid container spacing={1}>
+                                                <Grid size={6}>
+                                                  <MobileDetailItem
+                                                    label='Unit'
+                                                    value={
+                                                      byProduct.measurement_unit
+                                                        ?.symbol || '-'
+                                                    }
+                                                  />
+                                                </Grid>
+                                                <Grid size={6}>
+                                                  <MobileDetailItem
+                                                    label='Qty'
+                                                    value={formatQuantity(byProduct.quantity)}
+                                                  />
+                                                </Grid>
+                                                <Grid size={12}>
+                                                  <MobileDetailItem
+                                                    label='Market Value / Unit'
+                                                    value={formatCurrency(byProduct.market_value_per_unit)}
+                                                  />
+                                                </Grid>
+                                                <Grid size={12}>
+                                                  <MobileDetailItem
+                                                    label='Total Market Value'
+                                                    value={formatCurrency(byProduct.total_market_value)}
+                                                  />
+                                                </Grid>
+                                              </Grid>
+                                            </Stack>
+                                          </CardContent>
+                                        </Card>
+                                      ))}
+                                    </Stack>
+                                  ) : (
+                                    <TableContainer
+                                      component={Paper}
+                                      variant='outlined'
+                                      sx={{ overflowX: 'auto' }}
+                                    >
+                                      <Table size='small' sx={{ minWidth: 660 }}>
+                                        <TableHead>
+                                          <TableRow>
+                                            <TableCell>Product</TableCell>
+                                            <TableCell>Unit</TableCell>
+                                            <TableCell align='right'>
+                                              Qty
+                                            </TableCell>
+                                            <TableCell align='right'>
+                                              Market Value / Unit
+                                            </TableCell>
+                                            <TableCell align='right'>
+                                              Total Market Value
+                                            </TableCell>
+                                          </TableRow>
+                                        </TableHead>
+                                        <TableBody>
+                                          {(batch.by_products || []).map(
+                                            (byProduct) => (
+                                              <TableRow key={byProduct.id}>
+                                                <TableCell>
+                                                  {byProduct.product?.name}
+                                                </TableCell>
+                                                <TableCell>
+                                                  {
+                                                    byProduct.measurement_unit
+                                                      ?.symbol
+                                                  }
+                                                </TableCell>
+                                                <TableCell align='right'>
+                                                  {formatQuantity(
+                                                    byProduct.quantity
+                                                  )}
+                                                </TableCell>
+                                                <TableCell align='right'>
+                                                  {formatCurrency(
+                                                    byProduct.market_value_per_unit
+                                                  )}
+                                                </TableCell>
+                                                <TableCell align='right'>
+                                                  {formatCurrency(
+                                                    byProduct.total_market_value
+                                                  )}
+                                                </TableCell>
+                                              </TableRow>
+                                            )
+                                          )}
+                                        </TableBody>
+                                      </Table>
+                                    </TableContainer>
+                                  )
                                 ) : (
                                   <Alert variant='outlined' severity='info'>
                                     No by-products recorded for this batch.

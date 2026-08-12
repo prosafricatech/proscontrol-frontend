@@ -3,7 +3,6 @@ import StakeholderQuickAdd from '@/components/masters/stakeholders/StakeholderQu
 import { Stakeholder } from '@/components/masters/stakeholders/StakeholderType';
 import { MODULE_SETTINGS } from '@/utilities/constants/moduleSettings';
 import { PERMISSIONS } from '@/utilities/constants/permissions';
-import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Div } from '@jumbo/shared';
 import { AddOutlined, HighlightOff } from '@mui/icons-material';
@@ -83,7 +82,6 @@ function ProformaForm({ toggleOpen, proforma = null }: ProformaFormProps) {
   const { checkOrganizationPermission } = useJumboAuth();
 
   const [showWarning, setShowWarning] = useState(false);
-  const [showCurrencyChangeAlert, setShowCurrencyChangeAlert] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [clearFormKey, setClearFormKey] = useState(0);
   const [submitItemForm, setSubmitItemForm] = useState(false);
@@ -164,28 +162,6 @@ function ProformaForm({ toggleOpen, proforma = null }: ProformaFormProps) {
     },
   });
 
-  // Track previous currency ID to detect changes
-  const previousCurrencyIdRef = React.useRef<number>(
-    proforma?.currency_id ?? proforma?.currency?.id ?? 1
-  );
-  const currentCurrencyId = watch('currency_id');
-
-  // Alert when currency changes and items exist
-  useEffect(() => {
-    const previousCurrencyId = previousCurrencyIdRef.current;
-
-    // Check if currency has actually changed
-    if (previousCurrencyId !== currentCurrencyId && items.length > 0) {
-      setShowCurrencyChangeAlert(true);
-    } else if (previousCurrencyId === currentCurrencyId) {
-      // Hide alert if currency reverts to previous
-      setShowCurrencyChangeAlert(false);
-    }
-
-    // Update the ref after checking
-    previousCurrencyIdRef.current = currentCurrencyId;
-  }, [currentCurrencyId, items.length, proforma]);
-
   const orderTotalAmount = () => {
     let total = 0;
     let vatableTotal = 0;
@@ -255,8 +231,8 @@ function ProformaForm({ toggleOpen, proforma = null }: ProformaFormProps) {
       queryClient.invalidateQueries({ queryKey: ['proformaInvoices'] });
     },
     onError: (error: any) => {
-      // error?.response?.data?.message &&
-      enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
+      error?.response?.data?.message &&
+        enqueueSnackbar(error.response.data.message, { variant: 'error' });
     },
   });
 
@@ -269,8 +245,8 @@ function ProformaForm({ toggleOpen, proforma = null }: ProformaFormProps) {
       queryClient.invalidateQueries({ queryKey: ['proformaDetails'] });
     },
     onError: (error: any) => {
-      // error?.response?.data?.message &&
-      enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
+      error?.response?.data?.message &&
+        enqueueSnackbar(error.response.data.message, { variant: 'error' });
     },
   });
 
@@ -308,8 +284,6 @@ function ProformaForm({ toggleOpen, proforma = null }: ProformaFormProps) {
     setShowWarning(false);
     setClearFormKey((prev) => prev + 1);
   };
-
-  const selectedCurrencyId = watch('currency_id');
 
   return (
     <React.Fragment>
@@ -497,6 +471,30 @@ function ProformaForm({ toggleOpen, proforma = null }: ProformaFormProps) {
                       }}
                     >
                       <Div sx={{ mt: 0.3 }}>
+                        {/* <Autocomplete
+                          freeSolo
+                          options={proformaRemarks || []}
+                          getOptionLabel={(option) => option}
+                          defaultValue={watch('remarks')}
+                          renderInput={(params) => (
+                            <TextField
+                              {...params}
+                              label='Remarks'
+                              size='small'
+                              fullWidth
+                              multiline
+                              rows={2}
+                              error={!!errors.remarks}
+                              helperText={errors.remarks?.message}
+                            />
+                          )}
+                          onChange={(e, newValue) => {
+                            setValue('remarks', newValue ?? undefined, {
+                              shouldValidate: true,
+                              shouldDirty: true,
+                            });
+                          }}
+                        /> */}
                         <TextField
                           label='Reference'
                           variant='outlined'
@@ -624,7 +622,6 @@ function ProformaForm({ toggleOpen, proforma = null }: ProformaFormProps) {
                 setClearFormKey={setClearFormKey}
                 submitMainForm={handleSubmit((data) => saveMutation(data))}
                 submitItemForm={submitItemForm}
-                selectedCurrencyId={selectedCurrencyId}
                 setSubmitItemForm={setSubmitItemForm}
                 key={clearFormKey}
                 setIsDirty={setIsDirty}
@@ -644,21 +641,6 @@ function ProformaForm({ toggleOpen, proforma = null }: ProformaFormProps) {
             </Alert>
           )}
 
-          {/* Currency Change Alert */}
-          {showCurrencyChangeAlert && items.length > 0 && (
-            <Alert
-              severity='warning'
-              onClose={() => setShowCurrencyChangeAlert(false)}
-              sx={{ mb: 1 }}
-            >
-              <Typography variant='body2'>
-                <strong>Currency Changed!</strong> You have {items.length}{' '}
-                item(s) already added with the previous currency. Please review
-                all item prices to ensure they are correct for the new currency.
-              </Typography>
-            </Alert>
-          )}
-
           {items.map((item, index) => (
             <ProformaItemRow
               key={index}
@@ -668,7 +650,6 @@ function ProformaForm({ toggleOpen, proforma = null }: ProformaFormProps) {
               setItems={setItems as any}
               vat_percentage={Number(vat_percentage)}
               setIsDirty={setIsDirty}
-              selectedCurrencyId={selectedCurrencyId}
               setClearFormKey={setClearFormKey}
               submitMainForm={handleSubmit((data) => saveMutation(data))}
               submitItemForm={submitItemForm}

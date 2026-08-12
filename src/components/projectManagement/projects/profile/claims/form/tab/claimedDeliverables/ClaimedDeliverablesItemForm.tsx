@@ -11,6 +11,7 @@ import {
   Tooltip,
   Typography,
   CircularProgress,
+  Box,
 } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import * as yup from 'yup';
@@ -76,6 +77,7 @@ interface ClaimedDeliverablesItemFormProps {
   claimDate: string;
   setDeliverablesItems: React.Dispatch<React.SetStateAction<ClaimedDeliverableItem[]>>;
   selectedCurrencyId?: number;
+  selectedCurrencySymbol?: string; // Add this prop for currency symbol
 }
 
 interface FormValues {
@@ -85,6 +87,7 @@ interface FormValues {
   rate?: number;
   remarks?: string;
   response_uncertified_quantity?: number;
+  amount?: number; // Add amount field
 }
 
 const validationSchema = yup.object({
@@ -118,6 +121,7 @@ const ClaimedDeliverablesItemForm: React.FC<ClaimedDeliverablesItemFormProps> = 
   claimDate,
   setDeliverablesItems,
   selectedCurrencyId,
+  selectedCurrencySymbol = '', // Default currency symbol
 }) => {
   const { deliverable_groups }: { deliverable_groups: ProjectDeliverableGroup[] } = useProjectProfile() as any;
   const { ungroupedLedgerOptions } = useLedgerSelect();
@@ -148,6 +152,7 @@ const ClaimedDeliverablesItemForm: React.FC<ClaimedDeliverablesItemFormProps> = 
       rate: deliverableItem?.rate ? deliverableItem?.rate : deliverableItem?.project_deliverable?.contract_rate,
       remarks: deliverableItem?.remarks || '',
       response_uncertified_quantity: deliverableItem?.response_uncertified_quantity,
+      amount: (deliverableItem?.rate || 0) * (Number(deliverableItem?.certified_quantity) || 0) || 0,
     },
   });
 
@@ -174,7 +179,6 @@ const ClaimedDeliverablesItemForm: React.FC<ClaimedDeliverablesItemFormProps> = 
     if (!Array.isArray(groups)) return [];
 
     return groups.flatMap((group) => {
-      // Use the first non-empty topGroupName, or fallback to current group name
       const currentTopGroupName = topGroupName || group.name || '';
 
       const deliverableOptions = (group.deliverables || []).map((del) => ({
@@ -182,33 +186,29 @@ const ClaimedDeliverablesItemForm: React.FC<ClaimedDeliverablesItemFormProps> = 
         description: del.description,
         code: del.code,
         group_name: group.name || '',
-        top_group_name: currentTopGroupName, // Store the top-level group name
+        top_group_name: currentTopGroupName,
         currency_id: del.currency_id,
         contract_rate: del.contract_rate,
         unit_symbol: del.measurement_unit?.symbol,
         measurement_unit: del.measurement_unit,
       }));
 
-      // Recursively process children, passing the top-level group name
       const childrenOptions = getAllDeliverables(group.children || [], currentTopGroupName);
 
       return [...deliverableOptions, ...childrenOptions];
     });
   }, []);
 
-  // Get all deliverables once
   const allDeliverables = useMemo(() => {
     return getAllDeliverables(deliverable_groups);
   }, [deliverable_groups, getAllDeliverables]);
 
-  // Filter deliverables by currency
   const deliverablesByCurrency = useMemo(() => {
     return allDeliverables.filter(
       (del) => Number(del.currency_id) === Number(selectedCurrencyId)
     );
   }, [allDeliverables, selectedCurrencyId]);
 
-  // Debounced search function
   const debouncedSearch = useMemo(
     () =>
       debounce((searchTerm: string) => {
@@ -230,7 +230,6 @@ const ClaimedDeliverablesItemForm: React.FC<ClaimedDeliverablesItemFormProps> = 
     [deliverablesByCurrency]
   );
 
-  // Handle search input change
   const handleSearchChange = (event: React.SyntheticEvent, value: string) => {
     setSearchInput(value);
     if (value.length >= 2) {
@@ -240,7 +239,6 @@ const ClaimedDeliverablesItemForm: React.FC<ClaimedDeliverablesItemFormProps> = 
     }
   };
 
-  // Load initial options when dropdown opens
   const handleOpen = () => {
     if (filteredDeliverables.length === 0 && deliverablesByCurrency.length > 0) {
       setIsLoadingOptions(true);
@@ -300,9 +298,26 @@ const ClaimedDeliverablesItemForm: React.FC<ClaimedDeliverablesItemFormProps> = 
   }, [deliverableItem]);
 
   const watchedDeliverableId = watch('project_deliverable_id');
+  const watchedRate = watch('rate') || 0;
+  const watchedQuantity = watch('certified_quantity') || 0;
+  
   const selectedDeliverable = allDeliverables.find(
     (d) => d.id === watchedDeliverableId
   );
+
+  // Calculate amount: rate * quantity
+  const calculatedAmount = useMemo(() => {
+    const rate = Number(watchedRate) || 0;
+    const quantity = Number(watchedQuantity) || 0;
+    return rate * quantity;
+  }, [watchedRate, watchedQuantity]);
+
+  // Update amount when rate or quantity changes
+  useEffect(() => {
+    setValue('amount', calculatedAmount, {
+      shouldDirty: true,
+    });
+  }, [calculatedAmount, setValue]);
 
   if (isAdding) return <LinearProgress />;
 
@@ -345,7 +360,6 @@ const ClaimedDeliverablesItemForm: React.FC<ClaimedDeliverablesItemFormProps> = 
                 shouldValidate: true,
               });
             }
-            // Clear search after selection
             setSearchInput('');
             setFilteredDeliverables([]);
           }}
@@ -397,7 +411,7 @@ const ClaimedDeliverablesItemForm: React.FC<ClaimedDeliverablesItemFormProps> = 
       </Grid>
 
       {/* Revenue Ledger */}
-      <Grid size={{ xs: 12, md: 4 }}>
+      <Grid size={{ xs: 12, md: 3.5 }}>
         <LedgerSelect
           multiple={false}
           label="Revenue Ledger"
@@ -414,7 +428,7 @@ const ClaimedDeliverablesItemForm: React.FC<ClaimedDeliverablesItemFormProps> = 
       </Grid>
 
       {/* Certified Quantity with Unit Symbol */}
-      <Grid size={{ xs: 12, md: 2 }}>
+      <Grid size={{ xs: 12, md: 1.5 }}>
         {isRetrievingDetails ? (
           <LinearProgress />
         ) : (
@@ -447,7 +461,7 @@ const ClaimedDeliverablesItemForm: React.FC<ClaimedDeliverablesItemFormProps> = 
       </Grid>
 
       {/* Rate */}
-      <Grid size={{ xs: 12, md: 2 }}>
+      <Grid size={{ xs: 12, md: 1.5 }}>
         <TextField
           label="Rate"
           fullWidth
@@ -466,11 +480,36 @@ const ClaimedDeliverablesItemForm: React.FC<ClaimedDeliverablesItemFormProps> = 
         />
       </Grid>
 
+      {/* Amount - Read-only field showing total */}
+      <Grid size={{ xs: 12, md: 1.5 }}>
+        <TextField
+          label="Amount"
+          fullWidth
+          size="small"
+          value={calculatedAmount.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
+          InputProps={{
+            readOnly: true,
+            startAdornment: (
+              <InputAdornment position="start">
+                <Typography variant="caption" color="text.secondary">
+                  {selectedCurrencySymbol}
+                </Typography>
+              </InputAdornment>
+            ),
+          }}
+        />
+      </Grid>
+
       {/* Remarks */}
-      <Grid size={12}>
+      <Grid size={{ xs: 12, md: 12 }}>
         <TextField
           size="small"
           fullWidth
+          multiline
+          rows={2}
           label="Remarks"
           value={watch('remarks') ?? ''}
           onChange={(e) =>
@@ -483,7 +522,7 @@ const ClaimedDeliverablesItemForm: React.FC<ClaimedDeliverablesItemFormProps> = 
       </Grid>
 
       {/* Action Buttons */}
-      <Grid size={12} textAlign="end">
+      <Grid size={{ xs: 12 }} textAlign="end">
         <Button
           variant="contained"
           size="small"

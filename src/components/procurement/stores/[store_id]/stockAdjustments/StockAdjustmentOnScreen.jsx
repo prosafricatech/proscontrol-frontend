@@ -91,7 +91,7 @@ function StockAdjustmentOnScreen({ stockAdjustment, authObject }) {
             <Typography variant="subtitle2" sx={{ color: headerColor }} gutterBottom>
               Store
             </Typography>
-            <Typography variant="body1">{stockAdjustment.store.name}</Typography>
+            <Typography variant="body1">{stockAdjustment.store?.name}</Typography>
           </Box>
         </Grid>
         <Grid size={{xs: 12, sm: 6, md: 4}}>
@@ -99,7 +99,7 @@ function StockAdjustmentOnScreen({ stockAdjustment, authObject }) {
             <Typography variant="subtitle2" sx={{ color: headerColor }} gutterBottom>
               Cost Center
             </Typography>
-            <Typography variant="body1">{stockAdjustment.cost_center.name}</Typography>
+            <Typography variant="body1">{stockAdjustment.cost_center?.name}</Typography>
           </Box>
         </Grid>
       </Grid>
@@ -159,7 +159,7 @@ function StockAdjustmentOnScreen({ stockAdjustment, authObject }) {
                   }}
                 >
                   <TableCell>{index + 1}</TableCell>
-                  <TableCell>{movement.product.name}</TableCell>
+                  <TableCell>{movement.product?.name}</TableCell>
                   <TableCell>{movement.product.measurement_unit.symbol}</TableCell>
                   <TableCell align="right" sx={{ fontFamily: 'monospace' }}>
                     {formatQuantity(movement.balance_before)}
@@ -250,7 +250,7 @@ function StockAdjustmentOnScreen({ stockAdjustment, authObject }) {
               <Typography variant="subtitle2" sx={{ color: headerColor }} gutterBottom>
                 Posted By
               </Typography>
-              <Typography variant="body1">{stockAdjustment.creator.name}</Typography>
+              <Typography variant="body1">{stockAdjustment.creator?.name}</Typography>
             </Box>
           </Grid>
           {stockAdjustment.narration && (

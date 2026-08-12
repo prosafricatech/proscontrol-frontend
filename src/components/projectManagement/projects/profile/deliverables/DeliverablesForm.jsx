@@ -131,7 +131,7 @@ const DeliverablesForm = ({
     ...sameLevelDeliverables,
   ];
 
-  const validationSchema = yup.object({
+const validationSchema = yup.object({
     description: yup
       .string()
       .required('Description is required')
@@ -148,7 +148,28 @@ const DeliverablesForm = ({
       .number()
       .nullable()
       .notRequired()
-      .min(1, 'Weight Percentage must be greater than 0')
+      .test("greater-than-zero", "Weight Percentage must be greater than 0", function (value) {
+        // If value is null, undefined, or empty string, it's valid (optional field)
+        if (value === null || value === undefined || value === '') {
+          return true;
+        }
+        
+        // Check if value is a valid number
+        if (isNaN(value)) {
+          return this.createError({
+            message: "Weight Percentage must be a valid number"
+          });
+        }
+        
+        // Reject 0 and negative numbers
+        if (value <= 0) {
+          return this.createError({
+            message: "Weight Percentage must be greater than 0"
+          });
+        }
+        
+        return true;
+      })
       .max(100, 'Weight Percentage must be less than or equal to 100')
       .test('check-total', function (value) {
         const context = this.options.context || {};
@@ -161,10 +182,16 @@ const DeliverablesForm = ({
             total +
             (deliverable && del.position_index === deliverable.position_index
               ? 0
-              : del.weighted_percentage),
+              : del.weighted_percentage || 0),
           0
         );
 
+        // If value is null/undefined, skip this check
+        if (value === null || value === undefined || value === '') {
+          return true;
+        }
+
+        // Check if total exceeds 100
         if (totalWeightPercentages + value > 100) {
           return this.createError({
             message: `Total percentage should not exceed 100%. You currently have ${totalWeightPercentages}% allocated.`,

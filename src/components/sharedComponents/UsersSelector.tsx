@@ -1,24 +1,18 @@
-'use client';
+"use client";
 
-import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
-import CheckBox from '@mui/icons-material/CheckBox';
-import CheckBoxOutlineBlank from '@mui/icons-material/CheckBoxOutlineBlank';
+import React, { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import {
   Autocomplete,
   Checkbox,
   Chip,
   LinearProgress,
   TextField,
-} from '@mui/material';
-import { useQuery } from '@tanstack/react-query';
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
-import organizationServices from '../organizations/organizationServices';
+} from "@mui/material";
+import CheckBoxOutlineBlank from "@mui/icons-material/CheckBoxOutlineBlank";
+import CheckBox from "@mui/icons-material/CheckBox";
+import { useJumboAuth } from "@/app/providers/JumboAuthProvider";
+import organizationServices from "../organizations/organizationServices";
+import { useQuery } from "@tanstack/react-query";
 
 interface User {
   id: number;
@@ -30,8 +24,8 @@ interface UsersSelectorProps {
   onChange: (value: User | User[] | null) => void;
   multiple?: boolean;
   label?: string;
-  defaultValue?: User | User[] | null;
   value?: User | User[] | null;
+  defaultValue?: User | User[] | null;
   frontError?: { message?: string } | null;
   excludeUsers?: User[];
 }
@@ -39,21 +33,17 @@ interface UsersSelectorProps {
 const UsersSelector: React.FC<UsersSelectorProps> = ({
   onChange,
   multiple = false,
-  label = 'Users',
-  defaultValue = null,
+  label = "Users",
   value: controlledValue,
+  defaultValue = null,
   frontError = null,
   excludeUsers = [],
 }) => {
   const { authOrganization } = useJumboAuth();
   const organization = authOrganization?.organization;
 
-  const {
-    data: rawUsers = [],
-    isFetching,
-    error,
-  } = useQuery<User[]>({
-    queryKey: ['users', organization?.id],
+  const { data: rawUsers = [], isFetching, error } = useQuery<User[]>({
+    queryKey: ["users", organization?.id],
     queryFn: () =>
       organizationServices.getOrganizationUsers({
         organizationId: organization?.id,
@@ -74,8 +64,8 @@ const UsersSelector: React.FC<UsersSelectorProps> = ({
     return Array.from(map.values());
   }, [rawUsers, excludeUsers]);
 
-  const [value, setValue] = useState<User | User[] | null>(
-    controlledValue ?? (multiple ? [] : null)
+  const [internalValue, setInternalValue] = useState<User | User[] | null>(
+    multiple ? [] : null
   );
 
   const syncedRef = useRef(false);
@@ -91,59 +81,24 @@ const UsersSelector: React.FC<UsersSelectorProps> = ({
           (u) => u.id
         )
       );
-      setValue(users.filter((u) => ids.has(u.id)));
+      setInternalValue(users.filter((u) => ids.has(u.id)));
     } else {
       const id = Array.isArray(defaultValue)
         ? defaultValue[0]?.id
         : defaultValue.id;
 
-      setValue(users.find((u) => u.id === id) || null);
+      setInternalValue(users.find((u) => u.id === id) || null);
     }
   }, [defaultValue, users, multiple]);
 
-  useEffect(() => {
-    if (controlledValue === undefined) return;
-
-    if (multiple) {
-      const current = (value as User[]) || [];
-      const incoming = (
-        Array.isArray(controlledValue)
-          ? controlledValue
-          : controlledValue
-            ? [controlledValue]
-            : []
-      ) as User[];
-      const sameLength = current.length === incoming.length;
-      const sameValues =
-        sameLength &&
-        current.every((item, index) => item?.id === incoming[index]?.id);
-
-      if (!sameValues) {
-        setValue(incoming);
-      }
-      return;
-    }
-
-    const currentId = (value as User | null)?.id ?? null;
-    const incomingId =
-      (Array.isArray(controlledValue) ? controlledValue[0] : controlledValue)
-        ?.id ?? null;
-
-    if (currentId !== incomingId) {
-      setValue(
-        (Array.isArray(controlledValue)
-          ? controlledValue[0]
-          : controlledValue) || null
-      );
-    }
-  }, [controlledValue, multiple, value]);
-
   const handleChange = useCallback(
     (_: any, newValue: User | User[] | null) => {
-      setValue(newValue);
+      if (controlledValue === undefined) {
+        setInternalValue(newValue);
+      }
       onChange(newValue);
     },
-    [onChange]
+    [onChange, controlledValue]
   );
 
   if (isFetching) return <LinearProgress />;
@@ -151,9 +106,9 @@ const UsersSelector: React.FC<UsersSelectorProps> = ({
   return (
     <Autocomplete
       multiple={multiple}
-      size='small'
+      size="small"
       options={users}
-      value={value}
+      value={controlledValue !== undefined ? controlledValue : internalValue}
       onChange={handleChange}
       disableCloseOnSelect={multiple}
       isOptionEqualToValue={(o, v) => o.id === v.id}
@@ -169,9 +124,10 @@ const UsersSelector: React.FC<UsersSelectorProps> = ({
         />
       )}
       renderTags={(value: User[], getTagProps) =>
-        value.map((option, index) => (
-          <Chip {...getTagProps({ index })} label={option.name} />
-        ))
+        value.map((option, index) => {
+          const { key, ...chipProps } = getTagProps({ index });
+          return <Chip key={key ?? option.id} {...chipProps} label={option.name} />;
+        })
       }
       {...(multiple && {
         renderOption: (props, option: any, { selected }) => {
@@ -180,8 +136,8 @@ const UsersSelector: React.FC<UsersSelectorProps> = ({
           return (
             <li key={key} {...rest}>
               <Checkbox
-                icon={<CheckBoxOutlineBlank fontSize='small' />}
-                checkedIcon={<CheckBox fontSize='small' />}
+                icon={<CheckBoxOutlineBlank fontSize="small" />}
+                checkedIcon={<CheckBox fontSize="small" />}
                 checked={selected}
                 sx={{ mr: 1 }}
               />

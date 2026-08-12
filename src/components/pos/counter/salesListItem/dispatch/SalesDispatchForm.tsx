@@ -1,7 +1,6 @@
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import StoreSelector from '@/components/procurement/stores/StoreSelector';
 import { PERMISSIONS } from '@/utilities/constants/permissions';
-import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Div } from '@jumbo/shared';
 import { LoadingButton } from '@mui/lab';
@@ -110,8 +109,8 @@ const SalesDispatchForm: React.FC<SalesDispatchFormProps> = ({
       queryClient.invalidateQueries({ queryKey: ['saleDeliveryNotes'] });
     },
     onError: (error: any) => {
-      // error?.response?.data?.message &&
-      enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
+      error?.response?.data?.message &&
+        enqueueSnackbar(error.response.data.message, { variant: 'error' });
     },
   });
 
@@ -124,8 +123,8 @@ const SalesDispatchForm: React.FC<SalesDispatchFormProps> = ({
       queryClient.invalidateQueries({ queryKey: ['saleDeliveryNotes'] });
     },
     onError: (error: any) => {
-      // error?.response?.data?.message &&
-      enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
+      error?.response?.data?.message &&
+        enqueueSnackbar(error.response.data.message, { variant: 'error' });
     },
   });
 

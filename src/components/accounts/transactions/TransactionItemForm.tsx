@@ -303,7 +303,7 @@ const TransactionItemForm: React.FC<TransactionItemFormProps> = ({
                         'Duties and Taxes',
                       ]
                     : isTransfer
-                      ? ['Cash and cash equivalents']
+                      ? ['Cash and cash equivalents', 'Current Assets']
                       : []
                 }
                 onChange={(newValue: any) => {
