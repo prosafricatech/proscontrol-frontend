@@ -1,6 +1,7 @@
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import { useCurrencySelect } from '@/components/masters/Currencies/CurrencySelectProvider';
 import { PERMISSIONS } from '@/utilities/constants/permissions';
+import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { HighlightOff } from '@mui/icons-material';
 import { LoadingButton } from '@mui/lab';
@@ -60,7 +61,9 @@ function PurchaseOrderDialogForm({ toggleOpen, order = null }) {
 
   const getExchangeRateByCurrencyId = (currencyId) => {
     if (!currencyId) return 1;
-    const foundCurrency = currencies.find((currency) => currency.id === currencyId);
+    const foundCurrency = currencies.find(
+      (currency) => currency.id === currencyId
+    );
     return foundCurrency?.exchangeRate || 1;
   };
 
@@ -168,16 +171,22 @@ function PurchaseOrderDialogForm({ toggleOpen, order = null }) {
       stakeholder_ledger_id: null,
       date_required: order && order.date_required,
       instant_pay: order ? !!order.instant_pay && canInstantPay : canInstantPay,
-      instant_receive: order ? !!order.instant_receive && canInstantReceive : false,
+      instant_receive: order
+        ? !!order.instant_receive && canInstantReceive
+        : false,
       credit_ledger_id:
-        order && order.instant_pay && canInstantPay ? order.credit_ledger.id : null,
+        order && order.instant_pay && canInstantPay
+          ? order.credit_ledger.id
+          : null,
       store_id:
-        order && !!order.instant_receive && canInstantReceive ? order.store.id : null,
+        order && !!order.instant_receive && canInstantReceive
+          ? order.store.id
+          : null,
       cost_centers: order?.cost_centers
         ? order.cost_centers
         : costCenters?.length === 1
-        ? costCenters
-        : [],
+          ? costCenters
+          : [],
       items: order ? order.purchase_order_items : [itemTemplate],
       terms_of_payment: order && order.terms_of_payment,
       remarks: order && order.remarks,
@@ -252,15 +261,21 @@ function PurchaseOrderDialogForm({ toggleOpen, order = null }) {
   const currentStakeholderLedgerId = watch('stakeholder_ledger_id');
 
   const selectedStakeholderLedger =
-    stakeholderPayableLedgers.find((ledger) => ledger.id === currentStakeholderLedgerId) ||
+    stakeholderPayableLedgers.find(
+      (ledger) => ledger.id === currentStakeholderLedgerId
+    ) ||
     stakeholderPayableLedgers[0] ||
     null;
 
   const lockedSupplierCurrencyId =
-    selectedStakeholderLedger?.currency_id || selectedStakeholderLedger?.currency?.id || null;
+    selectedStakeholderLedger?.currency_id ||
+    selectedStakeholderLedger?.currency?.id ||
+    null;
 
   const baseCurrencyId = React.useMemo(() => {
-    const baseByFlag = currencies.find((currency) => Number(currency?.is_base) === 1);
+    const baseByFlag = currencies.find(
+      (currency) => Number(currency?.is_base) === 1
+    );
     if (baseByFlag?.id) return baseByFlag.id;
 
     const baseCode = authOrganization?.organization?.base_currency?.code;
@@ -323,7 +338,8 @@ function PurchaseOrderDialogForm({ toggleOpen, order = null }) {
   ]);
 
   useEffect(() => {
-    const hasActiveSupplierContext = !!stakeholder_id && stakeholderPayableLedgers.length > 0;
+    const hasActiveSupplierContext =
+      !!stakeholder_id && stakeholderPayableLedgers.length > 0;
     if (!hasActiveSupplierContext) {
       return;
     }
@@ -361,14 +377,15 @@ function PurchaseOrderDialogForm({ toggleOpen, order = null }) {
       queryClient.invalidateQueries({ queryKey: ['purchaseOrders'] });
     },
     onError: (error) => {
-      const currencyError = error?.response?.data?.validation_errors?.currency_id?.[0];
+      const currencyError =
+        error?.response?.data?.validation_errors?.currency_id?.[0];
       if (currencyError) {
         setError('currency_id', {
           type: 'manual',
           message: currencyError,
         });
       }
-      enqueueSnackbar(error?.response?.data?.message, { variant: 'error' });
+      enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
     },
   });
 
@@ -381,14 +398,15 @@ function PurchaseOrderDialogForm({ toggleOpen, order = null }) {
       queryClient.invalidateQueries({ queryKey: ['purchaseOrderGrns'] });
     },
     onError: (error) => {
-      const currencyError = error?.response?.data?.validation_errors?.currency_id?.[0];
+      const currencyError =
+        error?.response?.data?.validation_errors?.currency_id?.[0];
       if (currencyError) {
         setError('currency_id', {
           type: 'manual',
           message: currencyError,
         });
       }
-      enqueueSnackbar(error?.response?.data?.message, { variant: 'error' });
+      enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
     },
   });
 
@@ -413,13 +431,7 @@ function PurchaseOrderDialogForm({ toggleOpen, order = null }) {
     }
 
     clearErrors('store_id');
-  }, [
-    clearErrors,
-    displayStoreSelector,
-    getValues,
-    instant_receive,
-    setError,
-  ]);
+  }, [clearErrors, displayStoreSelector, getValues, instant_receive, setError]);
 
   useEffect(() => {
     if (!canInstantPay && getValues('instant_pay')) {

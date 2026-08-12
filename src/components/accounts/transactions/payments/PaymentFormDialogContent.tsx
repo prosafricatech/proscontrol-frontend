@@ -7,6 +7,7 @@ import { useCurrencySelect } from '@/components/masters/Currencies/CurrencySelec
 import { Currency } from '@/components/masters/Currencies/CurrencyType';
 import CommaSeparatedField from '@/shared/Inputs/CommaSeparatedField';
 import { PERMISSIONS } from '@/utilities/constants/permissions';
+import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Div } from '@jumbo/shared';
 import { AddOutlined, HighlightOff } from '@mui/icons-material';
@@ -51,7 +52,7 @@ interface Ledger {
 type PaymentItem = {
   debit_ledger_id?: number;
   credit_ledger_id?: number;
-  item_form_ledger_currency_id: any
+  item_form_ledger_currency_id: any;
   amount: number;
   description: string;
 };
@@ -63,7 +64,7 @@ type PaymentResponse = {
 type PaymentFormValues = {
   id?: number;
   credit_ledger_id: number;
-  form_ledger_currency_id: number
+  form_ledger_currency_id: number;
   reference?: string;
   narration: string;
   currency_id: number | null;
@@ -111,14 +112,16 @@ const PaymentFormDialogContent: React.FC<PaymentFormDialogContentProps> = ({
   const [showWarning, setShowWarning] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [clearFormKey, setClearFormKey] = useState(0);
-  const [prevKey, setPrevKey]= useState(0)
+  const [prevKey, setPrevKey] = useState(0);
   const [submitItemForm, setSubmitItemForm] = useState(false);
   const [addedLedger, setAddedLedger] = useState<Ledger | null>(null);
   const { currencies = [] } = useCurrencySelect();
 
   const getExchangeRateByCurrencyId = (currencyId?: number) => {
     if (!currencyId) return 1;
-    const foundCurrency = currencies.find((currency) => currency.id === currencyId);
+    const foundCurrency = currencies.find(
+      (currency) => currency.id === currencyId
+    );
     return foundCurrency?.exchangeRate || 1;
   };
 
@@ -147,7 +150,7 @@ const PaymentFormDialogContent: React.FC<PaymentFormDialogContentProps> = ({
 
   const findLedgerCurrencyId = (ledgerId?: number): number | undefined => {
     if (!ledgerId) return undefined;
-    const ledger = ungroupedLedgerOptions.find(l => l.id === ledgerId);
+    const ledger = ungroupedLedgerOptions.find((l) => l.id === ledgerId);
     return ledger?.currency?.id;
   };
 
@@ -156,7 +159,8 @@ const PaymentFormDialogContent: React.FC<PaymentFormDialogContentProps> = ({
     if (!payment?.items) return [];
     return payment.items.map((item: PaymentItem) => ({
       ...item,
-      item_form_ledger_currency_id: item.item_form_ledger_currency_id || 
+      item_form_ledger_currency_id:
+        item.item_form_ledger_currency_id ||
         findLedgerCurrencyId(item.debit_ledger_id) ||
         findLedgerCurrencyId(item.credit_ledger_id),
     }));
@@ -176,25 +180,31 @@ const PaymentFormDialogContent: React.FC<PaymentFormDialogContentProps> = ({
       setOpen(false);
     },
     onError: (error: Error) => {
-      if (error instanceof Error && 'response' in error) {
-        const axiosError = error as {
-          response?: { status?: number; data?: any };
-        };
-        const validationErrors = axiosError.response?.data?.validation_errors;
-        if (validationErrors?.currency_id?.[0]) {
-          setError('currency_id', {
-            type: 'manual',
-            message: validationErrors.currency_id[0],
-          });
-        }
-        if (axiosError.response?.status === 400 || axiosError.response?.status === 422) {
-          setServerError(validationErrors);
-        } else {
-          enqueueSnackbar(axiosError.response?.data?.message, {
-            variant: 'error',
-          });
-        }
-      }
+      const message = getErrorMessage(error);
+      setServerError(message);
+      enqueueSnackbar(message, {
+        variant: 'error',
+      });
+
+      // if (error instanceof Error && 'response' in error) {
+      //   const axiosError = error as {
+      //     response?: { status?: number; data?: any };
+      //   };
+      //   const validationErrors = axiosError.response?.data?.validation_errors;
+      //   if (validationErrors?.currency_id?.[0]) {
+      //     setError('currency_id', {
+      //       type: 'manual',
+      //       message: validationErrors.currency_id[0],
+      //     });
+      //   }
+      //   if (axiosError.response?.status === 400 || axiosError.response?.status === 422) {
+      //     setServerError(validationErrors);
+      //   } else {
+      //     enqueueSnackbar(axiosError.response?.data?.message, {
+      //       variant: 'error',
+      //     });
+      //   }
+      // }
     },
   });
 
@@ -206,25 +216,30 @@ const PaymentFormDialogContent: React.FC<PaymentFormDialogContentProps> = ({
       setOpen(false);
     },
     onError: (error: Error) => {
-      if (error instanceof Error && 'response' in error) {
-        const axiosError = error as {
-          response?: { status?: number; data?: any };
-        };
-        const validationErrors = axiosError.response?.data?.validation_errors;
-        if (validationErrors?.currency_id?.[0]) {
-          setError('currency_id', {
-            type: 'manual',
-            message: validationErrors.currency_id[0],
-          });
-        }
-        if (axiosError.response?.status === 400 || axiosError.response?.status === 422) {
-          setServerError(validationErrors);
-        } else {
-          enqueueSnackbar(axiosError.response?.data?.message, {
-            variant: 'error',
-          });
-        }
-      }
+      const message = getErrorMessage(error);
+      setServerError(message);
+      enqueueSnackbar(message, {
+        variant: 'error',
+      });
+      // if (error instanceof Error && 'response' in error) {
+      //   const axiosError = error as {
+      //     response?: { status?: number; data?: any };
+      //   };
+      //   const validationErrors = axiosError.response?.data?.validation_errors;
+      //   if (validationErrors?.currency_id?.[0]) {
+      //     setError('currency_id', {
+      //       type: 'manual',
+      //       message: validationErrors.currency_id[0],
+      //     });
+      //   }
+      //   if (axiosError.response?.status === 400 || axiosError.response?.status === 422) {
+      //     setServerError(validationErrors);
+      //   } else {
+      //     enqueueSnackbar(axiosError.response?.data?.message, {
+      //       variant: 'error',
+      //     });
+      //   }
+      // }
     },
   });
 
@@ -279,8 +294,7 @@ const PaymentFormDialogContent: React.FC<PaymentFormDialogContentProps> = ({
       currency_id: payment?.currency?.id || 1,
       exchange_rate: payment?.exchange_rate || 1,
       cost_centers:
-        payment?.cost_centers ||
-        (costCenters?.length === 1 ? costCenters : []),
+        payment?.cost_centers || (costCenters?.length === 1 ? costCenters : []),
       transactionDate:
         payment && !isDuplicate
           ? payment?.transactionDate
@@ -415,7 +429,14 @@ const PaymentFormDialogContent: React.FC<PaymentFormDialogContentProps> = ({
                         (ledger) => ledger.id === payment?.credit_ledger_id
                       ) || null
                     }
-                    allowedGroups={['Current Assets', 'Current Liabilities', 'Cash and Cash Equivalents', 'Banks', 'Accounts Payable', 'Accounts Receivable']}
+                    allowedGroups={[
+                      'Current Assets',
+                      'Current Liabilities',
+                      'Cash and Cash Equivalents',
+                      'Banks',
+                      'Accounts Payable',
+                      'Accounts Receivable',
+                    ]}
                     onChange={(newValue: any) => {
                       if (Array.isArray(newValue)) return;
                       applyCurrencyLock(newValue?.currency?.id);
@@ -504,7 +525,7 @@ const PaymentFormDialogContent: React.FC<PaymentFormDialogContentProps> = ({
                   helperText={errors?.exchange_rate?.message}
                   InputProps={{
                     inputComponent: CommaSeparatedField,
-                    disabled: !!watch(`form_ledger_currency_id`)
+                    disabled: !!watch(`form_ledger_currency_id`),
                   }}
                   value={watch('exchange_rate')}
                   onChange={(e) => {
@@ -555,7 +576,9 @@ const PaymentFormDialogContent: React.FC<PaymentFormDialogContentProps> = ({
           setItems={setItems as any}
           isPayment={true}
           selectedCurrencyId={watch('currency_id') as any}
-          onLedgerCurrencyDetected={(currencyId) => applyCurrencyLock(currencyId)}
+          onLedgerCurrencyDetected={(currencyId) =>
+            applyCurrencyLock(currencyId)
+          }
         />
 
         {errors?.items?.message && items.length < 1 && (

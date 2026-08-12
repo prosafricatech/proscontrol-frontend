@@ -1,5 +1,6 @@
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import CostCenterSelector from '@/components/masters/costCenters/CostCenterSelector';
+import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Div } from '@jumbo/shared';
 import { LoadingButton } from '@mui/lab';
@@ -96,7 +97,7 @@ const BudgetsForm = ({
     onError: (err) => {
       if (err.response?.status === 400)
         setServerError(err.response?.data?.validation_errors);
-      else enqueueSnackbar(err.response?.data?.message, { variant: 'error' });
+      else enqueueSnackbar(getErrorMessage(err), { variant: 'error' });
     },
   });
 
@@ -111,7 +112,7 @@ const BudgetsForm = ({
     onError: (err) => {
       if (err.response?.status === 400)
         setServerError(err.response?.data?.validation_errors);
-      else enqueueSnackbar(err.response?.data?.message, { variant: 'error' });
+      else enqueueSnackbar(getErrorMessage(err), { variant: 'error' });
     },
   });
 

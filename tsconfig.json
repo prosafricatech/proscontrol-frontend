@@ -1,11 +1,16 @@
 {
   "compilerOptions": {
+<<<<<<< HEAD
     "target": "es5",
     "lib": [
       "dom",
       "dom.iterable",
       "esnext"
     ],
+=======
+    "target": "es6",
+    "lib": ["dom", "dom.iterable", "esnext"],
+>>>>>>> origin/junior-development
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,

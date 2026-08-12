@@ -3,6 +3,7 @@
 
 import CostCenterSelector from '@/components/masters/costCenters/CostCenterSelector';
 import { CostCenter } from '@/components/masters/costCenters/CostCenterType';
+import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Div } from '@jumbo/shared';
 import { LoadingButton } from '@mui/lab';
@@ -37,15 +38,6 @@ interface FormData {
   cost_center_id: number | null;
 }
 
-const getErrorMessage = (error: any) => {
-  const validationErrors = error?.response?.data?.validation_errors;
-  if (validationErrors && typeof validationErrors === 'object') {
-    const first = Object.values(validationErrors)[0] as any;
-    return Array.isArray(first) ? first[0] : String(first);
-  }
-  return error?.response?.data?.message || error?.message || 'Something went wrong';
-};
-
 const PayrollRunForm = ({
   setOpenDialog,
   payrollPeriod,
@@ -58,13 +50,14 @@ const PayrollRunForm = ({
   const [costCenter, setCostCenter] = useState<CostCenter | null>(null);
 
   // Check if there's any existing run with a cost center (branch run)
-  const hasBranchRun = runs.some(run => run.cost_center_id !== null);
-  
+  const hasBranchRun = runs.some((run) => run.cost_center_id !== null);
+
   // Check if there's any existing company-wide run
-  const hasCompanyWideRun = runs.some(run => run.cost_center_id === null);
+  const hasCompanyWideRun = runs.some((run) => run.cost_center_id === null);
 
   // Determine if cost center is required
-  const isCostCenterRequired = hasBranchRun || (!hasCompanyWideRun && runs.length > 0);
+  const isCostCenterRequired =
+    hasBranchRun || (!hasCompanyWideRun && runs.length > 0);
 
   // Validation schema - conditionally require cost_center_id
   const validationSchema = yup.object({
@@ -74,7 +67,10 @@ const PayrollRunForm = ({
       .nullable()
       .when([], {
         is: () => isCostCenterRequired,
-        then: (schema) => schema.required('Cost center is required - this period already has branch runs'),
+        then: (schema) =>
+          schema.required(
+            'Cost center is required - this period already has branch runs'
+          ),
         otherwise: (schema) => schema.optional(),
       }),
   });
@@ -96,7 +92,8 @@ const PayrollRunForm = ({
   useEffect(() => {
     if (payrollRun) {
       reset({
-        payroll_period_id: payrollRun.payroll_period_id || payrollPeriod?.id || 0,
+        payroll_period_id:
+          payrollRun.payroll_period_id || payrollPeriod?.id || 0,
         cost_center_id: payrollRun.cost_center_id || null,
       });
       if (payrollRun.cost_center) {
@@ -109,9 +106,13 @@ const PayrollRunForm = ({
     mutationFn: humanResourcesServices.addPayrollRun,
     onSuccess: () => {
       setOpenDialog(false);
-      enqueueSnackbar('Payroll run created successfully', { variant: 'success' });
+      enqueueSnackbar('Payroll run created successfully', {
+        variant: 'success',
+      });
       queryClient.invalidateQueries({ queryKey: ['payrollRuns'] });
-      queryClient.invalidateQueries({ queryKey: ['payrollRunsForPeriod', String(payrollPeriod?.id)] });
+      queryClient.invalidateQueries({
+        queryKey: ['payrollRunsForPeriod', String(payrollPeriod?.id)],
+      });
       queryClient.invalidateQueries({ queryKey: ['payrollPeriods'] });
       if (onSuccess) onSuccess();
     },
@@ -125,8 +126,11 @@ const PayrollRunForm = ({
   };
 
   // Format period label for display
-  const monthName = payrollPeriod 
-    ? new Date(payrollPeriod.year, payrollPeriod.month - 1).toLocaleString('default', { month: 'long' })
+  const monthName = payrollPeriod
+    ? new Date(payrollPeriod.year, payrollPeriod.month - 1).toLocaleString(
+        'default',
+        { month: 'long' }
+      )
     : '';
 
   // Get info message based on existing runs
@@ -134,15 +138,15 @@ const PayrollRunForm = ({
     if (payrollRun?.id) {
       return 'Edit the payroll run details below.';
     }
-    
+
     if (hasBranchRun) {
       return `This period already has branch runs. You must select a cost center for this run. Company-wide runs are not allowed.`;
     }
-    
+
     if (hasCompanyWideRun) {
       return `This period already has a company-wide run. Only cost center runs are allowed. Select a cost center to create a branch run.`;
     }
-    
+
     return `Create a new payroll run for ${monthName} ${payrollPeriod?.year || ''}. Leave cost center empty for a company-wide run.`;
   };
 
@@ -160,8 +164,8 @@ const PayrollRunForm = ({
           <Grid container spacing={2}>
             <Grid size={12}>
               <Div sx={{ mt: 1, mb: 1 }}>
-                <Alert 
-                  severity={isCostCenterRequired ? 'warning' : 'info'} 
+                <Alert
+                  severity={isCostCenterRequired ? 'warning' : 'info'}
                   sx={{ mb: 2 }}
                 >
                   {getInfoMessage()}
@@ -170,9 +174,9 @@ const PayrollRunForm = ({
             </Grid>
 
             {/* Hidden field for payroll_period_id */}
-            <input 
-              type="hidden" 
-              {...control.register('payroll_period_id')} 
+            <input
+              type='hidden'
+              {...control.register('payroll_period_id')}
               value={payrollPeriod?.id || 0}
             />
 
@@ -185,10 +189,16 @@ const PayrollRunForm = ({
                     <CostCenterSelector
                       multiple={false}
                       withNotSpecified={false}
-                      label={isCostCenterRequired ? 'Cost Center *' : 'Cost Center (optional)'}
+                      label={
+                        isCostCenterRequired
+                          ? 'Cost Center *'
+                          : 'Cost Center (optional)'
+                      }
                       defaultValue={costCenter}
                       onChange={(value) => {
-                        const selected = Array.isArray(value) ? value[0] : value;
+                        const selected = Array.isArray(value)
+                          ? value[0]
+                          : value;
                         setCostCenter(selected || null);
                         field.onChange(selected?.id || null);
                       }}
@@ -201,7 +211,11 @@ const PayrollRunForm = ({
                   </Typography>
                 )}
                 {!isCostCenterRequired && !isEditMode && (
-                  <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mt: 0.5 }}>
+                  <Typography
+                    variant='caption'
+                    color='text.secondary'
+                    sx={{ display: 'block', mt: 0.5 }}
+                  >
                     Leave empty to create a company-wide run
                   </Typography>
                 )}
@@ -212,7 +226,8 @@ const PayrollRunForm = ({
               <Grid size={12}>
                 <Div sx={{ mt: 1, mb: 1 }}>
                   <Alert severity='info'>
-                    Current Status: <strong>{payrollRun.status || 'Draft'}</strong>
+                    Current Status:{' '}
+                    <strong>{payrollRun.status || 'Draft'}</strong>
                   </Alert>
                 </Div>
               </Grid>

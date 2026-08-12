@@ -1,37 +1,38 @@
 'use client';
 
+import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
+import projectsServices from '@/components/projectManagement/projects/project-services';
+import { getErrorMessage } from '@/utilities/helpers/errorHandler';
+import { yupResolver } from '@hookform/resolvers/yup';
+import { Div } from '@jumbo/shared';
 import { LoadingButton } from '@mui/lab';
 import {
   Alert,
+  Box,
   Button,
+  Checkbox,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  Grid,
-  TextField,
-  Box,
-  Tabs,
-  Tab,
   Divider,
+  Grid,
+  Tab,
+  Tabs,
+  TextField,
   Typography,
-  Checkbox,
 } from '@mui/material';
 import { DateTimePicker } from '@mui/x-date-pickers';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
+import { useSnackbar } from 'notistack';
 import React, { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import * as yup from 'yup';
-import { yupResolver } from '@hookform/resolvers/yup';
-import { useSnackbar } from 'notistack';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import projectsServices from '@/components/projectManagement/projects/project-services';
-import CertifiedTasksItemForm from './tab/certifiedTasks/CertifiedTasksItemForm';
-import CertifiedTasksItemRow from './tab/certifiedTasks/CertifiedTasksItemRow';
 import CertifiedAdjustments from './tab/adjustments/CertifiedAdjustments';
 import CertifiedAdjustmentsRow from './tab/adjustments/CertifiedAdjustmentsRow';
-import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
-import { Div } from '@jumbo/shared';
+import CertifiedTasksItemForm from './tab/certifiedTasks/CertifiedTasksItemForm';
+import CertifiedTasksItemRow from './tab/certifiedTasks/CertifiedTasksItemRow';
 
 interface Task {
   id?: number | string;
@@ -106,7 +107,8 @@ const CertificateForm: React.FC<CertificateFormProps> = ({
   const queryClient = useQueryClient();
   const { enqueueSnackbar } = useSnackbar();
   const { authOrganization } = useJumboAuth();
-  const organization = authOrganization?.organization as Organization | undefined;
+  const organization = authOrganization?.organization as
+    Organization | undefined;
 
   const [tasksItems, setTasksItems] = useState<CertifiedTaskItem[]>(
     certificate?.items || []
@@ -123,30 +125,28 @@ const CertificateForm: React.FC<CertificateFormProps> = ({
   const addCertificate = useMutation({
     mutationFn: projectsServices.addCertificates,
     onSuccess: (data: any) => {
-      enqueueSnackbar(data?.message || 'Certificate created', { variant: 'success' });
+      enqueueSnackbar(data?.message || 'Certificate created', {
+        variant: 'success',
+      });
       queryClient.invalidateQueries({ queryKey: ['Certificates'] });
       setOpenDialog(false);
     },
     onError: (error: any) => {
-      enqueueSnackbar(
-        error?.response?.data?.message || 'Error saving certificate',
-        { variant: 'error' }
-      );
+      enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
     },
   });
 
   const updateCertificate = useMutation({
     mutationFn: projectsServices.updateCertificates,
     onSuccess: (data: any) => {
-      enqueueSnackbar(data?.message || 'Certificate updated', { variant: 'success' });
+      enqueueSnackbar(data?.message || 'Certificate updated', {
+        variant: 'success',
+      });
       queryClient.invalidateQueries({ queryKey: ['Certificates'] });
       setOpenDialog(false);
     },
     onError: (error: any) => {
-      enqueueSnackbar(
-        error?.response?.data?.message || 'Error updating certificate',
-        { variant: 'error' }
-      );
+      enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
     },
   });
 
@@ -161,7 +161,8 @@ const CertificateForm: React.FC<CertificateFormProps> = ({
     resolver: yupResolver(validationSchema),
     defaultValues: {
       id: certificate?.id,
-      project_subcontract_id: subContract?.id || certificate?.project_subcontract_id,
+      project_subcontract_id:
+        subContract?.id || certificate?.project_subcontract_id,
       remarks: certificate?.remarks || '',
       vat_percentage:
         certificate?.vat_percentage ??
@@ -183,31 +184,34 @@ const CertificateForm: React.FC<CertificateFormProps> = ({
   );
 
   // ==================== REAL-TIME CALCULATIONS ====================
-  const { grossAmount, netAdjustments, subtotal, vatAmount, grandTotal } = useMemo(() => {
-    const gross = tasksItems.reduce((sum, item) => {
-      const rate = item.rate ?? item.task?.rate ?? 0;
-      const qty = Number(item.certified_quantity) || 0;
-      return sum + rate * qty;
-    }, 0);
+  const { grossAmount, netAdjustments, subtotal, vatAmount, grandTotal } =
+    useMemo(() => {
+      const gross = tasksItems.reduce((sum, item) => {
+        const rate = item.rate ?? item.task?.rate ?? 0;
+        const qty = Number(item.certified_quantity) || 0;
+        return sum + rate * qty;
+      }, 0);
 
-    const netAdj = adjustments.reduce((sum, adj) => {
-      const amount = Number(adj.amount) || 0;
-      return (adj.type === 'deduction' || adj.type === '-') ? sum - amount : sum + amount;
-    }, 0);
+      const netAdj = adjustments.reduce((sum, adj) => {
+        const amount = Number(adj.amount) || 0;
+        return adj.type === 'deduction' || adj.type === '-'
+          ? sum - amount
+          : sum + amount;
+      }, 0);
 
-    // VAT should be calculated on gross before adjustments
-    const vat = (gross * vatPercentage) / 100;
-    const sub = gross + netAdj;
-    const grand = sub + vat;
+      // VAT should be calculated on gross before adjustments
+      const vat = (gross * vatPercentage) / 100;
+      const sub = gross + netAdj;
+      const grand = sub + vat;
 
-    return {
-      grossAmount: gross,
-      netAdjustments: netAdj,
-      subtotal: sub,
-      vatAmount: vat,
-      grandTotal: grand,
-    };
-  }, [tasksItems, adjustments, vatPercentage]);
+      return {
+        grossAmount: gross,
+        netAdjustments: netAdj,
+        subtotal: sub,
+        vatAmount: vat,
+        grandTotal: grand,
+      };
+    }, [tasksItems, adjustments, vatPercentage]);
 
   const onSubmit = (data: FormValues) => {
     if (tasksItems.length === 0) {
@@ -229,14 +233,19 @@ const CertificateForm: React.FC<CertificateFormProps> = ({
     const payload = {
       ...data,
       certified_tasks: tasksItems.map((item) => ({
-        project_subcontract_task_id: item.project_subcontract_task_id ?? item.task?.id,
+        project_subcontract_task_id:
+          item.project_subcontract_task_id ?? item.task?.id,
         remarks: item.remarks,
         certified_quantity: Number(item.certified_quantity),
       })),
       adjustments: adjustments.map((adj) => ({
         description: adj.description,
-        complement_ledger_id: adj.complement_ledger_id || adj.complement_ledger?.id,
-        type: (adj.type === '-' || adj.type === 'deduction') ? 'deduction' : 'addition',
+        complement_ledger_id:
+          adj.complement_ledger_id || adj.complement_ledger?.id,
+        type:
+          adj.type === '-' || adj.type === 'deduction'
+            ? 'deduction'
+            : 'addition',
         amount: Number(adj.amount),
       })),
     };
@@ -253,18 +262,20 @@ const CertificateForm: React.FC<CertificateFormProps> = ({
 
   return (
     <>
-      <DialogTitle textAlign="center">
-        {certificate ? `Edit ${certificate.certificateNo}` : 'New Certificate Form'}
+      <DialogTitle textAlign='center'>
+        {certificate
+          ? `Edit ${certificate.certificateNo}`
+          : 'New Certificate Form'}
       </DialogTitle>
 
       <DialogContent dividers>
         <Grid container spacing={3}>
           <Grid size={{ xs: 12, md: 8 }}>
-            <form autoComplete="off" onSubmit={handleSubmit(onSubmit)}>
+            <form autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
               <Grid container spacing={2} mb={3}>
                 <Grid size={{ xs: 12, md: 4 }}>
                   <DateTimePicker
-                    label="Certificate Date"
+                    label='Certificate Date'
                     value={dayjs(certificateDate)}
                     slotProps={{
                       textField: {
@@ -283,8 +294,8 @@ const CertificateForm: React.FC<CertificateFormProps> = ({
                 </Grid>
                 <Grid size={{ xs: 12, md: 8 }}>
                   <TextField
-                    size="small"
-                    label="Remarks"
+                    size='small'
+                    label='Remarks'
                     fullWidth
                     multiline
                     rows={2}
@@ -309,63 +320,81 @@ const CertificateForm: React.FC<CertificateFormProps> = ({
                 height: 'fit-content',
               }}
             >
-              <Typography variant="h6" align="center" gutterBottom fontWeight="bold">
+              <Typography
+                variant='h6'
+                align='center'
+                gutterBottom
+                fontWeight='bold'
+              >
                 Summary
               </Typography>
               <Divider sx={{ my: 2 }} />
               <Grid container spacing={1.5}>
                 <Grid size={7}>
-                  <Typography variant="body2">Gross Amount:</Typography>
+                  <Typography variant='body2'>Gross Amount:</Typography>
                 </Grid>
                 <Grid size={5}>
-                  <Typography variant="body1" align="right" sx={{ fontFamily: 'monospace' }}>
-                    {grossAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  <Typography
+                    variant='body1'
+                    align='right'
+                    sx={{ fontFamily: 'monospace' }}
+                  >
+                    {grossAmount.toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                    })}
                   </Typography>
                 </Grid>
 
                 {adjustments.length > 0 && (
                   <>
                     <Grid size={7}>
-                      <Typography variant="body2">Net Adjustments:</Typography>
+                      <Typography variant='body2'>Net Adjustments:</Typography>
                     </Grid>
                     <Grid size={5}>
                       <Typography
-                        variant="body1"
-                        align="right"
+                        variant='body1'
+                        align='right'
                         sx={{
                           fontFamily: 'monospace',
-                          color: netAdjustments < 0 ? 'error.main' : 'success.main',
+                          color:
+                            netAdjustments < 0 ? 'error.main' : 'success.main',
                         }}
                       >
-                        {netAdjustments.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        {netAdjustments.toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                        })}
                       </Typography>
                     </Grid>
                   </>
                 )}
 
                 <Grid size={7}>
-                  <Typography variant="body2" fontWeight="bold">Subtotal:</Typography>
+                  <Typography variant='body2' fontWeight='bold'>
+                    Subtotal:
+                  </Typography>
                 </Grid>
                 <Grid size={5}>
                   <Typography
-                    variant="body1"
-                    align="right"
-                    fontWeight="bold"
+                    variant='body1'
+                    align='right'
+                    fontWeight='bold'
                     sx={{ fontFamily: 'monospace' }}
                   >
-                    {subtotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    {subtotal.toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                    })}
                   </Typography>
                 </Grid>
 
                 <Grid size={7}>
-                  <Typography variant="body2">
+                  <Typography variant='body2'>
                     VAT ({organization?.settings?.vat_percentage ?? 0}%):
                     <Checkbox
-                      size="small"
+                      size='small'
                       checked={vatPercentage > 0}
                       onChange={(e) => {
                         const rate = e.target.checked
-                          ? organization?.settings?.vat_percentage ?? 0
+                          ? (organization?.settings?.vat_percentage ?? 0)
                           : 0;
                         setValue('vat_percentage', rate, { shouldDirty: true });
                       }}
@@ -373,25 +402,35 @@ const CertificateForm: React.FC<CertificateFormProps> = ({
                   </Typography>
                 </Grid>
                 <Grid size={5}>
-                  <Typography variant="body1" align="right" sx={{ fontFamily: 'monospace' }}>
-                    {vatAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  <Typography
+                    variant='body1'
+                    align='right'
+                    sx={{ fontFamily: 'monospace' }}
+                  >
+                    {vatAmount.toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                    })}
                   </Typography>
                 </Grid>
 
                 <Grid size={7}>
-                  <Typography variant="h6" fontWeight="bold">Grand Total:</Typography>
+                  <Typography variant='h6' fontWeight='bold'>
+                    Grand Total:
+                  </Typography>
                 </Grid>
                 <Grid size={5}>
                   <Typography
-                    variant="h6"
-                    align="right"
+                    variant='h6'
+                    align='right'
                     sx={{
                       fontFamily: 'monospace',
                       color: 'primary.main',
                       fontWeight: 'bold',
                     }}
                   >
-                    {grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    {grandTotal.toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                    })}
                   </Typography>
                 </Grid>
               </Grid>
@@ -401,9 +440,14 @@ const CertificateForm: React.FC<CertificateFormProps> = ({
 
         <Divider sx={{ my: 3 }} />
 
-        <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)} variant="fullWidth" sx={{ mb: 3 }}>
-          <Tab label="Certified Tasks" />
-          <Tab label="Adjustments" />
+        <Tabs
+          value={activeTab}
+          onChange={(_, v) => setActiveTab(v)}
+          variant='fullWidth'
+          sx={{ mb: 3 }}
+        >
+          <Tab label='Certified Tasks' />
+          <Tab label='Adjustments' />
         </Tabs>
 
         <Box>
@@ -475,7 +519,7 @@ const CertificateForm: React.FC<CertificateFormProps> = ({
           )}
 
           {(errors as any).certified_tasks && tasksItems.length === 0 && (
-            <Alert severity="error" sx={{ mt: 2 }}>
+            <Alert severity='error' sx={{ mt: 2 }}>
               {(errors as any).certified_tasks.message}
             </Alert>
           )}
@@ -484,7 +528,9 @@ const CertificateForm: React.FC<CertificateFormProps> = ({
         <Dialog open={showWarning} onClose={() => setShowWarning(false)}>
           <DialogTitle>Unsaved Changes</DialogTitle>
           <DialogContent>
-            <Typography>The last item has not been added to the list.</Typography>
+            <Typography>
+              The last item has not been added to the list.
+            </Typography>
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setShowWarning(false)}>Cancel</Button>
@@ -496,7 +542,7 @@ const CertificateForm: React.FC<CertificateFormProps> = ({
             >
               Add & Submit
             </Button>
-            <Button onClick={handleConfirmSubmitWithoutAdd} color="primary">
+            <Button onClick={handleConfirmSubmitWithoutAdd} color='primary'>
               Submit Without Adding
             </Button>
           </DialogActions>
@@ -505,22 +551,22 @@ const CertificateForm: React.FC<CertificateFormProps> = ({
 
       <DialogActions>
         <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
-        <Box display="flex" gap={1}>
+        <Box display='flex' gap={1}>
           {activeTab === 1 && (
-            <Button variant="outlined" onClick={() => setActiveTab(0)}>
+            <Button variant='outlined' onClick={() => setActiveTab(0)}>
               Previous
             </Button>
           )}
           {activeTab === 0 && (
-            <Button variant="outlined" onClick={() => setActiveTab(1)}>
+            <Button variant='outlined' onClick={() => setActiveTab(1)}>
               Next
             </Button>
           )}
           {activeTab === 1 && (
             <LoadingButton
               loading={addCertificate.isPending || updateCertificate.isPending}
-              variant="contained"
-              color="success"
+              variant='contained'
+              color='success'
               onClick={handleSubmit(onSubmit)}
             >
               {certificate ? 'Update' : 'Submit'} Certificate

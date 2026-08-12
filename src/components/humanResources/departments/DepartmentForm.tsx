@@ -5,6 +5,7 @@ import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import LedgerSelect from '@/components/accounts/ledgers/forms/LedgerSelect';
 import { useLedgerSelect } from '@/components/accounts/ledgers/forms/LedgerSelectProvider';
 import { MODULES } from '@/utilities/constants/modules';
+import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Div } from '@jumbo/shared';
 import { LoadingButton } from '@mui/lab';
@@ -100,18 +101,18 @@ const DepartmentForm = ({
       queryClient.invalidateQueries({ queryKey: ['departments'] });
     },
     onError: (error) => {
-      let message = 'Something went wrong';
+      let message = getErrorMessage(error);
 
-      if (
-        typeof error === 'object' &&
-        error !== null &&
-        'response' in error &&
-        typeof (error as any).response?.data?.message === 'string'
-      ) {
-        message = (error as any).response.data.message;
-      } else if (error instanceof Error) {
-        message = error.message;
-      }
+      // if (
+      //   typeof error === 'object' &&
+      //   error !== null &&
+      //   'response' in error &&
+      //   typeof (error as any).response?.data?.message === 'string'
+      // ) {
+      //   message = (error as any).response.data.message;
+      // } else if (error instanceof Error) {
+      //   message = error.message;
+      // }
       enqueueSnackbar(message, { variant: 'error' });
     },
   });
@@ -130,18 +131,18 @@ const DepartmentForm = ({
       queryClient.invalidateQueries({ queryKey: ['departments'] });
     },
     onError: (error) => {
-      let message = 'Something went wrong';
+      let message = getErrorMessage(error);
 
-      if (
-        typeof error === 'object' &&
-        error !== null &&
-        'response' in error &&
-        typeof (error as any).response?.data?.message === 'string'
-      ) {
-        message = (error as any).response.data.message;
-      } else if (error instanceof Error) {
-        message = error.message;
-      }
+      // if (
+      //   typeof error === 'object' &&
+      //   error !== null &&
+      //   'response' in error &&
+      //   typeof (error as any).response?.data?.message === 'string'
+      // ) {
+      //   message = (error as any).response.data.message;
+      // } else if (error instanceof Error) {
+      //   message = error.message;
+      // }
       enqueueSnackbar(message, { variant: 'error' });
     },
   });

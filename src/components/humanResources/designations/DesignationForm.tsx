@@ -1,5 +1,6 @@
 'use client';
 
+import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Div } from '@jumbo/shared';
 import { LoadingButton } from '@mui/lab';
@@ -59,18 +60,18 @@ const DesignationForm = ({
       queryClient.invalidateQueries({ queryKey: ['designations'] });
     },
     onError: (error) => {
-      let message = 'Something went wrong';
+      let message = getErrorMessage(error);
 
-      if (
-        typeof error === 'object' &&
-        error !== null &&
-        'response' in error &&
-        typeof (error as any).response?.data?.message === 'string'
-      ) {
-        message = (error as any).response.data.message;
-      } else if (error instanceof Error) {
-        message = error.message;
-      }
+      // if (
+      //   typeof error === 'object' &&
+      //   error !== null &&
+      //   'response' in error &&
+      //   typeof (error as any).response?.data?.message === 'string'
+      // ) {
+      //   message = (error as any).response.data.message;
+      // } else if (error instanceof Error) {
+      //   message = error.message;
+      // }
       enqueueSnackbar(message, { variant: 'error' });
     },
   });
@@ -89,18 +90,18 @@ const DesignationForm = ({
       queryClient.invalidateQueries({ queryKey: ['designations'] });
     },
     onError: (error) => {
-      let message = 'Something went wrong';
+      let message = getErrorMessage(error);
 
-      if (
-        typeof error === 'object' &&
-        error !== null &&
-        'response' in error &&
-        typeof (error as any).response?.data?.message === 'string'
-      ) {
-        message = (error as any).response.data.message;
-      } else if (error instanceof Error) {
-        message = error.message;
-      }
+      // if (
+      //   typeof error === 'object' &&
+      //   error !== null &&
+      //   'response' in error &&
+      //   typeof (error as any).response?.data?.message === 'string'
+      // ) {
+      //   message = (error as any).response.data.message;
+      // } else if (error instanceof Error) {
+      //   message = error.message;
+      // }
       enqueueSnackbar(message, { variant: 'error' });
     },
   });

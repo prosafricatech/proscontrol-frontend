@@ -1,16 +1,25 @@
-'use client'
+'use client';
 
-import React, { useState, useEffect, useMemo } from "react";
-import { Autocomplete, Box, Button, Grid, LinearProgress, TextField, Typography } from "@mui/material";
-import { useForm } from "react-hook-form";
-import * as yup from "yup";
-import { LoadingButton } from "@mui/lab";
-import JumboCardQuick from "@jumbo/components/JumboCardQuick";
-import { useSnackbar } from "notistack";
-import { useLedgerGroup } from "./LedgerGroupProvider";
-import { yupResolver } from "@hookform/resolvers/yup";
-import ledgerServices from "../ledgers/ledger-services";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { getErrorMessage } from '@/utilities/helpers/errorHandler';
+import { yupResolver } from '@hookform/resolvers/yup';
+import JumboCardQuick from '@jumbo/components/JumboCardQuick';
+import { LoadingButton } from '@mui/lab';
+import {
+  Autocomplete,
+  Box,
+  Button,
+  Grid,
+  LinearProgress,
+  TextField,
+  Typography,
+} from '@mui/material';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSnackbar } from 'notistack';
+import { useEffect, useMemo, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import * as yup from 'yup';
+import ledgerServices from '../ledgers/ledger-services';
+import { useLedgerGroup } from './LedgerGroupProvider';
 
 interface LedgerGroupFormData {
   id?: number | null;
@@ -34,10 +43,17 @@ interface CreateLedgerGroupProps {
   setOpenEdit?: (open: boolean) => void;
 }
 
-export default function CreateLedgerGroup({ ledgerGroup, setOpenEdit }: CreateLedgerGroupProps) {
-  const { ledgerGroupOptions, ledgerGroupOptionIds, isLoading } = useLedgerGroup();
+export default function CreateLedgerGroup({
+  ledgerGroup,
+  setOpenEdit,
+}: CreateLedgerGroupProps) {
+  const { ledgerGroupOptions, ledgerGroupOptionIds, isLoading } =
+    useLedgerGroup();
   const queryClient = useQueryClient();
-  const [serverError, setServerError] = useState<Record<string, string[]> | null>(null);
+  const [serverError, setServerError] = useState<Record<
+    string,
+    string[]
+  > | null>(null);
   const { enqueueSnackbar } = useSnackbar();
 
   const storeLedgerGroup = useMutation({
@@ -52,9 +68,9 @@ export default function CreateLedgerGroup({ ledgerGroup, setOpenEdit }: CreateLe
       if (err.response?.status === 400) {
         setServerError(err.response?.data?.validation_errors);
       } else {
-        enqueueSnackbar(err.response?.data?.message, { variant: 'error' });
+        enqueueSnackbar(getErrorMessage(err), { variant: 'error' });
       }
-    }
+    },
   });
 
   const updateLedgerGroup = useMutation({
@@ -68,19 +84,20 @@ export default function CreateLedgerGroup({ ledgerGroup, setOpenEdit }: CreateLe
       if (err.response?.status === 400) {
         setServerError(err.response?.data?.validation_errors);
       } else {
-        enqueueSnackbar(err.response?.data?.message, { variant: 'error' });
+        enqueueSnackbar(getErrorMessage(err), { variant: 'error' });
       }
-    }
+    },
   });
 
   const validationSchema = yup.object({
-    name: yup
-      .string()
-      .required('Ledger Group Name is required'),
+    name: yup.string().required('Ledger Group Name is required'),
     parentGroupId: yup
       .mixed()
-      .oneOf(ledgerGroupOptionIds, 'Please select a value from the given options')
-      .required('Parent Group is required')
+      .oneOf(
+        ledgerGroupOptionIds,
+        'Please select a value from the given options'
+      )
+      .required('Parent Group is required'),
   });
 
   const {
@@ -88,7 +105,7 @@ export default function CreateLedgerGroup({ ledgerGroup, setOpenEdit }: CreateLe
     handleSubmit,
     formState: { errors },
     reset,
-    setValue
+    setValue,
   } = useForm<LedgerGroupFormData>({
     resolver: yupResolver(validationSchema) as any,
     defaultValues: {
@@ -96,11 +113,15 @@ export default function CreateLedgerGroup({ ledgerGroup, setOpenEdit }: CreateLe
       name: ledgerGroup?.name || '',
       alias: ledgerGroup?.alias || '',
       parentGroupId: ledgerGroup
-        ? String(ledgerGroupOptions.find(lg => lg.id === ledgerGroup.ledger_group_id)?.id || '')
+        ? String(
+            ledgerGroupOptions.find(
+              (lg) => lg.id === ledgerGroup.ledger_group_id
+            )?.id || ''
+          )
         : '',
       code: ledgerGroup?.code || null,
-      description: ledgerGroup?.description || ''
-    }
+      description: ledgerGroup?.description || '',
+    },
   });
 
   const [selectedParentGroup, setSelectedParentGroup] = useState<{
@@ -112,7 +133,9 @@ export default function CreateLedgerGroup({ ledgerGroup, setOpenEdit }: CreateLe
 
   useEffect(() => {
     if (ledgerGroup && ledgerGroupOptions.length > 0) {
-      const match = ledgerGroupOptions.find(lg => lg.id === ledgerGroup.ledger_group_id);
+      const match = ledgerGroupOptions.find(
+        (lg) => lg.id === ledgerGroup.ledger_group_id
+      );
       setSelectedParentGroup(match || null);
       setValue('parentGroupId', match ? String(match.id) : '');
     }
@@ -139,42 +162,52 @@ export default function CreateLedgerGroup({ ledgerGroup, setOpenEdit }: CreateLe
   };
 
   return (
-    <JumboCardQuick title={ledgerGroup ? 'Edit Ledger Group' : 'Create Ledger Group'} sx={{ borderRadius: 2 }}>
+    <JumboCardQuick
+      title={ledgerGroup ? 'Edit Ledger Group' : 'Create Ledger Group'}
+      sx={{ borderRadius: 2 }}
+    >
       {isLoading ? (
         <LinearProgress />
       ) : (
-        <form style={{ textAlign: 'left' }} noValidate autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
+        <form
+          style={{ textAlign: 'left' }}
+          noValidate
+          autoComplete='off'
+          onSubmit={handleSubmit(onSubmit)}
+        >
           <Grid container spacing={1}>
-            <Grid size={{xs: 12, sm: 6}}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
-                label="Ledger Group Name"
-                size="small"
+                label='Ledger Group Name'
+                size='small'
                 error={!!errors.name || !!serverError?.name}
                 helperText={errors.name?.message || serverError?.name?.[0]}
                 {...register('name')}
                 onChange={(e) => handleFieldChange('name', e.target.value)}
               />
             </Grid>
-            <Grid size={{xs: 12, sm: 6}}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
-                label="Alias (optional)"
-                size="small"
+                label='Alias (optional)'
+                size='small'
                 {...register('alias')}
                 onChange={(e) => handleFieldChange('alias', e.target.value)}
               />
               {serverError?.alias && (
-                <Typography variant="body2" color="error">
+                <Typography variant='body2' color='error'>
                   {serverError.alias[0]}
                 </Typography>
               )}
             </Grid>
-            <Grid size={{xs: 12, sm: 6}}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Autocomplete
                 options={
                   ledgerGroup
-                    ? ledgerGroupOptions.filter(lg => lg.nature_id === ledgerGroup.nature_id)
+                    ? ledgerGroupOptions.filter(
+                        (lg) => lg.nature_id === ledgerGroup.nature_id
+                      )
                     : ledgerGroupOptions
                 }
                 getOptionLabel={(option) => option.name}
@@ -182,28 +215,36 @@ export default function CreateLedgerGroup({ ledgerGroup, setOpenEdit }: CreateLe
                 value={selectedParentGroup}
                 onChange={(e, value) => {
                   setSelectedParentGroup(value);
-                  handleFieldChange('parentGroupId', value ? String(value.id) : '');
+                  handleFieldChange(
+                    'parentGroupId',
+                    value ? String(value.id) : ''
+                  );
                 }}
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label="Parent Group"
-                    error={!!errors.parentGroupId || !!serverError?.parentGroupId}
-                    helperText={errors.parentGroupId?.message || serverError?.parentGroupId?.[0]}
+                    label='Parent Group'
+                    error={
+                      !!errors.parentGroupId || !!serverError?.parentGroupId
+                    }
+                    helperText={
+                      errors.parentGroupId?.message ||
+                      serverError?.parentGroupId?.[0]
+                    }
                   />
                 )}
               />
             </Grid>
-            <Grid size={{xs: 12, sm: 6}}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
-                label="Code (optional)"
-                size="small"
+                label='Code (optional)'
+                size='small'
                 {...register('code')}
                 onChange={(e) => handleFieldChange('code', e.target.value)}
               />
               {serverError?.code && (
-                <Typography variant="body2" color="error">
+                <Typography variant='body2' color='error'>
                   {serverError.code[0]}
                 </Typography>
               )}
@@ -211,15 +252,17 @@ export default function CreateLedgerGroup({ ledgerGroup, setOpenEdit }: CreateLe
             <Grid size={12}>
               <TextField
                 fullWidth
-                label="Description (optional)"
-                size="small"
+                label='Description (optional)'
+                size='small'
                 multiline={true}
                 minRows={2}
                 {...register('description')}
-                onChange={(e) => handleFieldChange('description', e.target.value)}
+                onChange={(e) =>
+                  handleFieldChange('description', e.target.value)
+                }
               />
               {serverError?.description && (
-                <Typography variant="body2" color="error">
+                <Typography variant='body2' color='error'>
                   {serverError.description[0]}
                 </Typography>
               )}
@@ -227,14 +270,17 @@ export default function CreateLedgerGroup({ ledgerGroup, setOpenEdit }: CreateLe
             <Grid size={12}>
               <Box display={'flex'} justifyContent={'flex-end'} gap={1}>
                 {ledgerGroup && (
-                  <Button variant="outlined" onClick={() => setOpenEdit?.(false)}>
+                  <Button
+                    variant='outlined'
+                    onClick={() => setOpenEdit?.(false)}
+                  >
                     Cancel
                   </Button>
                 )}
                 <LoadingButton
-                  type="submit"
-                  variant="contained"
-                  size="small"
+                  type='submit'
+                  variant='contained'
+                  size='small'
                   loading={saveMutation.isPending}
                 >
                   Submit

@@ -181,17 +181,17 @@ const DeductionTypeForm = ({
       return;
     }
 
-    let message = 'Something went wrong';
-    if (
-      typeof mutationError === 'object' &&
-      mutationError !== null &&
-      'response' in mutationError &&
-      typeof (mutationError as any).response?.data?.message === 'string'
-    ) {
-      message = (mutationError as any).response.data.message;
-    } else if (mutationError instanceof Error) {
-      message = mutationError.message;
-    }
+    // let message = 'Something went wrong';
+    // if (
+    //   typeof mutationError === 'object' &&
+    //   mutationError !== null &&
+    //   'response' in mutationError &&
+    //   typeof (mutationError as any).response?.data?.message === 'string'
+    // ) {
+    //   message = (mutationError as any).response.data.message;
+    // } else if (mutationError instanceof Error) {
+    //   message = mutationError.message;
+    // }
     enqueueSnackbar(getErrorMessage(mutationError), { variant: 'error' });
   };
 
@@ -352,9 +352,9 @@ const DeductionTypeForm = ({
           {isReservedType && (
             <Alert severity='info' sx={{ mb: 2 }}>
               This is a system-provisioned deduction type — payroll matches it
-              by its Code, so Name, Code, Category, Computation Method,
-              Default Value, and Is Pre-tax are locked. Only the ledger
-              mapping and description can be changed here.
+              by its Code, so Name, Code, Category, Computation Method, Default
+              Value, and Is Pre-tax are locked. Only the ledger mapping and
+              description can be changed here.
             </Alert>
           )}
           <Grid container rowSpacing={{ xs: 1, md: 2 }} spacing={2}>
@@ -615,10 +615,9 @@ const DeductionTypeForm = ({
                       simply never earned. Optional: leave this blank and
                       posting automatically credits back whichever Salary
                       Expense account basic salary was debited to for that
-                      employee (their department's, or the fallback chosen
-                      when posting). Only map a ledger here if you want
-                      absence deductions to post to their own separate
-                      account instead.
+                      employee (their department's, or the fallback chosen when
+                      posting). Only map a ledger here if you want absence
+                      deductions to post to their own separate account instead.
                     </Typography>
                   )}
                 </Div>

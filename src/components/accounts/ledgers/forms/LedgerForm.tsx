@@ -3,6 +3,7 @@ import CostCenterSelector from '@/components/masters/costCenters/CostCenterSelec
 import CurrencySelector from '@/components/masters/Currencies/CurrencySelector';
 import axios from '@/lib/services/config';
 import CommaSeparatedField from '@/shared/Inputs/CommaSeparatedField';
+import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Div } from '@jumbo/shared';
 import { AddOutlined } from '@mui/icons-material';
@@ -99,10 +100,11 @@ export default function LedgerForm({
   const { enqueueSnackbar } = useSnackbar();
   const { ledgerGroupOptions } = useLedgerGroup();
   const queryClient = useQueryClient();
-  const [isFetching, setIsFetching]= useState(false);
-  const [openQuickAddLedgerGroup, setOpenQuickAddLedgerGroup]= useState(false);
+  const [isFetching, setIsFetching] = useState(false);
+  const [openQuickAddLedgerGroup, setOpenQuickAddLedgerGroup] = useState(false);
   const { authOrganization } = useJumboAuth();
-  const [openingBalanceCostCenter, setOpeningBalanceCostCenter]= useState<any>(null);
+  const [openingBalanceCostCenter, setOpeningBalanceCostCenter] =
+    useState<any>(null);
   const [serverError, setServerError] = useState<Record<
     string,
     string[]
@@ -124,7 +126,7 @@ export default function LedgerForm({
       if (err.response?.status === 400) {
         setServerError(err.response?.data?.validation_errors);
       } else {
-        enqueueSnackbar(err.response?.data?.message, { variant: 'error' });
+        enqueueSnackbar(getErrorMessage(err), { variant: 'error' });
       }
     },
   });
@@ -143,7 +145,7 @@ export default function LedgerForm({
       if (err.response?.status === 400) {
         setServerError(err.response?.data?.validation_errors);
       } else {
-        enqueueSnackbar(err.response?.data?.message, { variant: 'error' });
+        enqueueSnackbar(getErrorMessage(err), { variant: 'error' });
       }
     },
   });
@@ -205,7 +207,10 @@ export default function LedgerForm({
       setValue('ledger_group_id', ledger.ledger_group?.id || null);
       setValue('code', ledger.code);
       setValue('description', ledger.description);
-      setValue('currency_id', ledger.currency_id ?? ledger?.currency?.id ?? null);
+      setValue(
+        'currency_id',
+        ledger.currency_id ?? ledger?.currency?.id ?? null
+      );
 
       axios
         .get(
@@ -414,11 +419,20 @@ export default function LedgerForm({
                       label='Currency (Optional)'
                       required={false}
                       frontError={
-                        errors?.currency_id?.message || serverError?.currency_id?.[0]
-                          ? { message: errors?.currency_id?.message || serverError?.currency_id?.[0] }
+                        errors?.currency_id?.message ||
+                        serverError?.currency_id?.[0]
+                          ? {
+                              message:
+                                errors?.currency_id?.message ||
+                                serverError?.currency_id?.[0],
+                            }
                           : null
                       }
-                      defaultValue={ledger?.currency_id ?? ledger?.currency?.id ?? null as any}
+                      defaultValue={
+                        ledger?.currency_id ??
+                        ledger?.currency?.id ??
+                        (null as any)
+                      }
                       disabled={ledger?.has_transactions ?? false}
                       onChange={(newValue) => {
                         setValue('currency_id', newValue ? newValue.id : null, {

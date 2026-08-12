@@ -209,14 +209,9 @@ const EmployeeForm = ({
       queryClient.invalidateQueries({ queryKey: ['employees'] });
     },
     onError: (err: any) => {
-      enqueueSnackbar(
-        err?.response?.data?.message ||
-          getErrorMessage(err) ||
-          'Something went wrong',
-        {
-          variant: 'error',
-        }
-      );
+      enqueueSnackbar(getErrorMessage(err), {
+        variant: 'error',
+      });
     },
   });
 
@@ -242,14 +237,9 @@ const EmployeeForm = ({
       queryClient.invalidateQueries({ queryKey: ['employees'] });
     },
     onError: (err: any) => {
-      enqueueSnackbar(
-        err?.response?.data?.message ||
-          getErrorMessage(err) ||
-          'Something went wrong',
-        {
-          variant: 'error',
-        }
-      );
+      enqueueSnackbar(getErrorMessage(err), {
+        variant: 'error',
+      });
     },
   });
 
@@ -334,7 +324,9 @@ const EmployeeForm = ({
   const { isDirty, dirtyFields } = useFormState({ control });
   const showReasonField =
     !!employee &&
-    (dirtyFields.cost_center_id || dirtyFields.department_id || dirtyFields.manager_id);
+    (dirtyFields.cost_center_id ||
+      dirtyFields.department_id ||
+      dirtyFields.manager_id);
 
   // Populate form when editing
   useEffect(() => {

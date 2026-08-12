@@ -1,37 +1,43 @@
-"use client";
+'use client';
 
-import React, { useState } from 'react';
-import { useFieldArray, useForm } from 'react-hook-form';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { yupResolver } from '@hookform/resolvers/yup';
-import * as yup from 'yup';
+import { Div } from '@jumbo/shared';
 import {
-  Grid,
-  TextField,
-  DialogActions,
+  AddOutlined,
+  DisabledByDefault,
+  KeyboardArrowLeftOutlined,
+  KeyboardArrowRightOutlined,
+} from '@mui/icons-material';
+import { LoadingButton } from '@mui/lab';
+import {
   Button,
+  DialogActions,
   DialogContent,
-  Tooltip,
-  IconButton,
   DialogTitle,
   Divider,
-  Tabs,
-  Tab,
+  Grid,
+  IconButton,
   Stack,
+  Tab,
+  Tabs,
+  TextField,
+  Tooltip,
 } from '@mui/material';
-import { LoadingButton } from '@mui/lab';
-import { useSnackbar } from 'notistack';
-import { AddOutlined, DisabledByDefault, KeyboardArrowLeftOutlined, KeyboardArrowRightOutlined } from '@mui/icons-material';
-import LedgerSelect from '../../accounts/ledgers/forms/LedgerSelect';
-import ProductSelect from '../../productAndServices/products/ProductSelect';
-import StoreSelector from '../../procurement/stores/StoreSelector';
-import stationServices from './station-services';
-import { useProductsSelect } from '../../productAndServices/products/ProductsSelectProvider';
-import { useLedgerSelect } from '../../accounts/ledgers/forms/LedgerSelectProvider';
-import UsersSelector from '../../sharedComponents/UsersSelector';
-import { Div } from '@jumbo/shared';
 import { TimePicker } from '@mui/x-date-pickers';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
+import { useSnackbar } from 'notistack';
+import { useState } from 'react';
+import { useFieldArray, useForm } from 'react-hook-form';
+import * as yup from 'yup';
+import LedgerSelect from '../../accounts/ledgers/forms/LedgerSelect';
+import { useLedgerSelect } from '../../accounts/ledgers/forms/LedgerSelectProvider';
+import StoreSelector from '../../procurement/stores/StoreSelector';
+import ProductSelect from '../../productAndServices/products/ProductSelect';
+import { useProductsSelect } from '../../productAndServices/products/ProductsSelectProvider';
+import UsersSelector from '../../sharedComponents/UsersSelector';
+import stationServices from './station-services';
 
 interface ShiftForm {
   id?: number;
@@ -129,37 +135,75 @@ const formatDayjsToTime = (dayjsObj: dayjs.Dayjs | null) => {
 };
 
 const validationSchema = yup.object({
-  name: yup.string().required("Station name is required").typeError('Station name is required'),
-  collection_ledger_ids: yup.array()
+  name: yup
+    .string()
+    .required('Station name is required')
+    .typeError('Station name is required'),
+  collection_ledger_ids: yup
+    .array()
     .of(yup.number().required())
     .min(1, 'At least one collection Account is required')
     .required('Collection Accounts are required'),
-  shifts: yup.array().of(
-    yup.object().shape({
-      name: yup.string().required("Shift name is required").typeError('Shift name is required'),
-      start_time: yup.string()
-        .required("Start time is required")
-        .nullable()
-        .transform((value, originalValue) => originalValue === null ? '' : value),
-      end_time: yup.string()
-        .required("End time is required")
-        .nullable()
-        .transform((value, originalValue) => originalValue === null ? '' : value),
-    })
-  ).min(1, 'At least one Shift required'),
-  cashiers: yup.array().of(
-    yup.object().shape({
-      name: yup.string().required("Cashier name is required").typeError('Cashier name is required'),
-      ledger_ids: yup.array().min(1, 'At least one ledger is required').required("Ledger name is required").typeError('Ledger name is required'),
-    })
-  ).min(1, 'At least one Cashier required'),
-  fuel_pumps: yup.array().of(
-    yup.object().shape({
-      name: yup.string().required("Pump name is required").typeError('Pump name is required'),
-      product_id: yup.number().required("Fuel name is required").typeError('Fuel name is required'),
-      tank_id: yup.number().required("Tank name is required").typeError('Tank name is required'),
-    })
-  ).min(1, 'At least one Fuel Pump required'),
+  shifts: yup
+    .array()
+    .of(
+      yup.object().shape({
+        name: yup
+          .string()
+          .required('Shift name is required')
+          .typeError('Shift name is required'),
+        start_time: yup
+          .string()
+          .required('Start time is required')
+          .nullable()
+          .transform((value, originalValue) =>
+            originalValue === null ? '' : value
+          ),
+        end_time: yup
+          .string()
+          .required('End time is required')
+          .nullable()
+          .transform((value, originalValue) =>
+            originalValue === null ? '' : value
+          ),
+      })
+    )
+    .min(1, 'At least one Shift required'),
+  cashiers: yup
+    .array()
+    .of(
+      yup.object().shape({
+        name: yup
+          .string()
+          .required('Cashier name is required')
+          .typeError('Cashier name is required'),
+        ledger_ids: yup
+          .array()
+          .min(1, 'At least one ledger is required')
+          .required('Ledger name is required')
+          .typeError('Ledger name is required'),
+      })
+    )
+    .min(1, 'At least one Cashier required'),
+  fuel_pumps: yup
+    .array()
+    .of(
+      yup.object().shape({
+        name: yup
+          .string()
+          .required('Pump name is required')
+          .typeError('Pump name is required'),
+        product_id: yup
+          .number()
+          .required('Fuel name is required')
+          .typeError('Fuel name is required'),
+        tank_id: yup
+          .number()
+          .required('Tank name is required')
+          .typeError('Tank name is required'),
+      })
+    )
+    .min(1, 'At least one Fuel Pump required'),
 });
 
 const StationsForm = ({ setOpenDialog, station }: StationsFormProps) => {
@@ -173,11 +217,14 @@ const StationsForm = ({ setOpenDialog, station }: StationsFormProps) => {
     mutationFn: stationServices.add,
     onSuccess: (data: { message?: string }) => {
       setOpenDialog(false);
-      enqueueSnackbar(data.message || 'Station created successfully', { variant: 'success' });
+      enqueueSnackbar(data.message || 'Station created successfully', {
+        variant: 'success',
+      });
       queryClient.invalidateQueries({ queryKey: ['stations'] });
     },
     onError: (error: any) => {
-      const message = error?.response?.data?.message || 'Failed to create station';
+      // const message = error?.response?.data?.message || 'Failed to create station';
+      const message = getErrorMessage(error);
       enqueueSnackbar(message, { variant: 'error' });
     },
   });
@@ -186,11 +233,14 @@ const StationsForm = ({ setOpenDialog, station }: StationsFormProps) => {
     mutationFn: stationServices.update,
     onSuccess: (data: { message?: string }) => {
       setOpenDialog(false);
-      enqueueSnackbar(data.message || 'Station updated successfully', { variant: 'success' });
+      enqueueSnackbar(data.message || 'Station updated successfully', {
+        variant: 'success',
+      });
       queryClient.invalidateQueries({ queryKey: ['stations'] });
     },
     onError: (error: any) => {
-      const message = error?.response?.data?.message || 'Failed to update station';
+      // const message = error?.response?.data?.message || 'Failed to update station';
+      const message = getErrorMessage(error);
       enqueueSnackbar(message, { variant: 'error' });
     },
   });
@@ -212,7 +262,8 @@ const StationsForm = ({ setOpenDialog, station }: StationsFormProps) => {
       name: station?.name || '',
       address: station?.address || '',
       user_ids: station?.users?.map((user) => user.id) || [],
-      collection_ledger_ids: station?.collection_ledgers?.map((ledger) => ledger.id) || [],
+      collection_ledger_ids:
+        station?.collection_ledgers?.map((ledger) => ledger.id) || [],
       shifts: station?.shifts?.length
         ? station.shifts.map((shift) => ({
             id: shift.id,
@@ -221,12 +272,14 @@ const StationsForm = ({ setOpenDialog, station }: StationsFormProps) => {
             end_time: shift.end_time || getDefaultEndTime(),
             description: shift.description || '',
           }))
-        : [{ 
-            name: '', 
-            start_time: getCurrentTime(),
-            end_time: getDefaultEndTime(),
-            description: '' 
-          }],
+        : [
+            {
+              name: '',
+              start_time: getCurrentTime(),
+              end_time: getDefaultEndTime(),
+              description: '',
+            },
+          ],
       cashiers: station?.cashiers?.length
         ? station.cashiers.map((cashier) => ({
             id: cashier.id,
@@ -247,17 +300,29 @@ const StationsForm = ({ setOpenDialog, station }: StationsFormProps) => {
     },
   });
 
-  const { fields: shiftFields, append: appendShift, remove: removeShift } = useFieldArray({
+  const {
+    fields: shiftFields,
+    append: appendShift,
+    remove: removeShift,
+  } = useFieldArray({
     control,
     name: 'shifts',
   });
 
-  const { fields: cashierFields, append: appendCashier, remove: removeCashier } = useFieldArray({
+  const {
+    fields: cashierFields,
+    append: appendCashier,
+    remove: removeCashier,
+  } = useFieldArray({
     control,
     name: 'cashiers',
   });
 
-  const { fields: fuelPumpFields, append: appendFuelPump, remove: removeFuelPump } = useFieldArray({
+  const {
+    fields: fuelPumpFields,
+    append: appendFuelPump,
+    remove: removeFuelPump,
+  } = useFieldArray({
     control,
     name: 'fuel_pumps',
   });
@@ -267,11 +332,11 @@ const StationsForm = ({ setOpenDialog, station }: StationsFormProps) => {
   };
 
   const handleAddShift = () => {
-    appendShift({ 
-      name: '', 
+    appendShift({
+      name: '',
       start_time: getCurrentTime(),
       end_time: getDefaultEndTime(),
-      description: '' 
+      description: '',
     });
   };
 
@@ -285,60 +350,63 @@ const StationsForm = ({ setOpenDialog, station }: StationsFormProps) => {
 
   return (
     <>
-      <DialogTitle textAlign="center">
+      <DialogTitle textAlign='center'>
         {station ? `Edit ${station.name}` : 'New Station'}
       </DialogTitle>
-      
+
       <DialogContent>
-        <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
+        <form onSubmit={handleSubmit(onSubmit)} autoComplete='off'>
           <Grid container columnSpacing={2} rowSpacing={1} paddingTop={1}>
             {/* Station Name */}
             <Grid size={{ xs: 12, md: 6 }}>
               <Div sx={{ mt: 1 }}>
                 <TextField
-                  size="small"
+                  size='small'
                   fullWidth
-                  label="Station name"
+                  label='Station name'
                   error={!!errors.name}
                   helperText={errors.name?.message}
                   {...register('name')}
                 />
               </Div>
             </Grid>
-            
+
             {/* Address */}
             <Grid size={{ xs: 12, md: 6 }}>
               <Div sx={{ mt: 1 }}>
                 <TextField
-                  size="small"
+                  size='small'
                   fullWidth
-                  label="Address"
+                  label='Address'
                   error={!!errors.address}
                   helperText={errors.address?.message}
                   {...register('address')}
                 />
               </Div>
             </Grid>
-            
+
             {/* Users */}
             <Grid size={{ xs: 12 }}>
               <Div sx={{ mt: 1 }}>
                 <UsersSelector
-                  label="Users"
+                  label='Users'
                   multiple={true}
-                  defaultValue={station?.users || [] as any}
+                  defaultValue={station?.users || ([] as any)}
                   onChange={(users: any) => {
-                    setValue('user_ids', users?.map((user: any) => user.id) || []);
+                    setValue(
+                      'user_ids',
+                      users?.map((user: any) => user.id) || []
+                    );
                   }}
                 />
               </Div>
             </Grid>
-            
+
             {/* Collection Accounts */}
             <Grid size={{ xs: 12 }}>
               <Div sx={{ mt: 2 }}>
                 <LedgerSelect
-                  label="Collection Accounts"
+                  label='Collection Accounts'
                   allowedGroups={['Cash and cash equivalents', 'Banks']}
                   multiple={true}
                   defaultValue={ungroupedLedgerOptions.filter((ledger) =>
@@ -355,72 +423,92 @@ const StationsForm = ({ setOpenDialog, station }: StationsFormProps) => {
                 />
               </Div>
             </Grid>
-            
+
             {/* Tabs */}
             <Grid size={{ xs: 12 }} sx={{ mt: 2 }}>
               <Tabs
                 value={activeTab}
                 onChange={(_, newValue: number) => setActiveTab(newValue)}
-                variant="scrollable"
-                scrollButtons="auto"
+                variant='scrollable'
+                scrollButtons='auto'
                 allowScrollButtonsMobile
               >
-                <Tab label="Shifts" />
-                <Tab label="Cashiers" />
-                <Tab label="Fuel Pumps" />
+                <Tab label='Shifts' />
+                <Tab label='Cashiers' />
+                <Tab label='Fuel Pumps' />
               </Tabs>
             </Grid>
-            
+
             {/* SHIFTS TAB */}
             {activeTab === 0 && (
               <Grid size={{ xs: 12 }} container spacing={2} sx={{ mt: 2 }}>
                 {shiftFields.map((field, index) => (
                   <Grid key={field.id} size={{ xs: 12 }}>
                     <Divider sx={{ mb: 1.5 }} />
-                    <Grid container spacing={2} alignItems="flex-start">
+                    <Grid container spacing={2} alignItems='flex-start'>
                       <Grid size={{ xs: 12, md: 4 }}>
                         <Div sx={{ mt: 1 }}>
                           <TextField
-                            size="small"
+                            size='small'
                             fullWidth
-                            label="Shift Name"
+                            label='Shift Name'
                             error={!!errors.shifts?.[index]?.name}
                             helperText={errors.shifts?.[index]?.name?.message}
                             {...register(`shifts.${index}.name`)}
                           />
                         </Div>
                       </Grid>
-                      <Grid size={{ xs: 12, md: shiftFields.length > 1 ? 3.5 : 4 }}>
+                      <Grid
+                        size={{ xs: 12, md: shiftFields.length > 1 ? 3.5 : 4 }}
+                      >
                         <Div sx={{ mt: 1 }}>
                           <TimePicker
-                            label="Start Time"
-                            value={parseTimeToDayjs(watch(`shifts.${index}.start_time`))}
-                            onChange={(value) => handleTimeChange(`shifts.${index}.start_time`, value)}
+                            label='Start Time'
+                            value={parseTimeToDayjs(
+                              watch(`shifts.${index}.start_time`)
+                            )}
+                            onChange={(value) =>
+                              handleTimeChange(
+                                `shifts.${index}.start_time`,
+                                value
+                              )
+                            }
                             ampm={false}
                             slotProps={{
                               textField: {
                                 size: 'small',
                                 fullWidth: true,
                                 error: !!errors.shifts?.[index]?.start_time,
-                                helperText: errors.shifts?.[index]?.start_time?.message,
+                                helperText:
+                                  errors.shifts?.[index]?.start_time?.message,
                               },
                             }}
                           />
                         </Div>
                       </Grid>
-                      <Grid size={{ xs: 12, md: shiftFields.length > 1 ? 3.5 : 4 }}>
+                      <Grid
+                        size={{ xs: 12, md: shiftFields.length > 1 ? 3.5 : 4 }}
+                      >
                         <Div sx={{ mt: 1 }}>
                           <TimePicker
-                            label="End Time"
-                            value={parseTimeToDayjs(watch(`shifts.${index}.end_time`))}
-                            onChange={(value) => handleTimeChange(`shifts.${index}.end_time`, value)}
+                            label='End Time'
+                            value={parseTimeToDayjs(
+                              watch(`shifts.${index}.end_time`)
+                            )}
+                            onChange={(value) =>
+                              handleTimeChange(
+                                `shifts.${index}.end_time`,
+                                value
+                              )
+                            }
                             ampm={false}
                             slotProps={{
                               textField: {
                                 size: 'small',
                                 fullWidth: true,
                                 error: !!errors.shifts?.[index]?.end_time,
-                                helperText: errors.shifts?.[index]?.end_time?.message,
+                                helperText:
+                                  errors.shifts?.[index]?.end_time?.message,
                               },
                             }}
                           />
@@ -429,13 +517,13 @@ const StationsForm = ({ setOpenDialog, station }: StationsFormProps) => {
                       <Grid size={{ xs: 12, md: 1 }}>
                         {shiftFields.length > 1 && (
                           <Div sx={{ mt: 1 }}>
-                            <Tooltip title="Remove Shift">
+                            <Tooltip title='Remove Shift'>
                               <IconButton
-                                size="small"
+                                size='small'
                                 onClick={() => removeShift(index)}
-                                color="error"
+                                color='error'
                               >
-                                <DisabledByDefault fontSize="small" />
+                                <DisabledByDefault fontSize='small' />
                               </IconButton>
                             </Tooltip>
                           </Div>
@@ -444,9 +532,9 @@ const StationsForm = ({ setOpenDialog, station }: StationsFormProps) => {
                       <Grid size={{ xs: 12 }}>
                         <Div sx={{ mt: 1 }}>
                           <TextField
-                            size="small"
+                            size='small'
                             fullWidth
-                            label="Description"
+                            label='Description'
                             multiline
                             rows={2}
                             {...register(`shifts.${index}.description`)}
@@ -456,14 +544,17 @@ const StationsForm = ({ setOpenDialog, station }: StationsFormProps) => {
                     </Grid>
                   </Grid>
                 ))}
-                <Grid size={{ xs: 12 }} sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+                <Grid
+                  size={{ xs: 12 }}
+                  sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}
+                >
                   <Div sx={{ mt: 1 }}>
-                    <Tooltip title="Add Shift">
+                    <Tooltip title='Add Shift'>
                       <Button
-                        size="small"
-                        variant="outlined"
+                        size='small'
+                        variant='outlined'
                         onClick={handleAddShift}
-                        startIcon={<AddOutlined fontSize="small" />}
+                        startIcon={<AddOutlined fontSize='small' />}
                       >
                         Add Shift
                       </Button>
@@ -472,20 +563,20 @@ const StationsForm = ({ setOpenDialog, station }: StationsFormProps) => {
                 </Grid>
               </Grid>
             )}
-            
+
             {/* CASHIERS TAB */}
             {activeTab === 1 && (
               <Grid size={{ xs: 12 }} container spacing={2} sx={{ mt: 2 }}>
                 {cashierFields.map((field, index) => (
                   <Grid key={field.id} size={{ xs: 12 }}>
                     <Divider sx={{ mb: 1.5 }} />
-                    <Grid container spacing={2} alignItems="flex-start">
+                    <Grid container spacing={2} alignItems='flex-start'>
                       <Grid size={{ xs: 12, md: 5 }}>
                         <Div sx={{ mt: 1 }}>
                           <TextField
-                            size="small"
+                            size='small'
                             fullWidth
-                            label="Cashier Name"
+                            label='Cashier Name'
                             error={!!errors.cashiers?.[index]?.name}
                             helperText={errors.cashiers?.[index]?.name?.message}
                             {...register(`cashiers.${index}.name`)}
@@ -495,11 +586,17 @@ const StationsForm = ({ setOpenDialog, station }: StationsFormProps) => {
                       <Grid size={{ xs: 12, md: 5 }}>
                         <Div sx={{ mt: 1 }}>
                           <LedgerSelect
-                            label="Ledgers"
-                            allowedGroups={['Cash and cash equivalents', 'Banks']}
+                            label='Ledgers'
+                            allowedGroups={[
+                              'Cash and cash equivalents',
+                              'Banks',
+                            ]}
                             multiple={true}
-                            defaultValue={ungroupedLedgerOptions.filter((ledger) =>
-                              watch(`cashiers.${index}.ledger_ids`)?.includes(ledger.id)
+                            defaultValue={ungroupedLedgerOptions.filter(
+                              (ledger) =>
+                                watch(`cashiers.${index}.ledger_ids`)?.includes(
+                                  ledger.id
+                                )
                             )}
                             frontError={errors.cashiers?.[index]?.ledger_ids}
                             onChange={(newValue: any) =>
@@ -515,13 +612,13 @@ const StationsForm = ({ setOpenDialog, station }: StationsFormProps) => {
                       <Grid size={{ xs: 12, md: 1 }}>
                         {cashierFields.length > 1 && (
                           <Div sx={{ mt: 1 }}>
-                            <Tooltip title="Remove Cashier">
+                            <Tooltip title='Remove Cashier'>
                               <IconButton
-                                size="small"
+                                size='small'
                                 onClick={() => removeCashier(index)}
-                                color="error"
+                                color='error'
                               >
-                                <DisabledByDefault fontSize="small" />
+                                <DisabledByDefault fontSize='small' />
                               </IconButton>
                             </Tooltip>
                           </Div>
@@ -530,9 +627,9 @@ const StationsForm = ({ setOpenDialog, station }: StationsFormProps) => {
                       <Grid size={{ xs: 12 }}>
                         <Div sx={{ mt: 1 }}>
                           <TextField
-                            size="small"
+                            size='small'
                             fullWidth
-                            label="Description"
+                            label='Description'
                             multiline
                             rows={2}
                             {...register(`cashiers.${index}.description`)}
@@ -542,14 +639,23 @@ const StationsForm = ({ setOpenDialog, station }: StationsFormProps) => {
                     </Grid>
                   </Grid>
                 ))}
-                <Grid size={{ xs: 12 }} sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+                <Grid
+                  size={{ xs: 12 }}
+                  sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}
+                >
                   <Div sx={{ mt: 1 }}>
-                    <Tooltip title="Add Cashier">
+                    <Tooltip title='Add Cashier'>
                       <Button
-                        size="small"
-                        variant="outlined"
-                        onClick={() => appendCashier({ name: '', ledger_ids: [], description: '' })}
-                        startIcon={<AddOutlined fontSize="small" />}
+                        size='small'
+                        variant='outlined'
+                        onClick={() =>
+                          appendCashier({
+                            name: '',
+                            ledger_ids: [],
+                            description: '',
+                          })
+                        }
+                        startIcon={<AddOutlined fontSize='small' />}
                       >
                         Add Cashier
                       </Button>
@@ -558,28 +664,34 @@ const StationsForm = ({ setOpenDialog, station }: StationsFormProps) => {
                 </Grid>
               </Grid>
             )}
-            
+
             {/* FUEL PUMPS TAB */}
             {activeTab === 2 && (
               <Grid size={{ xs: 12 }} container spacing={2} sx={{ mt: 2 }}>
                 {fuelPumpFields.map((field, index) => (
                   <Grid key={field.id} size={{ xs: 12 }}>
                     <Divider sx={{ mb: 1.5 }} />
-                    <Grid container spacing={2} alignItems="flex-start">
+                    <Grid container spacing={2} alignItems='flex-start'>
                       <Grid size={{ xs: 12, md: 4 }}>
                         <Div sx={{ mt: 1 }}>
                           <ProductSelect
-                            label="Fuel"
+                            label='Fuel'
                             multiple={false}
                             frontError={errors.fuel_pumps?.[index]?.product_id}
                             defaultValue={productOptions.find(
-                              (product) => product.id === watch(`fuel_pumps.${index}.product_id`)
+                              (product) =>
+                                product.id ===
+                                watch(`fuel_pumps.${index}.product_id`)
                             )}
                             onChange={(product: any) =>
-                              setValue(`fuel_pumps.${index}.product_id`, product?.id || '', {
-                                shouldValidate: true,
-                                shouldDirty: true,
-                              })
+                              setValue(
+                                `fuel_pumps.${index}.product_id`,
+                                product?.id || '',
+                                {
+                                  shouldValidate: true,
+                                  shouldDirty: true,
+                                }
+                              )
                             }
                           />
                         </Div>
@@ -587,11 +699,13 @@ const StationsForm = ({ setOpenDialog, station }: StationsFormProps) => {
                       <Grid size={{ xs: 12, md: 4 }}>
                         <Div sx={{ mt: 1 }}>
                           <TextField
-                            size="small"
+                            size='small'
                             fullWidth
-                            label="Pump Name"
+                            label='Pump Name'
                             error={!!errors.fuel_pumps?.[index]?.name}
-                            helperText={errors.fuel_pumps?.[index]?.name?.message}
+                            helperText={
+                              errors.fuel_pumps?.[index]?.name?.message
+                            }
                             {...register(`fuel_pumps.${index}.name`)}
                           />
                         </Div>
@@ -599,16 +713,22 @@ const StationsForm = ({ setOpenDialog, station }: StationsFormProps) => {
                       <Grid size={{ xs: 12, md: 3 }}>
                         <Div sx={{ mt: 1 }}>
                           <StoreSelector
-                            label="Tank"
+                            label='Tank'
                             allowSubStores={true}
-                            frontError={errors.fuel_pumps?.[index]?.tank_id as any}
+                            frontError={
+                              errors.fuel_pumps?.[index]?.tank_id as any
+                            }
                             defaultValue={watch(`fuel_pumps.${index}.tank`)}
                             onChange={(store: any) => {
                               setValue(`fuel_pumps.${index}.tank`, store);
-                              setValue(`fuel_pumps.${index}.tank_id`, store?.id || '', {
-                                shouldValidate: true,
-                                shouldDirty: true,
-                              });
+                              setValue(
+                                `fuel_pumps.${index}.tank_id`,
+                                store?.id || '',
+                                {
+                                  shouldValidate: true,
+                                  shouldDirty: true,
+                                }
+                              );
                             }}
                           />
                         </Div>
@@ -616,13 +736,13 @@ const StationsForm = ({ setOpenDialog, station }: StationsFormProps) => {
                       <Grid size={{ xs: 12, md: 1 }}>
                         {fuelPumpFields.length > 1 && (
                           <Div sx={{ mt: 1 }}>
-                            <Tooltip title="Remove Fuel Pump">
+                            <Tooltip title='Remove Fuel Pump'>
                               <IconButton
-                                size="small"
+                                size='small'
                                 onClick={() => removeFuelPump(index)}
-                                color="error"
+                                color='error'
                               >
-                                <DisabledByDefault fontSize="small" />
+                                <DisabledByDefault fontSize='small' />
                               </IconButton>
                             </Tooltip>
                           </Div>
@@ -631,15 +751,24 @@ const StationsForm = ({ setOpenDialog, station }: StationsFormProps) => {
                     </Grid>
                   </Grid>
                 ))}
-                
-                <Grid size={{ xs: 12 }} sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+
+                <Grid
+                  size={{ xs: 12 }}
+                  sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}
+                >
                   <Div sx={{ mt: 1 }}>
-                    <Tooltip title="Add Fuel Pump">
+                    <Tooltip title='Add Fuel Pump'>
                       <Button
-                        size="small"
-                        variant="outlined"
-                        onClick={() => appendFuelPump({ name: '', product_id: '', tank_id: '' })}
-                        startIcon={<AddOutlined fontSize="small" />}
+                        size='small'
+                        variant='outlined'
+                        onClick={() =>
+                          appendFuelPump({
+                            name: '',
+                            product_id: '',
+                            tank_id: '',
+                          })
+                        }
+                        startIcon={<AddOutlined fontSize='small' />}
                       >
                         Add Fuel Pump
                       </Button>
@@ -651,16 +780,21 @@ const StationsForm = ({ setOpenDialog, station }: StationsFormProps) => {
           </Grid>
         </form>
       </DialogContent>
-      
+
       <DialogActions>
-        <Stack direction="row" spacing={2} justifyContent="flex-end" sx={{ mt: 1, mb: 1 }}>
-          <Button size="small" onClick={() => setOpenDialog(false)}>
+        <Stack
+          direction='row'
+          spacing={2}
+          justifyContent='flex-end'
+          sx={{ mt: 1, mb: 1 }}
+        >
+          <Button size='small' onClick={() => setOpenDialog(false)}>
             Cancel
           </Button>
           {activeTab > 0 && (
             <Button
-              size="small"
-              variant="outlined"
+              size='small'
+              variant='outlined'
               onClick={() => setActiveTab((prev) => prev - 1)}
               startIcon={<KeyboardArrowLeftOutlined />}
             >
@@ -669,8 +803,8 @@ const StationsForm = ({ setOpenDialog, station }: StationsFormProps) => {
           )}
           {activeTab < 2 && (
             <Button
-              size="small"
-              variant="outlined"
+              size='small'
+              variant='outlined'
               onClick={() => setActiveTab((prev) => prev + 1)}
               endIcon={<KeyboardArrowRightOutlined />}
             >
@@ -679,9 +813,9 @@ const StationsForm = ({ setOpenDialog, station }: StationsFormProps) => {
           )}
           {activeTab === 2 && (
             <LoadingButton
-              type="submit"
-              variant="contained"
-              size="small"
+              type='submit'
+              variant='contained'
+              size='small'
               loading={isLoading}
               onClick={handleSubmit(onSubmit)}
             >

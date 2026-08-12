@@ -4,6 +4,7 @@ import measurementUnitServices from '@/components/masters/measurementUnits/measu
 import MeasurementSelector from '@/components/masters/measurementUnits/MeasurementSelector';
 import MeasurementUnitForm from '@/components/masters/measurementUnits/MeasurementUnitForm';
 import CommaSeparatedField from '@/shared/Inputs/CommaSeparatedField';
+import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useJumboTheme } from '@jumbo/components/JumboTheme/hooks';
 import { Div } from '@jumbo/shared';
@@ -64,7 +65,7 @@ const DeliverablesForm = ({
       queryClient.invalidateQueries({ queryKey: ['projectDeliverableGroups'] });
     },
     onError: (error) => {
-      enqueueSnackbar(error.response.data.message, {
+      enqueueSnackbar(getErrorMessage(error), {
         variant: 'error',
       });
     },
@@ -81,7 +82,7 @@ const DeliverablesForm = ({
         });
       },
       onError: (error) => {
-        enqueueSnackbar(error.response.data.message, {
+        enqueueSnackbar(getErrorMessage(error), {
           variant: 'error',
         });
       },

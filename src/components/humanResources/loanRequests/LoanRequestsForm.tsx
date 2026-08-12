@@ -89,17 +89,14 @@ const LoanRequestsForm = ({
         { variant: 'success' }
       );
       queryClient.invalidateQueries({ queryKey: ['loanRequests'] });
-      queryClient.invalidateQueries({ queryKey: ['showLoanRequest', loan?.id] });
+      queryClient.invalidateQueries({
+        queryKey: ['showLoanRequest', loan?.id],
+      });
     },
     onError: (err: any) => {
-      enqueueSnackbar(
-        err?.response?.data?.message ||
-          getErrorMessage(err) ||
-          'Something went wrong',
-        {
-          variant: 'error',
-        }
-      );
+      enqueueSnackbar(getErrorMessage(err), {
+        variant: 'error',
+      });
     },
   });
 

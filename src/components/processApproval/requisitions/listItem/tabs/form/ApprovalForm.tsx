@@ -15,6 +15,7 @@ import CommaSeparatedField from '@/shared/Inputs/CommaSeparatedField';
 import { PERMISSIONS } from '@/utilities/constants/permissions';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Div } from '@jumbo/shared';
+import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { LoadingButton } from '@mui/lab';
 import {
   Alert,
@@ -589,8 +590,7 @@ const getInitialLedgerItems = (): RequisitionItem[] => {
       queryClient.invalidateQueries({ queryKey: ['requisitions'] });
     },
     onError: (error: any) => {
-      error?.response?.data?.message &&
-        enqueueSnackbar(error.response.data.message, { variant: 'error' });
+      enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
     },
   });
 
@@ -602,8 +602,7 @@ const getInitialLedgerItems = (): RequisitionItem[] => {
       queryClient.invalidateQueries({ queryKey: ['requisitions'] });
     },
     onError: (error: any) => {
-      error?.response?.data?.message &&
-        enqueueSnackbar(error.response.data.message, { variant: 'error' });
+      enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
     },
   });
 

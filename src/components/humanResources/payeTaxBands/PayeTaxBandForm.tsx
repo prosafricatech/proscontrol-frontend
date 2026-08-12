@@ -1,6 +1,7 @@
 'use client';
 
 import CommaSeparatedField from '@/shared/Inputs/CommaSeparatedField';
+import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Div } from '@jumbo/shared';
 import { LoadingButton } from '@mui/lab';
@@ -66,18 +67,18 @@ const PayeTaxBandForm = ({
       queryClient.invalidateQueries({ queryKey: ['payeTaxBands'] });
     },
     onError: (mutationError) => {
-      let message = 'Something went wrong';
+      let message = getErrorMessage(mutationError);
 
-      if (
-        typeof mutationError === 'object' &&
-        mutationError !== null &&
-        'response' in mutationError &&
-        typeof (mutationError as any).response?.data?.message === 'string'
-      ) {
-        message = (mutationError as any).response.data.message;
-      } else if (mutationError instanceof Error) {
-        message = mutationError.message;
-      }
+      // if (
+      //   typeof mutationError === 'object' &&
+      //   mutationError !== null &&
+      //   'response' in mutationError &&
+      //   typeof (mutationError as any).response?.data?.message === 'string'
+      // ) {
+      //   message = (mutationError as any).response.data.message;
+      // } else if (mutationError instanceof Error) {
+      //   message = mutationError.message;
+      // }
       enqueueSnackbar(message, { variant: 'error' });
     },
   });
@@ -96,18 +97,18 @@ const PayeTaxBandForm = ({
       queryClient.invalidateQueries({ queryKey: ['payeTaxBands'] });
     },
     onError: (mutationError) => {
-      let message = 'Something went wrong';
+      let message = getErrorMessage(mutationError);
 
-      if (
-        typeof mutationError === 'object' &&
-        mutationError !== null &&
-        'response' in mutationError &&
-        typeof (mutationError as any).response?.data?.message === 'string'
-      ) {
-        message = (mutationError as any).response.data.message;
-      } else if (mutationError instanceof Error) {
-        message = mutationError.message;
-      }
+      // if (
+      //   typeof mutationError === 'object' &&
+      //   mutationError !== null &&
+      //   'response' in mutationError &&
+      //   typeof (mutationError as any).response?.data?.message === 'string'
+      // ) {
+      //   message = (mutationError as any).response.data.message;
+      // } else if (mutationError instanceof Error) {
+      //   message = mutationError.message;
+      // }
       enqueueSnackbar(message, { variant: 'error' });
     },
   });

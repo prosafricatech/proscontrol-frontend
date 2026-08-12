@@ -1,28 +1,33 @@
-import React from 'react';
-import { useForm } from 'react-hook-form';
+import { sanitizedNumber } from '@/app/helpers/input-sanitization-helpers';
+import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { yupResolver } from '@hookform/resolvers/yup';
-import * as yup from 'yup';
+import { Div } from '@jumbo/shared';
+import { LoadingButton } from '@mui/lab';
 import {
-  Grid,
-  TextField,
-  DialogActions,
+  Autocomplete,
   Button,
+  DialogActions,
   DialogContent,
   DialogTitle,
-  Autocomplete,
+  Grid,
+  TextField,
 } from '@mui/material';
-import { LoadingButton } from '@mui/lab';
-import { useSnackbar } from 'notistack';
-import { useProjectProfile } from '../ProjectProfileProvider';
-import projectsServices from '../../project-services';
-import { sanitizedNumber } from '@/app/helpers/input-sanitization-helpers';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Div } from '@jumbo/shared';
+import { useSnackbar } from 'notistack';
+import React from 'react';
+import { useForm } from 'react-hook-form';
+import * as yup from 'yup';
+import projectsServices from '../../project-services';
+import { useProjectProfile } from '../ProjectProfileProvider';
 
-const WBSForm = ({ setOpenDialog, timelineActivity=null, parentActivity=null}) => {
+const WBSForm = ({
+  setOpenDialog,
+  timelineActivity = null,
+  parentActivity = null,
+}) => {
   const queryClient = useQueryClient();
   const { enqueueSnackbar } = useSnackbar();
-  const {project, projectTimelineActivities} = useProjectProfile();
+  const { project, projectTimelineActivities } = useProjectProfile();
 
   // React Query v5 syntax for useMutation
   const { mutate: addTimelineActivity, isPending } = useMutation({
@@ -30,28 +35,33 @@ const WBSForm = ({ setOpenDialog, timelineActivity=null, parentActivity=null}) =
     onSuccess: (data) => {
       setOpenDialog(false);
       enqueueSnackbar(data.message, { variant: 'success' });
-      queryClient.invalidateQueries({queryKey: ['projectTimelineActivities']});
+      queryClient.invalidateQueries({
+        queryKey: ['projectTimelineActivities'],
+      });
     },
     onError: (error) => {
-      enqueueSnackbar(error.response.data.message, {
+      enqueueSnackbar(getErrorMessage(error), {
         variant: 'error',
       });
     },
   });
 
-  const { mutate: updateTimelineActivity, isPending: updateLoading } = useMutation({
-    mutationFn: projectsServices.updateTimelineActivity,
-    onSuccess: (data) => {
-      setOpenDialog(false);
-      enqueueSnackbar(data.message, { variant: 'success' });
-      queryClient.invalidateQueries({queryKey: ['projectTimelineActivities']});
-    },
-    onError: (error) => {
-      enqueueSnackbar(error.response.data.message, {
-        variant: 'error',
-      });
-    },
-  });
+  const { mutate: updateTimelineActivity, isPending: updateLoading } =
+    useMutation({
+      mutationFn: projectsServices.updateTimelineActivity,
+      onSuccess: (data) => {
+        setOpenDialog(false);
+        enqueueSnackbar(data.message, { variant: 'success' });
+        queryClient.invalidateQueries({
+          queryKey: ['projectTimelineActivities'],
+        });
+      },
+      onError: (error) => {
+        enqueueSnackbar(getErrorMessage(error), {
+          variant: 'error',
+        });
+      },
+    });
 
   const saveMutation = React.useMemo(() => {
     return timelineActivity ? updateTimelineActivity : addTimelineActivity;
@@ -61,10 +71,16 @@ const WBSForm = ({ setOpenDialog, timelineActivity=null, parentActivity=null}) =
     if (!Array.isArray(groups)) {
       return [];
     }
-  
-    return groups.flatMap(group => {
-      const { name, weighted_percentage, children = [], position_index, id } = group;
-  
+
+    return groups.flatMap((group) => {
+      const {
+        name,
+        weighted_percentage,
+        children = [],
+        position_index,
+        id,
+      } = group;
+
       const option = {
         name: `After - ${name}`,
         depth,
@@ -73,29 +89,37 @@ const WBSForm = ({ setOpenDialog, timelineActivity=null, parentActivity=null}) =
         weighted_percentage,
         position_index,
       };
-  
+
       const groupChildren = toOptions(children, depth + 1, id);
-  
+
       return [option].concat(groupChildren);
     });
   };
-  
+
   const timelineActivities = toOptions(projectTimelineActivities);
 
-  const sameLevelActivities = timelineActivities.filter(group => 
-    group.parent_id === (parentActivity ? parentActivity.id : timelineActivity ? timelineActivity?.parent_id : null)
-  )
+  const sameLevelActivities = timelineActivities.filter(
+    (group) =>
+      group.parent_id ===
+      (parentActivity
+        ? parentActivity.id
+        : timelineActivity
+          ? timelineActivity?.parent_id
+          : null)
+  );
 
   const positionIndexOptions = [
-    { name: 'At the beginning', position_index: null, id: null }, 
-    ...sameLevelActivities
-  ];  
+    { name: 'At the beginning', position_index: null, id: null },
+    ...sameLevelActivities,
+  ];
 
   const onSubmit = (data) => {
     if (Object.keys(errors).length === 0) {
-        saveMutation(data);
+      saveMutation(data);
     } else {
-        enqueueSnackbar("Please resolve the errors before submitting.", { variant: "error" });
+      enqueueSnackbar('Please resolve the errors before submitting.', {
+        variant: 'error',
+      });
     }
   };
 
@@ -156,21 +180,30 @@ const WBSForm = ({ setOpenDialog, timelineActivity=null, parentActivity=null}) =
       name: timelineActivity && timelineActivity.name,
       code: timelineActivity && timelineActivity.code,
       description: timelineActivity && timelineActivity.description,
-      weighted_percentage: timelineActivity && timelineActivity.weighted_percentage,
-      parent_id: parentActivity ? parentActivity.id : timelineActivity?.parent_id,
-      position_index: timelineActivity? timelineActivity.position_index : null,
+      weighted_percentage:
+        timelineActivity && timelineActivity.weighted_percentage,
+      parent_id: parentActivity
+        ? parentActivity.id
+        : timelineActivity?.parent_id,
+      position_index: timelineActivity ? timelineActivity.position_index : null,
     },
-    context: { sameLevelActivities, timelineActivity }
+    context: { sameLevelActivities, timelineActivity },
   });
 
   return (
     <>
-      <DialogTitle textAlign={'center'}>{timelineActivity ? `Edit: ${timelineActivity.name}` : (parentActivity ? `New ${parentActivity.name} Activity` : `New Timeline Activity`)}</DialogTitle>
+      <DialogTitle textAlign={'center'}>
+        {timelineActivity
+          ? `Edit: ${timelineActivity.name}`
+          : parentActivity
+            ? `New ${parentActivity.name} Activity`
+            : `New Timeline Activity`}
+      </DialogTitle>
       <DialogContent>
-        <form autoComplete="off">
+        <form autoComplete='off'>
           <Grid container columnSpacing={1}>
-            <Grid size={{xs: 12, md: 4}}>
-              <Div sx={{ mt: 1}}>
+            <Grid size={{ xs: 12, md: 4 }}>
+              <Div sx={{ mt: 1 }}>
                 <TextField
                   size='small'
                   label='Name'
@@ -181,8 +214,8 @@ const WBSForm = ({ setOpenDialog, timelineActivity=null, parentActivity=null}) =
                 />
               </Div>
             </Grid>
-            <Grid size={{xs: 12, md: 4}}>
-              <Div sx={{ mt: 1}}>
+            <Grid size={{ xs: 12, md: 4 }}>
+              <Div sx={{ mt: 1 }}>
                 <TextField
                   size='small'
                   label='Code'
@@ -191,62 +224,76 @@ const WBSForm = ({ setOpenDialog, timelineActivity=null, parentActivity=null}) =
                 />
               </Div>
             </Grid>
-            <Grid size={{xs: 12, md: 4}}>
-              <Div sx={{ mt: 1}}>
+            <Grid size={{ xs: 12, md: 4 }}>
+              <Div sx={{ mt: 1 }}>
                 <TextField
-                  size="small"
+                  size='small'
                   fullWidth
                   defaultValue={timelineActivity?.weighted_percentage}
                   error={!!errors?.weighted_percentage}
                   helperText={errors?.weighted_percentage?.message}
-                  label="Weighted Percentage"
+                  label='Weighted Percentage'
                   InputProps={{
-                    endAdornment: <span>%</span>
+                    endAdornment: <span>%</span>,
                   }}
                   onChange={(e) => {
-                    setValue(`weighted_percentage`,e.target.value ? sanitizedNumber(e.target.value) : 0,{
-                      shouldValidate: true,
-                      shouldDirty: true
-                    });
+                    setValue(
+                      `weighted_percentage`,
+                      e.target.value ? sanitizedNumber(e.target.value) : 0,
+                      {
+                        shouldValidate: true,
+                        shouldDirty: true,
+                      }
+                    );
                   }}
                 />
               </Div>
             </Grid>
-            <Grid size={{xs: 12, md: 4}}>
-              <Div sx={{ mt: 1}}>
+            <Grid size={{ xs: 12, md: 4 }}>
+              <Div sx={{ mt: 1 }}>
                 <Autocomplete
-                  options={timelineActivity ? 
-                    positionIndexOptions.filter(group => group.position_index !== timelineActivity?.position_index) : 
-                    positionIndexOptions
+                  options={
+                    timelineActivity
+                      ? positionIndexOptions.filter(
+                          (group) =>
+                            group.position_index !==
+                            timelineActivity?.position_index
+                        )
+                      : positionIndexOptions
                   }
-                  isOptionEqualToValue={(option,value) => option.id === value.id}
+                  isOptionEqualToValue={(option, value) =>
+                    option.id === value.id
+                  }
                   getOptionLabel={(option) => option.name}
-                  renderInput={
-                    (params) => 
-                    <TextField 
-                      {...params} 
-                      label="Position" 
-                      size="small" 
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label='Position'
+                      size='small'
                       fullWidth
                     />
-                  }
+                  )}
                   onChange={(e, newValue) => {
-                    setValue(`position_index`, newValue && newValue?.position_index + 1 , {
-                      shouldValidate: true,
-                      shouldDirty: true,
-                    });
+                    setValue(
+                      `position_index`,
+                      newValue && newValue?.position_index + 1,
+                      {
+                        shouldValidate: true,
+                        shouldDirty: true,
+                      }
+                    );
                   }}
                 />
               </Div>
             </Grid>
-            <Grid size={{xs: 12, md: 8}}>
-              <Div sx={{ mt: 1}}>
+            <Grid size={{ xs: 12, md: 8 }}>
+              <Div sx={{ mt: 1 }}>
                 <TextField
-                  size="small"
+                  size='small'
                   fullWidth
                   multiline={true}
                   rows={2}
-                  label="Description"
+                  label='Description'
                   {...register(`description`)}
                 />
               </Div>
@@ -255,14 +302,14 @@ const WBSForm = ({ setOpenDialog, timelineActivity=null, parentActivity=null}) =
         </form>
       </DialogContent>
       <DialogActions>
-        <Button size="small" onClick={() => setOpenDialog(false)}>
+        <Button size='small' onClick={() => setOpenDialog(false)}>
           Cancel
         </Button>
         <LoadingButton
-          type="submit"
+          type='submit'
           onClick={handleSubmit(onSubmit)}
-          variant="contained"
-          size="small"
+          variant='contained'
+          size='small'
           sx={{ display: 'flex' }}
           loading={isPending || updateLoading}
         >
