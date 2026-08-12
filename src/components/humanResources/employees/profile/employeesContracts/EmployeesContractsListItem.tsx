@@ -28,19 +28,19 @@ const EmployeesContractsListItem = ({
         alignItems={'center'}
         container
       >
-        <Grid size={{ xs: 12, md: 2.5 }}>
+        <Grid size={{ xs: 6, md: 2.5 }}>
           <Tooltip title='Contract Type'>
             <Typography>{contract?.contract_type}</Typography>
           </Tooltip>
         </Grid>
-        <Grid size={{ xs: 12, md: 3 }}>
+        <Grid size={{ xs: 6, md: 3 }}>
           <Tooltip title='Start Date'>
             <Typography>
               {contract?.start_date ? readableDate(contract.start_date) : '-'}
             </Typography>
           </Tooltip>
         </Grid>
-        <Grid size={{ xs: 12, md: 2.5 }}>
+        <Grid size={{ xs: 6, md: 2.5 }}>
           <Tooltip title='Basic Salary'>
             <Typography>
               {contract.basic_salary
@@ -53,20 +53,31 @@ const EmployeesContractsListItem = ({
           </Tooltip>
         </Grid>
         <Grid
-          size={{ xs: 12, md: 3 }}
+          size={{ xs: 6, md: 3 }}
           display={`flex`}
           flexDirection={`row`}
           justifyContent={'start'}
         >
           <Tooltip title='Contract Status'>
             {contract.status === 'active' ? (
-              <Chip label={contract.status} color='success' size='small' variant='outlined' />
-            ) : <Chip label={contract.status} color='primary' size='small' variant='outlined' />}
-            
+              <Chip
+                label={contract.status}
+                color='success'
+                size='small'
+                variant='outlined'
+              />
+            ) : (
+              <Chip
+                label={contract.status}
+                color='primary'
+                size='small'
+                variant='outlined'
+              />
+            )}
           </Tooltip>
         </Grid>
 
-        <Grid size={{ xs: 1, md: 1 }} textAlign={'end'}>
+        <Grid size={{ xs: 12, md: 1 }} textAlign={'end'}>
           <EmployeesContractsItemAction contract={contract} />
         </Grid>
       </Grid>

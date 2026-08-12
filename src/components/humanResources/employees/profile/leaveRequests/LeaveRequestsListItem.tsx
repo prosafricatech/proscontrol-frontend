@@ -115,13 +115,13 @@ const LeaveRequestsListItem = ({
           paddingLeft={1}
           paddingRight={1}
         >
-          <Grid size={{ xs: 12, md: 2 }}>
+          <Grid size={{ xs: 6, md: 2 }}>
             <Tooltip title='Empoyee Name'>
               <Typography>{employeeName}</Typography>
             </Tooltip>
           </Grid>
 
-          <Grid size={{ xs: 12, md: 2.2 }}>
+          <Grid size={{ xs: 6, md: 2.2 }}>
             <Tooltip title='Leave Type'>
               <Typography>
                 {leaveRequest.leave_type?.name ||
@@ -130,7 +130,7 @@ const LeaveRequestsListItem = ({
             </Tooltip>
           </Grid>
 
-          <Grid size={{ xs: 12, md: 1.8 }}>
+          <Grid size={{ xs: 6, md: 1.8 }}>
             <Tooltip title='Start Date'>
               <Typography>
                 {dayjs(leaveRequest.start_date).format('YYYY-MM-DD')}
@@ -138,7 +138,7 @@ const LeaveRequestsListItem = ({
             </Tooltip>
           </Grid>
 
-          <Grid size={{ xs: 12, md: 1.8 }}>
+          <Grid size={{ xs: 6, md: 1.8 }}>
             <Tooltip title='End Date'>
               <Typography>
                 {dayjs(leaveRequest.end_date).format('YYYY-MM-DD')}
@@ -146,7 +146,7 @@ const LeaveRequestsListItem = ({
             </Tooltip>
           </Grid>
 
-          <Grid size={{ xs: 12, md: 1.2 }}>
+          <Grid size={{ xs: 6, md: 1.2 }}>
             <Tooltip title='Days'>
               <Typography>
                 {leaveRequest.days_granted != null
@@ -156,7 +156,7 @@ const LeaveRequestsListItem = ({
             </Tooltip>
           </Grid>
 
-          <Grid size={{ xs: 12, md: 3 }}>
+          <Grid size={{ xs: 6, md: 3 }}>
             <Chip
               label={formattedStatus}
               size='small'

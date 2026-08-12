@@ -56,7 +56,7 @@ const EmployeeDeductionsListItem = ({
           </Tooltip>
         </Grid>
 
-        <Grid size={{ xs: 5, md: 2.5 }}>
+        <Grid size={{ xs: 6, md: 2.5 }}>
           <Tooltip title='Effective From'>
             <Typography>
               {employeeDeduction.effective_from
@@ -66,7 +66,7 @@ const EmployeeDeductionsListItem = ({
           </Tooltip>
         </Grid>
 
-        <Grid size={{ xs: 5, md: 3.5 }}>
+        <Grid size={{ xs: 6, md: 3.5 }}>
           <Tooltip title='Effective To'>
             <Typography>
               {employeeDeduction.effective_to
@@ -76,7 +76,7 @@ const EmployeeDeductionsListItem = ({
           </Tooltip>
         </Grid>
 
-        <Grid size={{ xs: 2, md: 1.0 }} textAlign={'end'}>
+        <Grid size={{ xs: 12, md: 1.0 }} textAlign={'end'}>
           <EmployeeDeductionItemAction employeeDeduction={employeeDeduction} />
         </Grid>
       </Grid>
