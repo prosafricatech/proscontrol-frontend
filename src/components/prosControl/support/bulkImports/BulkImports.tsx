@@ -28,12 +28,21 @@ function BulkImports() {
 
   if (!mounted) return null;
 
+  const hasStakeholderPermission = checkOrganizationPermission(PERMISSIONS.STAKEHOLDERS_CREATE);
   const hasTransactionPermission = checkOrganizationPermission(PERMISSIONS.ACCOUNTS_TRANSACTIONS_CREATE);
 
   const tabs = [
-    { 
-      label: 'Stakeholders', 
-      component: <StakeholdersBulkImportsContent /> 
+    {
+      label: 'Stakeholders',
+      component: hasStakeholderPermission ? (
+        <StakeholdersBulkImportsContent />
+      ) : (
+        <Box sx={{ p: 3 }}>
+          <Alert severity="info">
+            You need the <strong>Stakeholders:Create</strong> permission to import stakeholders.
+          </Alert>
+        </Box>
+      )
     },
     { 
       label: 'Transactions', 
