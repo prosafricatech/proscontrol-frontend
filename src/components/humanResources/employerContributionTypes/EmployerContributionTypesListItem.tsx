@@ -24,10 +24,14 @@ const EmployerContributionTypesListItem = ({
         paddingLeft={2}
         paddingRight={2}
         columnSpacing={1}
+        rowSpacing={1}
         alignItems={'center'}
         container
       >
-        <Grid size={{ xs: 12, md: 2.2 }}>
+        <Grid
+          size={{ xs: 6, md: 2.2 }}
+          textAlign={{ xs: 'start', md: 'center' }}
+        >
           <Tooltip title='Name'>
             <Typography variant='h6' fontSize={14} lineHeight={1.25} mb={0}>
               {contributionType.name}
@@ -35,13 +39,19 @@ const EmployerContributionTypesListItem = ({
           </Tooltip>
         </Grid>
 
-        <Grid size={{ xs: 12, md: 1.4 }}>
+        <Grid
+          size={{ xs: 6, md: 1.4 }}
+          textAlign={{ xs: 'start', md: 'center' }}
+        >
           <Tooltip title='Code'>
             <Typography>{contributionType.code || '-'}</Typography>
           </Tooltip>
         </Grid>
 
-        <Grid size={{ xs: 12, md: 1.6 }}>
+        <Grid
+          size={{ xs: 6, md: 1.6 }}
+          textAlign={{ xs: 'start', md: 'center' }}
+        >
           <Chip
             label={
               contributionType.category === 'statutory'
@@ -56,7 +66,10 @@ const EmployerContributionTypesListItem = ({
           />
         </Grid>
 
-        <Grid size={{ xs: 12, md: 2.1 }}>
+        <Grid
+          size={{ xs: 6, md: 2.1 }}
+          textAlign={{ xs: 'start', md: 'center' }}
+        >
           <Tooltip title='Method'>
             <Typography textTransform='capitalize'>
               {contributionType.computation_method.replaceAll('_', ' ')}
@@ -64,21 +77,31 @@ const EmployerContributionTypesListItem = ({
           </Tooltip>
         </Grid>
 
-        <Grid size={{ xs: 12, md: 1.2 }}>
+        <Grid
+          size={{ xs: 5, md: 1.2 }}
+          textAlign={{ xs: 'start', md: 'center' }}
+        >
           <Tooltip title='Default Value'>
             <Typography>
-              {Number(contributionType.default_value || 0).toLocaleString('en-US')}
+              {Number(contributionType.default_value || 0).toLocaleString(
+                'en-US'
+              )}
             </Typography>
           </Tooltip>
         </Grid>
 
-        <Grid size={{ xs: 12, md: 2.5 }}>
+        <Grid
+          size={{ xs: 5, md: 2.5 }}
+          textAlign={{ xs: 'start', md: 'center' }}
+        >
           <Tooltip title='Description'>
-            <Typography noWrap>{contributionType.description || '-'}</Typography>
+            <Typography noWrap>
+              {contributionType.description || '-'}
+            </Typography>
           </Tooltip>
         </Grid>
 
-        <Grid size={{ xs: 12, md: 1.0 }} textAlign={'end'}>
+        <Grid size={{ xs: 2, md: 1.0 }} textAlign={'end'}>
           <EmployerContributionTypeItemAction
             contributionType={contributionType}
           />
