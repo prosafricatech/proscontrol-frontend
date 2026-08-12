@@ -940,6 +940,15 @@ humanResourcesServices.addPeriodAdjustmentDeduction = async (deductionEntry) => 
     const { data } = await axios.post('/api/humanResources/payrollPeriods/period-adjustments-template/deductions/add', deductionEntry);
     return data;
 }
+// ===== add several hand-entered adjustments/entries in one submission ===== //
+humanResourcesServices.addPeriodAdjustmentAllowanceBatch = async (payload) => {
+    const { data } = await axios.post('/api/humanResources/payrollPeriods/period-adjustments-template/allowances/add-batch', payload);
+    return data;
+}
+humanResourcesServices.addPeriodAdjustmentDeductionBatch = async (payload) => {
+    const { data } = await axios.post('/api/humanResources/payrollPeriods/period-adjustments-template/deductions/add-batch', payload);
+    return data;
+}
 humanResourcesServices.addPeriodLeaveEncashment = async (encashmentEntry) => {
     const { data } = await axios.post('/api/humanResources/payrollPeriods/period-adjustments-template/leave-encashments/add', encashmentEntry);
     return data;
@@ -978,6 +987,10 @@ humanResourcesServices.addPeriodOvertime = async (overtimeEntry) => {
     const { data } = await axios.post('/api/humanResources/payrollPeriods/period-adjustments-template/overtime/add', overtimeEntry);
     return data;
 }
+humanResourcesServices.addPeriodOvertimeBatch = async (payload) => {
+    const { data } = await axios.post('/api/humanResources/payrollPeriods/period-adjustments-template/overtime/add-batch', payload);
+    return data;
+}
 humanResourcesServices.updatePeriodOvertime = async (overtimeEntry) => {
     const { data } = await axios.put(`/api/humanResources/payrollPeriods/period-adjustments-template/overtime/${overtimeEntry.id}/update`, overtimeEntry);
     return data;
@@ -990,6 +1003,10 @@ humanResourcesServices.deletePeriodOvertime = async (id) => {
 // ===== period absences (monthly employees, logged one dated entry at a time — deducted pre-tax) ===== //
 humanResourcesServices.addPeriodAbsence = async (absenceEntry) => {
     const { data } = await axios.post('/api/humanResources/payrollPeriods/period-adjustments-template/absences/add', absenceEntry);
+    return data;
+}
+humanResourcesServices.addPeriodAbsenceBatch = async (payload) => {
+    const { data } = await axios.post('/api/humanResources/payrollPeriods/period-adjustments-template/absences/add-batch', payload);
     return data;
 }
 humanResourcesServices.updatePeriodAbsence = async (absenceEntry) => {

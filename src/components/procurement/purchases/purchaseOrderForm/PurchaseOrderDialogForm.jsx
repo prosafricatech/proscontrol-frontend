@@ -194,7 +194,7 @@ function PurchaseOrderDialogForm({ toggleOpen, order = null }) {
   });
   const getLastPriceItems = {
     stakeholder_id: watch(`stakeholder_id`) || null,
-    currency_id: watch(`currency_id`),
+    currency_id: watch(`currency_id`)
     date: watch(`order_date`),
   };
 

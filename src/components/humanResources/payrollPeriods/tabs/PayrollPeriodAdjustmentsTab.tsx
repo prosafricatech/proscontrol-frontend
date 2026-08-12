@@ -60,6 +60,9 @@ import EmployeeSelector from '../../employees/EmployeeSelector';
 import { EmployeesProvider } from '../../employees/EmployeesProvider';
 import { Employee } from '../../employees/EmployeesType';
 import humanResourcesServices from '../../humanResourcesServices';
+import AddAdjustmentsBatchDialog from './AddAdjustmentsBatchDialog';
+import LogAbsenceBatchDialog from './LogAbsenceBatchDialog';
+import LogOvertimeBatchDialog from './LogOvertimeBatchDialog';
 
 interface PayrollPeriodAdjustmentsTabProps {
   payrollPeriodId: number;
@@ -132,16 +135,6 @@ interface OvertimeType {
   id: number;
   name: string;
   multiplier: number;
-}
-
-interface AllowanceTypeOption {
-  id: number;
-  name: string;
-}
-
-interface DeductionTypeOption {
-  id: number;
-  name: string;
 }
 
 interface PeriodAbsence {
@@ -335,20 +328,15 @@ const PayrollPeriodAdjustmentsTab = ({
     useState(false);
   const [leaveEncashmentRemarks, setLeaveEncashmentRemarks] = useState('');
 
-  // Add Allowance / Add Deduction — the manual, single-entry counterpart to
-  // the Excel upload, for when HR only has a couple of adjustments to make.
-  const [addAdjustmentDialogType, setAddAdjustmentDialogType] = useState<
+  // Add Allowances / Deductions — the multi-row counterpart to the Excel
+  // upload, for when HR has a handful of adjustments to make and it isn't
+  // worth building a sheet for. 'allowance' | 'deduction' picks which kind
+  // the dialog is adding, mirroring which sub-tab it was opened from.
+  const [addAdjustmentBatchKind, setAddAdjustmentBatchKind] = useState<
     'allowance' | 'deduction' | null
   >(null);
-  const [addAdjustmentEmployee, setAddAdjustmentEmployee] =
-    useState<Employee | null>(null);
-  const [addAdjustmentType, setAddAdjustmentType] = useState<
-    AllowanceTypeOption | DeductionTypeOption | null
-  >(null);
-  const [addAdjustmentAmount, setAddAdjustmentAmount] = useState<number | ''>(
-    ''
-  );
-  const [addAdjustmentRemarks, setAddAdjustmentRemarks] = useState('');
+  const [overtimeBatchDialogOpen, setOvertimeBatchDialogOpen] = useState(false);
+  const [absenceBatchDialogOpen, setAbsenceBatchDialogOpen] = useState(false);
 
   const monthName = MONTH_NAMES[month] || month;
 
@@ -395,24 +383,6 @@ const PayrollPeriodAdjustmentsTab = ({
     queryFn: () => humanResourcesServices.getOvertimeTypesList({ limit: 200 }),
   });
   const overtimeTypes: OvertimeType[] = overtimeTypesResponse?.data || [];
-
-  // Allowance/Deduction types for the "Add Allowance"/"Add Deduction" dialog's
-  // type selector.
-  const { data: allowanceTypesResponse } = useQuery({
-    queryKey: ['allowanceTypesForPeriodAdjustments'],
-    queryFn: () => humanResourcesServices.getAllowanceTypesList({ limit: 200 }),
-    enabled: addAdjustmentDialogType === 'allowance',
-  });
-  const allowanceTypeOptions: AllowanceTypeOption[] =
-    allowanceTypesResponse?.data || [];
-
-  const { data: deductionTypesResponse } = useQuery({
-    queryKey: ['deductionTypesForPeriodAdjustments'],
-    queryFn: () => humanResourcesServices.getDeductionTypesList({ limit: 200 }),
-    enabled: addAdjustmentDialogType === 'deduction',
-  });
-  const deductionTypeOptions: DeductionTypeOption[] =
-    deductionTypesResponse?.data || [];
 
   // Leave types for the "Buy Leave" dialog's type selector.
   const { data: leaveTypesResponse } = useQuery({
@@ -608,21 +578,6 @@ const PayrollPeriodAdjustmentsTab = ({
     },
   });
 
-  // Add overtime entry mutation
-  const addOvertimeMutation = useMutation({
-    mutationFn: humanResourcesServices.addPeriodOvertime,
-    onSuccess: () => {
-      closeOvertimeDialog();
-      refetchAdjustments();
-      enqueueSnackbar('Overtime entry logged successfully', {
-        variant: 'success',
-      });
-    },
-    onError: (error: any) => {
-      enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
-    },
-  });
-
   // Edit overtime entry mutation
   const editOvertimeMutation = useMutation({
     mutationFn: humanResourcesServices.updatePeriodOvertime,
@@ -652,21 +607,6 @@ const PayrollPeriodAdjustmentsTab = ({
     },
     onError: (error: any) => {
       setDeleteDialogOpen(false);
-      enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
-    },
-  });
-
-  // Add absence entry mutation
-  const addAbsenceMutation = useMutation({
-    mutationFn: humanResourcesServices.addPeriodAbsence,
-    onSuccess: () => {
-      closeAbsenceDialog();
-      refetchAdjustments();
-      enqueueSnackbar('Absence entry logged successfully', {
-        variant: 'success',
-      });
-    },
-    onError: (error: any) => {
       enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
     },
   });
@@ -738,32 +678,6 @@ const PayrollPeriodAdjustmentsTab = ({
     },
   });
 
-  // Add allowance/deduction mutations — the single-entry counterpart to the
-  // Excel upload.
-  const addAllowanceMutation = useMutation({
-    mutationFn: humanResourcesServices.addPeriodAdjustmentAllowance,
-    onSuccess: () => {
-      closeAddAdjustmentDialog();
-      refetchAdjustments();
-      enqueueSnackbar('Allowance added successfully', { variant: 'success' });
-    },
-    onError: (error: any) => {
-      enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
-    },
-  });
-
-  const addDeductionMutation = useMutation({
-    mutationFn: humanResourcesServices.addPeriodAdjustmentDeduction,
-    onSuccess: () => {
-      closeAddAdjustmentDialog();
-      refetchAdjustments();
-      enqueueSnackbar('Deduction added successfully', { variant: 'success' });
-    },
-    onError: (error: any) => {
-      enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
-    },
-  });
-
   const closeOvertimeDialog = () => {
     setOvertimeDialogOpen(false);
     setEditingOvertime(null);
@@ -789,27 +703,16 @@ const PayrollPeriodAdjustmentsTab = ({
   };
 
   const handleOvertimeSave = () => {
-    if (!overtimeType || !overtimeDate || overtimeHours === '') return;
+    if (!overtimeType || !overtimeDate || overtimeHours === '' || !editingOvertime)
+      return;
 
-    if (editingOvertime) {
-      editOvertimeMutation.mutate({
-        id: editingOvertime.id,
-        overtime_type_id: overtimeType.id,
-        date: dayjs(overtimeDate).format('YYYY-MM-DD'),
-        hours: Number(overtimeHours),
-        remarks: overtimeRemarks || undefined,
-      });
-    } else {
-      if (!overtimeEmployee) return;
-      addOvertimeMutation.mutate({
-        payroll_period_id: payrollPeriodId,
-        employee_id: overtimeEmployee.id,
-        overtime_type_id: overtimeType.id,
-        date: dayjs(overtimeDate).format('YYYY-MM-DD'),
-        hours: Number(overtimeHours),
-        remarks: overtimeRemarks || undefined,
-      });
-    }
+    editOvertimeMutation.mutate({
+      id: editingOvertime.id,
+      overtime_type_id: overtimeType.id,
+      date: dayjs(overtimeDate).format('YYYY-MM-DD'),
+      hours: Number(overtimeHours),
+      remarks: overtimeRemarks || undefined,
+    });
   };
 
   const filterOvertimeEntries = (items: PeriodOvertime[], query: string) => {
@@ -851,25 +754,14 @@ const PayrollPeriodAdjustmentsTab = ({
   };
 
   const handleAbsenceSave = () => {
-    if (!absenceDate || absenceHours === '') return;
+    if (!absenceDate || absenceHours === '' || !editingAbsence) return;
 
-    if (editingAbsence) {
-      editAbsenceMutation.mutate({
-        id: editingAbsence.id,
-        date: dayjs(absenceDate).format('YYYY-MM-DD'),
-        hours: Number(absenceHours),
-        remarks: absenceRemarks || undefined,
-      });
-    } else {
-      if (!absenceEmployee) return;
-      addAbsenceMutation.mutate({
-        payroll_period_id: payrollPeriodId,
-        employee_id: absenceEmployee.id,
-        date: dayjs(absenceDate).format('YYYY-MM-DD'),
-        hours: Number(absenceHours),
-        remarks: absenceRemarks || undefined,
-      });
-    }
+    editAbsenceMutation.mutate({
+      id: editingAbsence.id,
+      date: dayjs(absenceDate).format('YYYY-MM-DD'),
+      hours: Number(absenceHours),
+      remarks: absenceRemarks || undefined,
+    });
   };
 
   const filterAbsenceEntries = (items: PeriodAbsence[], query: string) => {
@@ -942,38 +834,6 @@ const PayrollPeriodAdjustmentsTab = ({
         .toLowerCase();
       return haystack.includes(q);
     });
-  };
-
-  const closeAddAdjustmentDialog = () => {
-    setAddAdjustmentDialogType(null);
-    setAddAdjustmentEmployee(null);
-    setAddAdjustmentType(null);
-    setAddAdjustmentAmount('');
-    setAddAdjustmentRemarks('');
-  };
-
-  const handleAddAdjustmentSave = () => {
-    if (!addAdjustmentEmployee || !addAdjustmentType || addAdjustmentAmount === '')
-      return;
-
-    const payload = {
-      payroll_period_id: payrollPeriodId,
-      employee_id: addAdjustmentEmployee.id,
-      amount: Number(addAdjustmentAmount),
-      remarks: addAdjustmentRemarks || undefined,
-    };
-
-    if (addAdjustmentDialogType === 'allowance') {
-      addAllowanceMutation.mutate({
-        ...payload,
-        allowance_type_id: addAdjustmentType.id,
-      });
-    } else if (addAdjustmentDialogType === 'deduction') {
-      addDeductionMutation.mutate({
-        ...payload,
-        deduction_type_id: addAdjustmentType.id,
-      });
-    }
   };
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -1717,7 +1577,7 @@ const PayrollPeriodAdjustmentsTab = ({
               <Button
                 variant='contained'
                 startIcon={<AccessTimeOutlined />}
-                onClick={() => setOvertimeDialogOpen(true)}
+                onClick={() => setOvertimeBatchDialogOpen(true)}
                 disabled={isPeriodLocked}
                 sx={{
                   borderRadius: 2,
@@ -1742,7 +1602,7 @@ const PayrollPeriodAdjustmentsTab = ({
               <Button
                 variant='contained'
                 startIcon={<EventBusyOutlined />}
-                onClick={() => setAbsenceDialogOpen(true)}
+                onClick={() => setAbsenceBatchDialogOpen(true)}
                 disabled={isPeriodLocked}
                 sx={{
                   borderRadius: 2,
@@ -1794,7 +1654,7 @@ const PayrollPeriodAdjustmentsTab = ({
                   variant='outlined'
                   startIcon={<AddCircleOutline />}
                   onClick={() =>
-                    setAddAdjustmentDialogType(tabValue === 0 ? 'allowance' : 'deduction')
+                    setAddAdjustmentBatchKind(tabValue === 0 ? 'allowance' : 'deduction')
                   }
                   disabled={isPeriodLocked}
                   sx={{
@@ -2626,7 +2486,8 @@ const PayrollPeriodAdjustmentsTab = ({
         </MuiDialogActions>
       </Dialog>
 
-      {/* Log/Edit Overtime Dialog */}
+      {/* Edit Overtime Dialog — adding is done via the multi-row
+          LogOvertimeBatchDialog below; this is edit-only. */}
       <Dialog
         open={overtimeDialogOpen}
         onClose={closeOvertimeDialog}
@@ -2635,23 +2496,9 @@ const PayrollPeriodAdjustmentsTab = ({
         fullScreen={belowLargeScreen}
         scroll={belowLargeScreen ? 'body' : 'paper'}
       >
-        <MuiDialogTitle>
-          {editingOvertime ? 'Edit Overtime Entry' : 'Log Overtime Entry'}
-        </MuiDialogTitle>
+        <MuiDialogTitle>Edit Overtime Entry</MuiDialogTitle>
         <MuiDialogContent>
           <Stack spacing={2} sx={{ pt: 2 }}>
-            {!editingOvertime && (
-              <EmployeesProvider>
-                <EmployeeSelector
-                  value={overtimeEmployee || undefined}
-                  onChange={(newValue) => {
-                    setOvertimeEmployee(
-                      newValue && !Array.isArray(newValue) ? newValue : null
-                    );
-                  }}
-                />
-              </EmployeesProvider>
-            )}
             <Autocomplete
               size='small'
               options={overtimeTypes}
@@ -2715,8 +2562,6 @@ const PayrollPeriodAdjustmentsTab = ({
               !overtimeType ||
               !overtimeDate ||
               overtimeHours === '' ||
-              (!editingOvertime && !overtimeEmployee) ||
-              addOvertimeMutation.isPending ||
               editOvertimeMutation.isPending
             }
           >
@@ -2725,7 +2570,8 @@ const PayrollPeriodAdjustmentsTab = ({
         </MuiDialogActions>
       </Dialog>
 
-      {/* Log/Edit Absence Dialog */}
+      {/* Edit Absence Dialog — adding is done via the multi-row
+          LogAbsenceBatchDialog below; this is edit-only. */}
       <Dialog
         open={absenceDialogOpen}
         onClose={closeAbsenceDialog}
@@ -2734,23 +2580,9 @@ const PayrollPeriodAdjustmentsTab = ({
         fullScreen={belowLargeScreen}
         scroll={belowLargeScreen ? 'body' : 'paper'}
       >
-        <MuiDialogTitle>
-          {editingAbsence ? 'Edit Absence Entry' : 'Log Absence Entry'}
-        </MuiDialogTitle>
+        <MuiDialogTitle>Edit Absence Entry</MuiDialogTitle>
         <MuiDialogContent>
           <Stack spacing={2} sx={{ pt: 2 }}>
-            {!editingAbsence && (
-              <EmployeesProvider>
-                <EmployeeSelector
-                  value={absenceEmployee || undefined}
-                  onChange={(newValue) => {
-                    setAbsenceEmployee(
-                      newValue && !Array.isArray(newValue) ? newValue : null
-                    );
-                  }}
-                />
-              </EmployeesProvider>
-            )}
             <DatePicker
               label='Date'
               value={absenceDate ? dayjs(absenceDate) : null}
@@ -2798,11 +2630,7 @@ const PayrollPeriodAdjustmentsTab = ({
             onClick={handleAbsenceSave}
             variant='contained'
             disabled={
-              !absenceDate ||
-              absenceHours === '' ||
-              (!editingAbsence && !absenceEmployee) ||
-              addAbsenceMutation.isPending ||
-              editAbsenceMutation.isPending
+              !absenceDate || absenceHours === '' || editAbsenceMutation.isPending
             }
           >
             Save
@@ -2810,93 +2638,40 @@ const PayrollPeriodAdjustmentsTab = ({
         </MuiDialogActions>
       </Dialog>
 
-      {/* Add Allowance / Add Deduction Dialog — the single-entry counterpart
-          to the Excel upload. */}
-      <Dialog
-        open={!!addAdjustmentDialogType}
-        onClose={closeAddAdjustmentDialog}
-        maxWidth='sm'
-        fullWidth
-        fullScreen={belowLargeScreen}
-        scroll={belowLargeScreen ? 'body' : 'paper'}
-      >
-        <MuiDialogTitle>
-          Add {addAdjustmentDialogType === 'allowance' ? 'Allowance' : 'Deduction'}
-        </MuiDialogTitle>
-        <MuiDialogContent>
-          <Stack spacing={2} sx={{ pt: 2 }}>
-            <EmployeesProvider>
-              <EmployeeSelector
-                value={addAdjustmentEmployee || undefined}
-                onChange={(newValue) => {
-                  setAddAdjustmentEmployee(
-                    newValue && !Array.isArray(newValue) ? newValue : null
-                  );
-                }}
-              />
-            </EmployeesProvider>
-            <Autocomplete
-              size='small'
-              options={
-                addAdjustmentDialogType === 'allowance'
-                  ? allowanceTypeOptions
-                  : deductionTypeOptions
-              }
-              isOptionEqualToValue={(option, value) => option.id === value.id}
-              getOptionLabel={(option) => option.name}
-              value={addAdjustmentType}
-              onChange={(_event, newValue) => setAddAdjustmentType(newValue)}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label={
-                    addAdjustmentDialogType === 'allowance'
-                      ? 'Allowance Type'
-                      : 'Deduction Type'
-                  }
-                />
-              )}
-            />
-            <TextField
-              label='Amount'
-              size='small'
-              fullWidth
-              value={addAdjustmentAmount}
-              onChange={(e) => {
-                const sanitized = sanitizedNumber(e.target.value);
-                setAddAdjustmentAmount(Number.isNaN(sanitized) ? '' : sanitized);
-              }}
-              InputProps={{ inputComponent: CommaSeparatedField as any }}
-            />
-            <TextField
-              label='Remarks'
-              size='small'
-              fullWidth
-              multiline
-              minRows={2}
-              value={addAdjustmentRemarks}
-              onChange={(e) => setAddAdjustmentRemarks(e.target.value)}
-              placeholder='Optional remarks for this adjustment'
-            />
-          </Stack>
-        </MuiDialogContent>
-        <MuiDialogActions>
-          <Button onClick={closeAddAdjustmentDialog}>Cancel</Button>
-          <Button
-            onClick={handleAddAdjustmentSave}
-            variant='contained'
-            disabled={
-              !addAdjustmentEmployee ||
-              !addAdjustmentType ||
-              addAdjustmentAmount === '' ||
-              addAllowanceMutation.isPending ||
-              addDeductionMutation.isPending
-            }
-          >
-            Save
-          </Button>
-        </MuiDialogActions>
-      </Dialog>
+      {/* Add Allowances / Deductions — multi-row batch add. */}
+      <AddAdjustmentsBatchDialog
+        open={!!addAdjustmentBatchKind}
+        onClose={() => setAddAdjustmentBatchKind(null)}
+        payrollPeriodId={payrollPeriodId}
+        kind={addAdjustmentBatchKind || 'allowance'}
+        onSaved={refetchAdjustments}
+      />
+
+      {/* Log Overtime Entries — multi-row batch add. */}
+      <LogOvertimeBatchDialog
+        open={overtimeBatchDialogOpen}
+        onClose={() => setOvertimeBatchDialogOpen(false)}
+        payrollPeriodId={payrollPeriodId}
+        periodStart={periodStart}
+        periodEnd={periodEnd}
+        defaultDate={defaultOvertimeDate()}
+        monthName={monthName}
+        year={year}
+        onSaved={refetchAdjustments}
+      />
+
+      {/* Log Absence Entries — multi-row batch add. */}
+      <LogAbsenceBatchDialog
+        open={absenceBatchDialogOpen}
+        onClose={() => setAbsenceBatchDialogOpen(false)}
+        payrollPeriodId={payrollPeriodId}
+        periodStart={periodStart}
+        periodEnd={periodEnd}
+        defaultDate={defaultOvertimeDate()}
+        monthName={monthName}
+        year={year}
+        onSaved={refetchAdjustments}
+      />
 
       {/* Buy Leave (Leave Encashment) Dialog */}
       <Dialog
