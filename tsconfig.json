@@ -1,23 +1,12 @@
 {
   "compilerOptions": {
-<<<<<<< HEAD
-    "target": "es5",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
-=======
     "target": "es6",
     "lib": ["dom", "dom.iterable", "esnext"],
->>>>>>> origin/junior-development
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
-    "types": [
-      "node"
-    ],
+    "types": ["node"],
     "esModuleInterop": true,
     "module": "esnext",
     "moduleResolution": "bundler",
@@ -31,20 +20,11 @@
       }
     ],
     "paths": {
-      "@/*": [
-        "./src/*"
-      ],
-      "@jumbo/*": [
-        "./@jumbo/*"
-      ],
-      "@assets/*": [
-        "./@assets/*"
-      ]
+      "@/*": ["./src/*"],
+      "@jumbo/*": ["./@jumbo/*"],
+      "@assets/*": ["./@assets/*"]
     },
-    "typeRoots": [
-      "./node_modules/@types",
-      "./@jumbo/types"
-    ]
+    "typeRoots": ["./node_modules/@types", "./@jumbo/types"]
   },
   "include": [
     "**/*.d.ts",
@@ -345,9 +325,17 @@
     "src/components/projectManagement/projects/profile/subcontracts/tabs/certificatesTab/CertificateItemAction.tsx",
     "src/components/projectManagement/projects/profile/subcontracts/tabs/certificatesTab/preview/CertificatePDF.tsx",
     "src/components/projectManagement/projects/profile/subcontracts/tabs/certificatesTab/preview/CertificateOnScreen.jsx",
-    ".next/dev/types/**/*.ts"
-, "src/components/projectManagement/projects/profile/claims/form/tab/adjustments/ProjectClaimsAdjustments.tsx", "src/components/projectManagement/projects/profile/deliverables/tab/DeliverableSummary.jsx", "src/components/fuelStation/shifts/preview/SalesShiftPDF.jsx", "src/components/fuelStation/shifts/preview/SalesShiftOnScreen.jsx", "src/components/fuelStation/shifts/tabs/adjustments/Adjustments.jsx", "src/components/fuelStation/shifts/tabs/adjustments/AdjustmentsRow.jsx", "src/components/fuelStation/shifts/tabs/fuelVouchers/AdjustmentsTab.jsx", "src/components/fuelStation/shifts/SaleShiftForm2/ShiftSummary.jsx", "src/components/fuelStation/reports/dippingReport/DippingReportPDF.jsx", "src/app/global-errorrtsx"  ],
-  "exclude": [
-    "node_modules"
-  ]
+    ".next/dev/types/**/*.ts",
+    "src/components/projectManagement/projects/profile/claims/form/tab/adjustments/ProjectClaimsAdjustments.tsx",
+    "src/components/projectManagement/projects/profile/deliverables/tab/DeliverableSummary.jsx",
+    "src/components/fuelStation/shifts/preview/SalesShiftPDF.jsx",
+    "src/components/fuelStation/shifts/preview/SalesShiftOnScreen.jsx",
+    "src/components/fuelStation/shifts/tabs/adjustments/Adjustments.jsx",
+    "src/components/fuelStation/shifts/tabs/adjustments/AdjustmentsRow.jsx",
+    "src/components/fuelStation/shifts/tabs/fuelVouchers/AdjustmentsTab.jsx",
+    "src/components/fuelStation/shifts/SaleShiftForm2/ShiftSummary.jsx",
+    "src/components/fuelStation/reports/dippingReport/DippingReportPDF.jsx",
+    "src/app/global-errorrtsx"
+  ],
+  "exclude": ["node_modules"]
 }

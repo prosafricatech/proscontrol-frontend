@@ -27,7 +27,11 @@ import {
 } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import React, { useState } from 'react';
-import { Approval, RequisitionItem } from '../../../RequisitionType';
+import {
+  Approval,
+  Requisition,
+  RequisitionItem,
+} from '../../../RequisitionType';
 import RelatableOrderDetails from './form/RelatableOrderDetails';
 
 interface FetchRelatableDetailsProps {
@@ -42,6 +46,7 @@ interface ApprovalOnScreenProps {
   approval: Approval;
   organization: Organization;
   belowLargeScreen: boolean;
+  requisition: Requisition;
 }
 
 const FetchRelatableDetails = ({
@@ -102,6 +107,7 @@ function ApprovalOnScreen({
   approval,
   organization,
   belowLargeScreen,
+  requisition,
 }: ApprovalOnScreenProps) {
   const theme = useTheme();
   const [selectedRelated, setSelectedRelated] = useState<any>(null);
@@ -114,7 +120,7 @@ function ApprovalOnScreen({
       : organization.settings?.main_color || '#2113AD';
   const contrastText = organization.settings?.contrast_text || '#FFFFFF';
 
-  const isMaterial = 
+  const isMaterial =
     approval.requisition?.process_type?.toLowerCase() === 'material';
   const isPurchase =
     approval.requisition?.process_type?.toLowerCase() === 'purchase';
@@ -184,10 +190,9 @@ function ApprovalOnScreen({
                   ? 'Material Requisition Approval'
                   : isPurchase
                     ? 'Purchase Requisition Approval'
-                  : isImprest
-                    ? 'Imprest Requisition Approval'
-                    : 'Payment Requisition Approval'
-                }
+                    : isImprest
+                      ? 'Imprest Requisition Approval'
+                      : 'Payment Requisition Approval'}
               </Typography>
               <Typography variant='h6'>
                 {approval.requisition?.requisitionNo}
@@ -213,7 +218,7 @@ function ApprovalOnScreen({
 
           {/* Approval Information */}
           <Grid container spacing={2} sx={{ mb: 3 }} width={'100%'}>
-            <Grid size={{ xs: 12, md: 6 }}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <Box>
                 <Typography variant='subtitle2' sx={{ color: headerColor }}>
                   Approval Date
@@ -223,7 +228,7 @@ function ApprovalOnScreen({
                 </Typography>
               </Box>
             </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <Box>
                 <Typography variant='subtitle2' sx={{ color: headerColor }}>
                   Date Required
@@ -232,6 +237,16 @@ function ApprovalOnScreen({
                   {approval.requisition?.date_required
                     ? readableDate(approval.requisition.date_required)
                     : '-'}
+                </Typography>
+              </Box>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+              <Box>
+                <Typography variant='subtitle2' sx={{ color: headerColor }}>
+                  Cost Center
+                </Typography>
+                <Typography variant='body1'>
+                  {requisition.cost_center.name}
                 </Typography>
               </Box>
             </Grid>
@@ -268,7 +283,7 @@ function ApprovalOnScreen({
                           fontSize: '0.875rem',
                         }}
                       >
-                        {(isPurchase || isMaterial) ? 'Product' :  'Ledger'}
+                        {isPurchase || isMaterial ? 'Product' : 'Ledger'}
                       </TableCell>
                       <TableCell
                         sx={{
@@ -317,10 +332,13 @@ function ApprovalOnScreen({
                   <TableBody>
                     {approval?.items?.map(
                       (item: RequisitionItem, index: number) => {
-                        const isCreditItem = item.credit_ledger_id !== null && item.credit_ledger_id !== undefined;
-                        const mainLedgerName = (isPurchase || isMaterial)
-                          ? item.requisition_product?.product?.name
-                          : item.requisition_ledger_item?.ledger?.name;
+                        const isCreditItem =
+                          item.credit_ledger_id !== null &&
+                          item.credit_ledger_id !== undefined;
+                        const mainLedgerName =
+                          isPurchase || isMaterial
+                            ? item.requisition_product?.product?.name
+                            : item.requisition_ledger_item?.ledger?.name;
                         const creditLedgerName = item.credit_ledger?.name;
 
                         return (
@@ -340,21 +358,21 @@ function ApprovalOnScreen({
                                     {mainLedgerName}
                                   </Typography>
                                   {isCreditItem && creditLedgerName && (
-                                    <Tooltip 
+                                    <Tooltip
                                       title={`Split to: ${creditLedgerName}`}
-                                      placement="top"
+                                      placement='top'
                                       arrow
                                     >
                                       <Typography
                                         variant='caption'
                                         color='text.secondary'
-                                        sx={{ 
-                                          display: 'block', 
+                                        sx={{
+                                          display: 'block',
                                           mt: 0.5,
                                           cursor: 'help',
                                           '&:hover': {
                                             color: 'primary.main',
-                                          }
+                                          },
                                         }}
                                       >
                                         ({creditLedgerName})
@@ -434,7 +452,9 @@ function ApprovalOnScreen({
                                   sx={{ fontFamily: 'monospace' }}
                                 >
                                   {formatNumber(
-                                    item.rate * (item.vat_percentage ?? 0) * 0.01
+                                    item.rate *
+                                      (item.vat_percentage ?? 0) *
+                                      0.01
                                   )}
                                 </TableCell>
                               )}

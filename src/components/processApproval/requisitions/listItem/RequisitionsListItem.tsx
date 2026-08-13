@@ -1,34 +1,29 @@
-import React, { useState } from 'react';
+import { readableDate } from '@/app/helpers/input-sanitization-helpers';
+import { Attachment, VerifiedRounded } from '@mui/icons-material';
+import AddIcon from '@mui/icons-material/Add';
+import RemoveIcon from '@mui/icons-material/Remove';
 import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
-  Alert,
   Badge,
   Chip,
   Grid,
-  Paper,
   Stack,
   Tab,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Tabs,
   Tooltip,
   Typography,
 } from '@mui/material';
-import RemoveIcon from '@mui/icons-material/Remove';
-import AddIcon from '@mui/icons-material/Add';
-import RequisitionsItemAction from './RequisitionsItemAction';
+import React, { useState } from 'react';
 import AttachmentForm from '../../../filesShelf/attachments/AttachmentForm';
-import ApprovalsTab from './tabs/ApprovalsTab';
-import { Attachment, VerifiedRounded } from '@mui/icons-material';
-import { readableDate } from '@/app/helpers/input-sanitization-helpers';
 import { Requisition } from '../../RequisitionType';
-import { processTypeConfig, requisitionAmountDisplay } from '../../utils/requisition';
+import {
+  processTypeConfig,
+  requisitionAmountDisplay,
+} from '../../utils/requisition';
+import RequisitionsItemAction from './RequisitionsItemAction';
+import ApprovalsTab from './tabs/ApprovalsTab';
 
 interface RequisitionsListItemProps {
   requisition: Requisition;
@@ -49,19 +44,21 @@ const RequisitionsListItem = ({ requisition }: RequisitionsListItemProps) => {
     setActiveTab(newValue);
   };
 
-  const processConfig = processTypeConfig[requisition.process_type as keyof typeof processTypeConfig] || {
+  const processConfig = processTypeConfig[
+    requisition.process_type as keyof typeof processTypeConfig
+  ] || {
     label: requisition.process_type,
     color: 'default' as const,
   };
-  
+
   return (
     <Accordion
       key={requisition.id}
       expanded={!!expanded[requisition.id]}
       onChange={() => handleChange(requisition.id)}
       square
-      sx={{ 
-        borderRadius: 2, 
+      sx={{
+        borderRadius: 2,
         borderTop: 2,
         borderColor: 'divider',
         '&:hover': {
@@ -78,11 +75,12 @@ const RequisitionsListItem = ({ requisition }: RequisitionsListItemProps) => {
             alignItems: 'center',
             '&.Mui-expanded': {
               margin: '10px 0',
-            }},
+            },
+          },
           '.MuiAccordionSummary-expandIconWrapper': {
             borderRadius: 1,
             border: 1,
-            color: 'text.secondary',  
+            color: 'text.secondary',
             transform: 'none',
             mr: 0.5,
             '&.Mui-expanded': {
@@ -96,7 +94,7 @@ const RequisitionsListItem = ({ requisition }: RequisitionsListItemProps) => {
           },
         }}
       >
-        <Grid 
+        <Grid
           container
           spacing={1}
           alignItems={'center'}
@@ -104,19 +102,19 @@ const RequisitionsListItem = ({ requisition }: RequisitionsListItemProps) => {
           paddingLeft={1}
           paddingRight={1}
         >
-          <Grid size={{xs: 12, md: 2}}>
+          <Grid size={{ xs: 12, md: 2 }}>
             <Tooltip title='Requistion No.'>
               <Typography>{requisition.requisitionNo}</Typography>
             </Tooltip>
             <Tooltip title='Requistion Date'>
-              <Typography variant='caption'>{readableDate(requisition.requisition_date)}</Typography>
+              <Typography variant='caption'>
+                {readableDate(requisition.requisition_date)}
+              </Typography>
             </Tooltip>
           </Grid>
-          <Grid size={{xs: 12, md: 3}}>
+          <Grid size={{ xs: 12, md: 3 }}>
             <Tooltip title='Process'>
-              <Typography variant='body2'>
-                {processConfig.label}
-              </Typography>
+              <Typography variant='body2'>{processConfig.label}</Typography>
             </Tooltip>
             <Tooltip title={'Cost Center'}>
               <Typography
@@ -128,11 +126,11 @@ const RequisitionsListItem = ({ requisition }: RequisitionsListItemProps) => {
               </Typography>
             </Tooltip>
           </Grid>
-          <Grid size={{xs: 12, md: 4, lg: 4}}>
+          <Grid size={{ xs: 12, md: 4, lg: 4 }}>
             <Tooltip title={'Remarks'}>
               <Typography
-                component="span"
-                variant="body2"
+                component='span'
+                variant='body2'
                 fontSize={14}
                 mb={0}
                 sx={{ flexWrap: 'wrap' }}
@@ -141,44 +139,52 @@ const RequisitionsListItem = ({ requisition }: RequisitionsListItemProps) => {
               </Typography>
             </Tooltip>
           </Grid>
-          <Grid size={{xs: 8, md: 2.5, lg: 2}}>
+          <Grid size={{ xs: 8, md: 2.5, lg: 2 }}>
             <Tooltip title='Amount'>
               <Typography>
-                {requisitionAmountDisplay(requisition, requisition.currency?.code)}
+                {requisitionAmountDisplay(
+                  requisition,
+                  requisition.currency?.code
+                )}
               </Typography>
             </Tooltip>
             <Tooltip title='Status'>
               <Chip
-                size='small' 
+                size='small'
                 label={requisition.status_label}
                 color={
                   requisition.status === 'suspended'
                     ? 'primary'
                     : requisition.status?.toLowerCase() === 'rejected'
-                    ? 'error'
-                    : requisition.status?.toLowerCase() === 'on hold'
-                    ? 'warning'
-                    : requisition.status?.toLowerCase() === 'returned'
-                    ? 'secondary'
-                    : (requisition.status?.toLowerCase() === 'submitted' && requisition.status_label?.toLowerCase() === 'completed')
-                    ? 'success'
-                    : 'info'
+                      ? 'error'
+                      : requisition.status?.toLowerCase() === 'on hold'
+                        ? 'warning'
+                        : requisition.status?.toLowerCase() === 'returned'
+                          ? 'secondary'
+                          : requisition.status?.toLowerCase() === 'submitted' &&
+                              requisition.status_label?.toLowerCase() ===
+                                'completed'
+                            ? 'success'
+                            : 'info'
                 }
-              /> 
+              />
             </Tooltip>
           </Grid>
-          <Grid size={{xs: 4, md: 1}}>
+          <Grid size={{ xs: 4, md: 1 }}>
             <Stack
-              direction="row"
+              direction='row'
               mt={2}
               spacing={2}
-              justifyContent="flex-end"
-              alignItems="center"
+              justifyContent='flex-end'
+              alignItems='center'
             >
               {!!requisition?.attachments_count && (
-                <Tooltip title="Attachments Count">
-                  <Badge badgeContent={requisition.attachments_count} color="info">
-                    <Attachment fontSize="small" />
+                <Tooltip title='Attachments Count'>
+                  <Badge
+                    badgeContent={requisition.attachments_count}
+                    color='info'
+                  >
+                    <Attachment fontSize='small' />
                   </Badge>
                 </Tooltip>
               )}
@@ -196,7 +202,7 @@ const RequisitionsListItem = ({ requisition }: RequisitionsListItemProps) => {
                         : 'Fully Ordered'
                   }
                 >
-                  <VerifiedRounded fontSize="small" color="success" />
+                  <VerifiedRounded fontSize='small' color='success' />
                 </Tooltip>
               )}
             </Stack>
@@ -204,41 +210,56 @@ const RequisitionsListItem = ({ requisition }: RequisitionsListItemProps) => {
         </Grid>
       </AccordionSummary>
       <AccordionDetails
-        sx={{ 
-          backgroundColor:'background.paper',
-          marginBottom: 3
+        sx={{
+          backgroundColor: 'background.paper',
+          marginBottom: 3,
         }}
       >
         <Grid container spacing={1}>
-          <Grid size={{xs: 12}} textAlign={'end'}>
+          <Grid size={{ xs: 12 }} textAlign={'end'}>
             <RequisitionsItemAction requisition={requisition} />
           </Grid>
-          <Grid size={{xs: 12}}>
+          <Grid size={{ xs: 12 }}>
             <Tabs
               value={activeTab}
               onChange={handleTabChange}
-              variant="scrollable"
-              scrollButtons="auto"
+              variant='scrollable'
+              scrollButtons='auto'
               allowScrollButtonsMobile
               sx={{ display: 'flex', justifyContent: 'center' }}
             >
-              <Tab label="Approvals" />
-              <Tab label="Attachments" />
+              <Tab label='Approvals' />
+              <Tab label='Attachments' />
             </Tabs>
           </Grid>
         </Grid>
 
         <Grid container>
           {activeTab === 0 && (
-            <Grid container spacing={1} justifyContent="center" width={'100%'} marginTop={1}>
-              <Grid size={{xs: 12}}>
-                <ApprovalsTab isExpanded={expanded[requisition.id]} requisition={requisition}/>
+            <Grid
+              container
+              spacing={1}
+              justifyContent='center'
+              width={'100%'}
+              marginTop={1}
+            >
+              <Grid size={{ xs: 12 }}>
+                <ApprovalsTab
+                  isExpanded={expanded[requisition.id]}
+                  requisition={requisition}
+                />
               </Grid>
             </Grid>
           )}
           {activeTab === 1 && (
-            <Grid container spacing={1} justifyContent="center" marginTop={1} width={'100%'}>
-              <Grid size={{xs: 12}}>
+            <Grid
+              container
+              spacing={1}
+              justifyContent='center'
+              marginTop={1}
+              width={'100%'}
+            >
+              <Grid size={{ xs: 12 }}>
                 <AttachmentForm
                   hideFeatures={true}
                   attachment_name={'Requisition'}

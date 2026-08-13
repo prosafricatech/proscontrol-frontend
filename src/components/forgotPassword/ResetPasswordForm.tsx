@@ -1,15 +1,22 @@
 'use client';
 
-import { LoadingButton } from "@mui/lab";
-import { Card, CardContent, Typography, TextField, Box as Div, Link } from "@mui/material";
-import { useSnackbar } from "notistack";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { FC } from "react";
-import * as yup from "yup";
-import axios from "axios";
-import { useForm, Controller } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
-import { ASSET_IMAGES } from "@/utilities/constants/paths";
+import { ASSET_IMAGES } from '@/utilities/constants/paths';
+import { yupResolver } from '@hookform/resolvers/yup';
+import { LoadingButton } from '@mui/lab';
+import {
+  Card,
+  CardContent,
+  Box as Div,
+  Link,
+  TextField,
+  Typography,
+} from '@mui/material';
+import axios from 'axios';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { useSnackbar } from 'notistack';
+import { FC } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import * as yup from 'yup';
 
 interface ResetPasswordFormValues {
   email: string;
@@ -39,12 +46,12 @@ const ResetPasswordForm: FC = () => {
       .required('Password is required')
       .matches(
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{8,})/,
-        "Must contain atleast 8 Characters, 1 Uppercase, 1 Lowercase, 1 Number and 1 Special character"
+        'Must contain atleast 8 Characters, 1 Uppercase, 1 Lowercase, 1 Number and 1 Special character'
       ),
     password_confirmation: yup
       .string()
       .required('Password confirmation is required')
-      .oneOf([yup.ref("password")], 'Password does not match')
+      .oneOf([yup.ref('password')], 'Password does not match'),
   });
 
   const {
@@ -66,13 +73,13 @@ const ResetPasswordForm: FC = () => {
 
       if (response.status === 200) {
         enqueueSnackbar(response.data.message, {
-          variant: 'success'
+          variant: 'success',
         });
         router.push(`/${lang}/auth/signin`);
       }
     } catch (err: any) {
       enqueueSnackbar(err?.response?.data?.message || 'An error occurred', {
-        variant: 'error'
+        variant: 'error',
       });
       throw err;
     }
@@ -81,7 +88,7 @@ const ResetPasswordForm: FC = () => {
   const onSubmit = async (data: ResetPasswordFormValues) => {
     if (!token) {
       enqueueSnackbar('Password reset token is missing or invalid.', {
-        variant: 'error'
+        variant: 'error',
       });
       return;
     }
@@ -90,18 +97,24 @@ const ResetPasswordForm: FC = () => {
   };
 
   return (
-    <Div sx={{
-      flex: 1,
-      flexWrap: 'wrap',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      p: theme => theme.spacing(4),
-    }}>
+    <Div
+      sx={{
+        flex: 1,
+        flexWrap: 'wrap',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        p: (theme) => theme.spacing(4),
+      }}
+    >
       <Div sx={{ mb: 3, display: 'inline-flex' }}>
-        <Link href="/" underline="none" sx={{ display: 'inline-flex' }}>
-          <img width={200} src={`${ASSET_IMAGES}/proserp-blue.png`} alt="ProsERP" />
+        <Link href='/' underline='none' sx={{ display: 'inline-flex' }}>
+          <img
+            width={200}
+            src={`${ASSET_IMAGES}/logos/proserp-blue.png`}
+            alt='ProsERP'
+          />
         </Link>
       </Div>
       <Card sx={{ maxWidth: '100%', width: 360, mb: 4 }}>
@@ -110,16 +123,21 @@ const ResetPasswordForm: FC = () => {
             Create your new Password
           </Typography>
           <Div sx={{ mb: 3, mt: 1 }}>
-            <form onSubmit={handleSubmit(onSubmit)} style={{ textAlign: 'left' }} noValidate autoComplete='off'>
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              style={{ textAlign: 'left' }}
+              noValidate
+              autoComplete='off'
+            >
               <Div sx={{ mt: 1, mb: 3 }}>
                 <Controller
-                  name="email"
+                  name='email'
                   control={control}
                   render={({ field }) => (
                     <TextField
                       {...field}
                       fullWidth
-                      label="Email"
+                      label='Email'
                       error={!!errors.email}
                       helperText={errors.email?.message}
                     />
@@ -128,14 +146,14 @@ const ResetPasswordForm: FC = () => {
               </Div>
               <Div sx={{ mt: 1, mb: 2 }}>
                 <Controller
-                  name="password"
+                  name='password'
                   control={control}
                   render={({ field }) => (
                     <TextField
                       {...field}
                       fullWidth
-                      label="New Password"
-                      type="password"
+                      label='New Password'
+                      type='password'
                       error={!!errors.password}
                       helperText={errors.password?.message}
                     />
@@ -144,14 +162,14 @@ const ResetPasswordForm: FC = () => {
               </Div>
               <Div sx={{ mt: 1, mb: 2 }}>
                 <Controller
-                  name="password_confirmation"
+                  name='password_confirmation'
                   control={control}
                   render={({ field }) => (
                     <TextField
                       {...field}
                       fullWidth
-                      label="Confirm Password"
-                      type="password"
+                      label='Confirm Password'
+                      type='password'
                       error={!!errors.password_confirmation}
                       helperText={errors.password_confirmation?.message}
                     />
@@ -161,7 +179,7 @@ const ResetPasswordForm: FC = () => {
               <LoadingButton
                 fullWidth
                 type='submit'
-                variant="contained"
+                variant='contained'
                 sx={{ mb: 2 }}
                 loading={isSubmitting}
                 disabled={!token}
@@ -170,15 +188,25 @@ const ResetPasswordForm: FC = () => {
               </LoadingButton>
             </form>
           </Div>
-          <Typography textAlign={"center"} variant={"body1"} mb={1}>
-            Have the password? <Link color={"inherit"} underline="none" href={`/${lang}/auth/signin`}>Proceed to Sign In</Link>
+          <Typography textAlign={'center'} variant={'body1'} mb={1}>
+            Have the password?{' '}
+            <Link
+              color={'inherit'}
+              underline='none'
+              href={`/${lang}/auth/signin`}
+            >
+              Proceed to Sign In
+            </Link>
           </Typography>
-          <Typography textAlign={"center"} variant={"body1"} mb={1}>
-            Don't remember your email? <Link underline="none" href="#">Contact Support</Link>
+          <Typography textAlign={'center'} variant={'body1'} mb={1}>
+            Don't remember your email?{' '}
+            <Link underline='none' href='#'>
+              Contact Support
+            </Link>
           </Typography>
         </CardContent>
       </Card>
     </Div>
   );
-}
+};
 export default ResetPasswordForm;
