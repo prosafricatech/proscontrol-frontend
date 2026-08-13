@@ -378,34 +378,42 @@ const SalarySheetPDF = ({
 
   // first row column widths
   const recruitmentColWidth = 20;
-  // Employer section: "Total Empr. Cont." and "Total Empr. Cost" are each a
-  // single number, so they're given a narrow fixed width rather than an even
-  // split with the itemized contribution columns — the room saved goes to
-  // the (wider, more crowded) Employee section below instead.
-  const employerSecWidth = hasContributions ? 5 : 6;
-  const contributionWidth = hasContributions ? 18 : 0;
-  const employerColWith = contributionWidth + employerSecWidth * 2;
-  const employeeColWidth = 100 - recruitmentColWidth - employerColWith;
 
-  // employee section column width calculation
-  let columnWidth = 4.25;
-  const columnLength = 6 + (hasDeductions ? 1 : 0) + (hasAllowances ? 1 : 0);
-  columnWidth = employeeColWidth / columnLength;
-  let deductionColWidth = employeeColWidth / columnLength;
-  let allowanceColWidth = employeeColWidth / columnLength;
-  if (hasDeductions && !hasAllowances) {
-    deductionColWidth += 6;
-    columnWidth--;
-  }
-  if (hasAllowances && !hasDeductions) {
-    allowanceColWidth += 6;
-    columnWidth--;
-  }
-  if (hasAllowances && hasDeductions) {
-    allowanceColWidth += 3;
-    deductionColWidth += 3;
-    columnWidth--;
-  }
+  // Every itemized data column — the fixed single-value ones (Basic, Gross,
+  // Taxable, PAYE, Total Ded., Net, Total Empr. Cont., Total Empr. Cost) and
+  // the variable per-type ones (Allowances, Deductions, Contributions) —
+  // gets an equal share of the remaining width, proportional to how many
+  // columns it actually needs. This replaces the old fixed-percentage split
+  // (which capped Deductions/Contributions to a small fraction regardless of
+  // how many types existed) so a payroll with many deduction/contribution
+  // types gets proportionally more room instead of overlapping text.
+  const allowanceTypesCount = hasAllowances ? unique_allowances_types.length : 0;
+  const deductionTypesCount = hasDeductions ? unique_deductions_types.length : 0;
+  const contributionTypesCount = hasContributions
+    ? unique_contributions_types.length
+    : 0;
+
+  // Employee section: Basic + Allowances(N) + Gross + Taxable + PAYE + Deductions(M) + Total Ded. + Net
+  const employeeSectionColumnsCount =
+    6 + allowanceTypesCount + deductionTypesCount;
+  // Employer section: Contributions(K) + Total Empr. Cont. + Total Empr. Cost
+  const employerSectionColumnsCount = 2 + contributionTypesCount;
+
+  const remainingWidth = 100 - recruitmentColWidth;
+  const totalDataColumnsCount =
+    employeeSectionColumnsCount + employerSectionColumnsCount;
+  const unitColWidth = remainingWidth / totalDataColumnsCount;
+
+  const employeeColWidth = unitColWidth * employeeSectionColumnsCount;
+  const employerColWith = unitColWidth * employerSectionColumnsCount;
+
+  // Single-value columns (Basic, Gross, Taxable, PAYE, Total Ded., Net) each
+  // get exactly one unit; the itemized blocks get one unit per type.
+  const columnWidth = unitColWidth;
+  const allowanceColWidth = unitColWidth * allowanceTypesCount;
+  const deductionColWidth = unitColWidth * deductionTypesCount;
+  const contributionWidth = unitColWidth * contributionTypesCount;
+  const employerSecWidth = unitColWidth;
   const stringCOlumnWidth = String(columnWidth) + '%';
 
   // Colors for strict structural mapping
@@ -419,7 +427,7 @@ const SalarySheetPDF = ({
       author={organization.name}
       subject='Salary Sheet'
     >
-      <Page size='A3' orientation='landscape' style={styles.page}>
+      <Page size='A2' orientation='landscape' style={styles.page}>
         {/* Company Header Info Block */}
         <View style={styles.headerRow}>
           <View style={{ width: 110 }}>

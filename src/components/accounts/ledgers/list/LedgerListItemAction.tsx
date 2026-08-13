@@ -117,12 +117,12 @@ function LedgerListItemAction({ ledger }: LedgerListItemActionProps) {
         open={openFundTransferFormDialog}
         fullWidth
         fullScreen={isMobile}
-        maxWidth='md'
+        maxWidth='lg'
       >
         {openFundTransferFormDialog && (
           <TransferFormDialogContent
             setOpen={setOpenFundTransferFormDialog}
-            transfer={{ credit_ledger_id: ledger.id }}
+            defaultCreditLedgerId={ledger.id}
             defaultAmount={ledger?.balance?.amount}
           />
         )}

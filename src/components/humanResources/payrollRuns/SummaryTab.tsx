@@ -51,7 +51,7 @@ const ExpandableSummaryCard = ({
   total: number;
   breakdown?: BreakdownLine[];
 }) => {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
   const hasBreakdown = !!breakdown && breakdown.length > 0;
 
   if (!hasBreakdown) {
