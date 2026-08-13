@@ -59,7 +59,7 @@ function Troubleshooting() {
             <Tab key={index} label={tab.label} />
           ))}
         </Tabs>
-        {tabs[activeTab]?.component}
+        {React.cloneElement(tabs[activeTab]?.component ?? <React.Fragment />, { key: activeTab })}
       </JumboCardQuick>
     </SelectedTab.Provider>
   );

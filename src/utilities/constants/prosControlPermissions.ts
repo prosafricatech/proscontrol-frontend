@@ -15,4 +15,6 @@ export const PROS_CONTROL_PERMISSIONS = {
     USERS_MANAGE: 'SystemUsers:Manage',
     AUDIT_READ: 'ProsERP:Audit:Read',
     AUDIT_READ_ORGANIZATIONS: 'ProsERP:Audit:ReadOrganizations',
+    SMS_ACCOUNTS_READ: 'SmsAccounts:Read',
+    SMS_ACCOUNTS_MANAGE: 'SmsAccounts:Manage',
 };
