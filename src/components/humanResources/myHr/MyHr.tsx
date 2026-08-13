@@ -19,7 +19,6 @@ import { useEffect, useState } from 'react';
 import humanResourcesServices from '../humanResourcesServices';
 import MyHrAccountStatement from './accountStatementTab/MyHrAccountStatement';
 import MyHrContracts from './contractsTab/MyHrContracts';
-import MyHrImprestAccounts from './imprestAccountsTab/MyHrImprestAccounts';
 import MyHrLeaves from './leavesTab/MyHrLeaves';
 import MyHrNextOfKin from './nextOfKinTab/MyHrNextOfKin';
 import MyHrPayslips from './payslipsTab/MyHrPayslips';
@@ -32,8 +31,7 @@ type TabKey =
   | 'contracts'
   | 'nextOfKins'
   | 'loans'
-  | 'accountStatement'
-  | 'imprestAccounts';
+  | 'accountStatement';
 
 const VALID_TABS: TabKey[] = [
   'profile',
@@ -43,7 +41,6 @@ const VALID_TABS: TabKey[] = [
   'nextOfKins',
   'loans',
   'accountStatement',
-  'imprestAccounts',
 ];
 
 const MyHr = () => {
@@ -125,8 +122,6 @@ const MyHr = () => {
         return <MyHrLoans />;
       case 'accountStatement':
         return <MyHrAccountStatement />;
-      case 'imprestAccounts':
-        return <MyHrImprestAccounts />;
       default:
         return null;
     }
@@ -141,9 +136,6 @@ const MyHr = () => {
       setProfileLoading(false);
     }
     if (axios.isAxiosError(profileError)) {
-      if (profileError?.status === 404) {
-        setActiveTab('imprestAccounts');
-      }
       enqueueSnackbar(getErrorMessage(profileError) || 'Something went wrong', {
         variant: 'error',
       });
@@ -180,17 +172,10 @@ const MyHr = () => {
       }
     >
       {errStatus && errStatus === 404 ? (
-        <Card sx={{ height: '100%', p: 1 }}>
-          <Tabs
-            value={activeTab}
-            onChange={handleTabChange}
-            variant='scrollable'
-            scrollButtons='auto'
-            allowScrollButtonsMobile
-          >
-            <Tab label='Imprest Accounts' value='imprestAccounts' />
-          </Tabs>
-          {renderTabContent()}
+        <Card sx={{ height: '100%', p: 3 }}>
+          <Typography>
+            Your account is not linked to an employee record. Contact HR.
+          </Typography>
         </Card>
       ) : (
         <Card sx={{ height: '100%', p: 1 }}>
@@ -209,7 +194,6 @@ const MyHr = () => {
               <Tab label='Next of Kin' value='nextOfKins' />
               <Tab label='Loans' value='loans' />
               <Tab label='Account Statement' value='accountStatement' />
-              <Tab label='Imprest Accounts' value='imprestAccounts' />
             </Tabs>
 
             {renderTabContent()}

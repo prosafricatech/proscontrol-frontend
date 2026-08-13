@@ -95,11 +95,13 @@ interface TransferData {
 interface TransferFormDialogContentProps {
   setOpen: (open: boolean) => void;
   transfer?: TransferData | null;
+  defaultAmount?: number;
 }
 
 function TransferFormDialogContent({
   setOpen,
   transfer = null,
+  defaultAmount,
 }: TransferFormDialogContentProps) {
   const { authOrganization, checkOrganizationPermission } = useJumboAuth();
   const costCenters = authOrganization?.costCenters || [];
@@ -560,6 +562,7 @@ function TransferFormDialogContent({
             onLedgerCurrencyDetected={(currencyId) =>
               applyCurrencyLock(currencyId)
             }
+            defaultAmount={defaultAmount}
           />
 
           {errors?.items?.message && items.length < 1 && (

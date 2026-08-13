@@ -21,6 +21,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableContainer,
   TableHead,
   TableRow,
   TextField,
@@ -227,6 +228,7 @@ const PayEmployeesDialog = ({
             </Alert>
           ) : (
             <>
+              <TableContainer sx={{ overflowX: 'auto' }}>
               <Table size='small'>
                 <TableHead>
                   <TableRow>
@@ -306,6 +308,7 @@ const PayEmployeesDialog = ({
                   ))}
                 </TableBody>
               </Table>
+              </TableContainer>
               <Divider />
               <Stack direction='row' justifyContent='flex-end'>
                 <Typography variant='body2' fontWeight={600}>

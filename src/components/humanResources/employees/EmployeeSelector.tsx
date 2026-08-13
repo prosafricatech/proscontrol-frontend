@@ -1,6 +1,7 @@
 import { CheckBox, CheckBoxOutlineBlank } from '@mui/icons-material';
 import {
   Autocomplete,
+  Avatar,
   Box,
   Checkbox,
   Chip,
@@ -108,27 +109,33 @@ const EmployeeSelector = (props: EmployeeSelector) => {
           }}
         />
       )}
-      {...(multiple && {
-        renderOption: (
-          props: React.HTMLAttributes<HTMLLIElement> & { key?: React.Key }, // extend type to include key optionally
-          option: Employee,
-          { selected }
-        ) => {
-          const { key, ...otherProps } = props;
+      renderOption={(
+        props: React.HTMLAttributes<HTMLLIElement> & { key?: React.Key }, // extend type to include key optionally
+        option: Employee,
+        { selected }
+      ) => {
+        const { key, ...otherProps } = props;
 
-          return (
-            <li key={option.id} {...otherProps}>
+        return (
+          <li key={option.id} {...otherProps}>
+            {multiple && (
               <Checkbox
                 icon={<CheckBoxOutlineBlank fontSize='small' />}
                 checkedIcon={<CheckBox fontSize='small' />}
                 style={{ marginRight: 8 }}
                 checked={selected}
               />
-              {`${option.first_name} ${option.middle_name ? option.middle_name : ''} ${option.last_name}`}
-            </li>
-          );
-        },
-      })}
+            )}
+            <Avatar
+              src={option.photo_path || undefined}
+              sx={{ width: 24, height: 24, mr: 1, fontSize: 12 }}
+            >
+              {option.first_name?.[0] ?? '?'}
+            </Avatar>
+            {`${option.first_name} ${option.middle_name ? option.middle_name : ''} ${option.last_name}`}
+          </li>
+        );
+      }}
       onChange={(
         event: React.SyntheticEvent,
         newValue: Employee | Employee[] | null

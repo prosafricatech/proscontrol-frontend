@@ -5,6 +5,7 @@
     phone: string;
     is_admin: boolean;
     status: "active" | "invited" | "suspended";
+    photo_path?: string | null;
     organization_roles?: Array<{ id: string; name: string; [key: string]: any }>;
     [key: string]: any;
   }

@@ -18,6 +18,7 @@ import {
   DialogContent,
   DialogTitle,
   IconButton,
+  MenuItem,
   Stack,
   Table,
   TableBody,
@@ -25,12 +26,13 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TextField,
   Typography,
   useMediaQuery,
   useTheme,
 } from '@mui/material';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import humanResourcesServices from '../humanResourcesServices';
 import { PayrollRunType } from '../payrollRuns/PayrollRunType';
 import { PayslipComputed } from '../payrollRuns/payslipCalculations';
@@ -113,6 +115,9 @@ const SalarySheetDialog = ({
 
   const [showOnScreen, setShowOnScreen] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
+  const [groupBy, setGroupBy] = useState<'none' | 'department' | 'cost_center'>(
+    'none'
+  );
 
   const organization = authObject?.authOrganization?.organization;
 
@@ -138,18 +143,17 @@ const SalarySheetDialog = ({
       })) || []
   );
 
+  // Keyed by label (the displayed column name), not type_id — several
+  // system-computed lines (Overtime Pay's per-OvertimeType breakdown,
+  // Absence Deduction, PAYE) can share one type_id (or none at all) while
+  // being genuinely different columns; label is what's actually unique per
+  // column. The common case (the same real Allowance/Deduction/Contribution
+  // Type across employees) shares both label and type_id, so this still
+  // dedupes correctly there too.
   const getUniqueTypes = (value: Array<any>) => {
     if (value?.length > 0) {
       const filteredDeductions = Array.from(
-        new Map(
-          value.map((itm) => [
-            itm?.deduction_type_id ??
-              itm?.allowance_type_id ??
-              itm?.employer_contribution_type_id ??
-              itm?.label,
-            itm,
-          ])
-        ).values()
+        new Map(value.map((itm) => [itm?.label, itm])).values()
       );
       return filteredDeductions;
     } else {
@@ -174,39 +178,32 @@ const SalarySheetDialog = ({
   const hasDeductions = unique_deductions_types.length > 0;
   const hasContributions = unique_contributions_types.length > 0;
 
+  // Accepts optional subset arrays so the same function computes both the
+  // grand total (default, full flat arrays) and a per-group subtotal
+  // (filtered to that group's employees) — see groupBy below.
   const calculateTotalAmtByType = (
     typeObj: any,
     type_id: number,
-    type: 'deduction' | 'allowance' | 'contribution'
+    type: 'deduction' | 'allowance' | 'contribution',
+    allowanceRows: any[] = employeeAllowance,
+    deductionRows: any[] = employeeDeductions,
+    contributionRows: any[] = employeecontributions
   ) => {
     if (type === 'allowance') {
-      // type_id !== null matches by id; system-computed lines (Overtime Pay,
-      // Holiday Premium — no backing AllowanceType) share a null type_id, so
-      // those must match by label instead, or two different null-typed
-      // lines for the same employee would get conflated.
-      return employeeAllowance?.reduce(
-        (sum, item) =>
-          (type_id !== null
-            ? item.allowance_type_id === type_id
-            : item.label === typeObj.label)
-            ? sum + item?.amount
-            : sum,
+      // Matched by label, not type_id — see getUniqueTypes() above for why
+      // (e.g. Overtime Pay's per-OvertimeType lines share one type_id).
+      return allowanceRows?.reduce(
+        (sum, item) => (item.label === typeObj.label ? sum + item?.amount : sum),
         0
       );
     }
     if (type === 'deduction') {
-      return employeeDeductions?.reduce((sum, item) => {
-        return (
-          type_id !== null
-            ? item.deduction_type_id === type_id
-            : item.label === typeObj.label
-        )
-          ? sum + item?.amount
-          : sum;
+      return deductionRows?.reduce((sum, item) => {
+        return item.label === typeObj.label ? sum + item?.amount : sum;
       }, 0);
     }
     if (type === 'contribution') {
-      return employeecontributions?.reduce((sum, item) => {
+      return contributionRows?.reduce((sum, item) => {
         return item?.employer_contribution_type_id === type_id
           ? sum + item?.amount
           : sum;
@@ -214,34 +211,80 @@ const SalarySheetDialog = ({
     }
   };
 
-  const totals = rows?.reduce(
-    (sum, entry) => {
-      const run = entry.run;
-      const computed = entry.computed;
+  // Sums a set of rows' `computed` figures — used both for the grand total
+  // and, scoped to one group's rows, for each group's subtotal row.
+  const sumComputedTotals = (rowsSubset: SalarySheetRow[]) =>
+    rowsSubset?.reduce(
+      (sum, entry) => {
+        const computed = entry.computed;
 
-      return {
-        basicSalary: sum.basicSalary + computed.basicSalary,
-        grossSalary: sum.grossSalary + computed.grossSalary,
-        taxableSalary: sum.taxableSalary + computed.taxableIncome,
-        paye: sum.paye + computed.paye,
-        totalDeductions: sum.totalDeductions + computed.totalDeductions,
-        netSalary: sum.netSalary + computed.netSalary,
-        totalEmployerContributions:
-          sum.totalEmployerContributions + computed.totalEmployerContributions,
-        totalEmployerCost: sum.totalEmployerCost + computed.totalEmployerCost,
-      };
-    },
-    {
-      basicSalary: 0,
-      grossSalary: 0,
-      taxableSalary: 0,
-      paye: 0,
-      totalDeductions: 0,
-      netSalary: 0,
-      totalEmployerContributions: 0,
-      totalEmployerCost: 0,
+        return {
+          basicSalary: sum.basicSalary + computed.basicSalary,
+          grossSalary: sum.grossSalary + computed.grossSalary,
+          taxableSalary: sum.taxableSalary + computed.taxableIncome,
+          paye: sum.paye + computed.paye,
+          totalDeductions: sum.totalDeductions + computed.totalDeductions,
+          netSalary: sum.netSalary + computed.netSalary,
+          totalEmployerContributions:
+            sum.totalEmployerContributions + computed.totalEmployerContributions,
+          totalEmployerCost: sum.totalEmployerCost + computed.totalEmployerCost,
+        };
+      },
+      {
+        basicSalary: 0,
+        grossSalary: 0,
+        taxableSalary: 0,
+        paye: 0,
+        totalDeductions: 0,
+        netSalary: 0,
+        totalEmployerContributions: 0,
+        totalEmployerCost: 0,
+      }
+    );
+
+  const totals = sumComputedTotals(rows);
+
+  // Employer buys back leave / department / cost-center grouping — splits
+  // the single table into one section per Department or Cost Center
+  // (according to each employee's assignment), each with its own subtotal
+  // row, or keeps the default single table. Falls back to "Unassigned" for
+  // employees with no department/cost center set, so nobody is silently
+  // dropped from the sheet.
+  const getGroupLabel = (run: PayrollRunType): string => {
+    if (groupBy === 'department') {
+      return (run.employee as any)?.department?.name || 'Unassigned';
     }
-  );
+    if (groupBy === 'cost_center') {
+      return (run.employee as any)?.cost_center?.name || 'Unassigned';
+    }
+    return '';
+  };
+
+  const groupedRows: Array<{ label: string; rows: SalarySheetRow[] }> =
+    groupBy === 'none'
+      ? [{ label: '', rows }]
+      : Array.from(
+          rows
+            .reduce((map, entry) => {
+              const label = getGroupLabel(entry.run);
+              if (!map.has(label)) map.set(label, []);
+              map.get(label)!.push(entry);
+              return map;
+            }, new Map<string, SalarySheetRow[]>())
+            .entries()
+        )
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([label, groupRows]) => ({ label, rows: groupRows }));
+
+  // S/N, Employee, Designation, Basic Salary, [allowances], Gross, Taxable,
+  // PAYE, [deductions], Total Ded., Net Payable, [contributions], Total
+  // Empr. Cost — used to span group header/subtotal rows across every
+  // column actually rendered.
+  const totalColumnCount =
+    10 +
+    unique_allowances_types.length +
+    unique_deductions_types.length +
+    unique_contributions_types.length;
 
   const downloadFileName = `Salary-Sheet-${periodLabel}`;
 
@@ -257,6 +300,7 @@ const SalarySheetDialog = ({
     allowanceTypes: employeeAllowance,
     deductionTypes: employeeDeductions,
     contributionTypes: employeecontributions,
+    groupBy,
   };
 
   const handleExcelExport = async (exportedData: any) => {
@@ -337,6 +381,18 @@ const SalarySheetDialog = ({
                     Salary Payroll - {periodLabel}
                   </Typography>
                 </Box>
+                <TextField
+                  select
+                  size='small'
+                  label='Group By'
+                  value={groupBy}
+                  onChange={(e) => setGroupBy(e.target.value as typeof groupBy)}
+                  sx={{ minWidth: 200 }}
+                >
+                  <MenuItem value='none'>One table (default)</MenuItem>
+                  <MenuItem value='department'>Department</MenuItem>
+                  <MenuItem value='cost_center'>Cost Center</MenuItem>
+                </TextField>
               </Stack>
               {isLoading ? (
                 <Box
@@ -667,7 +723,25 @@ const SalarySheetDialog = ({
                     </TableHead>
 
                     <TableBody>
-                      {rows.map((entry, index) => {
+                      {groupedRows.map((group, groupIdx) => (
+                        <Fragment key={`group-${group.label || 'all'}-${groupIdx}`}>
+                          {groupBy !== 'none' && (
+                            <TableRow>
+                              <TableCell
+                                colSpan={totalColumnCount}
+                                sx={{
+                                  fontWeight: 700,
+                                  bgcolor: 'action.hover',
+                                  border: '1px solid',
+                                  borderColor: 'divider',
+                                }}
+                              >
+                                {group.label} ({group.rows.length} employee
+                                {group.rows.length === 1 ? '' : 's'})
+                              </TableCell>
+                            </TableRow>
+                          )}
+                          {group.rows.map((entry, index) => {
                         const run = entry.run;
                         const computed = entry.computed;
                         const name = getEmployeeName(run);
@@ -755,10 +829,7 @@ const SalarySheetDialog = ({
                                     (itm) =>
                                       itm.employee_contract_id ===
                                         entry.run.employee?.id &&
-                                      (type.allowance_type_id !== null
-                                        ? itm.allowance_type_id ===
-                                          type.allowance_type_id
-                                        : itm.label === type.label)
+                                      itm.label === type.label
                                   )?.amount ?? 0
                                 )}
                               </TableCell>
@@ -800,10 +871,7 @@ const SalarySheetDialog = ({
                                     (itm) =>
                                       itm.employee_contract_id ===
                                         entry.run.employee?.id &&
-                                      (type.deduction_type_id !== null
-                                        ? itm.deduction_type_id ===
-                                          type.deduction_type_id
-                                        : itm.label === type.label)
+                                      itm.label === type.label
                                   )?.amount ?? 0
                                 )}
                               </TableCell>
@@ -876,7 +944,180 @@ const SalarySheetDialog = ({
                             </TableCell>
                           </TableRow>
                         );
-                      })}
+                          })}
+                          {groupBy !== 'none' &&
+                            (() => {
+                              const groupTotals = sumComputedTotals(group.rows);
+                              const groupEmployeeIds = new Set(
+                                group.rows.map((e) => e.run.employee?.id)
+                              );
+                              const groupAllowanceRows = employeeAllowance.filter(
+                                (a) => groupEmployeeIds.has(a.employee_contract_id)
+                              );
+                              const groupDeductionRows = employeeDeductions.filter(
+                                (a) => groupEmployeeIds.has(a.employee_contract_id)
+                              );
+                              const groupContributionRows =
+                                employeecontributions.filter((a) =>
+                                  groupEmployeeIds.has(a.employee_contract_id)
+                                );
+
+                              return (
+                                <TableRow>
+                                  <TableCell
+                                    colSpan={3}
+                                    sx={{
+                                      fontWeight: 700,
+                                      textAlign: 'center',
+                                      borderTop: '2px solid',
+                                      borderLeft: '2px solid',
+                                      borderRight: '2px solid',
+                                      borderColor: 'divider',
+                                    }}
+                                  >
+                                    Subtotal — {group.label}
+                                  </TableCell>
+                                  <TableCell
+                                    align='right'
+                                    sx={{
+                                      fontWeight: 700,
+                                      borderTop: '2px solid',
+                                      borderColor: 'divider',
+                                    }}
+                                  >
+                                    {fmt(groupTotals.basicSalary)}
+                                  </TableCell>
+                                  {unique_allowances_types.map((type: any) => (
+                                    <TableCell
+                                      key={`g-allowance-total-${group.label}-${type.label}`}
+                                      align='right'
+                                      sx={{
+                                        fontWeight: 700,
+                                        borderTop: '2px solid',
+                                        borderColor: 'divider',
+                                      }}
+                                    >
+                                      {fmt(
+                                        calculateTotalAmtByType(
+                                          type,
+                                          type.allowance_type_id,
+                                          'allowance',
+                                          groupAllowanceRows,
+                                          groupDeductionRows,
+                                          groupContributionRows
+                                        )
+                                      )}
+                                    </TableCell>
+                                  ))}
+                                  <TableCell
+                                    align='right'
+                                    sx={{
+                                      fontWeight: 700,
+                                      borderTop: '2px solid',
+                                      borderColor: 'divider',
+                                    }}
+                                  >
+                                    {fmt(groupTotals.grossSalary)}
+                                  </TableCell>
+                                  <TableCell
+                                    align='right'
+                                    sx={{
+                                      fontWeight: 700,
+                                      borderTop: '2px solid',
+                                      borderColor: 'divider',
+                                    }}
+                                  >
+                                    {fmt(groupTotals.taxableSalary)}
+                                  </TableCell>
+                                  {unique_deductions_types.map((type: any) => (
+                                    <TableCell
+                                      key={`g-deduction-total-${group.label}-${type.label}`}
+                                      align='right'
+                                      sx={{
+                                        fontWeight: 700,
+                                        borderTop: '2px solid',
+                                        borderColor: 'divider',
+                                      }}
+                                    >
+                                      {fmt(
+                                        calculateTotalAmtByType(
+                                          type,
+                                          type.deduction_type_id,
+                                          'deduction',
+                                          groupAllowanceRows,
+                                          groupDeductionRows,
+                                          groupContributionRows
+                                        )
+                                      )}
+                                    </TableCell>
+                                  ))}
+                                  <TableCell
+                                    align='right'
+                                    sx={{
+                                      fontWeight: 700,
+                                      borderTop: '2px solid',
+                                      borderColor: 'divider',
+                                    }}
+                                  >
+                                    {fmt(groupTotals.paye)}
+                                  </TableCell>
+                                  <TableCell
+                                    align='right'
+                                    sx={{
+                                      fontWeight: 700,
+                                      borderTop: '2px solid',
+                                      borderColor: 'divider',
+                                    }}
+                                  >
+                                    {fmt(groupTotals.totalDeductions)}
+                                  </TableCell>
+                                  <TableCell
+                                    align='right'
+                                    sx={{
+                                      fontWeight: 700,
+                                      borderTop: '2px solid',
+                                      borderColor: 'divider',
+                                    }}
+                                  >
+                                    {fmt(groupTotals.netSalary)}
+                                  </TableCell>
+                                  {unique_contributions_types.map((type: any) => (
+                                    <TableCell
+                                      key={`g-contribution-total-${group.label}-${type.label}`}
+                                      align='right'
+                                      sx={{
+                                        fontWeight: 700,
+                                        borderTop: '2px solid',
+                                        borderColor: 'divider',
+                                      }}
+                                    >
+                                      {fmt(
+                                        calculateTotalAmtByType(
+                                          type,
+                                          type.employer_contribution_type_id,
+                                          'contribution',
+                                          groupAllowanceRows,
+                                          groupDeductionRows,
+                                          groupContributionRows
+                                        )
+                                      )}
+                                    </TableCell>
+                                  ))}
+                                  <TableCell
+                                    align='right'
+                                    sx={{
+                                      fontWeight: 700,
+                                      borderTop: '2px solid',
+                                      borderColor: 'divider',
+                                    }}
+                                  >
+                                    {fmt(groupTotals.totalEmployerCost)}
+                                  </TableCell>
+                                </TableRow>
+                              );
+                            })()}
+                        </Fragment>
+                      ))}
 
                       {/* Totals Row */}
                       <TableRow>
@@ -1058,6 +1299,7 @@ const SalarySheetDialog = ({
                     allowanceTypes={employeeAllowance}
                     deductionTypes={employeeDeductions}
                     contributionTypes={employeecontributions}
+                    groupBy={groupBy}
                   />
                 }
                 fileName={`Salary-Sheet-${periodLabel}`}

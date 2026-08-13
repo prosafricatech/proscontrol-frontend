@@ -280,6 +280,8 @@ const PayrollPeriodStatutoryTab = ({
                 direction='row'
                 justifyContent='space-between'
                 alignItems='center'
+                flexWrap='wrap'
+                rowGap={1}
                 sx={{ px: 2, py: 1.5 }}
               >
                 <Typography variant='subtitle1' fontWeight={600}>

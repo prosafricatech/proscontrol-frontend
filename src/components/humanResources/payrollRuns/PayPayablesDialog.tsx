@@ -19,6 +19,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableContainer,
   TableHead,
   TableRow,
   TextField,
@@ -188,6 +189,7 @@ const PayPayablesDialog = ({
               settled.
             </Alert>
           ) : (
+            <TableContainer sx={{ overflowX: 'auto' }}>
             <Table size='small'>
               <TableHead>
                 <TableRow>
@@ -261,6 +263,7 @@ const PayPayablesDialog = ({
                 ))}
               </TableBody>
             </Table>
+            </TableContainer>
           )}
 
           {payableRows.length > 0 && (

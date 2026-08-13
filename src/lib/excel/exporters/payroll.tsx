@@ -57,18 +57,16 @@ function sumContributionByType(run: any, type: any): number {
   }, 0);
 }
 
+// Keyed by label (the displayed column name), not type_id — several
+// system-computed lines (Overtime Pay's per-OvertimeType breakdown, Absence
+// Deduction, PAYE) can share one type_id (or none at all) while being
+// genuinely different columns; label is what's actually unique per column.
+// The common case (the same real Allowance/Deduction/Contribution Type
+// across employees) shares both label and type_id, so this still dedupes
+// correctly there too. Mirrors SalarySheetPDF.tsx / SalarySheetDialog.tsx.
 function getUniqueTypes(value: Array<any>): Array<any> {
   const filtered = Array.from(
-    new Map(
-      value.map((itm) => [
-        itm?.deduction_type_id ??
-          itm?.allowance_type_id ??
-          itm?.employer_contribution_type_id ??
-          itm?.id ??
-          itm?.label,
-        itm,
-      ])
-    ).values()
+    new Map(value.map((itm) => [itm?.label, itm])).values()
   );
   return filtered;
 }
@@ -82,20 +80,17 @@ function calculateTotalAmtByType(
   deductionTypes: any[],
   contributionTypes: any[]
 ): number {
+  // Matched by label, not type_id — see getUniqueTypes() above for why
+  // (e.g. Overtime Pay's per-OvertimeType lines share one type_id).
   if (type === 'allowance') {
     return allowanceTypes.reduce(
-      (sum, item) =>
-        item.allowance_type_id === type_id || item.label === typeObj.label
-          ? sum + item?.amount
-          : sum,
+      (sum, item) => (item.label === typeObj.label ? sum + item?.amount : sum),
       0
     );
   }
   if (type === 'deduction') {
     return deductionTypes.reduce((sum, item) => {
-      return item.deduction_type_id === type_id || item.label === typeObj.label
-        ? sum + item?.amount
-        : sum;
+      return item.label === typeObj.label ? sum + item?.amount : sum;
     }, 0);
   }
   if (type === 'contribution') {
@@ -148,13 +143,21 @@ export async function ExportPayrollToExcel(exportedData: any) {
       allowanceTypes = [],
       deductionTypes = [],
       contributionTypes = [],
+      groupBy = 'none',
     } = exportedData;
 
-    const uniqueAllowanceTypes = getUniqueTypes(allowanceTypes).filter(
-      (type) => type.allowance_type_id !== null
-    );
+    // Unlike deductions/contributions, allowances are never filtered by
+    // type_id — system-computed lines (Overtime Pay) are legitimately
+    // null-typed until HR maps a real AllowanceType, and still need a
+    // column. Mirrors SalarySheetPDF.tsx / SalarySheetDialog.tsx.
+    const uniqueAllowanceTypes = getUniqueTypes(allowanceTypes);
+    // PAYE is a deduction line with deduction_type_id === null and
+    // category === 'tax' — excluded here (it gets its own dedicated
+    // column), but other null-typed system deductions (e.g. Absence
+    // Deduction) are kept. Filtering on type_id alone used to drop Absence
+    // Deduction's column silently whenever it was unmapped.
     const uniqueDeductionTypes = getUniqueTypes(deductionTypes).filter(
-      (type) => type.deduction_type_id !== null
+      (type) => type.category !== 'tax'
     );
     const uniqueContributionTypes = getUniqueTypes(contributionTypes).filter(
       (type) => type.employer_contribution_type_id !== null
@@ -176,32 +179,63 @@ export async function ExportPayrollToExcel(exportedData: any) {
       return fullName || 'Unknown Employee';
     };
 
+    const getEmployeeNumber = (run: PayrollRunType) =>
+      (run.employee as any)?.employee_number || '';
+
     // ---- Calculate totals (exactly like PDF) ----
-    const totals = rows.reduce(
-      (sum: any, entry: any) => ({
-        basicSalary: sum.basicSalary + entry.computed.basicSalary,
-        grossSalary: sum.grossSalary + entry.computed.grossSalary,
-        taxableSalary: sum.taxableSalary + entry.computed.taxableIncome,
-        paye: sum.paye + entry.computed.paye,
-        totalDeductions: sum.totalDeductions + entry.computed.totalDeductions,
-        netSalary: sum.netSalary + entry.computed.netSalary,
-        totalEmployerContributions:
-          sum.totalEmployerContributions +
-          entry.computed.totalEmployerContributions,
-        totalEmployerCost:
-          sum.totalEmployerCost + entry.computed.totalEmployerCost,
-      }),
-      {
-        basicSalary: 0,
-        grossSalary: 0,
-        taxableSalary: 0,
-        paye: 0,
-        totalDeductions: 0,
-        netSalary: 0,
-        totalEmployerContributions: 0,
-        totalEmployerCost: 0,
-      }
-    );
+    const sumComputedTotals = (rowsSubset: any[]) =>
+      rowsSubset.reduce(
+        (sum: any, entry: any) => ({
+          basicSalary: sum.basicSalary + entry.computed.basicSalary,
+          grossSalary: sum.grossSalary + entry.computed.grossSalary,
+          taxableSalary: sum.taxableSalary + entry.computed.taxableIncome,
+          paye: sum.paye + entry.computed.paye,
+          totalDeductions: sum.totalDeductions + entry.computed.totalDeductions,
+          netSalary: sum.netSalary + entry.computed.netSalary,
+          totalEmployerContributions:
+            sum.totalEmployerContributions +
+            entry.computed.totalEmployerContributions,
+          totalEmployerCost:
+            sum.totalEmployerCost + entry.computed.totalEmployerCost,
+        }),
+        {
+          basicSalary: 0,
+          grossSalary: 0,
+          taxableSalary: 0,
+          paye: 0,
+          totalDeductions: 0,
+          netSalary: 0,
+          totalEmployerContributions: 0,
+          totalEmployerCost: 0,
+        }
+      );
+
+    const totals = sumComputedTotals(rows);
+
+    // Splits the sheet into one section per Department/Cost Center (per
+    // employee assignment), each with its own header + subtotal row —
+    // mirrors SalarySheetDialog.tsx / SalarySheetPDF.tsx exactly.
+    const getGroupLabel = (run: any): string => {
+      if (groupBy === 'department') return run.employee?.department?.name || 'Unassigned';
+      if (groupBy === 'cost_center') return run.employee?.cost_center?.name || 'Unassigned';
+      return '';
+    };
+
+    const groupedRows: Array<{ label: string; rows: any[] }> =
+      groupBy === 'none'
+        ? [{ label: '', rows }]
+        : Array.from(
+            rows
+              .reduce((map: Map<string, any[]>, entry: any) => {
+                const label = getGroupLabel(entry.run);
+                if (!map.has(label)) map.set(label, []);
+                map.get(label)!.push(entry);
+                return map;
+              }, new Map<string, any[]>())
+              .entries()
+          )
+            .sort(([a]: any, [b]: any) => a.localeCompare(b))
+            .map(([label, groupRowsArr]: any) => ({ label, rows: groupRowsArr }));
 
     // ---- Summary calculations (mirrors PDF) ----
     const grossByEmployer = totals.totalEmployerCost;
@@ -219,16 +253,17 @@ export async function ExportPayrollToExcel(exportedData: any) {
     const q = processedContributionTypes.length;
 
     const COL_SN = 1;
-    const COL_NAME = 2;
-    const COL_DESIGNATION = 3;
-    const COL_BASIC = 4;
-    const COL_GROSS = 5 + n;
-    const COL_TAXABLE = 6 + n;
-    const COL_PAYE = 7 + n;
-    const COL_TOTAL_DED = 8 + n + m;
-    const COL_NET = 9 + n + m;
-    const COL_TOTAL_CONTRIB = 10 + n + m + q;
-    const COL_EMPLOYER_COST = 11 + n + m + q;
+    const COL_EMP_NO = 2;
+    const COL_NAME = 3;
+    const COL_DESIGNATION = 4;
+    const COL_BASIC = 5;
+    const COL_GROSS = 6 + n;
+    const COL_TAXABLE = 7 + n;
+    const COL_PAYE = 8 + n;
+    const COL_TOTAL_DED = 9 + n + m;
+    const COL_NET = 10 + n + m;
+    const COL_TOTAL_CONTRIB = 11 + n + m + q;
+    const COL_EMPLOYER_COST = 12 + n + m + q;
     const TOTAL_COLS = COL_EMPLOYER_COST;
 
     // ---- Workbook ----
@@ -237,6 +272,7 @@ export async function ExportPayrollToExcel(exportedData: any) {
 
     // ---- Column widths ----
     ws.getColumn(getExcelColumnName(COL_SN)).width = 6;
+    ws.getColumn(getExcelColumnName(COL_EMP_NO)).width = 14;
     ws.getColumn(getExcelColumnName(COL_NAME)).width = 26;
     ws.getColumn(getExcelColumnName(COL_DESIGNATION)).width = 20;
     for (let c = COL_BASIC; c <= TOTAL_COLS; c++) {
@@ -284,12 +320,13 @@ export async function ExportPayrollToExcel(exportedData: any) {
     };
 
     setHdr(COL_SN, 'S/N');
+    setHdr(COL_EMP_NO, 'Employee No.');
     setHdr(COL_NAME, 'Name');
     setHdr(COL_DESIGNATION, 'Designation');
     setHdr(COL_BASIC, 'Basic Salary');
 
     processedAllowanceTypes.forEach((t: any, i: number) =>
-      setHdr(5 + i, t.label || t.name || 'Allowance')
+      setHdr(6 + i, t.label || t.name || 'Allowance')
     );
 
     setHdr(COL_GROSS, 'Gross');
@@ -297,25 +334,27 @@ export async function ExportPayrollToExcel(exportedData: any) {
     setHdr(COL_PAYE, 'PAYE');
 
     processedDeductionTypes.forEach((t: any, i: number) =>
-      setHdr(8 + n + i, fmtTypeLabel(t, 'Deduction'))
+      setHdr(9 + n + i, fmtTypeLabel(t, 'Deduction'))
     );
 
     setHdr(COL_TOTAL_DED, 'Total Ded.');
     setHdr(COL_NET, 'Net Payable');
 
     processedContributionTypes.forEach((t: any, i: number) =>
-      setHdr(10 + n + m + i, t.label || t.name || 'Contribution')
+      setHdr(11 + n + m + i, t.label || t.name || 'Contribution')
     );
 
     setHdr(COL_TOTAL_CONTRIB, 'Total Empr. Contrib.');
     setHdr(COL_EMPLOYER_COST, 'Employer Cost');
     ws.getRow(4).height = 18;
 
-    // ---- Data rows ----
-    rows.forEach((entry: any, index: number) => {
-      const ROW = 5 + index;
+    // ---- Data rows (one section per group when groupBy !== 'none') ----
+    let currentRow = 5;
+
+    const writeDataRow = (entry: any, snIndex: number, ROW: number) => {
       const name = getEmployeeName(entry.run);
-      const fill = getAlternatingRowFill(index);
+      const employeeNumber = getEmployeeNumber(entry.run);
+      const fill = getAlternatingRowFill(snIndex);
 
       const setTxt = (col: number, value: string) => {
         const cell = ws.getCell(`${getExcelColumnName(col)}${ROW}`);
@@ -329,7 +368,8 @@ export async function ExportPayrollToExcel(exportedData: any) {
         applyCellStyle(cell, { ...CELL_STYLES.dataRowNumeric, fill });
       };
 
-      setTxt(COL_SN, String(index + 1));
+      setTxt(COL_SN, String(snIndex + 1));
+      setTxt(COL_EMP_NO, employeeNumber || '-');
       setTxt(COL_NAME, name || '-');
       setTxt(COL_DESIGNATION, getDesignation(entry.run));
       setNum(COL_BASIC, entry.computed.basicSalary);
@@ -339,10 +379,9 @@ export async function ExportPayrollToExcel(exportedData: any) {
         const found = allowanceTypes.find(
           (itm: any) =>
             itm.employee_contract_id === entry.run.employee?.id &&
-            (itm.label === type.label ||
-              itm.allowance_type_id === type.allowance_type_id)
+            itm.label === type.label
         );
-        setNum(5 + i, found?.amount ?? 0);
+        setNum(6 + i, found?.amount ?? 0);
       });
 
       setNum(COL_GROSS, entry.computed.grossSalary);
@@ -353,10 +392,9 @@ export async function ExportPayrollToExcel(exportedData: any) {
         const found = deductionTypes.find(
           (itm: any) =>
             itm.employee_contract_id === entry.run.employee?.id &&
-            (itm.label === type.label ||
-              itm.deduction_type_id === type.deduction_type_id)
+            itm.label === type.label
         );
-        setNum(8 + n + i, found?.amount ?? 0);
+        setNum(9 + n + i, found?.amount ?? 0);
       });
 
       setNum(COL_TOTAL_DED, entry.computed.totalDeductions);
@@ -370,16 +408,121 @@ export async function ExportPayrollToExcel(exportedData: any) {
               itm.employer_contribution_type_id ===
                 type.employer_contribution_type_id)
         );
-        setNum(10 + n + m + i, found?.amount ?? 0);
+        setNum(11 + n + m + i, found?.amount ?? 0);
       });
 
       setNum(COL_TOTAL_CONTRIB, entry.computed.totalEmployerContributions);
       setNum(COL_EMPLOYER_COST, entry.computed.totalEmployerCost);
       ws.getRow(ROW).height = 16;
+    };
+
+    const writeSubtotalRow = (label: string, groupRowsArr: any[], ROW: number) => {
+      const groupTotals = sumComputedTotals(groupRowsArr);
+      const groupEmployeeIds = new Set(
+        groupRowsArr.map((e: any) => e.run.employee?.id)
+      );
+      const groupAllowanceRows = allowanceTypes.filter((a: any) =>
+        groupEmployeeIds.has(a.employee_contract_id)
+      );
+      const groupDeductionRows = deductionTypes.filter((a: any) =>
+        groupEmployeeIds.has(a.employee_contract_id)
+      );
+      const groupContributionRows = contributionTypes.filter((a: any) =>
+        groupEmployeeIds.has(a.employee_contract_id)
+      );
+
+      ws.mergeCells(
+        `${getExcelColumnName(COL_SN)}${ROW}:${getExcelColumnName(COL_DESIGNATION)}${ROW}`
+      );
+      const setSubTxt = (col: number, value: string) => {
+        const cell = ws.getCell(`${getExcelColumnName(col)}${ROW}`);
+        cell.value = value;
+        applyCellStyle(cell, CELL_STYLES.totalRowText);
+      };
+      const setSubNum = (col: number, value: number) => {
+        const cell = ws.getCell(`${getExcelColumnName(col)}${ROW}`);
+        cell.value = value;
+        cell.numFmt = NUM_FMT;
+        applyCellStyle(cell, CELL_STYLES.totalRowNumeric);
+      };
+
+      setSubTxt(COL_SN, `Subtotal — ${label}`);
+      setSubNum(COL_BASIC, groupTotals.basicSalary);
+      processedAllowanceTypes.forEach((type: any, i: number) => {
+        setSubNum(
+          6 + i,
+          calculateTotalAmtByType(
+            type,
+            type.allowance_type_id,
+            'allowance',
+            groupAllowanceRows,
+            groupDeductionRows,
+            groupContributionRows
+          )
+        );
+      });
+      setSubNum(COL_GROSS, groupTotals.grossSalary);
+      setSubNum(COL_TAXABLE, groupTotals.taxableSalary);
+      setSubNum(COL_PAYE, groupTotals.paye);
+      processedDeductionTypes.forEach((type: any, i: number) => {
+        setSubNum(
+          9 + n + i,
+          calculateTotalAmtByType(
+            type,
+            type.deduction_type_id,
+            'deduction',
+            groupAllowanceRows,
+            groupDeductionRows,
+            groupContributionRows
+          )
+        );
+      });
+      setSubNum(COL_TOTAL_DED, groupTotals.totalDeductions);
+      setSubNum(COL_NET, groupTotals.netSalary);
+      processedContributionTypes.forEach((type: any, i: number) => {
+        setSubNum(
+          11 + n + m + i,
+          calculateTotalAmtByType(
+            type,
+            type.employer_contribution_type_id,
+            'contribution',
+            groupAllowanceRows,
+            groupDeductionRows,
+            groupContributionRows
+          )
+        );
+      });
+      setSubNum(COL_TOTAL_CONTRIB, groupTotals.totalEmployerContributions);
+      setSubNum(COL_EMPLOYER_COST, groupTotals.totalEmployerCost);
+      ws.getRow(ROW).height = 18;
+    };
+
+    groupedRows.forEach((group) => {
+      if (groupBy !== 'none') {
+        ws.mergeCells(
+          `${getExcelColumnName(COL_SN)}${currentRow}:${getExcelColumnName(TOTAL_COLS)}${currentRow}`
+        );
+        const headerCell = ws.getCell(`${getExcelColumnName(COL_SN)}${currentRow}`);
+        headerCell.value = `${group.label} (${group.rows.length} employee${group.rows.length === 1 ? '' : 's'})`;
+        applyCellStyle(headerCell, CELL_STYLES.tableHeader);
+        headerCell.alignment = { horizontal: 'left', vertical: 'middle' };
+        ws.getRow(currentRow).height = 18;
+        currentRow++;
+      }
+
+      group.rows.forEach((entry: any, snIndex: number) => {
+        writeDataRow(entry, snIndex, currentRow);
+        currentRow++;
+      });
+
+      if (groupBy !== 'none') {
+        writeSubtotalRow(group.label, group.rows, currentRow);
+        currentRow++;
+      }
     });
 
     // ---- Totals row ----
-    const TOTALS_ROW = 5 + rows.length;
+    const TOTALS_ROW = currentRow;
     ws.mergeCells(
       `${getExcelColumnName(COL_SN)}${TOTALS_ROW}:${getExcelColumnName(COL_DESIGNATION)}${TOTALS_ROW}`
     );
@@ -402,7 +545,7 @@ export async function ExportPayrollToExcel(exportedData: any) {
     // Totals use calculateTotalAmtByType - EXACTLY like PDF
     processedAllowanceTypes.forEach((type: any, i: number) => {
       setTotalNum(
-        5 + i,
+        6 + i,
         calculateTotalAmtByType(
           type,
           type.allowance_type_id,
@@ -420,7 +563,7 @@ export async function ExportPayrollToExcel(exportedData: any) {
 
     processedDeductionTypes.forEach((type: any, i: number) => {
       setTotalNum(
-        8 + n + i,
+        9 + n + i,
         calculateTotalAmtByType(
           type,
           type.deduction_type_id,
@@ -437,7 +580,7 @@ export async function ExportPayrollToExcel(exportedData: any) {
 
     processedContributionTypes.forEach((type: any, i: number) => {
       setTotalNum(
-        10 + n + m + i,
+        11 + n + m + i,
         calculateTotalAmtByType(
           type,
           type.employer_contribution_type_id,
