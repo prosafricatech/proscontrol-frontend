@@ -2,8 +2,8 @@
 
 import { Divider, Grid, Tooltip, Typography } from '@mui/material';
 import dayjs from 'dayjs';
-import { EmployeeEmployerContributionType } from './EmployeeEmployerContributionType';
 import EmployeeEmployerContributionItemAction from './EmployeeEmployerContributionItemAction';
+import { EmployeeEmployerContributionType } from './EmployeeEmployerContributionType';
 
 const EmployeeEmployerContributionsListItem = ({
   employeeEmployerContribution,
@@ -28,7 +28,7 @@ const EmployeeEmployerContributionsListItem = ({
         alignItems={'center'}
         container
       >
-        <Grid size={{ xs: 12, md: 3.0 }}>
+        <Grid size={{ xs: 6, md: 3.0 }}>
           <Tooltip title='Contribution Type'>
             <Typography>
               {employeeEmployerContribution.contribution_type?.name ||
@@ -37,22 +37,28 @@ const EmployeeEmployerContributionsListItem = ({
           </Tooltip>
           {employeeEmployerContribution.member_no && (
             <Tooltip title='Member No.'>
-              <Typography variant='caption' color='text.secondary' display='block'>
+              <Typography
+                variant='caption'
+                color='text.secondary'
+                display='block'
+              >
                 No: {employeeEmployerContribution.member_no}
               </Typography>
             </Tooltip>
           )}
         </Grid>
 
-        <Grid size={{ xs: 12, md: 2.0 }}>
+        <Grid size={{ xs: 6, md: 2.0 }}>
           <Tooltip title='Value'>
             <Typography>
-              {Number(employeeEmployerContribution.value || 0).toLocaleString('en-US')}
+              {Number(employeeEmployerContribution.value || 0).toLocaleString(
+                'en-US'
+              )}
             </Typography>
           </Tooltip>
         </Grid>
 
-        <Grid size={{ xs: 12, md: 2.5 }}>
+        <Grid size={{ xs: 6, md: 2.5 }}>
           <Tooltip title='Effective From'>
             <Typography>
               {employeeEmployerContribution.effective_from
@@ -64,7 +70,7 @@ const EmployeeEmployerContributionsListItem = ({
           </Tooltip>
         </Grid>
 
-        <Grid size={{ xs: 12, md: 3.5 }}>
+        <Grid size={{ xs: 6, md: 3.5 }}>
           <Tooltip title='Effective To'>
             <Typography>
               {employeeEmployerContribution.effective_to
@@ -76,7 +82,7 @@ const EmployeeEmployerContributionsListItem = ({
           </Tooltip>
         </Grid>
 
-        <Grid size={{ xs: 2, md: 1.0 }} textAlign={'end'}>
+        <Grid size={{ xs: 12, md: 1.0 }} textAlign={'end'}>
           <EmployeeEmployerContributionItemAction
             employeeEmployerContribution={employeeEmployerContribution}
           />

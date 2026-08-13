@@ -1,8 +1,8 @@
 'use client';
 
 import { Chip, Divider, Grid, Tooltip, Typography } from '@mui/material';
-import AllowanceTypeItemAction from './AllowanceTypeItemAction';
 import { AllowanceType } from './AllowanceType';
+import AllowanceTypeItemAction from './AllowanceTypeItemAction';
 
 const AllowanceTypesListItem = ({
   allowanceType,
@@ -27,7 +27,7 @@ const AllowanceTypesListItem = ({
         alignItems={'center'}
         container
       >
-        <Grid size={{ xs: 12, md: 2.5 }}>
+        <Grid size={{ xs: 6, md: 2.5 }}>
           <Tooltip title='Name'>
             <Typography variant='h6' fontSize={14} lineHeight={1.25} mb={0}>
               {allowanceType.name}
@@ -35,21 +35,31 @@ const AllowanceTypesListItem = ({
           </Tooltip>
         </Grid>
 
-        <Grid size={{ xs: 12, md: 2 }}>
+        <Grid size={{ xs: 6, md: 2 }}>
           <Tooltip title='Code'>
             <Typography>{allowanceType.code || '-'}</Typography>
           </Tooltip>
         </Grid>
 
-        <Grid size={{ xs: 12, md: 2 }}>
+        <Grid size={{ xs: 5, md: 2 }}>
           {allowanceType.is_taxable ? (
-            <Chip label='Taxable' size='small' color='warning' variant='outlined' />
+            <Chip
+              label='Taxable'
+              size='small'
+              color='warning'
+              variant='outlined'
+            />
           ) : (
-            <Chip label='Non-taxable' size='small' color='success' variant='outlined' />
+            <Chip
+              label='Non-taxable'
+              size='small'
+              color='success'
+              variant='outlined'
+            />
           )}
         </Grid>
 
-        <Grid size={{ xs: 12, md: 4.5 }}>
+        <Grid size={{ xs: 5, md: 4.5 }}>
           <Tooltip title='Description'>
             <Typography noWrap>{allowanceType.description || '-'}</Typography>
           </Tooltip>

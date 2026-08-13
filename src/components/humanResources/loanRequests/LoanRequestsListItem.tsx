@@ -4,7 +4,7 @@ import { readableDate } from '@/app/helpers/input-sanitization-helpers';
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import organizationServices from '@/components/organizations/organizationServices';
 import { PERMISSIONS } from '@/utilities/constants/permissions';
-import {  Verified } from '@mui/icons-material';
+import { Verified } from '@mui/icons-material';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import {
@@ -185,25 +185,25 @@ const LoanRequestsListItem = ({
           paddingLeft={1}
           paddingRight={1}
         >
-          <Grid size={{ xs: 12, md: 3 }}>
+          <Grid size={{ xs: 6, md: 3 }}>
             <Tooltip title='Employee'>
               <Typography noWrap>{employeeName}</Typography>
             </Tooltip>
           </Grid>
 
-          <Grid size={{ xs: 12, md: 2.2 }}>
+          <Grid size={{ xs: 6, md: 2.2 }}>
             <Tooltip title='Amount Requested'>
               <Typography>{formatCurrency(loanRequest.amount)}</Typography>
             </Tooltip>
           </Grid>
 
-          <Grid size={{ xs: 12, md: 1.8 }}>
+          <Grid size={{ xs: 6, md: 1.8 }}>
             <Tooltip title='Installments Requested'>
               <Typography>{loanRequest.installments} months</Typography>
             </Tooltip>
           </Grid>
 
-          <Grid size={{ xs: 12, md: 1.8 }}>
+          <Grid size={{ xs: 6, md: 1.8 }}>
             <Tooltip title='Loan Request Date'>
               <Typography>
                 {readableDate(
@@ -233,7 +233,7 @@ const LoanRequestsListItem = ({
                 <Tooltip
                   title={`Disbursed ${readableDate(loanRequest.disbursed_at, false)}`}
                 >
-                  <Verified  color='success' fontSize='small' />
+                  <Verified color='success' fontSize='small' />
                 </Tooltip>
               )}
             </Stack>
