@@ -176,6 +176,7 @@ const DocumentDialog: React.FC<DocumentDialogProps> = ({
                 <RequisitionPDF
                   organization={organization}
                   requisition={requisitionDetails}
+                  approvals={requisition.approvals}
                 />
               }
               fileName={requisition.requisitionNo}

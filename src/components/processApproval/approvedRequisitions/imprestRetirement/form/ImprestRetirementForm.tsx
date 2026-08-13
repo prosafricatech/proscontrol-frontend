@@ -1,5 +1,15 @@
-import React from 'react';
+import { sanitizedNumber } from '@/app/helpers/input-sanitization-helpers';
+import LedgerSelect from '@/components/accounts/ledgers/forms/LedgerSelect';
+import userLedgerServices from '@/components/accounts/ledgers/user-ledger-services';
+import MeasurementSelector from '@/components/masters/measurementUnits/MeasurementSelector';
+import imprestRetirementServices from '@/components/processApproval/imprestRetirements/imprestRetirementServices';
+import StoreSelector from '@/components/procurement/stores/StoreSelector';
+import ProductSelect from '@/components/productAndServices/products/ProductSelect';
+import { useProductsSelect } from '@/components/productAndServices/products/ProductsSelectProvider';
+import CommaSeparatedField from '@/shared/Inputs/CommaSeparatedField';
+import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { Div } from '@jumbo/shared';
+import { AddOutlined, DisabledByDefault } from '@mui/icons-material';
 import { LoadingButton } from '@mui/lab';
 import {
   Alert,
@@ -17,20 +27,11 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import { AddOutlined, DisabledByDefault } from '@mui/icons-material';
 import { DateTimePicker } from '@mui/x-date-pickers';
-import dayjs, { Dayjs } from 'dayjs';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import dayjs, { Dayjs } from 'dayjs';
 import { useSnackbar } from 'notistack';
-import LedgerSelect from '@/components/accounts/ledgers/forms/LedgerSelect';
-import MeasurementSelector from '@/components/masters/measurementUnits/MeasurementSelector';
-import CommaSeparatedField from '@/shared/Inputs/CommaSeparatedField';
-import { sanitizedNumber } from '@/app/helpers/input-sanitization-helpers';
-import userLedgerServices from '@/components/accounts/ledgers/user-ledger-services';
-import imprestRetirementServices from '@/components/processApproval/imprestRetirements/imprestRetirementServices';
-import ProductSelect from '@/components/productAndServices/products/ProductSelect';
-import StoreSelector from '@/components/procurement/stores/StoreSelector';
-import { useProductsSelect } from '@/components/productAndServices/products/ProductsSelectProvider';
+import React from 'react';
 
 type RetirementItem = {
   id?: number;
@@ -112,8 +113,7 @@ const ReadOnlyField = ({
         px: 1.25,
         py: 1,
         height: '100%',
-        bgcolor:
-          theme.type === 'dark' ? 'rgba(255,255,255,0.06)' : 'grey.50',
+        bgcolor: theme.type === 'dark' ? 'rgba(255,255,255,0.06)' : 'grey.50',
         boxShadow:
           theme.type === 'dark'
             ? 'inset 0 1px 0 rgba(255,255,255,0.08)'
@@ -121,13 +121,13 @@ const ReadOnlyField = ({
       })}
     >
       <Typography
-        variant="caption"
-        color="text.secondary"
+        variant='caption'
+        color='text.secondary'
         sx={{ display: 'block', mb: 0.5, opacity: 0.95 }}
       >
         {label}
       </Typography>
-      <Typography variant="body2" color="text.primary">
+      <Typography variant='body2' color='text.primary'>
         {value || '-'}
       </Typography>
     </Div>
@@ -144,13 +144,17 @@ function ImprestRetirementForm({
 }: ImprestRetirementFormProps) {
   const queryClient = useQueryClient();
   const { enqueueSnackbar } = useSnackbar();
-  const {productOptions} = useProductsSelect();
-  const nonInventoryIds = productOptions.filter(product => product.type !== 'Inventory').map(product => product.id);
+  const { productOptions } = useProductsSelect();
+  const nonInventoryIds = productOptions
+    .filter((product) => product.type !== 'Inventory')
+    .map((product) => product.id);
 
   const [retirementId, setRetirementId] = React.useState<number | null>(null);
   const [statusLabel, setStatusLabel] = React.useState<string>('Draft');
   const [ledgerId, setLedgerId] = React.useState<number | null>(null);
-  const [retirementDate, setRetirementDate] = React.useState<Dayjs | null>(dayjs());
+  const [retirementDate, setRetirementDate] = React.useState<Dayjs | null>(
+    dayjs()
+  );
   const [remarks, setRemarks] = React.useState('');
   const [clientError, setClientError] = React.useState<string | null>(null);
 
@@ -159,23 +163,26 @@ function ImprestRetirementForm({
     queryFn: userLedgerServices.getMyLedgers,
   });
 
-  const {
-    data: existingRetirementsResponse,
-    isFetching: isFetchingExisting,
-  } = useQuery({
-    queryKey: ['imprestRetirements', { requisition_approval_id: approvedDetails?.id }],
-    queryFn: () =>
-      imprestRetirementServices.list({
-        requisition_approval_id: approvedDetails?.id
-      }),
-    enabled: !!approvedDetails?.id && !existingRetirementDetails && !startNew,
-  });
+  const { data: existingRetirementsResponse, isFetching: isFetchingExisting } =
+    useQuery({
+      queryKey: [
+        'imprestRetirements',
+        { requisition_approval_id: approvedDetails?.id },
+      ],
+      queryFn: () =>
+        imprestRetirementServices.list({
+          requisition_approval_id: approvedDetails?.id,
+        }),
+      enabled: !!approvedDetails?.id && !existingRetirementDetails && !startNew,
+    });
 
   const existingRetirementFromShow = React.useMemo(() => {
     if (!existingRetirementDetails) return null;
     if (existingRetirementDetails?.id) return existingRetirementDetails;
-    if (existingRetirementDetails?.data?.id) return existingRetirementDetails.data;
-    if (existingRetirementDetails?.data?.data?.id) return existingRetirementDetails.data.data;
+    if (existingRetirementDetails?.data?.id)
+      return existingRetirementDetails.data;
+    if (existingRetirementDetails?.data?.data?.id)
+      return existingRetirementDetails.data.data;
     return null;
   }, [existingRetirementDetails]);
 
@@ -184,10 +191,12 @@ function ImprestRetirementForm({
       ? myLedgersResponse
       : Array.isArray(myLedgersResponse?.data)
         ? myLedgersResponse.data
-          : [];
+        : [];
 
     return ledgers
-      .filter((entry: any) => String(entry?.type || '').toLowerCase() === 'imprest')
+      .filter(
+        (entry: any) => String(entry?.type || '').toLowerCase() === 'imprest'
+      )
       .map((entry: any) => ({
         id: Number(entry?.ledger_id || entry?.ledger?.id),
         name: entry?.ledger?.name || `Ledger #${entry?.ledger_id}`,
@@ -206,22 +215,33 @@ function ImprestRetirementForm({
       ? existingRetirementsResponse
       : Array.isArray(existingRetirementsResponse?.data)
         ? existingRetirementsResponse.data
-          : [];
+        : [];
 
     if (list.length === 0) return null;
 
     if (preferredRetirementId) {
-      const preferredRetirement = list.find((ret: any) => Number(ret?.id) === Number(preferredRetirementId));
+      const preferredRetirement = list.find(
+        (ret: any) => Number(ret?.id) === Number(preferredRetirementId)
+      );
       if (preferredRetirement) return preferredRetirement;
     }
 
     const editable = list.find((ret: any) => {
       const raw = String(ret?.status || ret?.status_label || '').toLowerCase();
-      return raw.includes('draft') || raw.includes('suspended') || raw.includes('reject');
+      return (
+        raw.includes('draft') ||
+        raw.includes('suspended') ||
+        raw.includes('reject')
+      );
     });
 
     return editable || list[0];
-  }, [startNew, existingRetirementFromShow, existingRetirementsResponse, preferredRetirementId]);
+  }, [
+    startNew,
+    existingRetirementFromShow,
+    existingRetirementsResponse,
+    preferredRetirementId,
+  ]);
 
   const retirementDisplayNo =
     existingRetirementFromShow?.retirementNo ||
@@ -237,8 +257,10 @@ function ImprestRetirementForm({
 
   // Helper function to check if an item is an imprest fulfillment
   const isImprestFulfillment = (item: any) => {
-    return item?.fulfillment_type?.toUpperCase() === 'IMPREST' || 
-           approvedDetails?.process_type?.toUpperCase() === 'IMPREST';
+    return (
+      item?.fulfillment_type?.toUpperCase() === 'IMPREST' ||
+      approvedDetails?.process_type?.toUpperCase() === 'IMPREST'
+    );
   };
 
   const [items, setItems] = React.useState<RetirementItem[]>(() => {
@@ -255,16 +277,21 @@ function ImprestRetirementForm({
       return sourceItems.map((item: any) => ({
         id: item.id,
         imprest_retirement_item_id:
-          Number(item?.imprest_retirement_item_id || item?.id || 0) || undefined,
+          Number(item?.imprest_retirement_item_id || item?.id || 0) ||
+          undefined,
         line_type: hasProductInItem(item) ? 'PRODUCT' : 'EXPENSE',
         ledger_id: Number(item.ledger_id || item.ledger?.id) || null,
         product_id: Number(item.product_id || item.product?.id) || null,
         store_id: Number(item.store_id || item.store?.id) || null,
         measurement_unit_id:
           Number(item.measurement_unit_id || item.measurement_unit?.id) || null,
-        quantity: Number.isFinite(Number(item.quantity)) ? Number(item.quantity) : 1,
+        quantity: Number.isFinite(Number(item.quantity))
+          ? Number(item.quantity)
+          : 1,
         rate: Number.isFinite(Number(item.rate)) ? Number(item.rate) : 0,
-        amount: Number.isFinite(Number(item.amount)) ? Number(item.amount) : undefined,
+        amount: Number.isFinite(Number(item.amount))
+          ? Number(item.amount)
+          : undefined,
         description: item.description || item.remarks || '',
         ledger: item.ledger,
         product: item.product,
@@ -272,34 +299,44 @@ function ImprestRetirementForm({
         measurement_unit: item.measurement_unit,
       }));
     }
-    
+
     // NEW: Check if approvedDetails has items with products (imprest fulfillment)
     if (approvedDetails?.items?.length) {
-      const imprestItems = approvedDetails.items.filter((item: any) => 
+      const imprestItems = approvedDetails.items.filter((item: any) =>
         isImprestFulfillment(item)
       );
-      
+
       if (imprestItems.length > 0) {
         return imprestItems.map((item: any) => {
           const hasProduct = hasProductInItem(item);
           return {
             line_type: hasProduct ? 'PRODUCT' : 'EXPENSE',
             ledger_id: Number(item?.ledger?.id) || null,
-            product_id: hasProduct ? Number(item.product_id || item.product?.id) : null,
-            store_id: hasProduct ? Number(item.store_id || item.store?.id) : null,
+            product_id: hasProduct
+              ? Number(item.product_id || item.product?.id)
+              : null,
+            store_id: hasProduct
+              ? Number(item.store_id || item.store?.id)
+              : null,
             measurement_unit_id: Number(item?.measurement_unit?.id) || null,
-            quantity: Number.isFinite(Number(item?.quantity)) ? Number(item.quantity) : 1,
+            quantity: Number.isFinite(Number(item?.quantity))
+              ? Number(item.quantity)
+              : 1,
             rate: Number.isFinite(Number(item?.rate)) ? Number(item.rate) : 0,
             description: item?.remarks || '',
-            ledger: item?.ledger ? { id: item.ledger.id, name: item.ledger.name } : null,
-            product: hasProduct ? (item.product || { id: item.product_id }) : null,
-            store: hasProduct ? (item.store || { id: item.store_id }) : null,
+            ledger: item?.ledger
+              ? { id: item.ledger.id, name: item.ledger.name }
+              : null,
+            product: hasProduct
+              ? item.product || { id: item.product_id }
+              : null,
+            store: hasProduct ? item.store || { id: item.store_id } : null,
             measurement_unit: item?.measurement_unit,
           };
         });
       }
     }
-    
+
     // Fallback to single empty expense item
     return [{ ...EMPTY_ITEM }];
   });
@@ -308,8 +345,13 @@ function ImprestRetirementForm({
     if (!existingRetirement) return;
 
     setRetirementId(existingRetirement.id);
-    setStatusLabel(existingRetirement.status_label || existingRetirement.status || 'Draft');
-    setLedgerId(Number(existingRetirement.ledger_id || existingRetirement.ledger?.id) || null);
+    setStatusLabel(
+      existingRetirement.status_label || existingRetirement.status || 'Draft'
+    );
+    setLedgerId(
+      Number(existingRetirement.ledger_id || existingRetirement.ledger?.id) ||
+        null
+    );
     setRetirementDate(
       existingRetirement.retirement_date
         ? dayjs(existingRetirement.retirement_date)
@@ -337,13 +379,17 @@ function ImprestRetirementForm({
 
   const totalAmount = React.useMemo(() => {
     return items.reduce((sum, item) => {
-      const qty = Number.isFinite(Number(item.quantity)) ? Number(item.quantity) : 0;
+      const qty = Number.isFinite(Number(item.quantity))
+        ? Number(item.quantity)
+        : 0;
       const rate = Number.isFinite(Number(item.rate)) ? Number(item.rate) : 0;
       return sum + qty * rate;
     }, 0);
   }, [items]);
 
-  const ceilingAmount = Number(approvedDetails?.amount || approvedRequisition?.amount || 0);
+  const ceilingAmount = Number(
+    approvedDetails?.amount || approvedRequisition?.amount || 0
+  );
   const rawCurrencyCode =
     existingRetirementFromShow?.currency?.code ||
     existingRetirementFromShow?.currency_code ||
@@ -369,14 +415,16 @@ function ImprestRetirementForm({
   };
 
   const approvedAmountDisplay = formatMoney(ceilingAmount);
-  const totalItemsAmountDisplay = formatMoney(Number.isFinite(totalAmount) ? totalAmount : 0);
+  const totalItemsAmountDisplay = formatMoney(
+    Number.isFinite(totalAmount) ? totalAmount : 0
+  );
 
   const statusRaw = String(statusLabel || '').toLowerCase();
   const isLocked = false;
   const canSubmitForApproval =
-    (statusRaw === 'draft' ||
-      statusRaw === 'suspended' ||
-      statusRaw.includes('reject'));
+    statusRaw === 'draft' ||
+    statusRaw === 'suspended' ||
+    statusRaw.includes('reject');
   const requisitionApprovalId =
     existingRetirementFromShow?.requisition_approval_id ||
     existingRetirement?.requisition_approval_id ||
@@ -389,9 +437,10 @@ function ImprestRetirementForm({
     myImprestLedgers.find((option) => option.id === ledgerId)?.name ||
     existingRetirement?.ledger?.name ||
     (ledgerId ? `Ledger #${ledgerId}` : '-');
-  const paidThroughLabel = selectedLedgerName && selectedLedgerName !== '-'
-    ? selectedLedgerName
-    : (existingRetirementFromShow?.ledger?.name || '-');
+  const paidThroughLabel =
+    selectedLedgerName && selectedLedgerName !== '-'
+      ? selectedLedgerName
+      : existingRetirementFromShow?.ledger?.name || '-';
 
   const resolveRetirementIdFromResponse = React.useCallback(
     async (response: any): Promise<number | null> => {
@@ -424,7 +473,9 @@ function ImprestRetirementForm({
             : [];
 
       const found = list.find(
-        (entry: any) => String(entry?.retirementNo || '').toUpperCase() === match[0].toUpperCase()
+        (entry: any) =>
+          String(entry?.retirementNo || '').toUpperCase() ===
+          match[0].toUpperCase()
       );
 
       return Number(found?.id || 0) || null;
@@ -435,7 +486,9 @@ function ImprestRetirementForm({
   const addRetirement = useMutation({
     mutationFn: imprestRetirementServices.add,
     onSuccess: async (response: any) => {
-      enqueueSnackbar(response?.message || 'Imprest retirement draft created', { variant: 'success' });
+      enqueueSnackbar(response?.message || 'Imprest retirement draft created', {
+        variant: 'success',
+      });
       queryClient.invalidateQueries({ queryKey: ['imprestRetirements'] });
       const createdId = await resolveRetirementIdFromResponse(response);
       if (createdId) {
@@ -443,7 +496,8 @@ function ImprestRetirementForm({
       }
     },
     onError: (error: any) => {
-      const apiMessage = error?.response?.data?.message || 'Failed to create retirement draft';
+      // const apiMessage = error?.response?.data?.message || 'Failed to create retirement draft';
+      const apiMessage = getErrorMessage(error);
       enqueueSnackbar(apiMessage, { variant: 'error' });
     },
   });
@@ -451,11 +505,17 @@ function ImprestRetirementForm({
   const updateRetirement = useMutation({
     mutationFn: imprestRetirementServices.update,
     onSuccess: (response: any) => {
-      enqueueSnackbar(response?.message || 'Imprest retirement draft updated', { variant: 'success' });
+      enqueueSnackbar(response?.message || 'Imprest retirement draft updated', {
+        variant: 'success',
+      });
       queryClient.invalidateQueries({ queryKey: ['imprestRetirements'] });
     },
     onError: (error: any) => {
-      enqueueSnackbar(error?.response?.data?.message || 'Failed to update retirement draft', {
+      // enqueueSnackbar(error?.response?.data?.message || 'Failed to update retirement draft', {
+      //   variant: 'error',
+      // });
+
+      enqueueSnackbar(getErrorMessage(error), {
         variant: 'error',
       });
     },
@@ -464,14 +524,20 @@ function ImprestRetirementForm({
   const submitRetirement = useMutation({
     mutationFn: imprestRetirementServices.submit,
     onSuccess: (response: any) => {
-      enqueueSnackbar(response?.message || 'Imprest retirement submitted for approval', {
-        variant: 'success',
-      });
+      enqueueSnackbar(
+        response?.message || 'Imprest retirement submitted for approval',
+        {
+          variant: 'success',
+        }
+      );
       queryClient.invalidateQueries({ queryKey: ['imprestRetirements'] });
       toggleOpen(false);
     },
     onError: (error: any) => {
-      enqueueSnackbar(error?.response?.data?.message || 'Failed to submit retirement', {
+      // enqueueSnackbar(error?.response?.data?.message || 'Failed to submit retirement', {
+      //   variant: 'error',
+      // });
+      enqueueSnackbar(getErrorMessage(error), {
         variant: 'error',
       });
     },
@@ -495,7 +561,9 @@ function ImprestRetirementForm({
 
   const validateBeforeSave = () => {
     if (!requisitionApprovalId) {
-      setClientError('Requisition approval reference is missing. Please reopen the form and try again.');
+      setClientError(
+        'Requisition approval reference is missing. Please reopen the form and try again.'
+      );
       return false;
     }
 
@@ -532,7 +600,9 @@ function ImprestRetirementForm({
     });
 
     if (hasInvalidItem) {
-      setClientError('Each item requires source account/product, measurement unit, quantity greater than 0 and rate greater than 0.');
+      setClientError(
+        'Each item requires source account/product, measurement unit, quantity greater than 0 and rate greater than 0.'
+      );
       return false;
     }
 
@@ -543,7 +613,9 @@ function ImprestRetirementForm({
   const buildPayload = () => ({
     requisition_approval_id: requisitionApprovalId,
     ledger_id: ledgerId,
-    retirement_date: retirementDate ? retirementDate.format('YYYY-MM-DD') : null,
+    retirement_date: retirementDate
+      ? retirementDate.format('YYYY-MM-DD')
+      : null,
     remarks,
     items: items.map((item) => ({
       line_type: item.line_type || 'EXPENSE',
@@ -551,7 +623,9 @@ function ImprestRetirementForm({
       product_id: item.product_id || null,
       store_id: item.store_id || null,
       measurement_unit_id: item.measurement_unit_id,
-      quantity: Number.isFinite(Number(item.quantity)) ? Number(item.quantity) : 0,
+      quantity: Number.isFinite(Number(item.quantity))
+        ? Number(item.quantity)
+        : 0,
       rate: Number.isFinite(Number(item.rate)) ? Number(item.rate) : 0,
       description: item.description || '',
     })),
@@ -584,9 +658,12 @@ function ImprestRetirementForm({
     const createdId = await resolveRetirementIdFromResponse(response);
 
     if (!createdId) {
-      enqueueSnackbar('Retirement created but could not resolve record id for submit.', {
-        variant: 'error',
-      });
+      enqueueSnackbar(
+        'Retirement created but could not resolve record id for submit.',
+        {
+          variant: 'error',
+        }
+      );
       return;
     }
 
@@ -599,16 +676,29 @@ function ImprestRetirementForm({
 
   return (
     <>
-      <DialogTitle textAlign="center">
-        {retirementId ? `Update ${retirementDisplayNo}` : 'Imprest Retirement Form'}
+      <DialogTitle textAlign='center'>
+        {retirementId
+          ? `Update ${retirementDisplayNo}`
+          : 'Imprest Retirement Form'}
       </DialogTitle>
       <DialogContent>
         <Grid container spacing={1.5} marginBottom={2}>
           <Grid size={{ xs: 12, md: 3 }}>
-            <Chip size="small" color="primary" label={`Status: ${statusLabel}`} />
+            <Chip
+              size='small'
+              color='primary'
+              label={`Status: ${statusLabel}`}
+            />
           </Grid>
           <Grid size={{ xs: 12, md: 9 }}>
-            <Div sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, flexWrap: 'wrap' }}>
+            <Div
+              sx={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                gap: 1,
+                flexWrap: 'wrap',
+              }}
+            >
               <Div
                 sx={(theme) => ({
                   display: 'inline-block',
@@ -616,14 +706,26 @@ function ImprestRetirementForm({
                   py: 0.75,
                   borderRadius: 1.5,
                   border: '1px solid',
-                  borderColor: theme.type === 'dark' ? 'rgba(46, 204, 113, 0.45)' : 'success.light',
-                  bgcolor: theme.type === 'dark' ? 'rgba(46, 204, 113, 0.12)' : 'rgba(46, 204, 113, 0.1)',
+                  borderColor:
+                    theme.type === 'dark'
+                      ? 'rgba(46, 204, 113, 0.45)'
+                      : 'success.light',
+                  bgcolor:
+                    theme.type === 'dark'
+                      ? 'rgba(46, 204, 113, 0.12)'
+                      : 'rgba(46, 204, 113, 0.1)',
                 })}
               >
-                <Typography variant="caption" sx={{ display: 'block', opacity: 0.9 }}>
+                <Typography
+                  variant='caption'
+                  sx={{ display: 'block', opacity: 0.9 }}
+                >
                   Approved Amount
                 </Typography>
-                <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+                <Typography
+                  variant='h6'
+                  sx={{ fontWeight: 700, lineHeight: 1.2 }}
+                >
                   {approvedAmountDisplay}
                 </Typography>
               </Div>
@@ -634,14 +736,26 @@ function ImprestRetirementForm({
                   py: 0.75,
                   borderRadius: 1.5,
                   border: '1px solid',
-                  borderColor: theme.type === 'dark' ? 'rgba(33, 150, 243, 0.45)' : 'info.light',
-                  bgcolor: theme.type === 'dark' ? 'rgba(33, 150, 243, 0.12)' : 'rgba(33, 150, 243, 0.08)',
+                  borderColor:
+                    theme.type === 'dark'
+                      ? 'rgba(33, 150, 243, 0.45)'
+                      : 'info.light',
+                  bgcolor:
+                    theme.type === 'dark'
+                      ? 'rgba(33, 150, 243, 0.12)'
+                      : 'rgba(33, 150, 243, 0.08)',
                 })}
               >
-                <Typography variant="caption" sx={{ display: 'block', opacity: 0.9 }}>
+                <Typography
+                  variant='caption'
+                  sx={{ display: 'block', opacity: 0.9 }}
+                >
                   Total Items Amount
                 </Typography>
-                <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+                <Typography
+                  variant='h6'
+                  sx={{ fontWeight: 700, lineHeight: 1.2 }}
+                >
                   {totalItemsAmountDisplay}
                 </Typography>
               </Div>
@@ -653,19 +767,27 @@ function ImprestRetirementForm({
                 options={myImprestLedgers}
                 disabled={isLocked}
                 getOptionLabel={(option) => option.name}
-                value={myImprestLedgers.find((option) => option.id === ledgerId) || null}
+                value={
+                  myImprestLedgers.find((option) => option.id === ledgerId) ||
+                  null
+                }
                 isOptionEqualToValue={(option, value) => option.id === value.id}
                 onChange={(_e, newValue) => {
                   setLedgerId(newValue?.id || null);
                 }}
                 renderInput={(params) => (
-                  <TextField {...params} size="small" label="Imprest Ledger" fullWidth />
+                  <TextField
+                    {...params}
+                    size='small'
+                    label='Imprest Ledger'
+                    fullWidth
+                  />
                 )}
               />
             </Grid>
             <Grid size={{ xs: 12, md: 4 }}>
               <DateTimePicker
-                label="Retirement Date"
+                label='Retirement Date'
                 disabled={isLocked}
                 value={retirementDate}
                 onChange={(value: Dayjs | null) => setRetirementDate(value)}
@@ -679,21 +801,21 @@ function ImprestRetirementForm({
             </Grid>
             <Grid size={{ xs: 12, md: 4 }}>
               <TextField
-                size="small"
+                size='small'
                 fullWidth
-                label="Reference Requisition"
+                label='Reference Requisition'
                 disabled
                 value={approvedRequisition?.requisition?.requisitionNo || ''}
               />
             </Grid>
             <Grid size={{ xs: 12 }}>
               <TextField
-                size="small"
+                size='small'
                 fullWidth
                 multiline
                 minRows={2}
                 disabled={isLocked}
-                label="Remarks"
+                label='Remarks'
                 value={remarks}
                 onChange={(e) => setRemarks(e.target.value)}
               />
@@ -704,18 +826,29 @@ function ImprestRetirementForm({
         <Divider sx={{ mb: 1.5 }} />
 
         {items.map((item, index) => {
-          const isProductLine = String(item.line_type || 'EXPENSE') === 'PRODUCT';
+          const isProductLine =
+            String(item.line_type || 'EXPENSE') === 'PRODUCT';
 
           return (
-            <Grid container spacing={1} alignItems="center" key={`${item.id || 'new'}-${index}`} mb={1}>
+            <Grid
+              container
+              spacing={1}
+              alignItems='center'
+              key={`${item.id || 'new'}-${index}`}
+              mb={1}
+            >
               <Grid size={{ xs: 1, md: 0.5 }}>
-                <Typography variant="body2">{index + 1}.</Typography>
+                <Typography variant='body2'>{index + 1}.</Typography>
               </Grid>
               {isLocked ? (
                 <>
                   <Grid size={{ xs: 12, md: 4.5 }}>
                     <ReadOnlyField
-                      label={isProductLine ? 'Product / Store' : 'Paid Through (Item Ledger)'}
+                      label={
+                        isProductLine
+                          ? 'Product / Store'
+                          : 'Paid Through (Item Ledger)'
+                      }
                       value={
                         isProductLine
                           ? `${item.product?.item_name || item.product?.name || (item.product_id ? `Product #${item.product_id}` : '-')} (${item.store?.name || (item.store_id ? `Store #${item.store_id}` : '-')})`
@@ -725,35 +858,54 @@ function ImprestRetirementForm({
                   </Grid>
                   <Grid size={{ xs: 12, md: 2 }}>
                     <ReadOnlyField
-                      label="Unit"
-                      value={item.measurement_unit?.alias || item.measurement_unit?.symbol || item.measurement_unit?.name || '-'}
+                      label='Unit'
+                      value={
+                        item.measurement_unit?.alias ||
+                        item.measurement_unit?.symbol ||
+                        item.measurement_unit?.name ||
+                        '-'
+                      }
                     />
                   </Grid>
                   <Grid size={{ xs: 12, md: 1.5 }}>
                     <ReadOnlyField
-                      label="Qty"
-                      value={Number(item.quantity || 0).toLocaleString('en-US', {
-                        maximumFractionDigits: 4,
-                      })}
+                      label='Qty'
+                      value={Number(item.quantity || 0).toLocaleString(
+                        'en-US',
+                        {
+                          maximumFractionDigits: 4,
+                        }
+                      )}
                     />
                   </Grid>
                   <Grid size={{ xs: 12, md: 2.5 }}>
                     <ReadOnlyField
-                      label="Rate"
-                      value={formatMoney(Number.isFinite(Number(item.rate)) ? Number(item.rate) : 0)}
+                      label='Rate'
+                      value={formatMoney(
+                        Number.isFinite(Number(item.rate))
+                          ? Number(item.rate)
+                          : 0
+                      )}
                     />
                   </Grid>
                   <Grid size={{ xs: 12, md: 1.5 }}>
                     <ReadOnlyField
-                      label="Amount"
+                      label='Amount'
                       value={formatMoney(
-                        (Number.isFinite(Number(item.quantity)) ? Number(item.quantity) : 0) *
-                          (Number.isFinite(Number(item.rate)) ? Number(item.rate) : 0)
+                        (Number.isFinite(Number(item.quantity))
+                          ? Number(item.quantity)
+                          : 0) *
+                          (Number.isFinite(Number(item.rate))
+                            ? Number(item.rate)
+                            : 0)
                       )}
                     />
                   </Grid>
                   <Grid size={{ xs: 12, md: 3 }}>
-                    <ReadOnlyField label="Description" value={item.description || '-'} />
+                    <ReadOnlyField
+                      label='Description'
+                      value={item.description || '-'}
+                    />
                   </Grid>
                 </>
               ) : (
@@ -766,12 +918,18 @@ function ImprestRetirementForm({
                       label='Line Type'
                       value={item.line_type || 'EXPENSE'}
                       onChange={(e) => {
-                        const lineType = String(e.target.value) === 'PRODUCT' ? 'PRODUCT' : 'EXPENSE';
+                        const lineType =
+                          String(e.target.value) === 'PRODUCT'
+                            ? 'PRODUCT'
+                            : 'EXPENSE';
                         updateItem(index, {
                           line_type: lineType,
-                          ledger_id: lineType === 'EXPENSE' ? item.ledger_id : null,
-                          product_id: lineType === 'PRODUCT' ? item.product_id : null,
-                          store_id: lineType === 'PRODUCT' ? item.store_id : null,
+                          ledger_id:
+                            lineType === 'EXPENSE' ? item.ledger_id : null,
+                          product_id:
+                            lineType === 'PRODUCT' ? item.product_id : null,
+                          store_id:
+                            lineType === 'PRODUCT' ? item.store_id : null,
                         });
                       }}
                     >
@@ -806,9 +964,18 @@ function ImprestRetirementForm({
                     ) : (
                       <LedgerSelect
                         label={`Item Ledger (Paid via ${paidThroughLabel})`}
-                        defaultValue={item.ledger_id ? ({ id: item.ledger_id, name: item.ledger?.name || '' } as any) : null}
+                        defaultValue={
+                          item.ledger_id
+                            ? ({
+                                id: item.ledger_id,
+                                name: item.ledger?.name || '',
+                              } as any)
+                            : null
+                        }
                         onChange={(newValue: any) => {
-                          const singleValue = Array.isArray(newValue) ? newValue[0] : newValue;
+                          const singleValue = Array.isArray(newValue)
+                            ? newValue[0]
+                            : newValue;
                           updateItem(index, {
                             ledger_id: Number(singleValue?.id || 0) || null,
                             ledger: singleValue,
@@ -837,12 +1004,15 @@ function ImprestRetirementForm({
 
                   <Grid size={{ xs: 12, md: isProductLine ? 2.5 : 2.5 }}>
                     <MeasurementSelector
-                      label="Unit"
+                      label='Unit'
                       defaultValue={item.measurement_unit_id || null}
                       onChange={(newValue: any) => {
-                        const selected = Array.isArray(newValue) ? newValue[0] : newValue;
+                        const selected = Array.isArray(newValue)
+                          ? newValue[0]
+                          : newValue;
                         updateItem(index, {
-                          measurement_unit_id: Number(selected?.id || 0) || null,
+                          measurement_unit_id:
+                            Number(selected?.id || 0) || null,
                           measurement_unit: selected,
                         });
                       }}
@@ -851,42 +1021,54 @@ function ImprestRetirementForm({
 
                   <Grid size={{ xs: 12, md: isProductLine ? 2 : 3 }}>
                     <TextField
-                      size="small"
+                      size='small'
                       fullWidth
                       disabled={isLocked}
-                      label="Quantity"
+                      label='Quantity'
                       value={item.quantity ?? 0}
-                      InputProps={{ inputComponent: CommaSeparatedField as any }}
+                      InputProps={{
+                        inputComponent: CommaSeparatedField as any,
+                      }}
                       onChange={(e) => {
                         const quantity = sanitizedNumber(e.target.value);
-                        updateItem(index, { quantity: Number.isFinite(quantity) ? quantity : 0 });
+                        updateItem(index, {
+                          quantity: Number.isFinite(quantity) ? quantity : 0,
+                        });
                       }}
                     />
                   </Grid>
 
                   <Grid size={{ xs: 12, md: isProductLine ? 2 : 3 }}>
                     <TextField
-                      size="small"
+                      size='small'
                       fullWidth
                       disabled={isLocked}
-                      label="Rate"
+                      label='Rate'
                       value={item.rate ?? 0}
-                      InputProps={{ inputComponent: CommaSeparatedField as any }}
+                      InputProps={{
+                        inputComponent: CommaSeparatedField as any,
+                      }}
                       onChange={(e) => {
                         const rate = sanitizedNumber(e.target.value);
-                        updateItem(index, { rate: Number.isFinite(rate) ? rate : 0 });
+                        updateItem(index, {
+                          rate: Number.isFinite(rate) ? rate : 0,
+                        });
                       }}
                     />
                   </Grid>
 
                   <Grid size={{ xs: 12, md: isProductLine ? 2 : 3 }}>
                     <TextField
-                      size="small"
+                      size='small'
                       fullWidth
-                      label="Amount"
+                      label='Amount'
                       value={(
-                        (Number.isFinite(Number(item.quantity)) ? Number(item.quantity) : 0) *
-                        (Number.isFinite(Number(item.rate)) ? Number(item.rate) : 0)
+                        (Number.isFinite(Number(item.quantity))
+                          ? Number(item.quantity)
+                          : 0) *
+                        (Number.isFinite(Number(item.rate))
+                          ? Number(item.rate)
+                          : 0)
                       ).toLocaleString('en-US', {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
@@ -897,22 +1079,27 @@ function ImprestRetirementForm({
 
                   <Grid size={{ xs: 12, md: items.length > 1 ? 5.5 : 6 }}>
                     <TextField
-                      size="small"
+                      size='small'
                       fullWidth
                       multiline
                       minRows={2}
                       disabled={isLocked}
-                      label="Description"
+                      label='Description'
                       value={item.description || ''}
-                      onChange={(e) => updateItem(index, { description: e.target.value })}
+                      onChange={(e) =>
+                        updateItem(index, { description: e.target.value })
+                      }
                     />
                   </Grid>
 
-                  <Grid size={{ xs: 0.5 }} textAlign="right">
+                  <Grid size={{ xs: 0.5 }} textAlign='right'>
                     {!isLocked && items.length > 1 && (
-                      <Tooltip title="Remove Item">
-                        <IconButton size="small" onClick={() => removeItem(index)}>
-                          <DisabledByDefault fontSize="small" color="error" />
+                      <Tooltip title='Remove Item'>
+                        <IconButton
+                          size='small'
+                          onClick={() => removeItem(index)}
+                        >
+                          <DisabledByDefault fontSize='small' color='error' />
                         </IconButton>
                       </Tooltip>
                     )}
@@ -926,8 +1113,8 @@ function ImprestRetirementForm({
         {!isLocked && (
           <Div sx={{ textAlign: 'right', mb: 1.5 }}>
             <Button
-              size="small"
-              variant="outlined"
+              size='small'
+              variant='outlined'
               startIcon={<AddOutlined />}
               onClick={appendItem}
             >
@@ -937,20 +1124,20 @@ function ImprestRetirementForm({
         )}
 
         {clientError && (
-          <Alert severity="error" sx={{ mb: 1.5 }}>
+          <Alert severity='error' sx={{ mb: 1.5 }}>
             {clientError}
           </Alert>
         )}
       </DialogContent>
 
       <DialogActions>
-        <Button size="small" onClick={() => toggleOpen(false)}>
+        <Button size='small' onClick={() => toggleOpen(false)}>
           Cancel
         </Button>
         {!isLocked && (
           <LoadingButton
-            size="small"
-            variant="contained"
+            size='small'
+            variant='contained'
             onClick={handleSaveDraft}
             loading={addRetirement.isPending || updateRetirement.isPending}
           >
@@ -959,9 +1146,9 @@ function ImprestRetirementForm({
         )}
         {canSubmitForApproval && (
           <LoadingButton
-            size="small"
-            color="success"
-            variant="contained"
+            size='small'
+            color='success'
+            variant='contained'
             onClick={handleSubmitForApproval}
             loading={submitRetirement.isPending || addRetirement.isPending}
           >

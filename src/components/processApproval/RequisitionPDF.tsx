@@ -6,6 +6,7 @@ import PageFooter from '../pdf/PageFooter';
 import pdfStyles from '../pdf/pdf-styles';
 import PdfLogo from '../pdf/PdfLogo';
 import {
+  Approval,
   PaymentItem,
   PurchaseItem,
   Requisition,
@@ -16,9 +17,14 @@ import {
 interface RequisitionPDFProps {
   requisition: Requisition;
   organization: Organization;
+  approvals: Approval[] | null;
 }
 
-function RequisitionPDF({ requisition, organization }: RequisitionPDFProps) {
+function RequisitionPDF({
+  requisition,
+  organization,
+  approvals,
+}: RequisitionPDFProps) {
   const mainColor = organization.settings?.main_color || '#2113AD';
   const lightColor = organization.settings?.light_color || '#bec5da';
   const contrastText = organization.settings?.contrast_text || '#FFFFFF';
@@ -478,6 +484,10 @@ function RequisitionPDF({ requisition, organization }: RequisitionPDFProps) {
               </Text>
             </View>
           )}
+        </View>
+
+        {/* approval chain history */}
+        <View style={{ ...pdfStyles.tableRow, marginBottom: 10 }}>
           <View style={{ flex: 1, padding: 0.5 }}>
             <Text style={{ ...pdfStyles.minInfo, color: mainColor }}>
               Requested By
@@ -487,6 +497,30 @@ function RequisitionPDF({ requisition, organization }: RequisitionPDFProps) {
             </Text>
           </View>
         </View>
+        {approvals &&
+          approvals.length > 0 &&
+          approvals.map((approval, idx) => (
+            <View style={{ ...pdfStyles.tableRow, marginBottom: 10 }} key={idx}>
+              <View style={{ flex: 1, padding: 0.5 }}>
+                <Text style={{ ...pdfStyles.minInfo, color: mainColor }}>
+                  {approval.status_label}
+                </Text>
+                <Text style={{ ...pdfStyles.minInfo }}>
+                  {readableDate(approval.approval_date)}
+                </Text>
+                <Text
+                  style={{
+                    ...pdfStyles.minInfo,
+                    fontStyle: 'italic',
+                    fontWeight: 'light',
+                    color: '#363534',
+                  }}
+                >
+                  {approval.remarks}
+                </Text>
+              </View>
+            </View>
+          ))}
 
         <PageFooter />
       </Page>

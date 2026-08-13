@@ -1,17 +1,19 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
+import { NextRequest, NextResponse } from 'next/server';
 
-const COOKIE_NAME = process.env.NODE_ENV === 'production'
-  ? '__Secure-next-auth.session-token'
-  : 'next-auth.session-token';
+const COOKIE_NAME =
+  process.env.NODE_ENV === 'production'
+    ? '__Secure-next-auth.session-token'
+    : 'next-auth.session-token';
 
 export async function authMiddleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   if (
     pathname.includes('/auth/verifyEmail') ||
-    pathname === '/api/auth/status' || 
-    pathname.startsWith('/api/auth/')
+    pathname === '/api/auth/status' ||
+    pathname.startsWith('/api/auth/') ||
+    pathname.includes('/auth/verify-email')
   ) {
     return NextResponse.next();
   }

@@ -186,6 +186,7 @@ const DocumentDialog: React.FC<DocumentDialogProps> = ({
                   <ApprovalPDF
                     organization={organization}
                     approval={approvalDetails}
+                    requisition={requisition}
                   />
                 }
                 fileName={`${approvalDetails?.requisition?.requisitionNo} Approval`}
@@ -195,6 +196,7 @@ const DocumentDialog: React.FC<DocumentDialogProps> = ({
                 belowLargeScreen={belowLargeScreen}
                 approval={approvalDetails}
                 organization={organization}
+                requisition={requisition}
               />
             )}
           </Box>
