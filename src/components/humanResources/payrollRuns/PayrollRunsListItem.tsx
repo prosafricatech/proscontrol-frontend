@@ -125,6 +125,41 @@ const PayrollRunsListItem = ({
   const previewTotals =
     previewData?.data?.totals || previewData?.totals || null;
 
+  // Per-type breakdowns for the Summary tab's expandable Allowances/
+  // Deductions/Contributions cards — grouped by label (the displayed name),
+  // same convention as the Salary Sheet's own type columns.
+  const sumByLabel = (rows: any[], key: string, excludeTax = false) => {
+    const map = new Map<string, number>();
+    rows.forEach((row: any) => {
+      (row[key] || []).forEach((item: any) => {
+        if (excludeTax && item.category === 'tax') return;
+        map.set(item.label, (map.get(item.label) || 0) + (item.amount || 0));
+      });
+    });
+    return Array.from(map.entries()).map(([label, amount]) => ({ label, amount }));
+  };
+
+  const allowanceBreakdown = useMemo(
+    () => sumByLabel(previewRows, 'allowances'),
+    [previewRows]
+  );
+  // PAYE is a deduction line too, but it already has its own dedicated
+  // summary card — excluded here so it isn't double-counted in the total.
+  const deductionBreakdown = useMemo(
+    () => sumByLabel(previewRows, 'deductions', true),
+    [previewRows]
+  );
+  const contributionBreakdown = useMemo(
+    () => sumByLabel(previewRows, 'employer_contributions'),
+    [previewRows]
+  );
+  // Not returned by PayrollService::summarize() — derived here from the same
+  // per-row contribution lines the breakdown above already sums.
+  const totalEmployerContributions = useMemo(
+    () => contributionBreakdown.reduce((sum, c) => sum + c.amount, 0),
+    [contributionBreakdown]
+  );
+
   // Fetch run details
   const { data: runDetailsData, isLoading: isLoadingDetails } = useQuery({
     queryKey: ['payrollRunDetails', payrollRun.id],
@@ -444,6 +479,10 @@ const PayrollRunsListItem = ({
                   paye={previewTotals?.paye}
                   total_allowances={previewTotals?.total_allowances}
                   total_deductions={previewTotals?.total_deductions}
+                  total_employer_contributions={totalEmployerContributions}
+                  allowance_breakdown={allowanceBreakdown}
+                  deduction_breakdown={deductionBreakdown}
+                  contribution_breakdown={contributionBreakdown}
                   onSimulate={handleSimulateEmployee}
                   isSimulating={isSimulating}
                 />

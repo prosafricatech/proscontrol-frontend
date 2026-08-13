@@ -52,6 +52,7 @@ interface LedgerSelectProps {
   multiple?: boolean;
   startAdornment?: React.ReactNode;
   showCurrency?: boolean;
+  disabled?: boolean;
 }
 
 function LedgerSelect(props: LedgerSelectProps) {
@@ -69,6 +70,7 @@ function LedgerSelect(props: LedgerSelectProps) {
     multiple = false,
     startAdornment,
     showCurrency = true,
+    disabled = false,
   } = props;
 
   const { extractLedgers, isLoaded } = useLedgerSelect();
@@ -299,6 +301,7 @@ function LedgerSelect(props: LedgerSelectProps) {
   return (
     <Autocomplete
       options={options}
+      disabled={disabled}
       filterOptions={filterOptions}
       getOptionLabel={getOptionLabel}
       value={selectedValue}

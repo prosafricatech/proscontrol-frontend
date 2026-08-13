@@ -4,6 +4,7 @@ import React from 'react';
 import { useJumboTheme } from '@jumbo/components/JumboTheme/hooks';
 import { Div } from '@jumbo/shared';
 import LogoutIcon from '@mui/icons-material/Logout';
+import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
 import RepeatOutlinedIcon from '@mui/icons-material/RepeatOutlined';
 import {
   Avatar,
@@ -44,7 +45,7 @@ type Dictionary = {
 interface User {
   name: string;
   email: string;
-  avatar?: string;
+  photo_path?: string | null;
 }
 
 interface Organization {
@@ -106,7 +107,7 @@ export const AuthUserPopover: React.FC<AuthUserPopoverProps> = ({ dictionary }) 
       <JumboDdPopover
         triggerButton={
           <Avatar
-            src={user?.avatar}
+            src={user?.photo_path || undefined}
             sizes="small"
             sx={{ boxShadow: 23, cursor: 'pointer' }}
           />
@@ -121,7 +122,10 @@ export const AuthUserPopover: React.FC<AuthUserPopoverProps> = ({ dictionary }) 
             p: (theme) => theme.spacing(2.5),
           }}
         >
-          <Avatar src={user?.avatar} sx={{ width: 60, height: 60, mb: 2 }} />
+          <Avatar
+            src={user?.photo_path || undefined}
+            sx={{ width: 60, height: 60, mb: 2 }}
+          />
           <Typography noWrap variant="h5">
             {user?.name}
           </Typography>
@@ -170,6 +174,12 @@ export const AuthUserPopover: React.FC<AuthUserPopoverProps> = ({ dictionary }) 
 
         <nav>
           <List disablePadding sx={{ pb: 1 }}>
+            <ListItemButton onClick={() => router.push(`/${lang}/profile`)}>
+              <ListItemIcon sx={{ minWidth: 36 }}>
+                <PersonOutlineIcon />
+              </ListItemIcon>
+              <ListItemText primary="Profile" sx={{ my: 0 }} />
+            </ListItemButton>
             <ListItemButton onClick={switchOrganization}>
               <ListItemIcon sx={{ minWidth: 36 }}>
                 <RepeatOutlinedIcon />

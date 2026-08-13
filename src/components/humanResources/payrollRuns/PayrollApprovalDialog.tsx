@@ -96,6 +96,21 @@ const getEditedPayrollApprovalLevelId = (approval: any) => {
   );
 };
 
+// Groups a set of per-payslip line-item arrays by label (the displayed
+// name) — same convention as the Salary Sheet's own type columns.
+const sumByLabel = (payslips: any[], key: string, excludeTax = false) => {
+  const map = new Map<string, number>();
+  payslips.forEach((payslip: any) => {
+    const items = Array.isArray(payslip[key]) ? payslip[key] : [];
+    items.forEach((item: any) => {
+      if (excludeTax && item.category === 'tax') return;
+      const amount = Number(item.amount) || Number(item.value) || 0;
+      map.set(item.label, (map.get(item.label) || 0) + amount);
+    });
+  });
+  return Array.from(map.entries()).map(([label, amount]) => ({ label, amount }));
+};
+
 const calculateSummaryFromPayslips = (payslips: any[] = []) => {
   const totals = {
     basic_salary: 0,
@@ -105,6 +120,12 @@ const calculateSummaryFromPayslips = (payslips: any[] = []) => {
     paye: 0,
     total_allowances: 0,
     total_deductions: 0,
+    total_employer_contributions: 0,
+    allowance_breakdown: [] as Array<{ label: string; amount: number }>,
+    // PAYE is a deduction line too, but it already has its own dedicated
+    // summary card — excluded here so it isn't double-counted in the total.
+    deduction_breakdown: [] as Array<{ label: string; amount: number }>,
+    contribution_breakdown: [] as Array<{ label: string; amount: number }>,
   };
 
   if (!Array.isArray(payslips) || payslips.length === 0) return totals;
@@ -125,6 +146,14 @@ const calculateSummaryFromPayslips = (payslips: any[] = []) => {
       0
     );
 
+    const contributions = Array.isArray(payslip.employer_contributions)
+      ? payslip.employer_contributions
+      : [];
+    const contributionsSum = contributions.reduce(
+      (sum: number, c: any) => sum + (Number(c.amount) || Number(c.value) || 0),
+      0
+    );
+
     const grossSalary = basicSalary + allowancesSum;
     const netSalary = grossSalary - paye - deductionsSum;
 
@@ -132,11 +161,15 @@ const calculateSummaryFromPayslips = (payslips: any[] = []) => {
     totals.paye += paye;
     totals.total_allowances += allowancesSum;
     totals.total_deductions += deductionsSum + paye;
+    totals.total_employer_contributions += contributionsSum;
     totals.gross_salary += grossSalary;
     totals.net_salary += netSalary;
   });
 
   totals.employees_count = payslips.length;
+  totals.allowance_breakdown = sumByLabel(payslips, 'allowances');
+  totals.deduction_breakdown = sumByLabel(payslips, 'deductions', true);
+  totals.contribution_breakdown = sumByLabel(payslips, 'employer_contributions');
   return totals;
 };
 
@@ -338,6 +371,10 @@ const PayrollApprovalDialog = ({
                   paye={summary.paye}
                   total_allowances={summary.total_allowances}
                   total_deductions={summary.total_deductions}
+                  total_employer_contributions={summary.total_employer_contributions}
+                  allowance_breakdown={summary.allowance_breakdown}
+                  deduction_breakdown={summary.deduction_breakdown}
+                  contribution_breakdown={summary.contribution_breakdown}
                 />
               </Stack>
               <Tooltip title='Preview Salary Sheet'>

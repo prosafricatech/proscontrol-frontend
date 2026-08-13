@@ -10,7 +10,6 @@ import { useJumboDialog } from '@jumbo/components/JumboDialog/hooks/useJumboDial
 import { useJumboTheme } from '@jumbo/components/JumboTheme/hooks';
 import { EditOutlined } from '@mui/icons-material';
 import {
-  Avatar,
   Button,
   Card,
   Chip,
@@ -32,6 +31,7 @@ import { DepartmentsProvider } from '../../departments/DepartmentsProvider';
 import { DesignationsProvider } from '../../designations/DesignationsProvider';
 import humanResourcesServices from '../../humanResourcesServices';
 import EmployeeForm from '../EmployeeForm';
+import EmployeePhotoUpload from '../EmployeePhotoUpload';
 import { EmployeesProvider } from '../EmployeesProvider';
 import { Employee } from '../EmployeesType';
 import AuditTrailTab from './auditTrail/AuditTrailTab';
@@ -262,16 +262,15 @@ function ProfileContent() {
             spacing={2}
             flexWrap='wrap'
           >
-            <Avatar
-              sx={{
-                width: 64,
-                height: 64,
-                bgcolor: 'primary.main',
-                fontSize: 24,
-              }}
-            >
-              {employee?.first_name?.[0] ?? '?'}
-            </Avatar>
+            {employeeId && (
+              <EmployeePhotoUpload
+                employeeId={employeeId}
+                photoPath={employee?.photo_path}
+                firstName={employee?.first_name}
+                size={64}
+                onChanged={reFetchEmployee}
+              />
+            )}
             <Stack flex={1} spacing={0.25}>
               <Typography variant='h4'>{fullName}</Typography>
               <Typography variant='body2' color='text.secondary'>

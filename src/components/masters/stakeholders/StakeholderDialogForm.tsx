@@ -18,13 +18,19 @@ import {
   RadioGroup,
   TextField,
 } from '@mui/material';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSnackbar } from 'notistack';
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import stakeholderServices from './stakeholder-services';
+import stakeholderGroupServices from '@/components/masters/stakeholderGroups/stakeholderGroup-services';
 import { Stakeholder } from './StakeholderType';
+
+interface StakeholderGroupOption {
+  id: number;
+  name: string;
+}
 
 interface StakeholderDialogFormProps {
   stakeholder?: Stakeholder | null;
@@ -46,6 +52,7 @@ type FormData = {
   create_payable: boolean;
   ledger_type?: string;
   currency_id?: number | null;
+  group_ids?: number[];
 };
 
 interface ApiResponse {
@@ -135,11 +142,17 @@ const StakeholderDialogForm: React.FC<StakeholderDialogFormProps> = ({
       create_receivable: stakeholder?.create_receivable || false,
       create_payable: stakeholder?.create_payable || false,
       currency_id: stakeholder?.currency_id ?? stakeholder?.currency?.id,
+      group_ids: stakeholder?.groups?.map((group) => group.id) || [],
     },
   });
 
   const { enqueueSnackbar } = useSnackbar();
   const queryClient = useQueryClient();
+
+  const { data: groupOptions = [] } = useQuery<StakeholderGroupOption[]>({
+    queryKey: ['stakeholder-groups-options'],
+    queryFn: stakeholderGroupServices.getSelectOptions,
+  });
 
   const handleRadioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
@@ -427,6 +440,30 @@ const StakeholderDialogForm: React.FC<StakeholderDialogFormProps> = ({
                 error={!!errors?.address}
                 helperText={errors?.address?.message}
                 {...register('address')}
+              />
+            </Div>
+          </Grid>
+
+          {/* Groups */}
+          <Grid size={{ xs: 12, md: stakeholder ? 3 : 6 }}>
+            <Div sx={{ mt: 1, mb: 1 }}>
+              <Autocomplete
+                multiple
+                size='small'
+                options={groupOptions}
+                defaultValue={stakeholder?.groups || []}
+                getOptionLabel={(option) => option.name}
+                isOptionEqualToValue={(option, value) => option.id === value.id}
+                renderInput={(params) => (
+                  <TextField {...params} label='Groups (optional)' />
+                )}
+                onChange={(event, newValue) => {
+                  setValue(
+                    'group_ids',
+                    newValue.map((group) => group.id),
+                    { shouldDirty: true }
+                  );
+                }}
               />
             </Div>
           </Grid>

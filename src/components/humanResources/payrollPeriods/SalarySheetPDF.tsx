@@ -29,6 +29,7 @@ type SalarySheetPDFProps = {
   allowanceTypes: Array<any>;
   deductionTypes: Array<any>;
   contributionTypes: Array<any>;
+  groupBy?: 'none' | 'department' | 'cost_center';
 };
 
 const styles = StyleSheet.create({
@@ -184,6 +185,10 @@ function getEmployeeName(run: PayrollRunType) {
   return fullName || '';
 }
 
+function getEmployeeNumber(run: PayrollRunType) {
+  return (run.employee as any)?.employee_number || '';
+}
+
 function getDesignation(run: PayrollRunType) {
   if (run.contract?.designation?.title) {
     return run.contract.designation.title;
@@ -204,28 +209,37 @@ const SalarySheetPDF = ({
   allowanceTypes,
   deductionTypes,
   contributionTypes,
+  groupBy = 'none',
 }: SalarySheetPDFProps) => {
   const mainColor = organization.settings?.main_color || '#2113AD';
   const lightColor = organization.settings?.light_color || '#d9dfef';
   const contrastText = organization.settings?.contrast_text || '#FFFFFF';
 
+  // Keyed by label (the displayed column name), not type_id — several
+  // system-computed lines (Overtime Pay's per-OvertimeType breakdown,
+  // Absence Deduction, PAYE) can share one type_id (or none at all) while
+  // being genuinely different columns; label is what's actually unique per
+  // column. The common case (the same real Allowance/Deduction/Contribution
+  // Type across employees) shares both label and type_id, so this still
+  // dedupes correctly there too.
   const getUniqueTypes = (value: Array<any>) => {
     const filteredDeductions = Array.from(
-      new Map(
-        value.map((itm) => [
-          itm?.deduction_type_id ??
-            itm?.allowance_type_id ??
-            itm?.employer_contribution_type_id ??
-            itm?.label,
-          itm,
-        ])
-      ).values()
+      new Map(value.map((itm) => [itm?.label, itm])).values()
     );
     return filteredDeductions;
   };
 
+  // PAYE is a deduction line with deduction_type_id === null and
+  // category === 'tax' (see PayrollService::computePayslip()) and gets its
+  // own dedicated column below — excluded here so this array's length
+  // matches the actual number of per-type columns rendered. Other
+  // null-typed system deductions (e.g. Absence Deduction, which has no
+  // backing DeductionType until HR maps one) are NOT excluded — category is
+  // what singles PAYE out, not a null type_id. Filtering on type_id alone
+  // (as this used to) silently dropped Absence Deduction's column here even
+  // though the Dialog preview still showed it — see SalarySheetDialog.tsx.
   const unique_deductions_types = getUniqueTypes(deductionTypes).filter(
-    (type) => type.deduction_type_id !== null
+    (type) => type.category !== 'tax'
   );
   const unique_allowances_types = getUniqueTypes(allowanceTypes);
   const unique_contributions_types = getUniqueTypes(contributionTypes);
@@ -234,30 +248,33 @@ const SalarySheetPDF = ({
   const hasDeductions = unique_deductions_types.length > 0;
   const hasContributions = unique_contributions_types.length > 0;
 
+  // Accepts optional subset arrays so the same function computes both the
+  // grand total (default, full flat arrays) and a per-group subtotal
+  // (filtered to that group's employees) — see groupedRows below.
   const calculateTotalAmtByType = (
     typeObj: any,
     type_id: number,
-    type: 'deduction' | 'allowance' | 'contribution'
+    type: 'deduction' | 'allowance' | 'contribution',
+    allowanceRows: any[] = allowanceTypes,
+    deductionRows: any[] = deductionTypes,
+    contributionRows: any[] = contributionTypes
   ) => {
+    // Matched by label, not type_id — see getUniqueTypes() above for why
+    // (e.g. Overtime Pay's per-OvertimeType lines share one type_id).
     if (type === 'allowance') {
-      return allowanceTypes.reduce(
+      return allowanceRows.reduce(
         (sum, item) =>
-          item.allowance_type_id === type_id || item.label === typeObj.label
-            ? sum + item?.amount
-            : sum,
+          item.label === typeObj.label ? sum + item?.amount : sum,
         0
       );
     }
     if (type === 'deduction') {
-      return deductionTypes.reduce((sum, item) => {
-        return item.deduction_type_id === type_id ||
-          item.label === typeObj.label
-          ? sum + item?.amount
-          : sum;
+      return deductionRows.reduce((sum, item) => {
+        return item.label === typeObj.label ? sum + item?.amount : sum;
       }, 0);
     }
     if (type === 'contribution') {
-      return contributionTypes.reduce((sum, item) => {
+      return contributionRows.reduce((sum, item) => {
         return item?.employer_contribution_type_id === type_id
           ? sum + item?.amount
           : sum;
@@ -292,33 +309,65 @@ const SalarySheetPDF = ({
     (hasContributions ? unique_contributions_types.length : 0) + 1 + 1;
   const employerFlex = dataColumnFlex * employerColumnsCount;
 
-  const totals = rows.reduce(
-    (sum, entry) => {
-      return {
-        basicSalary: sum.basicSalary + entry.computed.basicSalary,
-        grossSalary: sum.grossSalary + entry.computed.grossSalary,
-        taxableSalary: sum.taxableSalary + entry.computed.taxableIncome,
-        paye: sum.paye + entry.computed.paye,
-        totalDeductions: sum.totalDeductions + entry.computed.totalDeductions,
-        netSalary: sum.netSalary + entry.computed.netSalary,
-        totalEmployerContributions:
-          sum.totalEmployerContributions +
-          entry.computed.totalEmployerContributions,
-        totalEmployerCost:
-          sum.totalEmployerCost + entry.computed.totalEmployerCost,
-      };
-    },
-    {
-      basicSalary: 0,
-      grossSalary: 0,
-      taxableSalary: 0,
-      paye: 0,
-      totalDeductions: 0,
-      netSalary: 0,
-      totalEmployerContributions: 0,
-      totalEmployerCost: 0,
+  const sumComputedTotals = (rowsSubset: SalarySheetRow[]) =>
+    rowsSubset.reduce(
+      (sum, entry) => {
+        return {
+          basicSalary: sum.basicSalary + entry.computed.basicSalary,
+          grossSalary: sum.grossSalary + entry.computed.grossSalary,
+          taxableSalary: sum.taxableSalary + entry.computed.taxableIncome,
+          paye: sum.paye + entry.computed.paye,
+          totalDeductions: sum.totalDeductions + entry.computed.totalDeductions,
+          netSalary: sum.netSalary + entry.computed.netSalary,
+          totalEmployerContributions:
+            sum.totalEmployerContributions +
+            entry.computed.totalEmployerContributions,
+          totalEmployerCost:
+            sum.totalEmployerCost + entry.computed.totalEmployerCost,
+        };
+      },
+      {
+        basicSalary: 0,
+        grossSalary: 0,
+        taxableSalary: 0,
+        paye: 0,
+        totalDeductions: 0,
+        netSalary: 0,
+        totalEmployerContributions: 0,
+        totalEmployerCost: 0,
+      }
+    );
+
+  const totals = sumComputedTotals(rows);
+
+  // Splits the table into one section per Department/Cost Center (per
+  // employee assignment), each with its own subtotal row — mirrors
+  // SalarySheetDialog.tsx's groupedRows exactly.
+  const getGroupLabel = (run: PayrollRunType): string => {
+    if (groupBy === 'department') {
+      return (run.employee as any)?.department?.name || 'Unassigned';
     }
-  );
+    if (groupBy === 'cost_center') {
+      return (run.employee as any)?.cost_center?.name || 'Unassigned';
+    }
+    return '';
+  };
+
+  const groupedRows: Array<{ label: string; rows: SalarySheetRow[] }> =
+    groupBy === 'none'
+      ? [{ label: '', rows }]
+      : Array.from(
+          rows
+            .reduce((map, entry) => {
+              const label = getGroupLabel(entry.run);
+              if (!map.has(label)) map.set(label, []);
+              map.get(label)!.push(entry);
+              return map;
+            }, new Map<string, SalarySheetRow[]>())
+            .entries()
+        )
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([label, groupRowsArr]) => ({ label, rows: groupRowsArr }));
 
   const grossByEmployer = totals.totalEmployerCost;
   const netEmployeePayment = totals.netSalary;
@@ -329,38 +378,43 @@ const SalarySheetPDF = ({
 
   // first row column widths
   const recruitmentColWidth = 20;
-  const employeeColWidth = 45;
-  const employerColWith = 35;
 
-  // employee section column width calculation
-  let columnWidth = 4.25;
-  const columnLength = 6 + (hasDeductions ? 1 : 0) + (hasAllowances ? 1 : 0);
-  columnWidth = employeeColWidth / columnLength;
-  let deductionColWidth = employeeColWidth / columnLength;
-  let allowanceColWidth = employeeColWidth / columnLength;
-  if (hasDeductions && !hasAllowances) {
-    deductionColWidth += 6;
-    columnWidth--;
-  }
-  if (hasAllowances && !hasDeductions) {
-    allowanceColWidth += 6;
-    columnWidth--;
-  }
-  if (hasAllowances && hasDeductions) {
-    allowanceColWidth += 3;
-    deductionColWidth += 3;
-    columnWidth--;
-  }
+  // Every itemized data column — the fixed single-value ones (Basic, Gross,
+  // Taxable, PAYE, Total Ded., Net, Total Empr. Cont., Total Empr. Cost) and
+  // the variable per-type ones (Allowances, Deductions, Contributions) —
+  // gets an equal share of the remaining width, proportional to how many
+  // columns it actually needs. This replaces the old fixed-percentage split
+  // (which capped Deductions/Contributions to a small fraction regardless of
+  // how many types existed) so a payroll with many deduction/contribution
+  // types gets proportionally more room instead of overlapping text.
+  const allowanceTypesCount = hasAllowances ? unique_allowances_types.length : 0;
+  const deductionTypesCount = hasDeductions ? unique_deductions_types.length : 0;
+  const contributionTypesCount = hasContributions
+    ? unique_contributions_types.length
+    : 0;
+
+  // Employee section: Basic + Allowances(N) + Gross + Taxable + PAYE + Deductions(M) + Total Ded. + Net
+  const employeeSectionColumnsCount =
+    6 + allowanceTypesCount + deductionTypesCount;
+  // Employer section: Contributions(K) + Total Empr. Cont. + Total Empr. Cost
+  const employerSectionColumnsCount = 2 + contributionTypesCount;
+
+  const remainingWidth = 100 - recruitmentColWidth;
+  const totalDataColumnsCount =
+    employeeSectionColumnsCount + employerSectionColumnsCount;
+  const unitColWidth = remainingWidth / totalDataColumnsCount;
+
+  const employeeColWidth = unitColWidth * employeeSectionColumnsCount;
+  const employerColWith = unitColWidth * employerSectionColumnsCount;
+
+  // Single-value columns (Basic, Gross, Taxable, PAYE, Total Ded., Net) each
+  // get exactly one unit; the itemized blocks get one unit per type.
+  const columnWidth = unitColWidth;
+  const allowanceColWidth = unitColWidth * allowanceTypesCount;
+  const deductionColWidth = unitColWidth * deductionTypesCount;
+  const contributionWidth = unitColWidth * contributionTypesCount;
+  const employerSecWidth = unitColWidth;
   const stringCOlumnWidth = String(columnWidth) + '%';
-
-  // employer section column width calculations
-  let employerSecWidth = employerColWith / 2;
-  let contributionWidth = employerColWith / 3;
-  if (hasContributions) {
-    employerSecWidth = employerColWith / 3;
-    contributionWidth = employerSecWidth + 4;
-    employerSecWidth -= 2;
-  }
 
   // Colors for strict structural mapping
   const borderColor = '#000000';
@@ -373,7 +427,7 @@ const SalarySheetPDF = ({
       author={organization.name}
       subject='Salary Sheet'
     >
-      <Page size='A3' orientation='landscape' style={styles.page}>
+      <Page size='A2' orientation='landscape' style={styles.page}>
         {/* Company Header Info Block */}
         <View style={styles.headerRow}>
           <View style={{ width: 110 }}>
@@ -773,8 +827,26 @@ const SalarySheetPDF = ({
           </View>
 
           {/* Dynamic Employee Data Payload Rows */}
-          {rows.map((entry, index) => {
+          {groupedRows.map((group, groupIdx) => (
+            <View key={`pdf-group-${group.label || 'all'}-${groupIdx}`}>
+              {groupBy !== 'none' && (
+                <View style={{ ...styles.tableRow }} wrap={false}>
+                  <Text
+                    style={{
+                      ...styles.headerCell,
+                      width: '100%',
+                      backgroundColor: subHeaderBg,
+                      textAlign: 'left',
+                    }}
+                  >
+                    {group.label} ({group.rows.length} employee
+                    {group.rows.length === 1 ? '' : 's'})
+                  </Text>
+                </View>
+              )}
+              {group.rows.map((entry, index) => {
             const name = getEmployeeName(entry.run);
+            const employeeNumber = getEmployeeNumber(entry.run);
             const designation = getDesignation(entry.run);
             const backgroundColor = index % 2 === 0 ? '#FFFFFF' : lightColor;
 
@@ -794,7 +866,7 @@ const SalarySheetPDF = ({
                 >
                   {index + 1}
                 </Text>
-                <Text
+                <View
                   style={{
                     ...styles.cell,
                     borderColor: lightBorderColor,
@@ -802,8 +874,13 @@ const SalarySheetPDF = ({
                     width: '10%',
                   }}
                 >
-                  {name || '-'}
-                </Text>
+                  <Text>{name || '-'}</Text>
+                  {!!employeeNumber && (
+                    <Text style={{ fontSize: 5.5, color: lightBorderColor }}>
+                      {employeeNumber}
+                    </Text>
+                  )}
+                </View>
                 <Text
                   style={{
                     ...styles.cell,
@@ -841,8 +918,7 @@ const SalarySheetPDF = ({
                       allowanceTypes.find(
                         (itm) =>
                           itm.employee_contract_id === entry.run.employee?.id &&
-                          (itm.label === type.label ||
-                            itm.allowance_type_id === type.allowance_type_id)
+                          itm.label === type.label
                       )?.amount ?? 0
                     )}
                   </Text>
@@ -895,8 +971,7 @@ const SalarySheetPDF = ({
                       deductionTypes.find(
                         (itm) =>
                           itm.employee_contract_id === entry.run.employee?.id &&
-                          (itm.label === type.label ||
-                            itm.deduction_type_id === type.deduction_type_id)
+                          itm.label === type.label
                       )?.amount ?? 0
                     )}
                   </Text>
@@ -970,7 +1045,190 @@ const SalarySheetPDF = ({
                 </Text>
               </View>
             );
-          })}
+              })}
+              {groupBy !== 'none' &&
+                (() => {
+                  const groupTotals = sumComputedTotals(group.rows);
+                  const groupEmployeeIds = new Set(
+                    group.rows.map((e) => e.run.employee?.id)
+                  );
+                  const groupAllowanceRows = allowanceTypes.filter((a) =>
+                    groupEmployeeIds.has(a.employee_contract_id)
+                  );
+                  const groupDeductionRows = deductionTypes.filter((a) =>
+                    groupEmployeeIds.has(a.employee_contract_id)
+                  );
+                  const groupContributionRows = contributionTypes.filter((a) =>
+                    groupEmployeeIds.has(a.employee_contract_id)
+                  );
+
+                  return (
+                    <View
+                      style={{ ...styles.tableRow, backgroundColor: lightColor }}
+                      wrap={false}
+                    >
+                      <Text
+                        style={{
+                          ...styles.headerCell,
+                          borderColor: borderColor,
+                          width: `${recruitmentColWidth}%`,
+                          textAlign: 'center',
+                          fontWeight: 'bold',
+                        }}
+                      >
+                        Subtotal — {group.label}
+                      </Text>
+                      <Text
+                        style={{
+                          ...styles.headerCell,
+                          borderColor: borderColor,
+                          width: stringCOlumnWidth,
+                          textAlign: 'right',
+                        }}
+                      >
+                        {fmt(groupTotals.basicSalary)}
+                      </Text>
+                      {unique_allowances_types.map((type: any, idx) => (
+                        <Text
+                          key={`g-allowance-total-${group.label}-${idx}`}
+                          style={{
+                            ...styles.headerCell,
+                            borderColor: borderColor,
+                            width: `${allowanceColWidth / unique_allowances_types.length}%`,
+                            textAlign: 'right',
+                          }}
+                        >
+                          {fmt(
+                            calculateTotalAmtByType(
+                              type,
+                              type.allowance_type_id,
+                              'allowance',
+                              groupAllowanceRows,
+                              groupDeductionRows,
+                              groupContributionRows
+                            )
+                          )}
+                        </Text>
+                      ))}
+                      <Text
+                        style={{
+                          ...styles.headerCell,
+                          borderColor: borderColor,
+                          width: stringCOlumnWidth,
+                          textAlign: 'right',
+                        }}
+                      >
+                        {fmt(groupTotals.grossSalary)}
+                      </Text>
+                      <Text
+                        style={{
+                          ...styles.headerCell,
+                          borderColor: borderColor,
+                          width: stringCOlumnWidth,
+                          textAlign: 'right',
+                        }}
+                      >
+                        {fmt(groupTotals.taxableSalary)}
+                      </Text>
+                      <Text
+                        style={{
+                          ...styles.headerCell,
+                          borderColor: borderColor,
+                          width: stringCOlumnWidth,
+                          textAlign: 'right',
+                        }}
+                      >
+                        {fmt(groupTotals.paye)}
+                      </Text>
+                      {unique_deductions_types.map((type: any, idx) => (
+                        <Text
+                          key={`g-deduction-total-${group.label}-${idx}`}
+                          style={{
+                            ...styles.headerCell,
+                            borderColor: borderColor,
+                            width: `${deductionColWidth / unique_deductions_types.length}%`,
+                            textAlign: 'right',
+                          }}
+                        >
+                          {fmt(
+                            calculateTotalAmtByType(
+                              type,
+                              type.deduction_type_id,
+                              'deduction',
+                              groupAllowanceRows,
+                              groupDeductionRows,
+                              groupContributionRows
+                            )
+                          )}
+                        </Text>
+                      ))}
+                      <Text
+                        style={{
+                          ...styles.headerCell,
+                          borderColor: borderColor,
+                          width: stringCOlumnWidth,
+                          textAlign: 'right',
+                        }}
+                      >
+                        {fmt(groupTotals.totalDeductions)}
+                      </Text>
+                      <Text
+                        style={{
+                          ...styles.headerCell,
+                          borderColor: borderColor,
+                          width: stringCOlumnWidth,
+                          textAlign: 'right',
+                        }}
+                      >
+                        {fmt(groupTotals.netSalary)}
+                      </Text>
+                      {unique_contributions_types.map((type: any, idx) => (
+                        <Text
+                          key={`g-contribution-total-${group.label}-${idx}`}
+                          style={{
+                            ...styles.headerCell,
+                            borderColor: borderColor,
+                            width: `${contributionWidth / unique_contributions_types.length}%`,
+                            textAlign: 'right',
+                          }}
+                        >
+                          {fmt(
+                            calculateTotalAmtByType(
+                              type,
+                              type.employer_contribution_type_id,
+                              'contribution',
+                              groupAllowanceRows,
+                              groupDeductionRows,
+                              groupContributionRows
+                            )
+                          )}
+                        </Text>
+                      ))}
+                      <Text
+                        style={{
+                          ...styles.headerCell,
+                          borderColor: borderColor,
+                          width: `${employerSecWidth}%`,
+                          textAlign: 'right',
+                        }}
+                      >
+                        {fmt(groupTotals.totalEmployerContributions)}
+                      </Text>
+                      <Text
+                        style={{
+                          ...styles.headerCell,
+                          borderColor: borderColor,
+                          width: `${employerSecWidth}%`,
+                          textAlign: 'right',
+                        }}
+                      >
+                        {fmt(groupTotals.totalEmployerCost)}
+                      </Text>
+                    </View>
+                  );
+                })()}
+            </View>
+          ))}
 
           {/* Table Footer Totals Accumulation Row */}
           <View

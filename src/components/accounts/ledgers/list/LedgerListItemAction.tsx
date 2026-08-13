@@ -2,7 +2,7 @@
 
 import { Dialog, Tooltip } from '@mui/material'
 import React, { useState } from 'react'
-import { DeleteOutlined, EditOutlined, MoreHorizOutlined, ViewTimelineOutlined } from '@mui/icons-material'
+import { DeleteOutlined, EditOutlined, MoreHorizOutlined, SwapHorizOutlined, ViewTimelineOutlined } from '@mui/icons-material'
 import { useJumboDialog } from '@jumbo/components/JumboDialog/hooks/useJumboDialog'
 import ledgerServices from '../ledger-services'
 import LedgerStatementDialogContent from './ledgerStatement/LedgerStatementDialogContent'
@@ -14,13 +14,16 @@ import { useJumboAuth } from '@/app/providers/JumboAuthProvider'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { JumboDdMenu } from '@jumbo/components'
 import { MenuItemProps } from '@jumbo/types'
+import TransferFormDialogContent from '../../transactions/tranfers/TransferFormDialogContent'
 
 interface Ledger {
   id: number;
   name: string;
   balance?: {
     amount: number;
+    side?: string;
   };
+  is_cash_or_bank?: boolean;
   [key: string]: any;
 }
 
@@ -35,7 +38,14 @@ function LedgerListItemAction({ ledger }: LedgerListItemActionProps) {
   const { checkOrganizationPermission } = useJumboAuth();
   const queryClient = useQueryClient();
   const [openEditLedgerFormDialog, setOpenEditLedgerFormDialog] = useState(false);
+  const [openFundTransferFormDialog, setOpenFundTransferFormDialog] = useState(false);
   const isMobile = deviceType() === 'mobile';
+
+  const canFundTransfer =
+    ledger?.is_cash_or_bank &&
+    ledger?.balance?.side === 'DR' &&
+    (ledger?.balance?.amount ?? 0) > 0 &&
+    checkOrganizationPermission(PERMISSIONS.FUND_TRANSFERS_CREATE);
 
   const { mutate: deleteLedgerMutation } = useMutation({
     mutationFn: (ledger: Ledger) => ledgerServices.delete(ledger),
@@ -56,6 +66,9 @@ function LedgerListItemAction({ ledger }: LedgerListItemActionProps) {
       ? [{ icon: <EditOutlined />, title: 'Edit', action: 'edit' } as MenuItemProps]
       : []),
     { icon: <ViewTimelineOutlined />, title: 'Statement', action: 'statement' } as MenuItemProps,
+    ...(canFundTransfer
+      ? [{ icon: <SwapHorizOutlined />, title: 'Fund Transfer', action: 'fundTransfer' } as MenuItemProps]
+      : []),
     ...(ledger?.balance?.amount === 0 && ledger?.id > 10 && checkOrganizationPermission(PERMISSIONS.ACCOUNTS_MASTERS_DELETE)
       ? [{ icon: <DeleteOutlined color='error' />, title: 'Delete', action: 'delete' } as MenuItemProps]
       : []),
@@ -68,6 +81,9 @@ function LedgerListItemAction({ ledger }: LedgerListItemActionProps) {
         break;
       case 'statement':
         setOpenDocumentDialog(true);
+        break;
+      case 'fundTransfer':
+        setOpenFundTransferFormDialog(true);
         break;
       case 'delete':
         showDialog({
@@ -96,6 +112,20 @@ function LedgerListItemAction({ ledger }: LedgerListItemActionProps) {
       >
         {openDocumentDialog && <LedgerStatementDialogContent ledger={ledger} setOpen={setOpenDocumentDialog} />}
         {openEditLedgerFormDialog && <LedgerForm ledger={ledger} toggleOpen={setOpenEditLedgerFormDialog} />}
+      </Dialog>
+      <Dialog
+        open={openFundTransferFormDialog}
+        fullWidth
+        fullScreen={isMobile}
+        maxWidth='lg'
+      >
+        {openFundTransferFormDialog && (
+          <TransferFormDialogContent
+            setOpen={setOpenFundTransferFormDialog}
+            defaultCreditLedgerId={ledger.id}
+            defaultAmount={ledger?.balance?.amount}
+          />
+        )}
       </Dialog>
       <JumboDdMenu
         icon={
