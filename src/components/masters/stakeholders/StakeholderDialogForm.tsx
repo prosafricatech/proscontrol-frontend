@@ -167,6 +167,8 @@ const StakeholderDialogForm: React.FC<StakeholderDialogFormProps> = ({
         variant: 'success',
       });
       queryClient.invalidateQueries({ queryKey: ['stakeholders'] });
+      queryClient.invalidateQueries({ queryKey: ['ledgers-list'] });
+      queryClient.invalidateQueries({ queryKey: ['ledgerOptions'] });
     },
     onError: (error) => {
       const errorMessage = getErrorMessage(error);
@@ -200,6 +202,8 @@ const StakeholderDialogForm: React.FC<StakeholderDialogFormProps> = ({
         variant: 'success',
       });
       queryClient.invalidateQueries({ queryKey: ['stakeholders'] });
+      queryClient.invalidateQueries({ queryKey: ['ledgers-list'] });
+      queryClient.invalidateQueries({ queryKey: ['ledgerOptions'] });
     },
     onError: (error) => {
       // Handle validation errors including currency_id
