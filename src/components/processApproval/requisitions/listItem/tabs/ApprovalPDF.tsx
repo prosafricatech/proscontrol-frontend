@@ -2,7 +2,7 @@ import { readableDate } from '@/app/helpers/input-sanitization-helpers';
 import PageFooter from '@/components/pdf/PageFooter';
 import pdfStyles from '@/components/pdf/pdf-styles';
 import PdfLogo from '@/components/pdf/PdfLogo';
-import { Organization } from '@/types/auth-types';
+import { Organization, User } from '@/types/auth-types';
 import { Document, Page, Text, View } from '@react-pdf/renderer';
 import React from 'react';
 import { Requisition, RequisitionItem } from '../../../RequisitionType';
@@ -30,12 +30,14 @@ interface ApprovalPDFProps {
   approval: Approval;
   organization: Organization;
   requisition: Requisition;
+  user?: Omit<User, 'phone' | 'status'>;
 }
 
 function ApprovalPDF({
   approval,
   organization,
   requisition,
+  user,
 }: ApprovalPDFProps) {
   const mainColor = organization.settings?.main_color || '#2113AD';
   const lightColor = organization.settings?.light_color || '#bec5da';
@@ -550,6 +552,36 @@ function ApprovalPDF({
             </Text>
             <Text style={{ ...pdfStyles.minInfo }}>
               {approval.creator?.name}
+            </Text>
+          </View>
+        </View>
+
+        <View
+          style={{
+            ...pdfStyles.tableRow,
+            marginBottom: 10,
+            position: 'absolute',
+            bottom: 20,
+            width: '100%',
+            borderBottomColor: 'black',
+            borderBottomWidth: 1,
+          }}
+        >
+          <View style={{ flex: 1, padding: 0.5 }}>
+            <Text style={{ ...pdfStyles.minInfo, color: mainColor }}>
+              Printed By:
+            </Text>
+            <Text style={{ ...pdfStyles.minInfo }}>
+              {user ? user?.name : '-'}
+            </Text>
+          </View>
+
+          <View style={{ flex: 1, padding: 0.5 }}>
+            <Text style={{ ...pdfStyles.minInfo, color: mainColor }}>
+              Printed On:
+            </Text>
+            <Text style={{ ...pdfStyles.minInfo }}>
+              {readableDate(undefined, true)}
             </Text>
           </View>
         </View>

@@ -122,12 +122,14 @@ const DocumentDialog: React.FC<DocumentDialogProps> = ({
   approval,
   organization,
 }) => {
+  const { authUser } = useJumboAuth();
   const { data: approvalDetails, isFetching } = useQuery({
     queryKey: ['retrieveApprovalDetails', { id: approval.id }],
     queryFn: async () =>
       await requisitionsServices.retrieveApprovalDetails(approval.id),
     enabled: !!openDocumentDialog,
   });
+  const user = authUser?.user;
 
   const [selectedTab, setSelectedTab] = useState(0);
   const [showOnScreen, setShowOnScreen] = useState(true);
@@ -187,6 +189,7 @@ const DocumentDialog: React.FC<DocumentDialogProps> = ({
                     organization={organization}
                     approval={approvalDetails}
                     requisition={requisition}
+                    user={user}
                   />
                 }
                 fileName={`${approvalDetails?.requisition?.requisitionNo} Approval`}
