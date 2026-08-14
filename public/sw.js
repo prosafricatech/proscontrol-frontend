@@ -1,6 +1,6 @@
 // CACHE VERSIONING AND UPDATE LOGIC
 <<<<<<< HEAD
-const CACHE_VERSION = 'v1786697447265'; // Increment this to force update
+const CACHE_VERSION = 'v1786700863529'; // Increment this to force update
 =======
 const CACHE_VERSION = 'v1786425972633'; // Increment this to force update
 >>>>>>> origin/junior-development

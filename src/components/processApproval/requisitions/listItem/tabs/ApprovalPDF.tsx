@@ -136,14 +136,16 @@ function ApprovalPDF({
                 : '-'}
             </Text>
           </View>
-          <View style={{ flex: 1, padding: 0.5 }}>
-            <Text style={{ ...pdfStyles.minInfo, color: mainColor }}>
-              Cost Center
-            </Text>
-            <Text style={{ ...pdfStyles.minInfo }}>
-              {requisition.cost_center.name}
-            </Text>
-          </View>
+          {requisition?.cost_center.name && (
+            <View style={{ flex: 1, padding: 0.5 }}>
+              <Text style={{ ...pdfStyles.minInfo, color: mainColor }}>
+                Cost Center
+              </Text>
+              <Text style={{ ...pdfStyles.minInfo }}>
+                {requisition?.cost_center.name}
+              </Text>
+            </View>
+          )}
         </View>
 
         {approval.status?.toLowerCase() === 'returned' && (
