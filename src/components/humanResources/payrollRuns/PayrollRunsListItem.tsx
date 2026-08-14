@@ -23,6 +23,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSnackbar } from 'notistack';
 import { useEffect, useMemo, useState } from 'react';
 import humanResourcesServices from '../humanResourcesServices';
+import { PayrollPeriodType } from '../payrollPeriods/PayrollPeriodType';
 import PayrollPaymentsTab from './PayrollPaymentsTab';
 import { PayrollRunActions } from './PayrollRunActions';
 import { PayslipViewDialog, SimulationDialog } from './PayrollRunDialogs';
@@ -44,8 +45,10 @@ const getErrorMessage = (error: any) => {
 
 const PayrollRunsListItem = ({
   payrollRun,
+  selectedPayrollPeriod,
 }: {
   payrollRun: PayrollRunType;
+  selectedPayrollPeriod: PayrollPeriodType | null;
 }) => {
   const theme = useTheme();
   const { enqueueSnackbar } = useSnackbar();
@@ -82,8 +85,7 @@ const PayrollRunsListItem = ({
   );
   // Payments/settlements only ever exist once a run has at least been posted.
   const hasPaymentsTabs =
-    orgHasAccountsAndFinance &&
-    (isPosted || isPartiallyPaid || isPaid);
+    orgHasAccountsAndFinance && (isPosted || isPartiallyPaid || isPaid);
   const canReversePayment = checkOrganizationPermission(
     PERMISSIONS.ACCOUNTS_TRANSACTIONS_DELETE
   );
@@ -136,7 +138,10 @@ const PayrollRunsListItem = ({
         map.set(item.label, (map.get(item.label) || 0) + (item.amount || 0));
       });
     });
-    return Array.from(map.entries()).map(([label, amount]) => ({ label, amount }));
+    return Array.from(map.entries()).map(([label, amount]) => ({
+      label,
+      amount,
+    }));
   };
 
   const allowanceBreakdown = useMemo(
@@ -442,6 +447,7 @@ const PayrollRunsListItem = ({
                 isPosting={isPosting}
                 runLabel={runLabel}
                 isCompleting={isCompleting}
+                selectedPayrollPeriod={selectedPayrollPeriod}
               />
 
               <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
@@ -490,7 +496,10 @@ const PayrollRunsListItem = ({
 
               {hasApprovalsTab && (
                 <TabPanel value={tabValue} index={approvalsTabIndex}>
-                  <ApprovalsTab payrollRun={runDetails} />
+                  <ApprovalsTab
+                    payrollRun={runDetails}
+                    selectedPayrollPeriod={selectedPayrollPeriod}
+                  />
                 </TabPanel>
               )}
 
@@ -507,10 +516,7 @@ const PayrollRunsListItem = ({
               )}
 
               {hasPaymentsTabs && (
-                <TabPanel
-                  value={tabValue}
-                  index={payableSettlementsTabIndex}
-                >
+                <TabPanel value={tabValue} index={payableSettlementsTabIndex}>
                   <PayrollPaymentsTab
                     payments={payableSettlementPayments}
                     payrollRunId={payrollRun.id}

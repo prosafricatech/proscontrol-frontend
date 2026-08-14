@@ -4,6 +4,8 @@ import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import LedgerSelect from '@/components/accounts/ledgers/forms/LedgerSelect';
 import { MODULES } from '@/utilities/constants/modules';
 import { getErrorMessage } from '@/utilities/helpers/errorHandler';
+import { faMoneyBill1 } from '@fortawesome/free-regular-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useJumboDialog } from '@jumbo/components/JumboDialog/hooks/useJumboDialog';
 import { useJumboTheme } from '@jumbo/components/JumboTheme/hooks';
 import {
@@ -16,8 +18,6 @@ import {
   ReceiptLongOutlined,
   SendOutlined,
 } from '@mui/icons-material';
-import { faMoneyBill1 } from '@fortawesome/free-regular-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   Alert,
   Button,
@@ -39,6 +39,7 @@ import dayjs from 'dayjs';
 import { useSnackbar } from 'notistack';
 import { useEffect, useState } from 'react';
 import humanResourcesServices from '../humanResourcesServices';
+import { PayrollPeriodType } from '../payrollPeriods/PayrollPeriodType';
 import SalarySheetDialog from '../payrollPeriods/SalarySheetDialog';
 import BankTransferListDialog from './BankTransferListView/BankTransferListDialog';
 import PayEmployeesDialog from './PayEmployeesDialog';
@@ -64,6 +65,7 @@ interface PayrollRunActionsProps {
   runLabel?: string;
   payrollRun?: any;
   previewRows?: any[]; // Add previewRows prop
+  selectedPayrollPeriod: PayrollPeriodType | null;
 }
 
 interface PostFormData {
@@ -114,6 +116,7 @@ export const PayrollRunActions = ({
   runLabel = 'this run',
   payrollRun,
   previewRows = [], // Default to empty array
+  selectedPayrollPeriod,
 }: PayrollRunActionsProps) => {
   const { enqueueSnackbar } = useSnackbar();
   const { organizationHasSubscribed } = useJumboAuth();
@@ -580,6 +583,7 @@ export const PayrollRunActions = ({
             periodLabel={salarySheetData.periodLabel}
             rows={salarySheetData.rows}
             isLoading={isLoadingSalarySheet}
+            selectedPayrollPeriod={selectedPayrollPeriod}
           />
         )
       )}
@@ -672,7 +676,11 @@ export const PayrollRunActions = ({
                   title="Used as the debit account for basic salary and allowances only when no more specific account is mapped — a department's own Salary Expense Account, if set, is used instead; likewise an Allowance Type's own Expense Account, if set, overrides this for that allowance."
                   arrow
                 >
-                  <InfoOutlined fontSize='small' color='action' sx={{ cursor: 'help' }} />
+                  <InfoOutlined
+                    fontSize='small'
+                    color='action'
+                    sx={{ cursor: 'help' }}
+                  />
                 </Tooltip>
               }
               onChange={(ledger: any) =>

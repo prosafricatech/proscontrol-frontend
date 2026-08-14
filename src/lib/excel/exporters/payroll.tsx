@@ -144,6 +144,7 @@ export async function ExportPayrollToExcel(exportedData: any) {
       deductionTypes = [],
       contributionTypes = [],
       groupBy = 'none',
+      selectedPeriod,
     } = exportedData;
 
     // Unlike deductions/contributions, allowances are never filtered by
@@ -216,8 +217,10 @@ export async function ExportPayrollToExcel(exportedData: any) {
     // employee assignment), each with its own header + subtotal row —
     // mirrors SalarySheetDialog.tsx / SalarySheetPDF.tsx exactly.
     const getGroupLabel = (run: any): string => {
-      if (groupBy === 'department') return run.employee?.department?.name || 'Unassigned';
-      if (groupBy === 'cost_center') return run.employee?.cost_center?.name || 'Unassigned';
+      if (groupBy === 'department')
+        return run.employee?.department?.name || 'Unassigned';
+      if (groupBy === 'cost_center')
+        return run.employee?.cost_center?.name || 'Unassigned';
       return '';
     };
 
@@ -235,7 +238,10 @@ export async function ExportPayrollToExcel(exportedData: any) {
               .entries()
           )
             .sort(([a]: any, [b]: any) => a.localeCompare(b))
-            .map(([label, groupRowsArr]: any) => ({ label, rows: groupRowsArr }));
+            .map(([label, groupRowsArr]: any) => ({
+              label,
+              rows: groupRowsArr,
+            }));
 
     // ---- Summary calculations (mirrors PDF) ----
     const grossByEmployer = totals.totalEmployerCost;
@@ -290,7 +296,7 @@ export async function ExportPayrollToExcel(exportedData: any) {
     // ---- Row 2: Period label ----
     ws.mergeCells(`A2:${getExcelColumnName(TOTAL_COLS)}2`);
     const subtitleCell = ws.getCell('A2');
-    subtitleCell.value = `SALARY PAYROLL — ${periodLabel}`;
+    subtitleCell.value = `SALARY PAYROLL — ${periodLabel} - (${selectedPeriod})`;
     subtitleCell.font = { bold: true, size: 11 };
     subtitleCell.alignment = { horizontal: 'center', vertical: 'middle' };
     ws.getRow(2).height = 20;
@@ -416,7 +422,11 @@ export async function ExportPayrollToExcel(exportedData: any) {
       ws.getRow(ROW).height = 16;
     };
 
-    const writeSubtotalRow = (label: string, groupRowsArr: any[], ROW: number) => {
+    const writeSubtotalRow = (
+      label: string,
+      groupRowsArr: any[],
+      ROW: number
+    ) => {
       const groupTotals = sumComputedTotals(groupRowsArr);
       const groupEmployeeIds = new Set(
         groupRowsArr.map((e: any) => e.run.employee?.id)
@@ -502,7 +512,9 @@ export async function ExportPayrollToExcel(exportedData: any) {
         ws.mergeCells(
           `${getExcelColumnName(COL_SN)}${currentRow}:${getExcelColumnName(TOTAL_COLS)}${currentRow}`
         );
-        const headerCell = ws.getCell(`${getExcelColumnName(COL_SN)}${currentRow}`);
+        const headerCell = ws.getCell(
+          `${getExcelColumnName(COL_SN)}${currentRow}`
+        );
         headerCell.value = `${group.label} (${group.rows.length} employee${group.rows.length === 1 ? '' : 's'})`;
         applyCellStyle(headerCell, CELL_STYLES.tableHeader);
         headerCell.alignment = { horizontal: 'left', vertical: 'middle' };

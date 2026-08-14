@@ -36,6 +36,7 @@ import { Fragment, useState } from 'react';
 import humanResourcesServices from '../humanResourcesServices';
 import { PayrollRunType } from '../payrollRuns/PayrollRunType';
 import { PayslipComputed } from '../payrollRuns/payslipCalculations';
+import { PayrollPeriodType } from './PayrollPeriodType';
 import SalarySheetPDF from './SalarySheetPDF';
 
 type SalaryTypeItem = {
@@ -58,10 +59,8 @@ type SalarySheetDialogProps = {
   onClose: () => void;
   periodLabel: string;
   rows: SalarySheetRow[];
-  // allowanceTypes: SalaryTypeItem[];
-  // deductionTypes: SalaryTypeItem[];
-  // contributionTypes: SalaryTypeItem[];
   isLoading?: boolean;
+  selectedPayrollPeriod?: PayrollPeriodType | null;
 };
 
 function fmt(value: number) {
@@ -104,6 +103,7 @@ const SalarySheetDialog = ({
   periodLabel,
   rows,
   isLoading = false,
+  selectedPayrollPeriod,
 }: SalarySheetDialogProps) => {
   const router = useRouter();
   const lang = useLanguage();
@@ -120,6 +120,8 @@ const SalarySheetDialog = ({
   );
 
   const organization = authObject?.authOrganization?.organization;
+
+  const selectedPeriod = `${selectedPayrollPeriod?.year} - ${selectedPayrollPeriod?.monthName}`;
 
   const employeeDeductions = rows.flatMap(
     (itm) =>
@@ -193,7 +195,8 @@ const SalarySheetDialog = ({
       // Matched by label, not type_id — see getUniqueTypes() above for why
       // (e.g. Overtime Pay's per-OvertimeType lines share one type_id).
       return allowanceRows?.reduce(
-        (sum, item) => (item.label === typeObj.label ? sum + item?.amount : sum),
+        (sum, item) =>
+          item.label === typeObj.label ? sum + item?.amount : sum,
         0
       );
     }
@@ -226,7 +229,8 @@ const SalarySheetDialog = ({
           totalDeductions: sum.totalDeductions + computed.totalDeductions,
           netSalary: sum.netSalary + computed.netSalary,
           totalEmployerContributions:
-            sum.totalEmployerContributions + computed.totalEmployerContributions,
+            sum.totalEmployerContributions +
+            computed.totalEmployerContributions,
           totalEmployerCost: sum.totalEmployerCost + computed.totalEmployerCost,
         };
       },
@@ -301,6 +305,7 @@ const SalarySheetDialog = ({
     deductionTypes: employeeDeductions,
     contributionTypes: employeecontributions,
     groupBy,
+    selectedPeriod: selectedPeriod,
   };
 
   const handleExcelExport = async (exportedData: any) => {
@@ -344,7 +349,7 @@ const SalarySheetDialog = ({
           },
         }}
       >
-        <DialogTitle>
+        <DialogTitle variant='h3'>
           <PreviewTopBar
             fileExportGrid={
               <FileExportGrid
@@ -368,10 +373,11 @@ const SalarySheetDialog = ({
           <>
             <DialogContent>
               <Stack
-                direction='row'
+                direction={{ xs: 'column', md: 'row' }}
                 justifyContent='space-between'
-                alignItems='center'
+                alignItems={{ md: 'center' }}
                 mb={2}
+                spacing={2}
               >
                 <Box>
                   <Typography variant='h6'>
@@ -379,6 +385,9 @@ const SalarySheetDialog = ({
                   </Typography>
                   <Typography variant='body2' color='text.secondary'>
                     Salary Payroll - {periodLabel}
+                  </Typography>
+                  <Typography variant='body1' fontWeight={400}>
+                    {selectedPeriod}
                   </Typography>
                 </Box>
                 <TextField
@@ -724,7 +733,9 @@ const SalarySheetDialog = ({
 
                     <TableBody>
                       {groupedRows.map((group, groupIdx) => (
-                        <Fragment key={`group-${group.label || 'all'}-${groupIdx}`}>
+                        <Fragment
+                          key={`group-${group.label || 'all'}-${groupIdx}`}
+                        >
                           {groupBy !== 'none' && (
                             <TableRow>
                               <TableCell
@@ -742,208 +753,215 @@ const SalarySheetDialog = ({
                             </TableRow>
                           )}
                           {group.rows.map((entry, index) => {
-                        const run = entry.run;
-                        const computed = entry.computed;
-                        const name = getEmployeeName(run);
-                        const employeeNumber = getEmployeeNumber(run);
-                        const designation = getDesignation(run);
-                        const isEven = index % 2 === 0;
+                            const run = entry.run;
+                            const computed = entry.computed;
+                            const name = getEmployeeName(run);
+                            const employeeNumber = getEmployeeNumber(run);
+                            const designation = getDesignation(run);
+                            const isEven = index % 2 === 0;
 
-                        return (
-                          <TableRow
-                            key={`salary-row-${run.id || index}-${index}`}
-                            sx={{
-                              backgroundColor: isEven
-                                ? theme.palette.background.paper
-                                : theme.palette.action.hover,
-                              '&:hover': {
-                                backgroundColor: theme.palette.action.selected,
-                              },
-                            }}
-                          >
-                            <TableCell
-                              sx={{
-                                border: '1px solid',
-                                borderColor: 'divider',
-                              }}
-                            >
-                              {index + 1}
-                            </TableCell>
-                            <TableCell
-                              sx={{
-                                border: '1px solid',
-                                borderColor: 'divider',
-                                textWrap: 'nowrap',
-                                cursor: 'pointer',
-                                '&:hover': {
-                                  color: 'primary.main',
-                                  textDecoration: 'underline',
-                                },
-                              }}
-                              onClick={() =>
-                                router.push(
-                                  `/${lang}/humanResources/employees/${entry.run.employee?.id}`
-                                )
-                              }
-                            >
-                              {name}
-                              <Typography
-                                variant='body2'
-                                fontSize={10}
-                                color='textSecondary'
-                              >
-                                {employeeNumber && `(${employeeNumber})`}
-                              </Typography>
-                            </TableCell>
-
-                            <TableCell
-                              sx={{
-                                color: 'text.secondary',
-                                border: '1px solid',
-                                borderColor: 'divider',
-                              }}
-                            >
-                              {designation}
-                            </TableCell>
-                            <TableCell
-                              align='right'
-                              sx={{
-                                border: '1px solid',
-                                borderColor: 'divider',
-                              }}
-                            >
-                              {fmt(computed.basicSalary)}
-                            </TableCell>
-
-                            {unique_allowances_types.map((type, typeIdx) => (
-                              <TableCell
-                                key={`allowance-value-${run.id || index}-${type.allowance_type_id || type.label}-${typeIdx}`}
-                                align='right'
+                            return (
+                              <TableRow
+                                key={`salary-row-${run.id || index}-${index}`}
                                 sx={{
-                                  border: '1px solid',
-                                  borderColor: 'divider',
+                                  backgroundColor: isEven
+                                    ? theme.palette.background.paper
+                                    : theme.palette.action.hover,
+                                  '&:hover': {
+                                    backgroundColor:
+                                      theme.palette.action.selected,
+                                  },
                                 }}
                               >
-                                {fmt(
-                                  employeeAllowance.find(
-                                    (itm) =>
-                                      itm.employee_contract_id ===
-                                        entry.run.employee?.id &&
-                                      itm.label === type.label
-                                  )?.amount ?? 0
+                                <TableCell
+                                  sx={{
+                                    border: '1px solid',
+                                    borderColor: 'divider',
+                                  }}
+                                >
+                                  {index + 1}
+                                </TableCell>
+                                <TableCell
+                                  sx={{
+                                    border: '1px solid',
+                                    borderColor: 'divider',
+                                    textWrap: 'nowrap',
+                                    cursor: 'pointer',
+                                    '&:hover': {
+                                      color: 'primary.main',
+                                      textDecoration: 'underline',
+                                    },
+                                  }}
+                                  onClick={() =>
+                                    router.push(
+                                      `/${lang}/humanResources/employees/${entry.run.employee?.id}`
+                                    )
+                                  }
+                                >
+                                  {name}
+                                  <Typography
+                                    variant='body2'
+                                    fontSize={10}
+                                    color='textSecondary'
+                                  >
+                                    {employeeNumber && `(${employeeNumber})`}
+                                  </Typography>
+                                </TableCell>
+
+                                <TableCell
+                                  sx={{
+                                    color: 'text.secondary',
+                                    border: '1px solid',
+                                    borderColor: 'divider',
+                                  }}
+                                >
+                                  {designation}
+                                </TableCell>
+                                <TableCell
+                                  align='right'
+                                  sx={{
+                                    border: '1px solid',
+                                    borderColor: 'divider',
+                                  }}
+                                >
+                                  {fmt(computed.basicSalary)}
+                                </TableCell>
+
+                                {unique_allowances_types.map(
+                                  (type, typeIdx) => (
+                                    <TableCell
+                                      key={`allowance-value-${run.id || index}-${type.allowance_type_id || type.label}-${typeIdx}`}
+                                      align='right'
+                                      sx={{
+                                        border: '1px solid',
+                                        borderColor: 'divider',
+                                      }}
+                                    >
+                                      {fmt(
+                                        employeeAllowance.find(
+                                          (itm) =>
+                                            itm.employee_contract_id ===
+                                              entry.run.employee?.id &&
+                                            itm.label === type.label
+                                        )?.amount ?? 0
+                                      )}
+                                    </TableCell>
+                                  )
                                 )}
-                              </TableCell>
-                            ))}
 
-                            <TableCell
-                              align='right'
-                              sx={{
-                                fontWeight: 400,
-                                border: '1px solid',
-                                borderColor: 'divider',
-                              }}
-                            >
-                              {fmt(computed.grossSalary)}
-                            </TableCell>
+                                <TableCell
+                                  align='right'
+                                  sx={{
+                                    fontWeight: 400,
+                                    border: '1px solid',
+                                    borderColor: 'divider',
+                                  }}
+                                >
+                                  {fmt(computed.grossSalary)}
+                                </TableCell>
 
-                            <TableCell
-                              align='right'
-                              sx={{
-                                fontWeight: 400,
-                                border: '1px solid',
-                                borderColor: 'divider',
-                              }}
-                            >
-                              {fmt(computed.taxableIncome)}
-                            </TableCell>
+                                <TableCell
+                                  align='right'
+                                  sx={{
+                                    fontWeight: 400,
+                                    border: '1px solid',
+                                    borderColor: 'divider',
+                                  }}
+                                >
+                                  {fmt(computed.taxableIncome)}
+                                </TableCell>
 
-                            {unique_deductions_types.map((type, typeIdx) => (
-                              <TableCell
-                                key={`deduction-value-${run.id || index}-${type.deduction_type_id || type.label}-${typeIdx}`}
-                                align='right'
-                                sx={{
-                                  border: '1px solid',
-                                  borderColor: 'divider',
-                                }}
-                              >
-                                {fmt(
-                                  employeeDeductions.find(
-                                    (itm) =>
-                                      itm.employee_contract_id ===
-                                        entry.run.employee?.id &&
-                                      itm.label === type.label
-                                  )?.amount ?? 0
+                                {unique_deductions_types.map(
+                                  (type, typeIdx) => (
+                                    <TableCell
+                                      key={`deduction-value-${run.id || index}-${type.deduction_type_id || type.label}-${typeIdx}`}
+                                      align='right'
+                                      sx={{
+                                        border: '1px solid',
+                                        borderColor: 'divider',
+                                      }}
+                                    >
+                                      {fmt(
+                                        employeeDeductions.find(
+                                          (itm) =>
+                                            itm.employee_contract_id ===
+                                              entry.run.employee?.id &&
+                                            itm.label === type.label
+                                        )?.amount ?? 0
+                                      )}
+                                    </TableCell>
+                                  )
                                 )}
-                              </TableCell>
-                            ))}
 
-                            <TableCell
-                              align='right'
-                              sx={{
-                                border: '1px solid',
-                                borderColor: 'divider',
-                                fontWeight: 400,
-                              }}
-                            >
-                              {fmt(computed.paye)}
-                            </TableCell>
+                                <TableCell
+                                  align='right'
+                                  sx={{
+                                    border: '1px solid',
+                                    borderColor: 'divider',
+                                    fontWeight: 400,
+                                  }}
+                                >
+                                  {fmt(computed.paye)}
+                                </TableCell>
 
-                            <TableCell
-                              align='right'
-                              sx={{
-                                fontWeight: 400,
-                                border: '1px solid',
-                                borderColor: 'divider',
-                              }}
-                            >
-                              {fmt(entry.computed.totalDeductions)}
-                            </TableCell>
+                                <TableCell
+                                  align='right'
+                                  sx={{
+                                    fontWeight: 400,
+                                    border: '1px solid',
+                                    borderColor: 'divider',
+                                  }}
+                                >
+                                  {fmt(entry.computed.totalDeductions)}
+                                </TableCell>
 
-                            <TableCell
-                              align='right'
-                              sx={{
-                                fontWeight: 400,
-                                border: '1px solid',
-                                borderColor: 'divider',
-                              }}
-                            >
-                              {fmt(computed.netSalary)}
-                            </TableCell>
+                                <TableCell
+                                  align='right'
+                                  sx={{
+                                    fontWeight: 400,
+                                    border: '1px solid',
+                                    borderColor: 'divider',
+                                  }}
+                                >
+                                  {fmt(computed.netSalary)}
+                                </TableCell>
 
-                            {unique_contributions_types.map((type, typeIdx) => (
-                              <TableCell
-                                key={`contribution-value-${run.id || index}-${type.employer_contribution_type_id || type.label}-${typeIdx}`}
-                                align='right'
-                                sx={{
-                                  border: '1px solid',
-                                  borderColor: 'divider',
-                                }}
-                              >
-                                {fmt(
-                                  employeecontributions.find(
-                                    (itm) =>
-                                      itm.employee_contract_id ===
-                                        entry.run.employee?.id &&
-                                      (itm.label === type.label ||
-                                        itm.employer_contribution_type_id ===
-                                          type.employer_contribution_type_id)
-                                  )?.amount ?? 0
+                                {unique_contributions_types.map(
+                                  (type, typeIdx) => (
+                                    <TableCell
+                                      key={`contribution-value-${run.id || index}-${type.employer_contribution_type_id || type.label}-${typeIdx}`}
+                                      align='right'
+                                      sx={{
+                                        border: '1px solid',
+                                        borderColor: 'divider',
+                                      }}
+                                    >
+                                      {fmt(
+                                        employeecontributions.find(
+                                          (itm) =>
+                                            itm.employee_contract_id ===
+                                              entry.run.employee?.id &&
+                                            (itm.label === type.label ||
+                                              itm.employer_contribution_type_id ===
+                                                type.employer_contribution_type_id)
+                                        )?.amount ?? 0
+                                      )}
+                                    </TableCell>
+                                  )
                                 )}
-                              </TableCell>
-                            ))}
 
-                            <TableCell
-                              align='right'
-                              sx={{
-                                fontWeight: 400,
-                                border: '1px solid',
-                                borderColor: 'divider',
-                              }}
-                            >
-                              {fmt(computed.totalEmployerCost)}
-                            </TableCell>
-                          </TableRow>
-                        );
+                                <TableCell
+                                  align='right'
+                                  sx={{
+                                    fontWeight: 400,
+                                    border: '1px solid',
+                                    borderColor: 'divider',
+                                  }}
+                                >
+                                  {fmt(computed.totalEmployerCost)}
+                                </TableCell>
+                              </TableRow>
+                            );
                           })}
                           {groupBy !== 'none' &&
                             (() => {
@@ -951,12 +969,14 @@ const SalarySheetDialog = ({
                               const groupEmployeeIds = new Set(
                                 group.rows.map((e) => e.run.employee?.id)
                               );
-                              const groupAllowanceRows = employeeAllowance.filter(
-                                (a) => groupEmployeeIds.has(a.employee_contract_id)
-                              );
-                              const groupDeductionRows = employeeDeductions.filter(
-                                (a) => groupEmployeeIds.has(a.employee_contract_id)
-                              );
+                              const groupAllowanceRows =
+                                employeeAllowance.filter((a) =>
+                                  groupEmployeeIds.has(a.employee_contract_id)
+                                );
+                              const groupDeductionRows =
+                                employeeDeductions.filter((a) =>
+                                  groupEmployeeIds.has(a.employee_contract_id)
+                                );
                               const groupContributionRows =
                                 employeecontributions.filter((a) =>
                                   groupEmployeeIds.has(a.employee_contract_id)
@@ -1081,28 +1101,30 @@ const SalarySheetDialog = ({
                                   >
                                     {fmt(groupTotals.netSalary)}
                                   </TableCell>
-                                  {unique_contributions_types.map((type: any) => (
-                                    <TableCell
-                                      key={`g-contribution-total-${group.label}-${type.label}`}
-                                      align='right'
-                                      sx={{
-                                        fontWeight: 700,
-                                        borderTop: '2px solid',
-                                        borderColor: 'divider',
-                                      }}
-                                    >
-                                      {fmt(
-                                        calculateTotalAmtByType(
-                                          type,
-                                          type.employer_contribution_type_id,
-                                          'contribution',
-                                          groupAllowanceRows,
-                                          groupDeductionRows,
-                                          groupContributionRows
-                                        )
-                                      )}
-                                    </TableCell>
-                                  ))}
+                                  {unique_contributions_types.map(
+                                    (type: any) => (
+                                      <TableCell
+                                        key={`g-contribution-total-${group.label}-${type.label}`}
+                                        align='right'
+                                        sx={{
+                                          fontWeight: 700,
+                                          borderTop: '2px solid',
+                                          borderColor: 'divider',
+                                        }}
+                                      >
+                                        {fmt(
+                                          calculateTotalAmtByType(
+                                            type,
+                                            type.employer_contribution_type_id,
+                                            'contribution',
+                                            groupAllowanceRows,
+                                            groupDeductionRows,
+                                            groupContributionRows
+                                          )
+                                        )}
+                                      </TableCell>
+                                    )
+                                  )}
                                   <TableCell
                                     align='right'
                                     sx={{
@@ -1300,6 +1322,7 @@ const SalarySheetDialog = ({
                     deductionTypes={employeeDeductions}
                     contributionTypes={employeecontributions}
                     groupBy={groupBy}
+                    selectedPeriod={selectedPeriod}
                   />
                 }
                 fileName={`Salary-Sheet-${periodLabel}`}

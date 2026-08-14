@@ -5,6 +5,7 @@ import { useJumboTheme } from '@jumbo/components/JumboTheme/hooks';
 import { FactCheckOutlined } from '@mui/icons-material';
 import { ButtonGroup, IconButton, Tooltip, useMediaQuery } from '@mui/material';
 import { useState } from 'react';
+import { PayrollPeriodType } from '../payrollPeriods/PayrollPeriodType';
 import PayrollApprovalDialog, {
   getNextPendingPayrollLevel,
 } from './PayrollApprovalDialog';
@@ -12,9 +13,13 @@ import { PayrollRunType } from './PayrollRunType';
 
 interface PayrollApprovalsActionTailProps {
   payrollRun: PayrollRunType;
+  selectedPayrollPeriod?: PayrollPeriodType | null;
 }
 
-const PayrollApprovalsActionTail = ({ payrollRun }: PayrollApprovalsActionTailProps) => {
+const PayrollApprovalsActionTail = ({
+  payrollRun,
+  selectedPayrollPeriod,
+}: PayrollApprovalsActionTailProps) => {
   const [openDialog, setOpenDialog] = useState(false);
   const { hasOrganizationRole } = useJumboAuth();
   const { theme } = useJumboTheme();
@@ -37,6 +42,7 @@ const PayrollApprovalsActionTail = ({ payrollRun }: PayrollApprovalsActionTailPr
         belowLargeScreen={belowLargeScreen}
         payrollRun={payrollRun}
         onClose={() => setOpenDialog(false)}
+        selectedPayrollPeriod={selectedPayrollPeriod}
       />
 
       {canApprove && (

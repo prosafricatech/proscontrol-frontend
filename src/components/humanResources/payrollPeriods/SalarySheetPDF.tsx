@@ -30,6 +30,7 @@ type SalarySheetPDFProps = {
   deductionTypes: Array<any>;
   contributionTypes: Array<any>;
   groupBy?: 'none' | 'department' | 'cost_center';
+  selectedPeriod: String | null;
 };
 
 const styles = StyleSheet.create({
@@ -210,6 +211,7 @@ const SalarySheetPDF = ({
   deductionTypes,
   contributionTypes,
   groupBy = 'none',
+  selectedPeriod,
 }: SalarySheetPDFProps) => {
   const mainColor = organization.settings?.main_color || '#2113AD';
   const lightColor = organization.settings?.light_color || '#d9dfef';
@@ -387,8 +389,12 @@ const SalarySheetPDF = ({
   // (which capped Deductions/Contributions to a small fraction regardless of
   // how many types existed) so a payroll with many deduction/contribution
   // types gets proportionally more room instead of overlapping text.
-  const allowanceTypesCount = hasAllowances ? unique_allowances_types.length : 0;
-  const deductionTypesCount = hasDeductions ? unique_deductions_types.length : 0;
+  const allowanceTypesCount = hasAllowances
+    ? unique_allowances_types.length
+    : 0;
+  const deductionTypesCount = hasDeductions
+    ? unique_deductions_types.length
+    : 0;
   const contributionTypesCount = hasContributions
     ? unique_contributions_types.length
     : 0;
@@ -438,6 +444,9 @@ const SalarySheetPDF = ({
               SALARY PAYROLL
             </Text>
             <Text style={styles.subtitle}>{periodLabel}</Text>
+            <Text style={{ ...styles.subtitle, marginTop: 1 }}>
+              {selectedPeriod}
+            </Text>
           </View>
         </View>
 
@@ -845,206 +854,212 @@ const SalarySheetPDF = ({
                 </View>
               )}
               {group.rows.map((entry, index) => {
-            const name = getEmployeeName(entry.run);
-            const employeeNumber = getEmployeeNumber(entry.run);
-            const designation = getDesignation(entry.run);
-            const backgroundColor = index % 2 === 0 ? '#FFFFFF' : lightColor;
+                const name = getEmployeeName(entry.run);
+                const employeeNumber = getEmployeeNumber(entry.run);
+                const designation = getDesignation(entry.run);
+                const backgroundColor =
+                  index % 2 === 0 ? '#FFFFFF' : lightColor;
 
-            return (
-              <View
-                key={`pdf-row-${entry.run.id || index}-${index}`}
-                style={{ ...styles.tableRow, backgroundColor }}
-                wrap={false}
-              >
-                <Text
-                  style={{
-                    ...styles.cell,
-                    borderColor: lightBorderColor,
-                    // flex: serialFlex,
-                    width: '3%',
-                  }}
-                >
-                  {index + 1}
-                </Text>
-                <View
-                  style={{
-                    ...styles.cell,
-                    borderColor: lightBorderColor,
-                    // flex: nameFlex,
-                    width: '10%',
-                  }}
-                >
-                  <Text>{name || '-'}</Text>
-                  {!!employeeNumber && (
-                    <Text style={{ fontSize: 5.5, color: lightBorderColor }}>
-                      {employeeNumber}
+                return (
+                  <View
+                    key={`pdf-row-${entry.run.id || index}-${index}`}
+                    style={{ ...styles.tableRow, backgroundColor }}
+                    wrap={false}
+                  >
+                    <Text
+                      style={{
+                        ...styles.cell,
+                        borderColor: lightBorderColor,
+                        // flex: serialFlex,
+                        width: '3%',
+                      }}
+                    >
+                      {index + 1}
                     </Text>
-                  )}
-                </View>
-                <Text
-                  style={{
-                    ...styles.cell,
-                    borderColor: lightBorderColor,
-                    // flex: designationFlex,
-                    width: '7%',
-                  }}
-                >
-                  {designation}
-                </Text>
+                    <View
+                      style={{
+                        ...styles.cell,
+                        borderColor: lightBorderColor,
+                        // flex: nameFlex,
+                        width: '10%',
+                      }}
+                    >
+                      <Text>{name || '-'}</Text>
+                      {!!employeeNumber && (
+                        <Text
+                          style={{ fontSize: 5.5, color: lightBorderColor }}
+                        >
+                          {employeeNumber}
+                        </Text>
+                      )}
+                    </View>
+                    <Text
+                      style={{
+                        ...styles.cell,
+                        borderColor: lightBorderColor,
+                        // flex: designationFlex,
+                        width: '7%',
+                      }}
+                    >
+                      {designation}
+                    </Text>
 
-                <Text
-                  style={{
-                    ...styles.cell,
-                    borderColor: lightBorderColor,
-                    // flex: dataColumnFlex,
-                    width: stringCOlumnWidth,
-                    textAlign: 'right',
-                  }}
-                >
-                  {fmt(entry.computed.basicSalary)}
-                </Text>
-                {unique_allowances_types.map((type, typeIdx) => (
-                  <Text
-                    key={`pdf-allowance-value-${entry.run.id || index}-${type.allowance_type_id || type.label}-${typeIdx}`}
-                    style={{
-                      ...styles.cell,
-                      borderColor: lightBorderColor,
-                      // flex: dataColumnFlex,
-                      width: `${allowanceColWidth / unique_allowances_types.length}%`,
-                      textAlign: 'right',
-                    }}
-                  >
-                    {fmt(
-                      allowanceTypes.find(
-                        (itm) =>
-                          itm.employee_contract_id === entry.run.employee?.id &&
-                          itm.label === type.label
-                      )?.amount ?? 0
-                    )}
-                  </Text>
-                ))}
-                <Text
-                  style={{
-                    ...styles.cell,
-                    borderColor: lightBorderColor,
-                    // flex: dataColumnFlex,
-                    width: stringCOlumnWidth,
-                    textAlign: 'right',
-                  }}
-                >
-                  {fmt(entry.computed.grossSalary)}
-                </Text>
-                <Text
-                  style={{
-                    ...styles.cell,
-                    borderColor: lightBorderColor,
-                    // flex: dataColumnFlex,
-                    width: stringCOlumnWidth,
-                    textAlign: 'right',
-                  }}
-                >
-                  {fmt(entry.computed.taxableIncome)}
-                </Text>
-                <Text
-                  style={{
-                    ...styles.cell,
-                    borderColor: lightBorderColor,
-                    // flex: dataColumnFlex,
-                    width: stringCOlumnWidth,
-                    textAlign: 'right',
-                  }}
-                >
-                  {fmt(entry.computed.paye)}
-                </Text>
-                {unique_deductions_types.map((type, typeIdx) => (
-                  <Text
-                    key={`pdf-deduction-value-${entry.run.id || index}-${type.deduction_type_id || type.label}-${typeIdx}`}
-                    style={{
-                      ...styles.cell,
-                      borderColor: lightBorderColor,
-                      // flex: dataColumnFlex,
-                      width: `${deductionColWidth / unique_deductions_types.length}%`,
-                      textAlign: 'right',
-                    }}
-                  >
-                    {fmt(
-                      deductionTypes.find(
-                        (itm) =>
-                          itm.employee_contract_id === entry.run.employee?.id &&
-                          itm.label === type.label
-                      )?.amount ?? 0
-                    )}
-                  </Text>
-                ))}
-                <Text
-                  style={{
-                    ...styles.cell,
-                    borderColor: lightBorderColor,
-                    // flex: dataColumnFlex,
-                    width: stringCOlumnWidth,
-                    textAlign: 'right',
-                  }}
-                >
-                  {fmt(entry.computed.totalDeductions)}
-                </Text>
-                <Text
-                  style={{
-                    ...styles.cell,
-                    borderColor: lightBorderColor,
-                    // flex: dataColumnFlex,
-                    width: stringCOlumnWidth,
-                    textAlign: 'right',
-                  }}
-                >
-                  {fmt(entry.computed.netSalary)}
-                </Text>
+                    <Text
+                      style={{
+                        ...styles.cell,
+                        borderColor: lightBorderColor,
+                        // flex: dataColumnFlex,
+                        width: stringCOlumnWidth,
+                        textAlign: 'right',
+                      }}
+                    >
+                      {fmt(entry.computed.basicSalary)}
+                    </Text>
+                    {unique_allowances_types.map((type, typeIdx) => (
+                      <Text
+                        key={`pdf-allowance-value-${entry.run.id || index}-${type.allowance_type_id || type.label}-${typeIdx}`}
+                        style={{
+                          ...styles.cell,
+                          borderColor: lightBorderColor,
+                          // flex: dataColumnFlex,
+                          width: `${allowanceColWidth / unique_allowances_types.length}%`,
+                          textAlign: 'right',
+                        }}
+                      >
+                        {fmt(
+                          allowanceTypes.find(
+                            (itm) =>
+                              itm.employee_contract_id ===
+                                entry.run.employee?.id &&
+                              itm.label === type.label
+                          )?.amount ?? 0
+                        )}
+                      </Text>
+                    ))}
+                    <Text
+                      style={{
+                        ...styles.cell,
+                        borderColor: lightBorderColor,
+                        // flex: dataColumnFlex,
+                        width: stringCOlumnWidth,
+                        textAlign: 'right',
+                      }}
+                    >
+                      {fmt(entry.computed.grossSalary)}
+                    </Text>
+                    <Text
+                      style={{
+                        ...styles.cell,
+                        borderColor: lightBorderColor,
+                        // flex: dataColumnFlex,
+                        width: stringCOlumnWidth,
+                        textAlign: 'right',
+                      }}
+                    >
+                      {fmt(entry.computed.taxableIncome)}
+                    </Text>
+                    <Text
+                      style={{
+                        ...styles.cell,
+                        borderColor: lightBorderColor,
+                        // flex: dataColumnFlex,
+                        width: stringCOlumnWidth,
+                        textAlign: 'right',
+                      }}
+                    >
+                      {fmt(entry.computed.paye)}
+                    </Text>
+                    {unique_deductions_types.map((type, typeIdx) => (
+                      <Text
+                        key={`pdf-deduction-value-${entry.run.id || index}-${type.deduction_type_id || type.label}-${typeIdx}`}
+                        style={{
+                          ...styles.cell,
+                          borderColor: lightBorderColor,
+                          // flex: dataColumnFlex,
+                          width: `${deductionColWidth / unique_deductions_types.length}%`,
+                          textAlign: 'right',
+                        }}
+                      >
+                        {fmt(
+                          deductionTypes.find(
+                            (itm) =>
+                              itm.employee_contract_id ===
+                                entry.run.employee?.id &&
+                              itm.label === type.label
+                          )?.amount ?? 0
+                        )}
+                      </Text>
+                    ))}
+                    <Text
+                      style={{
+                        ...styles.cell,
+                        borderColor: lightBorderColor,
+                        // flex: dataColumnFlex,
+                        width: stringCOlumnWidth,
+                        textAlign: 'right',
+                      }}
+                    >
+                      {fmt(entry.computed.totalDeductions)}
+                    </Text>
+                    <Text
+                      style={{
+                        ...styles.cell,
+                        borderColor: lightBorderColor,
+                        // flex: dataColumnFlex,
+                        width: stringCOlumnWidth,
+                        textAlign: 'right',
+                      }}
+                    >
+                      {fmt(entry.computed.netSalary)}
+                    </Text>
 
-                {unique_contributions_types.map((type, typeIdx) => (
-                  <Text
-                    key={`pdf-contribution-value-${entry.run.id || index}-${type.employer_contribution_type_id || type.label}-${typeIdx}`}
-                    style={{
-                      ...styles.cell,
-                      borderColor: lightBorderColor,
-                      // flex: dataColumnFlex,
-                      width: `${contributionWidth / unique_contributions_types.length}%`,
-                      textAlign: 'right',
-                    }}
-                  >
-                    {fmt(
-                      contributionTypes.find(
-                        (itm) =>
-                          itm.employee_contract_id === entry.run.employee?.id &&
-                          (itm.label === type.label ||
-                            itm.employer_contribution_type_id ===
-                              type.employer_contribution_type_id)
-                      )?.amount ?? 0
-                    )}
-                  </Text>
-                ))}
-                <Text
-                  style={{
-                    ...styles.cell,
-                    borderColor: lightBorderColor,
-                    // flex: dataColumnFlex,
-                    width: `${employerSecWidth}%`,
-                    textAlign: 'right',
-                  }}
-                >
-                  {fmt(entry.computed.totalEmployerContributions)}
-                </Text>
-                <Text
-                  style={{
-                    ...styles.cell,
-                    borderColor: lightBorderColor,
-                    // flex: dataColumnFlex,
-                    width: `${employerSecWidth}%`,
-                    textAlign: 'right',
-                  }}
-                >
-                  {fmt(entry.computed.totalEmployerCost)}
-                </Text>
-              </View>
-            );
+                    {unique_contributions_types.map((type, typeIdx) => (
+                      <Text
+                        key={`pdf-contribution-value-${entry.run.id || index}-${type.employer_contribution_type_id || type.label}-${typeIdx}`}
+                        style={{
+                          ...styles.cell,
+                          borderColor: lightBorderColor,
+                          // flex: dataColumnFlex,
+                          width: `${contributionWidth / unique_contributions_types.length}%`,
+                          textAlign: 'right',
+                        }}
+                      >
+                        {fmt(
+                          contributionTypes.find(
+                            (itm) =>
+                              itm.employee_contract_id ===
+                                entry.run.employee?.id &&
+                              (itm.label === type.label ||
+                                itm.employer_contribution_type_id ===
+                                  type.employer_contribution_type_id)
+                          )?.amount ?? 0
+                        )}
+                      </Text>
+                    ))}
+                    <Text
+                      style={{
+                        ...styles.cell,
+                        borderColor: lightBorderColor,
+                        // flex: dataColumnFlex,
+                        width: `${employerSecWidth}%`,
+                        textAlign: 'right',
+                      }}
+                    >
+                      {fmt(entry.computed.totalEmployerContributions)}
+                    </Text>
+                    <Text
+                      style={{
+                        ...styles.cell,
+                        borderColor: lightBorderColor,
+                        // flex: dataColumnFlex,
+                        width: `${employerSecWidth}%`,
+                        textAlign: 'right',
+                      }}
+                    >
+                      {fmt(entry.computed.totalEmployerCost)}
+                    </Text>
+                  </View>
+                );
               })}
               {groupBy !== 'none' &&
                 (() => {
@@ -1064,7 +1079,10 @@ const SalarySheetPDF = ({
 
                   return (
                     <View
-                      style={{ ...styles.tableRow, backgroundColor: lightColor }}
+                      style={{
+                        ...styles.tableRow,
+                        backgroundColor: lightColor,
+                      }}
                       wrap={false}
                     >
                       <Text

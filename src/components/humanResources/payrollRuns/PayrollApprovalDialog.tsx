@@ -1,8 +1,5 @@
 'use client';
 
-import humanResourcesServices from '../humanResourcesServices';
-import SalarySheetDialog from '../payrollPeriods/SalarySheetDialog';
-import { getPayslipCalculations } from './payslipCalculations';
 import { PreviewOutlined } from '@mui/icons-material';
 import { LoadingButton } from '@mui/lab';
 import {
@@ -24,8 +21,13 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import dayjs, { Dayjs } from 'dayjs';
 import { useSnackbar } from 'notistack';
 import { useEffect, useState } from 'react';
-import SummaryTab from './SummaryTab';
+import humanResourcesServices from '../humanResourcesServices';
+import { PayrollPeriodType } from '../payrollPeriods/PayrollPeriodType';
+import SalarySheetDialog from '../payrollPeriods/SalarySheetDialog';
+import { PeriodProvider } from './PayrollRuns';
 import { PayrollRunType } from './PayrollRunType';
+import { getPayslipCalculations } from './payslipCalculations';
+import SummaryTab from './SummaryTab';
 
 export type ApprovalDecision = 'approved' | 'rejected' | 'on hold';
 
@@ -38,13 +40,16 @@ interface PayrollApprovalDialogProps {
   payrollRun: PayrollRunType;
   approval?: NonNullable<PayrollRunType['approvals']>[number];
   onClose: () => void;
+  selectedPayrollPeriod?: PayrollPeriodType | null;
 }
 
 export const getPayrollApprovalDecision = (
   approval: any
 ): ApprovalDecision | 'unknown' => {
   const status = String(approval?.status || '').toLowerCase();
-  const label = String(approval?.label || approval?.status_label || '').toLowerCase();
+  const label = String(
+    approval?.label || approval?.status_label || ''
+  ).toLowerCase();
 
   if (status === 'rejected' || label === 'rejected') return 'rejected';
   if (status === 'on hold' || label === 'on hold') return 'on hold';
@@ -67,11 +72,12 @@ export const getNextPendingPayrollLevel = (
 
   if (!levels.length) return undefined;
 
-  const latestApproval = payrollRun.approvals?.[payrollRun.approvals.length - 1];
+  const latestApproval =
+    payrollRun.approvals?.[payrollRun.approvals.length - 1];
   if (!latestApproval) return levels[0];
-  console.log('latestApproval', latestApproval)
 
-  if (getPayrollApprovalDecision(latestApproval) !== 'approved') return undefined;
+  if (getPayrollApprovalDecision(latestApproval) !== 'approved')
+    return undefined;
 
   const latestLevelId = Number(
     latestApproval.chain_level_id || latestApproval.approval_chain_level_id
@@ -91,8 +97,8 @@ export const getNextPendingPayrollLevel = (
 const getEditedPayrollApprovalLevelId = (approval: any) => {
   return Number(
     approval?.approval_chain_level?.id ||
-    approval?.chain_level_id ||
-    approval?.approval_chain_level_id
+      approval?.chain_level_id ||
+      approval?.approval_chain_level_id
   );
 };
 
@@ -108,7 +114,10 @@ const sumByLabel = (payslips: any[], key: string, excludeTax = false) => {
       map.set(item.label, (map.get(item.label) || 0) + amount);
     });
   });
-  return Array.from(map.entries()).map(([label, amount]) => ({ label, amount }));
+  return Array.from(map.entries()).map(([label, amount]) => ({
+    label,
+    amount,
+  }));
 };
 
 const calculateSummaryFromPayslips = (payslips: any[] = []) => {
@@ -134,13 +143,17 @@ const calculateSummaryFromPayslips = (payslips: any[] = []) => {
     const basicSalary = Number(payslip.basic_salary) || 0;
     const paye = Number(payslip.paye) || 0;
 
-    const allowances = Array.isArray(payslip.allowances) ? payslip.allowances : [];
+    const allowances = Array.isArray(payslip.allowances)
+      ? payslip.allowances
+      : [];
     const allowancesSum = allowances.reduce(
       (sum: number, a: any) => sum + (Number(a.amount) || Number(a.value) || 0),
       0
     );
 
-    const deductions = Array.isArray(payslip.deductions) ? payslip.deductions : [];
+    const deductions = Array.isArray(payslip.deductions)
+      ? payslip.deductions
+      : [];
     const deductionsSum = deductions.reduce(
       (sum: number, d: any) => sum + (Number(d.amount) || Number(d.value) || 0),
       0
@@ -169,7 +182,10 @@ const calculateSummaryFromPayslips = (payslips: any[] = []) => {
   totals.employees_count = payslips.length;
   totals.allowance_breakdown = sumByLabel(payslips, 'allowances');
   totals.deduction_breakdown = sumByLabel(payslips, 'deductions', true);
-  totals.contribution_breakdown = sumByLabel(payslips, 'employer_contributions');
+  totals.contribution_breakdown = sumByLabel(
+    payslips,
+    'employer_contributions'
+  );
   return totals;
 };
 
@@ -180,6 +196,7 @@ const PayrollApprovalDialog = ({
   payrollRun,
   approval,
   onClose,
+  selectedPayrollPeriod,
 }: PayrollApprovalDialogProps) => {
   const [remarks, setRemarks] = useState('');
   const [remarksError, setRemarksError] = useState('');
@@ -192,7 +209,6 @@ const PayrollApprovalDialog = ({
   const queryClient = useQueryClient();
 
   const summary = calculateSummaryFromPayslips(payrollRun.payslips as any[]);
-  console.log(payrollRun)
   const pendingLevel = getNextPendingPayrollLevel(payrollRun);
 
   useEffect(() => {
@@ -210,7 +226,9 @@ const PayrollApprovalDialog = ({
   const { mutate: addApproval, isPending: isSubmitting } = useMutation({
     mutationFn: humanResourcesServices.addPayrollRunApproval,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['payrollRunDetails', payrollRun.id] });
+      queryClient.invalidateQueries({
+        queryKey: ['payrollRunDetails', payrollRun.id],
+      });
       queryClient.invalidateQueries({ queryKey: ['payrollRuns'] });
       enqueueSnackbar('Payroll approval recorded', { variant: 'success' });
       onClose();
@@ -288,9 +306,12 @@ const PayrollApprovalDialog = ({
       });
       setIsLoadingSalarySheet(false);
     } catch (error: any) {
-      enqueueSnackbar(error?.response?.data?.message || 'Something went wrong', {
-        variant: 'error',
-      });
+      enqueueSnackbar(
+        error?.response?.data?.message || 'Something went wrong',
+        {
+          variant: 'error',
+        }
+      );
       setIsLoadingSalarySheet(false);
       setOpenSalarySheetDialog(false);
     }
@@ -307,7 +328,9 @@ const PayrollApprovalDialog = ({
       : Number(pendingLevel?.id);
 
     if (!chainLevelId) {
-      enqueueSnackbar('Unable to resolve approval chain level', { variant: 'error' });
+      enqueueSnackbar('Unable to resolve approval chain level', {
+        variant: 'error',
+      });
       return;
     }
 
@@ -371,7 +394,9 @@ const PayrollApprovalDialog = ({
                   paye={summary.paye}
                   total_allowances={summary.total_allowances}
                   total_deductions={summary.total_deductions}
-                  total_employer_contributions={summary.total_employer_contributions}
+                  total_employer_contributions={
+                    summary.total_employer_contributions
+                  }
                   allowance_breakdown={summary.allowance_breakdown}
                   deduction_breakdown={summary.deduction_breakdown}
                   contribution_breakdown={summary.contribution_breakdown}
@@ -440,16 +465,19 @@ const PayrollApprovalDialog = ({
         </Dialog>
       ) : (
         salarySheetData && (
-          <SalarySheetDialog
-            open={openSalarySheetDialog}
-            onClose={() => {
-              setOpenSalarySheetDialog(false);
-              setSalarySheetData(null);
-            }}
-            periodLabel={salarySheetData.periodLabel}
-            rows={salarySheetData.rows}
-            isLoading={isLoadingSalarySheet}
-          />
+          <PeriodProvider>
+            <SalarySheetDialog
+              open={openSalarySheetDialog}
+              onClose={() => {
+                setOpenSalarySheetDialog(false);
+                setSalarySheetData(null);
+              }}
+              periodLabel={salarySheetData.periodLabel}
+              rows={salarySheetData.rows}
+              isLoading={isLoadingSalarySheet}
+              selectedPayrollPeriod={selectedPayrollPeriod}
+            />
+          </PeriodProvider>
         )
       )}
     </>

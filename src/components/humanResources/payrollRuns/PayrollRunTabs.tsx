@@ -30,6 +30,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useRouter } from 'next/navigation';
+import { PayrollPeriodType } from '../payrollPeriods/PayrollPeriodType';
 import PayrollApprovalItemAction from './PayrollApprovalItemAction';
 import PayrollApprovalsActionTail from './PayrollApprovalsActionTail';
 import { PayrollRunType } from './PayrollRunType';
@@ -338,16 +339,23 @@ export const PayslipsTab = ({
 
 interface ApprovalsTabProps {
   payrollRun: PayrollRunType;
+  selectedPayrollPeriod?: PayrollPeriodType | null;
 }
 
-export const ApprovalsTab = ({ payrollRun }: ApprovalsTabProps) => {
+export const ApprovalsTab = ({
+  payrollRun,
+  selectedPayrollPeriod,
+}: ApprovalsTabProps) => {
   const approvals = payrollRun?.approvals || [];
 
   return (
     <Grid container spacing={2}>
       {approvals.length === 0 && (
         <Grid size={{ xs: 12 }} textAlign={'end'}>
-          <PayrollApprovalsActionTail payrollRun={payrollRun} />
+          <PayrollApprovalsActionTail
+            payrollRun={payrollRun}
+            selectedPayrollPeriod={selectedPayrollPeriod}
+          />
         </Grid>
       )}
       <Grid size={{ xs: 12 }}>
