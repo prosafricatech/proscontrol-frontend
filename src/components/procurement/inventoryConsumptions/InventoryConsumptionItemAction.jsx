@@ -1,5 +1,6 @@
 'use client';
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
+import AttachmentForm from '@/components/filesShelf/attachments/AttachmentForm';
 import PDFContent from '@/components/pdf/PDFContent';
 import { FileExportGrid } from '@/components/sharedComponents/FileExportGrid';
 import PreviewTopBar from '@/components/sharedComponents/PreviewTopBar';
@@ -8,6 +9,7 @@ import { JumboDdMenu } from '@jumbo/components';
 import { useJumboDialog } from '@jumbo/components/JumboDialog/hooks/useJumboDialog';
 import { useJumboTheme } from '@jumbo/components/JumboTheme/hooks';
 import {
+  AttachmentOutlined,
   DeleteOutlined,
   EditOutlined,
   HighlightOff,
@@ -156,6 +158,18 @@ const ActionDialogContent = ({
   return dialogContent;
 };
 
+const AttachDialog = ({ inventoryConsumption, setAttachDialog }) => {
+  return (
+    <AttachmentForm
+      setAttachDialog={setAttachDialog}
+      attachment_sourceNo={inventoryConsumption.consumptionNo}
+      attachmentable_type={'inventory_consumption'}
+      attachment_name={'Inventory Consumption'}
+      attachmentable_id={inventoryConsumption.id}
+    />
+  );
+};
+
 function InventoryConsumptionItemAction({
   inventoryConsumption,
   consumptionTab = false,
@@ -163,6 +177,7 @@ function InventoryConsumptionItemAction({
   const { showDialog, hideDialog } = useJumboDialog();
   const [openEditDialog, setOpenEditDialog] = useState(false);
   const [openDocumentDialog, setOpenDocumentDialog] = useState(false);
+  const [attachDialog, setAttachDialog] = useState(false);
   const queryClient = useQueryClient();
   const { enqueueSnackbar } = useSnackbar();
   const authObject = useJumboAuth();
@@ -201,6 +216,7 @@ function InventoryConsumptionItemAction({
         title: 'Edit',
         action: 'edit',
       },
+    { icon: <AttachmentOutlined />, title: 'Attchments', action: 'attchment' },
     (checkOrganizationPermission(PERMISSIONS.INVENTORY_CONSUMPTIONS_BACKDATE) ||
       inventoryConsumption.consumption_date >=
         dayjs().startOf('date').toISOString()) && {
@@ -231,6 +247,9 @@ function InventoryConsumptionItemAction({
       case 'open':
         setOpenDocumentDialog(true);
         break;
+      case 'attchment':
+        setAttachDialog(true);
+        break;
       default:
         break;
     }
@@ -244,7 +263,7 @@ function InventoryConsumptionItemAction({
         fullScreen={belowLargeScreen}
         fullWidth
         onClose={() => setOpenDocumentDialog(false)}
-        open={openEditDialog || openDocumentDialog}
+        open={openEditDialog || openDocumentDialog || attachDialog}
       >
         {openDocumentDialog && (
           <DialogContent>
@@ -261,6 +280,12 @@ function InventoryConsumptionItemAction({
             action='edit'
             inventoryConsumption={inventoryConsumption}
             consumptionTab={consumptionTab}
+          />
+        )}
+        {attachDialog && (
+          <AttachDialog
+            inventoryConsumption={inventoryConsumption}
+            setAttachDialog={setAttachDialog}
           />
         )}
       </Dialog>
