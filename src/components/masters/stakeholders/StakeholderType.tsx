@@ -29,6 +29,7 @@ export interface Stakeholder {
   email: string | null;
   phone: string | null;
   remarks: string | null;
+  groups?: { id: number; name: string }[];
   website: string | null;
   created_at: string;
   updated_at: string;

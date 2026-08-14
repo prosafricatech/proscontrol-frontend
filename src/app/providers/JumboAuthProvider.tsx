@@ -24,6 +24,7 @@ interface AuthUser {
     is_admin: boolean;
     email_verified_at?: any;
     organization_roles?: Array<{ name: string }>;
+    photo_path?: string | null;
   };
   permissions?: string[];
   [key: string]: any;
@@ -300,6 +301,7 @@ export const JumboAuthProvider = ({
             email: response.authUser.user.email,
             is_admin: response.authUser.user.is_admin,
             organization_roles: response.authUser.user.organization_roles,
+            photo_path: response.authUser.user.photo_path,
           },
           permissions: response.authUser.permissions || [],
         };

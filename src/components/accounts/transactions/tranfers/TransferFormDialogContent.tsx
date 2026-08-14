@@ -95,11 +95,15 @@ interface TransferData {
 interface TransferFormDialogContentProps {
   setOpen: (open: boolean) => void;
   transfer?: TransferData | null;
+  defaultAmount?: number;
+  defaultCreditLedgerId?: number;
 }
 
 function TransferFormDialogContent({
   setOpen,
   transfer = null,
+  defaultAmount,
+  defaultCreditLedgerId,
 }: TransferFormDialogContentProps) {
   const { authOrganization, checkOrganizationPermission } = useJumboAuth();
   const costCenters = authOrganization?.costCenters || [];
@@ -289,7 +293,7 @@ function TransferFormDialogContent({
     defaultValues: {
       id: transfer?.id,
       transactionDate: transfer?.transactionDate || dayjs().toISOString(),
-      credit_ledger_id: transfer?.credit_ledger_id || 0,
+      credit_ledger_id: transfer?.credit_ledger_id || defaultCreditLedgerId || 0,
       items: transfer?.items || [],
       reference: transfer?.reference,
       narration: transfer?.narration || '',
@@ -437,10 +441,13 @@ function TransferFormDialogContent({
                   frontError={errors.credit_ledger_id}
                   defaultValue={
                     ungroupedLedgerOptions.find(
-                      (ledger) => ledger.id === transfer?.credit_ledger_id
+                      (ledger) =>
+                        ledger.id ===
+                        (transfer?.credit_ledger_id || defaultCreditLedgerId)
                     ) || null
                   }
                   allowedGroups={['Cash and cash equivalents']}
+                  disabled={!transfer && !!defaultCreditLedgerId}
                   onChange={(newValue: any) => {
                     if (Array.isArray(newValue)) return;
                     applyCurrencyLock(newValue?.currency?.id);
@@ -560,6 +567,7 @@ function TransferFormDialogContent({
             onLedgerCurrencyDetected={(currencyId) =>
               applyCurrencyLock(currencyId)
             }
+            defaultAmount={defaultAmount}
           />
 
           {errors?.items?.message && items.length < 1 && (

@@ -83,6 +83,10 @@ export interface PayrollRunType {
       id?: number;
       name?: string;
     };
+    cost_center?: {
+      id?: number;
+      name?: string;
+    };
   };
   contract?: {
     id: number;

@@ -42,6 +42,20 @@ humanResourcesServices.deleteEmployee = async (id) => {
     return data;
 }
 
+humanResourcesServices.uploadEmployeePhoto = async (id, file) => {
+    const formData = new FormData();
+    formData.append('photo', file);
+    const { data } = await axios.post(`/api/humanResources/employees/${id}/photo`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return data;
+}
+
+humanResourcesServices.deleteEmployeePhoto = async (id) => {
+    const { data } = await axios.delete(`/api/humanResources/employees/${id}/photo`);
+    return data;
+}
+
 humanResourcesServices.downloadEmployeesRegistrationTemplate = async () => {
     const { data } = await axios.post('/api/humanResources/employees/registration-excel-template', {}, {
         responseType: 'blob',

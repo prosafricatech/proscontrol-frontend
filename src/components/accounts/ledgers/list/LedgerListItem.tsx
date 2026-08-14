@@ -32,6 +32,7 @@ interface Ledger {
     amount: number;
     side: string;
   } | null;
+  is_cash_or_bank?: boolean;
 }
 
 interface LedgerListItemProps {

@@ -3,9 +3,10 @@
 import { useLanguage } from '@/app/[lang]/contexts/LanguageContext';
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import { PERMISSIONS } from '@/utilities/constants/permissions';
-import { Chip, Divider, Grid, Tooltip, Typography } from '@mui/material';
+import { Chip, Divider, Grid, Stack, Tooltip, Typography } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import EmployeeItemAction from './EmployeeItemAction';
+import EmployeePhotoUpload from './EmployeePhotoUpload';
 import { Employee } from './EmployeesType';
 
 const formatEmploymentType = (value?: string) =>
@@ -46,32 +47,43 @@ const EmployeesListItem = ({ employee }: { employee: Employee }) => {
       >
         <Grid size={{ xs: 12, md: 3.5 }}>
           <Tooltip title='View Employee Profile'>
-            <div>
-              <Typography
-                variant='h5'
-                fontSize={14}
-                lineHeight={1.25}
-                mb={0}
-                noWrap
-                onClick={() =>
-                  router.push(
-                    `/${lang}/humanResources/employees/${employee.id}`
-                  )
-                }
-                sx={{
-                  cursor: 'pointer',
-                  '&:hover': {
-                    color: 'primary.main',
-                    textDecoration: 'underline',
-                  },
-                }}
-              >
-                {fullName}
-              </Typography>
-              <Typography variant='body2' color='text.secondary' noWrap>
-                {employee.employee_number}
-              </Typography>
-            </div>
+            <Stack
+              direction='row'
+              spacing={1}
+              alignItems='center'
+              onClick={() =>
+                router.push(`/${lang}/humanResources/employees/${employee.id}`)
+              }
+              sx={{ cursor: 'pointer' }}
+            >
+              <EmployeePhotoUpload
+                employeeId={employee.id}
+                photoPath={employee.photo_path}
+                firstName={employee.first_name}
+                size={36}
+                editable={false}
+              />
+              <div>
+                <Typography
+                  variant='h5'
+                  fontSize={14}
+                  lineHeight={1.25}
+                  mb={0}
+                  noWrap
+                  sx={{
+                    '&:hover': {
+                      color: 'primary.main',
+                      textDecoration: 'underline',
+                    },
+                  }}
+                >
+                  {fullName}
+                </Typography>
+                <Typography variant='body2' color='text.secondary' noWrap>
+                  {employee.employee_number}
+                </Typography>
+              </div>
+            </Stack>
           </Tooltip>
         </Grid>
 

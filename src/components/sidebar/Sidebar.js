@@ -848,13 +848,42 @@ function Sidebar({ menus }) {
                 updatedMenus = [...updatedMenus, ...menus.filter(menu => menu.label === dictionary.sidebar.menuItem.masters)];
             }
 
-            // Masters > Stakeholders
+            // Masters > Stakeholders > List
             if (!checkOrganizationPermission([PERMISSIONS.STAKEHOLDERS_READ, PERMISSIONS.STAKEHOLDERS_CREATE])) {
                 const mastersMenuIndex = updatedMenus.findIndex(menu => menu.label === dictionary.sidebar.menuItem.masters);
                 if (mastersMenuIndex >= 0) {
-                    updatedMenus[mastersMenuIndex].children = updatedMenus[mastersMenuIndex].children.filter(
-                        child => child.label !== dictionary.sidebar.menuItem.stakeholders
-                    );
+                    const stakeholdersMenuIndex = updatedMenus[mastersMenuIndex].children.findIndex(child => child.label === 'Stakeholders');
+                    if (stakeholdersMenuIndex >= 0) {
+                        updatedMenus[mastersMenuIndex].children[stakeholdersMenuIndex].children = updatedMenus[mastersMenuIndex].children[stakeholdersMenuIndex].children.filter(
+                            item => item.label !== 'List'
+                        );
+                    }
+                }
+            }
+
+            // Masters > Stakeholders > Groups
+            if (!checkOrganizationPermission(PERMISSIONS.STAKEHOLDER_GROUPS_READ)) {
+                const mastersMenuIndex = updatedMenus.findIndex(menu => menu.label === dictionary.sidebar.menuItem.masters);
+                if (mastersMenuIndex >= 0) {
+                    const stakeholdersMenuIndex = updatedMenus[mastersMenuIndex].children.findIndex(child => child.label === 'Stakeholders');
+                    if (stakeholdersMenuIndex >= 0) {
+                        updatedMenus[mastersMenuIndex].children[stakeholdersMenuIndex].children = updatedMenus[mastersMenuIndex].children[stakeholdersMenuIndex].children.filter(
+                            item => item.label !== 'Groups'
+                        );
+                    }
+                }
+            }
+
+            // Masters > Stakeholders — drop the whole group if both children were removed
+            {
+                const mastersMenuIndex = updatedMenus.findIndex(menu => menu.label === dictionary.sidebar.menuItem.masters);
+                if (mastersMenuIndex >= 0) {
+                    const stakeholdersMenuIndex = updatedMenus[mastersMenuIndex].children.findIndex(child => child.label === 'Stakeholders');
+                    if (stakeholdersMenuIndex >= 0 && updatedMenus[mastersMenuIndex].children[stakeholdersMenuIndex].children.length === 0) {
+                        updatedMenus[mastersMenuIndex].children = updatedMenus[mastersMenuIndex].children.filter(
+                            child => child.label !== 'Stakeholders'
+                        );
+                    }
                 }
             }
 
@@ -886,6 +915,14 @@ function Sidebar({ menus }) {
                         child => child.label !== 'Audit Trail'
                     );
                 }
+            }
+
+            //SMS
+            if (
+                organizationHasSubscribed(MODULES.SMS) &&
+                checkOrganizationPermission([PERMISSIONS.SMS_READ, PERMISSIONS.SMS_SEND])
+            ) {
+                updatedMenus = [...updatedMenus, ...menus.filter(menu => menu.label === 'SMS')];
             }
         }
 

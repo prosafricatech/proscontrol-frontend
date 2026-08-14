@@ -463,12 +463,6 @@ export async function getMenus(locale: string) {
       type: 'section',
       children: [
         {
-          uri: `/${locale}/masters/stakeholders`,
-          label: sidebar.menuItem.stakeholders,
-          type: 'nav-item',
-          icon: icon('stakeholders'),
-        },
-        {
           uri: `/${locale}/masters/currencies`,
           label: sidebar.menuItem.currencies,
           type: 'nav-item',
@@ -491,6 +485,36 @@ export async function getMenus(locale: string) {
           label: 'Audit Trail',
           type: 'nav-item',
           icon: icon('reports'),
+        },
+        {
+          label: 'Stakeholders',
+          type: 'collapsible',
+          icon: icon('stakeholders'),
+          children: [
+            {
+              uri: `/${locale}/masters/stakeholders`,
+              label: 'List',
+              type: 'nav-item',
+            },
+            {
+              uri: `/${locale}/masters/stakeholderGroups`,
+              label: 'Groups',
+              type: 'nav-item',
+              icon: icon('stakeholderGroups'),
+            },
+          ],
+        },
+      ],
+    },
+    {
+      label: 'SMS',
+      type: 'section',
+      children: [
+        {
+          uri: `/${locale}/sms`,
+          label: 'Overview',
+          type: 'nav-item',
+          icon: icon('sms'),
         },
       ],
     },
@@ -539,6 +563,12 @@ export async function getMenus(locale: string) {
           label: sidebar.menuItem.nextSMS,
           type: 'nav-item',
           icon: icon('nextSMS'),
+        },
+        {
+          uri: `/${locale}/prosControl/smsAccounts`,
+          label: 'SMS Accounts',
+          type: 'nav-item',
+          icon: icon('smsAccounts'),
         },
       ],
     },

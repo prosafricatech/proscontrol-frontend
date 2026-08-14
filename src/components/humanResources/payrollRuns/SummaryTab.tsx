@@ -1,8 +1,23 @@
+import { ExpandMore } from '@mui/icons-material';
 import { LoadingButton } from '@mui/lab';
-import { Card, CardContent, Grid, Stack, Typography } from '@mui/material';
+import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Card,
+  CardContent,
+  Grid,
+  Stack,
+  Typography,
+} from '@mui/material';
 import { useState } from 'react';
 import EmployeeSelector from '../employees/EmployeeSelector';
 import { Employee } from '../employees/EmployeesType';
+
+interface BreakdownLine {
+  label: string;
+  amount: number;
+}
 
 interface SummaryTabProps {
   basic_salary?: number;
@@ -12,9 +27,88 @@ interface SummaryTabProps {
   paye?: number;
   total_allowances?: number;
   total_deductions?: number;
+  total_employer_contributions?: number;
+  allowance_breakdown?: BreakdownLine[];
+  deduction_breakdown?: BreakdownLine[];
+  contribution_breakdown?: BreakdownLine[];
   onSimulate?: (employeeId: number) => void;
   isSimulating?: boolean;
 }
+
+const money = (value: number) =>
+  value.toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
+/** A summary tile that expands to show its per-type breakdown when one is available. */
+const ExpandableSummaryCard = ({
+  label,
+  total,
+  breakdown,
+}: {
+  label: string;
+  total: number;
+  breakdown?: BreakdownLine[];
+}) => {
+  const [expanded, setExpanded] = useState(true);
+  const hasBreakdown = !!breakdown && breakdown.length > 0;
+
+  if (!hasBreakdown) {
+    return (
+      <Card sx={{ minWidth: 275, height: '100%' }}>
+        <CardContent>
+          <Typography gutterBottom sx={{ color: 'text.secondary', fontSize: 16 }}>
+            {label}
+          </Typography>
+          <Typography variant='body2' fontSize={20} fontWeight={500}>
+            {money(total)}
+          </Typography>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Accordion
+      expanded={expanded}
+      onChange={(_e, isExpanded) => setExpanded(isExpanded)}
+      variant='outlined'
+      sx={{ minWidth: 275, '&:before': { display: 'none' } }}
+    >
+      <AccordionSummary expandIcon={<ExpandMore />}>
+        <Stack sx={{ width: '100%' }}>
+          <Typography sx={{ color: 'text.secondary', fontSize: 16 }}>
+            {label}
+          </Typography>
+          <Typography variant='body2' fontSize={20} fontWeight={500}>
+            {money(total)}
+          </Typography>
+        </Stack>
+      </AccordionSummary>
+      <AccordionDetails sx={{ pt: 0 }}>
+        <Stack spacing={0.5} divider={<Stack sx={{ borderTop: 1, borderColor: 'divider' }} />}>
+          {breakdown!.map((line, idx) => (
+            <Stack
+              key={`${line.label}-${idx}`}
+              direction='row'
+              justifyContent='space-between'
+              spacing={2}
+              py={0.5}
+            >
+              <Typography variant='body2' color='text.secondary'>
+                {line.label}
+              </Typography>
+              <Typography variant='body2' fontWeight={500}>
+                {money(line.amount)}
+              </Typography>
+            </Stack>
+          ))}
+        </Stack>
+      </AccordionDetails>
+    </Accordion>
+  );
+};
 
 const SummaryTab = ({
   basic_salary = 0,
@@ -24,39 +118,25 @@ const SummaryTab = ({
   paye = 0,
   total_allowances = 0,
   total_deductions = 0,
+  total_employer_contributions = 0,
+  allowance_breakdown,
+  deduction_breakdown,
+  contribution_breakdown,
   onSimulate,
   isSimulating = false,
 }: SummaryTabProps) => {
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(
     null
   );
-  const sumarryData = {
-    'Basic Salary': basic_salary.toLocaleString('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }),
-    Employees: employees,
-    'Gross Salary': gross_salary.toLocaleString('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }),
-    'Net Salary': net_salary.toLocaleString('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }),
-    Paye: paye.toLocaleString('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }),
-    'Total Allowances': total_allowances.toLocaleString('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }),
-    'Total Deductions': total_deductions.toLocaleString('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }),
-  };
+
+  const plainCards: Array<{ label: string; value: number | string }> = [
+    { label: 'Basic Salary', value: money(basic_salary) },
+    { label: 'Employees', value: employees },
+    { label: 'Gross Salary', value: money(gross_salary) },
+    { label: 'Net Salary', value: money(net_salary) },
+    { label: 'Paye', value: money(paye) },
+  ];
+
   return (
     <Grid container columnSpacing={2} rowSpacing={2}>
       {onSimulate && (
@@ -91,15 +171,15 @@ const SummaryTab = ({
           </Stack>
         </Grid>
       )}
-      {Object.entries(sumarryData).map(([Key, value]) => (
-        <Grid size={{ xs: 12, md: 6, lg: 3 }} key={Key}>
-          <Card sx={{ minWidth: 275 }}>
+      {plainCards.map(({ label, value }) => (
+        <Grid size={{ xs: 12, md: 6, lg: 3 }} key={label}>
+          <Card sx={{ minWidth: 275, height: '100%' }}>
             <CardContent>
               <Typography
                 gutterBottom
                 sx={{ color: 'text.secondary', fontSize: 16 }}
               >
-                {Key}
+                {label}
               </Typography>
               <Typography variant='body2' fontSize={20} fontWeight={500}>
                 {value}
@@ -108,6 +188,27 @@ const SummaryTab = ({
           </Card>
         </Grid>
       ))}
+      <Grid size={{ xs: 12, md: 6, lg: 3 }}>
+        <ExpandableSummaryCard
+          label='Total Allowances'
+          total={total_allowances}
+          breakdown={allowance_breakdown}
+        />
+      </Grid>
+      <Grid size={{ xs: 12, md: 6, lg: 3 }}>
+        <ExpandableSummaryCard
+          label='Total Deductions'
+          total={total_deductions}
+          breakdown={deduction_breakdown}
+        />
+      </Grid>
+      <Grid size={{ xs: 12, md: 6, lg: 3 }}>
+        <ExpandableSummaryCard
+          label='Total Employer Contributions'
+          total={total_employer_contributions}
+          breakdown={contribution_breakdown}
+        />
+      </Grid>
     </Grid>
   );
 };

@@ -9,6 +9,7 @@ import JumboGridItem from '@jumbo/components/JumboList/components/JumboGridItem'
 import { Div } from '@jumbo/shared';
 import {
   AccessibilityNewOutlined,
+  AccountBalanceWalletOutlined,
   AlternateEmail,
   Person3Outlined,
   PhoneOutlined,
@@ -17,6 +18,7 @@ import {
 import {
   Avatar,
   Box,
+  Button,
   Card,
   CardContent,
   CardHeader,
@@ -33,10 +35,15 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import axios from 'axios';
 import React, { ReactNode, useEffect, useMemo, useState } from 'react';
+import humanResourcesServices from '../humanResources/humanResourcesServices';
 import MyHr from '../humanResources/myHr/MyHr';
+import MyHrImprestAccounts from '../humanResources/myHr/imprestAccountsTab/MyHrImprestAccounts';
 import organizationServices from '../organizations/organizationServices';
+import ChangePasswordForm from './ChangePasswordForm';
+import UserPhotoUpload from './UserPhotoUpload';
 
 function TabPanel({
   children,
@@ -60,12 +67,14 @@ const Profile = () => {
   const { authUser, authOrganization, organizationHasSubscribed } =
     useJumboAuth();
   const organization = authOrganization?.organization;
+  const queryClient = useQueryClient();
   const [value, setValue] = useState(0);
   const [statusColor, setStatusColor] = useState<
     'success' | 'primary' | 'error'
   >('success');
   const [hasHrModule, setHasHrModule] = useState(false);
   const [isClient, setIsClient] = useState(false);
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
 
   const { data: users, isLoading } = useQuery({
     queryKey: ['users', organization?.id],
@@ -75,6 +84,16 @@ const Profile = () => {
       }),
     enabled: !!organization?.id,
   });
+
+  const { error: employeeError } = useQuery({
+    queryKey: ['showMyHr'],
+    queryFn: async () => await humanResourcesServices.myHrProfile(),
+    enabled: hasHrModule && !!authUser,
+  });
+
+  const hasEmployeeLink =
+    hasHrModule &&
+    !(axios.isAxiosError(employeeError) && employeeError?.status === 404);
 
   const currentUser = useMemo(() => {
     if (users) {
@@ -87,6 +106,28 @@ const Profile = () => {
   const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
   };
+
+  const tabs = useMemo(
+    () =>
+      [
+        { key: 'profile', label: 'Profile', icon: <Person3Outlined /> },
+        hasEmployeeLink && {
+          key: 'myHr',
+          label: 'My Hr',
+          icon: <AccessibilityNewOutlined />,
+        },
+        {
+          key: 'imprestAccounts',
+          label: 'Imprest Accounts',
+          icon: <AccountBalanceWalletOutlined />,
+        },
+      ].filter(Boolean) as {
+        key: string;
+        label: string;
+        icon: React.ReactElement;
+      }[],
+    [hasEmployeeLink]
+  );
 
   useEffect(() => {
     setIsClient(true);
@@ -145,20 +186,15 @@ const Profile = () => {
           variant='scrollable'
           scrollButtons='auto'
         >
-          <Tab
-            icon={<Person3Outlined />}
-            iconPosition='start'
-            label={'Profile'}
-            aria-controls={`tabpanel-profile`}
-          />
-          {hasHrModule && (
+          {tabs.map((tab) => (
             <Tab
-              icon={<AccessibilityNewOutlined />}
+              key={tab.key}
+              icon={tab.icon}
               iconPosition='start'
-              label={'My Hr'}
-              aria-controls={`tabpanel-my-hr`}
+              label={tab.label}
+              aria-controls={`tabpanel-${tab.key}`}
             />
-          )}
+          ))}
         </Tabs>
 
         <TabPanel value={value} index={0}>
@@ -170,7 +206,7 @@ const Profile = () => {
                     <Avatar
                       sx={{ width: 48, height: 48 }}
                       alt={currentUser?.name}
-                      src={currentUser?.profile_pic}
+                      src={currentUser?.photo_path}
                     />
                   )}
                   <Skeleton sx={{ width: '100%', height: 58 }} />
@@ -184,10 +220,16 @@ const Profile = () => {
                 <Card variant='outlined' elevation={0}>
                   <CardHeader
                     avatar={
-                      <Avatar
-                        sx={{ width: 48, height: 48 }}
-                        alt={currentUser?.name}
-                        src={currentUser?.profile_pic}
+                      <UserPhotoUpload
+                        photoPath={currentUser?.photo_path}
+                        name={currentUser?.name}
+                        size={48}
+                        editable={currentUser?.id === authUser?.user?.id}
+                        onChanged={() =>
+                          queryClient.invalidateQueries({
+                            queryKey: ['users', organization?.id],
+                          })
+                        }
                       />
                     }
                     title={
@@ -268,6 +310,13 @@ const Profile = () => {
                         )}
                       </Div>
                     </Tooltip>
+                    <Divider sx={{ my: 2 }} />
+                    <Button
+                      variant='outlined'
+                      onClick={() => setChangePasswordOpen(true)}
+                    >
+                      Change Password
+                    </Button>
                   </CardContent>
                 </Card>
               </>
@@ -275,10 +324,20 @@ const Profile = () => {
           </JumboGridItem>
         </TabPanel>
 
-        <TabPanel value={value} index={1}>
-          {<MyHr />}
-        </TabPanel>
+        {tabs.map((tab, index) => {
+          if (tab.key === 'profile') return null;
+          return (
+            <TabPanel key={tab.key} value={value} index={index}>
+              {tab.key === 'myHr' && <MyHr />}
+              {tab.key === 'imprestAccounts' && <MyHrImprestAccounts />}
+            </TabPanel>
+          );
+        })}
       </CardContent>
+      <ChangePasswordForm
+        open={changePasswordOpen}
+        toggleOpen={setChangePasswordOpen}
+      />
     </Card>
   );
 };

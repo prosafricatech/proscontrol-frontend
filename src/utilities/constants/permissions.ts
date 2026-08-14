@@ -234,4 +234,14 @@ export const PERMISSIONS = {
   SUBSCRIPTIONS_MANAGE: 'Subscriptions:Manage',
   USERS_INVITE: 'Users:Invite',
   USERS_MANAGE: 'Users:Manage',
+
+  // SMS
+  SMS_READ: 'Sms:Read',
+  SMS_SEND: 'Sms:Send',
+
+  // Stakeholder Groups
+  STAKEHOLDER_GROUPS_READ: 'StakeholderGroups:Read',
+  STAKEHOLDER_GROUPS_CREATE: 'StakeholderGroups:Create',
+  STAKEHOLDER_GROUPS_EDIT: 'StakeholderGroups:Edit',
+  STAKEHOLDER_GROUPS_DELETE: 'StakeholderGroups:Delete',
 };

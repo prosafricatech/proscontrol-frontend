@@ -47,6 +47,7 @@ type TransactionItemFormProps = {
   item?: TransactionItem;
   items?: TransactionItem[];
   setItems: React.Dispatch<React.SetStateAction<TransactionItem[]>>;
+  defaultAmount?: number;
 };
 
 type FormValues = {
@@ -76,6 +77,7 @@ const TransactionItemForm: React.FC<TransactionItemFormProps> = ({
   item,
   items = [],
   setItems,
+  defaultAmount,
 }) => {
   const [isAdding, setIsAdding] = useState(false);
   const { ungroupedLedgerOptions } = useLedgerSelect();
@@ -152,7 +154,7 @@ const TransactionItemForm: React.FC<TransactionItemFormProps> = ({
         ),
       debit_ledger_id: item?.debit_ledger_id,
       item_form_ledger_currency_id: item?.item_form_ledger_currency_id,
-      amount: item?.amount || 0,
+      amount: item?.amount || (items.length === 0 ? defaultAmount : 0) || 0,
       description: item?.description || '',
     },
   });

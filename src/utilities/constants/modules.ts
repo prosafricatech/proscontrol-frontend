@@ -7,4 +7,5 @@ export const MODULES = {
   HUMAN_RESOURCES: 'Human Resources',
   FUEL_STATION: 'Fuel Station',
   PROCESS_APPROVAL: 'Process Approval',
+  SMS: 'SMS',
 };
