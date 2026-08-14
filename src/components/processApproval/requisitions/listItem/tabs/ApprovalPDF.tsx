@@ -567,7 +567,7 @@ function ApprovalPDF({
             borderBottomWidth: 1,
           }}
         >
-          <View style={{ flex: 1, padding: 0.5 }}>
+          <View style={{ flex: 1, padding: 0.5, flexDirection: 'row' }}>
             <Text style={{ ...pdfStyles.minInfo, color: mainColor }}>
               Printed By:
             </Text>
@@ -576,7 +576,7 @@ function ApprovalPDF({
             </Text>
           </View>
 
-          <View style={{ flex: 1, padding: 0.5 }}>
+          <View style={{ flex: 1, padding: 0.5, flexDirection: 'row' }}>
             <Text style={{ ...pdfStyles.minInfo, color: mainColor }}>
               Printed On:
             </Text>
