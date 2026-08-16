@@ -742,6 +742,20 @@ const SalarySheetDialog = ({
                                 colSpan={totalColumnCount}
                                 sx={{
                                   fontWeight: 700,
+                                  py: 2,
+                                  // bgcolor: 'action.hover',
+                                  // border: '1px solid',
+                                  // borderColor: 'divider',
+                                }}
+                              ></TableCell>
+                            </TableRow>
+                          )}
+                          {groupBy !== 'none' && (
+                            <TableRow>
+                              <TableCell
+                                colSpan={totalColumnCount}
+                                sx={{
+                                  fontWeight: 700,
                                   bgcolor: 'action.hover',
                                   border: '1px solid',
                                   borderColor: 'divider',
@@ -752,6 +766,7 @@ const SalarySheetDialog = ({
                               </TableCell>
                             </TableRow>
                           )}
+
                           {group.rows.map((entry, index) => {
                             const run = entry.run;
                             const computed = entry.computed;
@@ -963,6 +978,7 @@ const SalarySheetDialog = ({
                               </TableRow>
                             );
                           })}
+
                           {groupBy !== 'none' &&
                             (() => {
                               const groupTotals = sumComputedTotals(group.rows);
