@@ -114,7 +114,11 @@ export const AuthUserPopover: React.FC<AuthUserPopoverProps> = ({
           <Avatar
             src={user?.photo_path || undefined}
             sizes='small'
-            sx={{ boxShadow: 23, cursor: 'pointer' }}
+            sx={{
+              boxShadow: 23,
+              cursor: 'pointer',
+              border: `4px solid ${mainColor}`,
+            }}
           />
         }
         sx={{ ml: 3 }}
