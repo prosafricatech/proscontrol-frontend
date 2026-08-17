@@ -177,7 +177,7 @@ const Profile = () => {
 
   return (
     <Card>
-      <CardContent>
+      <CardContent sx={{ px: 0 }}>
         <Tabs
           value={value}
           onChange={handleChange}

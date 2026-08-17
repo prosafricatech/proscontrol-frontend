@@ -1,6 +1,7 @@
 'use client';
 
-import React from 'react';
+import { useLanguage } from '@/app/[lang]/contexts/LanguageContext';
+import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import { useJumboTheme } from '@jumbo/components/JumboTheme/hooks';
 import { Div } from '@jumbo/shared';
 import LogoutIcon from '@mui/icons-material/Logout';
@@ -8,30 +9,29 @@ import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
 import RepeatOutlinedIcon from '@mui/icons-material/RepeatOutlined';
 import {
   Avatar,
-  Divider,
-  List,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  ThemeProvider,
-  Typography,
+  Button,
   Chip,
-  Stack,
   Dialog,
   DialogActions,
   DialogContent,
   DialogContentText,
   DialogTitle,
-  Button,
+  Divider,
+  List,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Stack,
+  ThemeProvider,
+  Typography,
 } from '@mui/material';
 import { signOut } from 'next-auth/react';
-import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import dynamic from 'next/dynamic';
-import { useLanguage } from '@/app/[lang]/contexts/LanguageContext';
 import { useRouter } from 'next/navigation';
+import React from 'react';
 
-const JumboDdPopover = dynamic(() =>
-  import('@jumbo/components').then((mod) => mod.JumboDdPopover),
+const JumboDdPopover = dynamic(
+  () => import('@jumbo/components').then((mod) => mod.JumboDdPopover),
   { ssr: false }
 );
 
@@ -57,13 +57,16 @@ interface AuthUserPopoverProps {
   dictionary: Dictionary;
 }
 
-export const AuthUserPopover: React.FC<AuthUserPopoverProps> = ({ dictionary }) => {
+export const AuthUserPopover: React.FC<AuthUserPopoverProps> = ({
+  dictionary,
+}) => {
   const router = useRouter();
   const lang = useLanguage();
   const { theme } = useJumboTheme();
   const authContext = useJumboAuth();
 
-  const [openLogoutDialog, setOpenLogoutDialog] = React.useState<boolean>(false);
+  const [openLogoutDialog, setOpenLogoutDialog] =
+    React.useState<boolean>(false);
   const hasTriggeredAutoLogout = React.useRef(false);
 
   if (!authContext) {
@@ -89,6 +92,8 @@ export const AuthUserPopover: React.FC<AuthUserPopoverProps> = ({ dictionary }) 
   const user: User | undefined = authData?.authUser?.user;
   const organization: Organization | undefined = authOrganization?.organization;
 
+  const mainColor = authOrganization?.organization?.settings.main_color || '';
+
   React.useEffect(() => {
     if (isLoading || user || hasTriggeredAutoLogout.current) {
       return;
@@ -108,7 +113,7 @@ export const AuthUserPopover: React.FC<AuthUserPopoverProps> = ({ dictionary }) 
         triggerButton={
           <Avatar
             src={user?.photo_path || undefined}
-            sizes="small"
+            sizes='small'
             sx={{ boxShadow: 23, cursor: 'pointer' }}
           />
         }
@@ -124,25 +129,33 @@ export const AuthUserPopover: React.FC<AuthUserPopoverProps> = ({ dictionary }) 
         >
           <Avatar
             src={user?.photo_path || undefined}
-            sx={{ width: 60, height: 60, mb: 2 }}
+            sx={{
+              width: 60,
+              height: 60,
+              mb: 2,
+              borderColor: 'green',
+              border: `4px solid ${mainColor}`,
+            }}
           />
-          <Typography noWrap variant="h5">
+          <Typography noWrap variant='h5'>
             {user?.name}
           </Typography>
-          <Typography noWrap variant="body1" color="text.secondary">
+          <Typography noWrap variant='body1' color='text.secondary'>
             {user?.email}
           </Typography>
 
-          <Stack direction="row" alignItems="center" spacing={1} mt={1}>
+          <Stack direction='row' alignItems='center' spacing={1} mt={1}>
             {organization?.id ? (
               <Chip
                 label={organization?.name}
-                size="small"
-                color="primary"
-                variant="outlined"
+                size='small'
+                color='primary'
+                variant='outlined'
                 clickable
                 onClick={() => {
-                  router.push(`/${lang}/organizations/profile/${organization.id}`);
+                  router.push(
+                    `/${lang}/organizations/profile/${organization.id}`
+                  );
                 }}
                 sx={{
                   cursor: 'pointer',
@@ -153,8 +166,8 @@ export const AuthUserPopover: React.FC<AuthUserPopoverProps> = ({ dictionary }) 
               />
             ) : (
               <Typography
-                variant="body2"
-                color="warning.main"
+                variant='body2'
+                color='warning.main'
                 onClick={switchOrganization}
                 sx={{
                   cursor: 'pointer',
@@ -178,7 +191,7 @@ export const AuthUserPopover: React.FC<AuthUserPopoverProps> = ({ dictionary }) 
               <ListItemIcon sx={{ minWidth: 36 }}>
                 <PersonOutlineIcon />
               </ListItemIcon>
-              <ListItemText primary="Profile" sx={{ my: 0 }} />
+              <ListItemText primary='Profile' sx={{ my: 0 }} />
             </ListItemButton>
             <ListItemButton onClick={switchOrganization}>
               <ListItemIcon sx={{ minWidth: 36 }}>
@@ -203,7 +216,10 @@ export const AuthUserPopover: React.FC<AuthUserPopoverProps> = ({ dictionary }) 
       </JumboDdPopover>
 
       {/* Logout Confirmation Dialog */}
-      <Dialog open={openLogoutDialog} onClose={() => setOpenLogoutDialog(false)}>
+      <Dialog
+        open={openLogoutDialog}
+        onClose={() => setOpenLogoutDialog(false)}
+      >
         <DialogTitle>Confirm Logout</DialogTitle>
         <DialogContent>
           <DialogContentText>
@@ -211,10 +227,7 @@ export const AuthUserPopover: React.FC<AuthUserPopoverProps> = ({ dictionary }) 
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button
-            onClick={() => setOpenLogoutDialog(false)}
-            variant="text"
-          >
+          <Button onClick={() => setOpenLogoutDialog(false)} variant='text'>
             Cancel
           </Button>
           <Button
@@ -222,7 +235,7 @@ export const AuthUserPopover: React.FC<AuthUserPopoverProps> = ({ dictionary }) 
               setOpenLogoutDialog(false);
               logout();
             }}
-            variant="text"
+            variant='text'
           >
             Logout
           </Button>
