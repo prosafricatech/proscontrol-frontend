@@ -96,6 +96,8 @@ const DocumentDialog: React.FC<DocumentDialogProps> = ({
       await requisitionsServices.getRequisitionDetails(requisition.id),
     enabled: !!openDocumentDialog,
   });
+  const { authUser } = useJumboAuth();
+  const user = authUser?.user;
 
   const [showOnScreen, setShowOnScreen] = useState(true);
   const { theme } = useJumboTheme();
@@ -177,6 +179,7 @@ const DocumentDialog: React.FC<DocumentDialogProps> = ({
                   organization={organization}
                   requisition={requisitionDetails}
                   approvals={requisition.approvals}
+                  user={user}
                 />
               }
               fileName={requisition.requisitionNo}

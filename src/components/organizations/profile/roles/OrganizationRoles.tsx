@@ -154,6 +154,11 @@ const PERMISSION_MODULES: PermissionModuleConfig[] = [
     prefixes: ['Employees', 'Payroll', 'PayrollRuns','LeaveAllocations', 'LeaveRequests', 'LoanRequests','Loans'],
   },
   {
+    key: 'sms',
+    displayName: MODULES.SMS,
+    prefixes: ['Sms'],
+  },
+  {
     key: 'shared',
     displayName: 'Shared / Organization',
     prefixes: [
@@ -164,7 +169,8 @@ const PERMISSION_MODULES: PermissionModuleConfig[] = [
       'Subscriptions',
       'Users',
       'Audit',
-      'Stakeholders'
+      'Stakeholders',
+      'StakeholderGroups'
     ],
   },
 ];

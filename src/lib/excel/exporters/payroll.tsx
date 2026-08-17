@@ -515,6 +515,18 @@ export async function ExportPayrollToExcel(exportedData: any) {
         const headerCell = ws.getCell(
           `${getExcelColumnName(COL_SN)}${currentRow}`
         );
+        headerCell.alignment = { horizontal: 'left', vertical: 'middle' };
+        ws.getRow(currentRow).height = 18;
+        currentRow++;
+      }
+
+      if (groupBy !== 'none') {
+        ws.mergeCells(
+          `${getExcelColumnName(COL_SN)}${currentRow}:${getExcelColumnName(TOTAL_COLS)}${currentRow}`
+        );
+        const headerCell = ws.getCell(
+          `${getExcelColumnName(COL_SN)}${currentRow}`
+        );
         headerCell.value = `${group.label} (${group.rows.length} employee${group.rows.length === 1 ? '' : 's'})`;
         applyCellStyle(headerCell, CELL_STYLES.tableHeader);
         headerCell.alignment = { horizontal: 'left', vertical: 'middle' };

@@ -240,16 +240,18 @@ function ApprovalOnScreen({
                 </Typography>
               </Box>
             </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-              <Box>
-                <Typography variant='subtitle2' sx={{ color: headerColor }}>
-                  Cost Center
-                </Typography>
-                <Typography variant='body1'>
-                  {requisition.cost_center.name}
-                </Typography>
-              </Box>
-            </Grid>
+            {requisition?.cost_center.name && (
+              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Box>
+                  <Typography variant='subtitle2' sx={{ color: headerColor }}>
+                    Cost Center
+                  </Typography>
+                  <Typography variant='body1'>
+                    {requisition?.cost_center.name}
+                  </Typography>
+                </Box>
+              </Grid>
+            )}
           </Grid>
 
           {/* Items Table */}

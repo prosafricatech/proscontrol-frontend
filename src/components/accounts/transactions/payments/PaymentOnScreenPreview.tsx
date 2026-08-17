@@ -38,7 +38,6 @@ interface Transaction {
     name: string
   };
   currency: Currency;
-  exchange_rate?: number;
 }
 
 interface PaymentOnScreenPreviewProps {
@@ -53,13 +52,11 @@ const PaymentOnScreenPreview: React.FC<PaymentOnScreenPreviewProps> = ({
   const theme = useTheme();
   const currencyCode = transaction.currency.code;
   const { authOrganization: { organization } } = authObject;
-  const baseCurrencyCode = organization.base_currency?.code || 'BASE';
   const mainColor = organization.settings?.main_color || "#2113AD";
   const headerColor = theme.type === 'dark' ? '#29f096' : (organization.settings?.main_color || "#2113AD");
   const contrastText = organization.settings?.contrast_text || "#FFFFFF";
 
   const totalAmount = transaction.items.reduce((total, item) => total + item.amount, 0);
-  const showExchangeRate = !!transaction.exchange_rate && transaction.exchange_rate !== 1;
 
   return (
     <Box sx={{ padding: 2 }}>
@@ -98,31 +95,6 @@ const PaymentOnScreenPreview: React.FC<PaymentOnScreenPreviewProps> = ({
             <Typography variant="body1">{transaction.creditLedgerName}</Typography>
           </Box>
         </Grid>
-        <Grid size={{xs: 12, md: 6, lg: 4}}>
-          <Box>
-            <Typography variant="subtitle2" color={headerColor} gutterBottom>
-              Transaction Currency
-            </Typography>
-            <Typography variant="body1">
-              {transaction.currency.name} ({currencyCode})
-            </Typography>
-          </Box>
-        </Grid>
-        {showExchangeRate && (
-          <Grid size={{xs: 12, md: 6, lg: 4}}>
-            <Box>
-              <Typography variant="subtitle2" color={headerColor} gutterBottom>
-                Exchange Rate
-              </Typography>
-              <Typography variant="body1">
-                {transaction.exchange_rate?.toLocaleString('en-US', {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
-              </Typography>
-            </Box>
-          </Grid>
-        )}
         {transaction.cost_centers.length > 0 && (
           <Grid size={{xs: 12, md: 6, lg: 4}}>
             <Box>
@@ -181,7 +153,7 @@ const PaymentOnScreenPreview: React.FC<PaymentOnScreenPreviewProps> = ({
           <TableHead>
             <TableRow>
               <TableCell sx={{ backgroundColor: mainColor, color: contrastText, fontSize: '0.875rem' }}>
-                S/N
+                #
               </TableCell>
               <TableCell sx={{ backgroundColor: mainColor, color: contrastText, fontSize: '0.875rem' }}>
                 Account Paid (Debit)

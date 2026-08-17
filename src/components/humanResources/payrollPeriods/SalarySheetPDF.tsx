@@ -838,6 +838,19 @@ const SalarySheetPDF = ({
           {/* Dynamic Employee Data Payload Rows */}
           {groupedRows.map((group, groupIdx) => (
             <View key={`pdf-group-${group.label || 'all'}-${groupIdx}`}>
+              {/* {groupBy !== 'none' && (
+                <View style={{ ...styles.tableRow }} wrap={false}>
+                  <Text
+                    style={{
+                      ...styles.headerCell,
+                      width: '100%',
+                      // backgroundColor: subHeaderBg,
+                      textAlign: 'left',
+                    }}
+                  ></Text>
+                </View>
+              )} */}
+
               {groupBy !== 'none' && (
                 <View style={{ ...styles.tableRow }} wrap={false}>
                   <Text
@@ -846,6 +859,7 @@ const SalarySheetPDF = ({
                       width: '100%',
                       backgroundColor: subHeaderBg,
                       textAlign: 'left',
+                      marginTop: 12,
                     }}
                   >
                     {group.label} ({group.rows.length} employee
