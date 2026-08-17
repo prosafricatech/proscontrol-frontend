@@ -151,6 +151,7 @@ export const PERMISSIONS = {
   STAKEHOLDERS_DELETE: 'Stakeholders:Delete',
   STAKEHOLDERS_EDIT: 'Stakeholders:Edit',
   STAKEHOLDERS_READ: 'Stakeholders:Read',
+  STOCK_ADJUSTMENTS_APPROVE: 'StockAdjustments:Approve',
   STOCK_ADJUSTMENTS_CREATE: 'StockAdjustments:Create',
   STOCK_ADJUSTMENTS_DELETE: 'StockAdjustments:Delete',
   STOCK_ADJUSTMENTS_EDIT: 'StockAdjustments:Edit',
@@ -213,12 +214,14 @@ export const PERMISSIONS = {
   PROJECT_SUBCONTRACTS_CREATE: 'ProjectSubcontracts:Create',
   PROJECT_SUBCONTRACTS_EDIT: 'ProjectSubcontracts:Edit',
   PROJECT_SUBCONTRACTS_DELETE: 'ProjectSubcontracts:Delete',
+  PROJECT_SUBCONTRACT_CERTIFICATES_APPROVE: 'ProjectSubcontractCertificates:Approve',
 
   PROJECTS_MANAGE_TEAM: 'Projects:ManageTeam',
 
   PROJECT_CLAIMS_CREATE: 'ProjectClaims:Create',
   PROJECT_CLAIMS_UPDATE: 'ProjectClaims:Update',
   PROJECT_CLAIMS_DELETE: 'ProjectClaims:Delete',
+  PROJECT_PAYMENT_CLAIMS_APPROVE: 'ProjectPaymentClaims:Approve',
 
   // Shared / Organization / Platform
   AUDIT_READ: 'Audit:Read',

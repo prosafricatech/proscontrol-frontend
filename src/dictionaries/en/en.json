@@ -43,6 +43,8 @@
       "boms": "BOMs",
       "sales": "Sales",
       "projects": "Projects",
+      "approvedSubcontractCertificates": "Approved Subcontract Certificates",
+      "approvedProjectPaymentClaims": "Approved Project Payment Claims",
       "projectCategories": "Project Categories",
       "approvedPayments": "Approved Payments",
       "approvedPayrollRuns": "Approved Payroll",

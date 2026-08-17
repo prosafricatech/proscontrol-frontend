@@ -14,6 +14,8 @@ import {
 } from '@mui/icons-material';
 import {
   Dialog,
+  DialogActions,
+  Button,
   Divider,
   Grid,
   IconButton,
@@ -89,6 +91,58 @@ const FetchRelatableDetails = ({
         certificate={certificateDetails}
         organization={authOrganization?.organization as Organization}
       />
+    );
+  }
+
+  if (
+    relatable.relatable_type === 'bill' ||
+    ledger_item.relatable_type === 'bill'
+  ) {
+    return (
+      <>
+        <Grid container spacing={2} sx={{ p: 3 }}>
+          <Grid size={12}>
+            <Typography variant='h5'>{relatable.invoiceNo}</Typography>
+          </Grid>
+          <Grid size={{ xs: 12, md: 4 }}>
+            <Typography variant='caption' color='text.secondary'>
+              Transaction Date
+            </Typography>
+            <Typography>
+              {readableDate(relatable.transaction_date, false)}
+            </Typography>
+          </Grid>
+          <Grid size={{ xs: 12, md: 4 }}>
+            <Typography variant='caption' color='text.secondary'>
+              Amount
+            </Typography>
+            <Typography>{relatable.amount?.toLocaleString()}</Typography>
+          </Grid>
+          <Grid size={{ xs: 12, md: 4 }}>
+            <Typography variant='caption' color='text.secondary'>
+              VAT Amount
+            </Typography>
+            <Typography>{relatable.vat_amount?.toLocaleString()}</Typography>
+          </Grid>
+          <Grid size={{ xs: 12, md: 4 }}>
+            <Typography variant='caption' color='text.secondary'>
+              Net Amount
+            </Typography>
+            <Typography>
+              {relatable.total_amount?.toLocaleString()}
+            </Typography>
+          </Grid>
+        </Grid>
+        <DialogActions sx={{ pb: 2 }}>
+          <Button
+            variant='outlined'
+            color='primary'
+            onClick={() => toggleOpen(false)}
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </>
     );
   }
 
@@ -242,19 +296,25 @@ function RequisitionLedgerItemRow({
                         lineHeight={1.25}
                         mb={0}
                       >
-                        {`${readableDate(ledger_item.relatable?.order_date || ledger_item.relatable?.certificate_date, false)} - ${
-                          ledger_item.relatable?.unapproved_amount?.toLocaleString(
-                            'en-US',
-                            {
-                              style: 'currency',
-                              currency: ledger_item.relatable?.currency?.code,
-                            }
-                          ) || ''
+                        {`${readableDate(ledger_item.relatable?.order_date || ledger_item.relatable?.certificate_date || ledger_item.relatable?.transaction_date, false)} - ${
+                          (
+                            ledger_item.relatable?.unapproved_amount ??
+                            ledger_item.relatable?.total_amount
+                          )?.toLocaleString('en-US', {
+                            style: 'currency',
+                            currency: ledger_item.relatable?.currency?.code,
+                          }) || ''
                         }`}
                       </Typography>
                     </Tooltip>
                     <Tooltip
-                      title={`View ${ledger_item.relatable_type === 'purchase' ? 'Order' : 'Certificate'} Details`}
+                      title={`View ${
+                        ledger_item.relatable_type === 'purchase'
+                          ? 'Order'
+                          : ledger_item.relatable_type === 'bill'
+                            ? 'Bill'
+                            : 'Certificate'
+                      } Details`}
                     >
                       <IconButton
                         onClick={() => {

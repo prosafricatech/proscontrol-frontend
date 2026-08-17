@@ -450,6 +450,26 @@ function Sidebar({ menus }) {
                         }
                     }
                 }
+
+                // Project Management > Approved Subcontract Certificates
+                if (!checkOrganizationPermission(PERMISSIONS.PROJECT_SUBCONTRACT_CERTIFICATES_APPROVE)) {
+                    const projectsMenuIndex = updatedMenus.findIndex(menu => menu.label === dictionary.sidebar.menu.projectManagement);
+                    if (projectsMenuIndex >= 0) {
+                        updatedMenus[projectsMenuIndex].children = updatedMenus[projectsMenuIndex].children.filter(
+                            child => child.label !== dictionary.sidebar.menuItem.approvedSubcontractCertificates
+                        );
+                    }
+                }
+
+                // Project Management > Approved Project Payment Claims
+                if (!checkOrganizationPermission(PERMISSIONS.PROJECT_PAYMENT_CLAIMS_APPROVE)) {
+                    const projectsMenuIndex = updatedMenus.findIndex(menu => menu.label === dictionary.sidebar.menu.projectManagement);
+                    if (projectsMenuIndex >= 0) {
+                        updatedMenus[projectsMenuIndex].children = updatedMenus[projectsMenuIndex].children.filter(
+                            child => child.label !== dictionary.sidebar.menuItem.approvedProjectPaymentClaims
+                        );
+                    }
+                }
             }
 
             if (organizationHasSubscribed(MODULES.ACCOUNTS_AND_FINANCE)) {

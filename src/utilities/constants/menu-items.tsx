@@ -189,6 +189,18 @@ export async function getMenus(locale: string) {
           icon: icon('projects'),
         },
         {
+          uri: `/${locale}/projectManagement/approvedSubcontractCertificates`,
+          label: sidebar.menuItem.approvedSubcontractCertificates,
+          type: 'nav-item',
+          icon: icon('approvedSubcontractCertificates'),
+        },
+        {
+          uri: `/${locale}/projectManagement/approvedProjectPaymentClaims`,
+          label: sidebar.menuItem.approvedProjectPaymentClaims,
+          type: 'nav-item',
+          icon: icon('approvedProjectPaymentClaims'),
+        },
+        {
           label: sidebar.menuItem.masters,
           type: 'collapsible',
           icon: icon('accountTree'),

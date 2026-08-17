@@ -44,9 +44,11 @@ import {
   SmsOutlined,
   StoreOutlined,
   StraightenOutlined,
+  TaskAltOutlined,
   TroubleshootOutlined,
   TuneOutlined,
   UploadFileOutlined,
+  VerifiedOutlined,
   ViewAgendaOutlined,
 } from '@mui/icons-material';
 
@@ -63,6 +65,8 @@ export const ICONS = {
   counter: PointOfSaleOutlined,
   proforma: RequestQuoteOutlined,
   projects: ViewAgendaOutlined,
+  approvedSubcontractCertificates: TaskAltOutlined,
+  approvedProjectPaymentClaims: VerifiedOutlined,
   transactions: ReceiptOutlined,
   budgets: EnergySavingsLeafOutlined,
   purchases: ShoppingCartOutlined,

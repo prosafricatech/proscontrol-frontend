@@ -3,11 +3,10 @@
 import React from 'react';
 import { Box, Chip, Divider, Grid, Tooltip, Typography } from '@mui/material';
 import { readableDate } from '@/app/helpers/input-sanitization-helpers';
-import ProjectClaimItemAction from './ProjectClaimItemAction';
-import ProjectClaimApprovalsActionTail from './ProjectClaimApprovalsActionTail';
-import { ProjectClaim } from './ProjectClaimType';
+import ProjectClaimItemAction from '@/components/projectManagement/projects/profile/claims/ProjectClaimItemAction';
+import { ProjectClaim } from '@/components/projectManagement/projects/profile/claims/ProjectClaimType';
 
-interface ProjectClaimsListItemProps {
+interface ApprovedProjectPaymentClaimsListItemProps {
   claim: ProjectClaim;
 }
 
@@ -16,11 +15,12 @@ const STATUS_CHIP_COLOR: Record<string, 'default' | 'warning' | 'info' | 'succes
   in_review: 'info',
   approved: 'success',
   rejected: 'error',
+  invoiced: 'success',
 };
 
-const ProjectClaimsListItem: React.FC<ProjectClaimsListItemProps> = ({
-  claim,
-}) => {
+const ApprovedProjectPaymentClaimsListItem: React.FC<
+  ApprovedProjectPaymentClaimsListItemProps
+> = ({ claim }) => {
   return (
     <>
       <Divider />
@@ -33,15 +33,9 @@ const ProjectClaimsListItem: React.FC<ProjectClaimsListItemProps> = ({
         paddingRight={2}
         columnSpacing={1}
         alignItems="center"
-        sx={{
-          cursor: 'pointer',
-          '&:hover': {
-            bgcolor: 'action.hover',
-          },
-        }}
       >
         {/* Claim Date */}
-        <Grid size={{ xs: 6, md: 3, lg: 3 }}>
+        <Grid size={{ xs: 6, md: 2, lg: 2 }}>
           <Tooltip title="Claim Date">
             <Typography variant="h5" fontSize={14} lineHeight={1.25} noWrap>
               {claim.claim_date ? readableDate(claim.claim_date) : '-'}
@@ -50,39 +44,38 @@ const ProjectClaimsListItem: React.FC<ProjectClaimsListItemProps> = ({
         </Grid>
 
         {/* Claim No */}
-        <Grid size={{ xs: 6, md: 3, lg: 3 }}>
+        <Grid size={{ xs: 6, md: 2, lg: 2 }}>
           <Tooltip title="Claim No.">
             <Box display="flex" alignItems="center" gap={1}>
-              <Typography noWrap>
-                {claim.claimNo || '-'}
-              </Typography>
-              {claim.approval_chain && claim.status_label ? (
+              <Typography noWrap>{claim.claimNo || '-'}</Typography>
+              {claim.status_label ? (
                 <Chip
                   label={claim.status_label}
                   size="small"
                   color={STATUS_CHIP_COLOR[claim.status || ''] || 'default'}
                   variant="outlined"
                 />
-              ) : (
-                claim.status === 'draft' && (
-                  <Chip label="Draft" size="small" color="warning" variant="outlined" />
-                )
-              )}
+              ) : null}
             </Box>
           </Tooltip>
         </Grid>
 
-        {/* Remarks */}
-        <Grid size={{ xs: 5, md: 2, lg: 2 }}>
-          <Tooltip title="Remarks">
-            <Typography noWrap>
-              {claim.remarks || '-'}
-            </Typography>
+        {/* Project */}
+        <Grid size={{ xs: 6, md: 2, lg: 2 }}>
+          <Tooltip title="Project">
+            <Typography noWrap>{claim.project?.name || '-'}</Typography>
+          </Tooltip>
+        </Grid>
+
+        {/* Client */}
+        <Grid size={{ xs: 6, md: 2, lg: 2 }}>
+          <Tooltip title="Client">
+            <Typography noWrap>{claim.client?.name || '-'}</Typography>
           </Tooltip>
         </Grid>
 
         {/* Amount */}
-        <Grid size={{ xs: 7, md: 3, lg: 3 }}>
+        <Grid size={{ xs: 7, md: 2, lg: 2 }}>
           <Tooltip title="Amount">
             <Typography noWrap>
               {claim.amount != null && claim.currency?.code
@@ -96,9 +89,8 @@ const ProjectClaimsListItem: React.FC<ProjectClaimsListItemProps> = ({
         </Grid>
 
         {/* Actions */}
-        <Grid size={{ xs: 12, md: 1, lg: 1 }}>
+        <Grid size={{ xs: 12, md: 2, lg: 2 }}>
           <Box display="flex" justifyContent="flex-end" alignItems="center" gap={1}>
-            <ProjectClaimApprovalsActionTail claim={claim} />
             <ProjectClaimItemAction claim={claim} />
           </Box>
         </Grid>
@@ -107,4 +99,4 @@ const ProjectClaimsListItem: React.FC<ProjectClaimsListItemProps> = ({
   );
 };
 
-export default ProjectClaimsListItem;
+export default ApprovedProjectPaymentClaimsListItem;

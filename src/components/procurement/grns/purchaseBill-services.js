@@ -17,4 +17,14 @@ purchaseBillServices.delete = async (id) => {
   return data;
 };
 
+// Bills (purchase invoices) for a given supplier — used by the Bill
+// search-picker (Payment Requisitions / Direct Payments relatable linking).
+purchaseBillServices.listByStakeholder = async (stakeholderId, params = {}) => {
+  const { data } = await axios.get(
+    `/api/masters/stakeholders/${stakeholderId}/purchase-bills`,
+    { params }
+  );
+  return data;
+};
+
 export default purchaseBillServices;

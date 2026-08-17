@@ -55,6 +55,10 @@ type PaymentItem = {
   item_form_ledger_currency_id: any;
   amount: number;
   description: string;
+  relatable_type?: 'purchase' | 'bill' | null;
+  relatable_id?: number | null;
+  relatable?: any;
+  relatableNo?: string;
 };
 
 type PaymentResponse = {
@@ -351,6 +355,8 @@ const PaymentFormDialogContent: React.FC<PaymentFormDialogContentProps> = ({
         item_form_ledger_currency_id: item.item_form_ledger_currency_id,
         amount: item.amount,
         description: item.description,
+        relatable_type: item.relatable_type || undefined,
+        relatable_id: item.relatable_id || undefined,
       })),
     };
     await savePayment.mutate(updatedData);

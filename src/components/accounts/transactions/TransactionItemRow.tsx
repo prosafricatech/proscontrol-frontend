@@ -16,6 +16,9 @@ type TransactionItem = {
   creditLedgerName?: string;
   amount: number;
   description: string;
+  relatable_type?: 'purchase' | 'bill' | null;
+  relatable_id?: number | null;
+  relatableNo?: string;
 };
 
 type TransactionItemRowProps = {
@@ -100,7 +103,14 @@ const TransactionItemRow: React.FC<TransactionItemRowProps> = ({
           {/* Description Display */}
           <Grid size={{xs: 6, md: 4, lg: 4.3}}>
             <Tooltip title="Description">
-              <Typography>{item.description}</Typography>
+              <Typography>
+                {item.description}
+                {isPayment && item.relatableNo && (
+                  <Typography component="span" variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                    {item.relatable_type === 'bill' ? 'Bill' : 'P.O'}: {item.relatableNo}
+                  </Typography>
+                )}
+              </Typography>
             </Tooltip>
           </Grid>
           

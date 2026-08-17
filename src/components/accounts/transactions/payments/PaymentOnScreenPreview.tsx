@@ -21,6 +21,8 @@ interface TransactionItem {
   debitLedgerName: string;
   description: string;
   amount: number;
+  relatable_type?: 'purchase' | 'bill';
+  relatableNo?: string;
 }
 
 interface Transaction {
@@ -210,9 +212,16 @@ const PaymentOnScreenPreview: React.FC<PaymentOnScreenPreviewProps> = ({
                 <TableCell>
                   {item.debitLedgerName}
                 </TableCell>
-                <TableCell>{item.description}</TableCell>
-                <TableCell 
-                  align="right" 
+                <TableCell>
+                  {item.description}
+                  {item.relatableNo && (
+                    <Typography variant="caption" color="text.secondary" display="block">
+                      {item.relatable_type === 'bill' ? 'Bill' : 'P.O'}: {item.relatableNo}
+                    </Typography>
+                  )}
+                </TableCell>
+                <TableCell
+                  align="right"
                   sx={{ 
                     fontFamily: 'monospace',
                     fontSize: '0.875rem'

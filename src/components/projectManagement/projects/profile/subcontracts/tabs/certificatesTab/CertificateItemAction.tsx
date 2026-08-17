@@ -1,7 +1,6 @@
 'use client';
 
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
-import { Currency } from '@/components/masters/Currencies/CurrencyType';
 import PDFContent from '@/components/pdf/PDFContent';
 import projectsServices from '@/components/projectManagement/projects/project-services';
 import { FileExportGrid } from '@/components/sharedComponents/FileExportGrid';
@@ -39,16 +38,7 @@ import React, { useState } from 'react';
 import CertificateForm from './form/CertificateForm';
 import CertificateOnScreen from './preview/CertificateOnScreen';
 import CertificatePDF from './preview/CertificatePDF';
-
-interface Certificate {
-  id?: number | string;
-  certificateNo?: string;
-  certificate_date?: string | null;
-  remarks?: string | null;
-  total_amount?: number | null;
-  currency?: Currency | null;
-  status?: 'draft' | 'invoiced';
-}
+import { Certificate } from './CertificateType';
 
 const DocumentDialog: React.FC<{
   open: boolean;
@@ -262,8 +252,22 @@ const CertificateItemAction: React.FC<{ certificate: Certificate }> = ({
   // once invoiced AND the org actually defers invoicing; otherwise every
   // certificate is 'invoiced' immediately and has always stayed editable.
   const deferredInvoicing = !!organization?.settings?.defer_project_certificate_invoicing;
+  const hasApprovalChain = !!certificate.approval_chain;
   const isDraft = certificate.status === 'draft';
-  const isLocked = deferredInvoicing && certificate.status === 'invoiced';
+  // 'in_review'/'approved' statuses are only ever set by the backend when an
+  // approval chain is configured (see store()), so status alone is a
+  // reliable signal here — this also holds on list items that omit the
+  // `approval_chain` relation (e.g. the org-wide Approved Subcontract
+  // Certificates list), where `hasApprovalChain` would otherwise read false.
+  const isLocked =
+    (deferredInvoicing && certificate.status === 'invoiced') ||
+    ['in_review', 'approved'].includes(certificate.status || '');
+  // Invoicing requires 'approved' status once a chain is configured; legacy
+  // behavior (no chain) still only requires 'draft'. Checking status directly
+  // for the 'approved' case (rather than gating on `hasApprovalChain`) keeps
+  // this correct on list items that don't include the `approval_chain` relation.
+  const canInvoice =
+    certificate.status === 'approved' || (!hasApprovalChain && isDraft);
 
   const menuItems = [
     {
@@ -276,7 +280,7 @@ const CertificateItemAction: React.FC<{ certificate: Certificate }> = ({
       title: 'Edit',
       action: 'edit',
     },
-    isDraft && {
+    canInvoice && {
       icon: <ReceiptLongOutlined fontSize='small' />,
       title: 'Create Invoice',
       action: 'invoice',
