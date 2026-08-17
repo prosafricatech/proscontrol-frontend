@@ -3,6 +3,7 @@ import { Organization, User } from '@/types/auth-types';
 import { Document, Page, Text, View } from '@react-pdf/renderer';
 import React from 'react';
 import PageFooter from '../pdf/PageFooter';
+import PageNumber from '../pdf/PageNumber';
 import pdfStyles from '../pdf/pdf-styles';
 import PdfLogo from '../pdf/PdfLogo';
 import {
@@ -554,6 +555,7 @@ function RequisitionPDF({
           </View>
         </View>
         <PageFooter />
+        <PageNumber />
       </Page>
     </Document>
   );

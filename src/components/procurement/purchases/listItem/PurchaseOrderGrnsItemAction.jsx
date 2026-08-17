@@ -129,27 +129,6 @@ const DocumentDialog = ({
 
   return (
     <DialogContent>
-      {/* {belowLargeScreen && (
-        <Grid container alignItems="center" justifyContent="space-between" marginBottom={2}>
-          <Grid size={11}>
-            <Tabs value={activeTab} onChange={handleTabChange} aria-label="grn tabs">
-              <Tab label="ONSCREEN" />
-              <Tab label="PDF" />
-            </Tabs>
-          </Grid>
-          <Grid size={1} textAlign="right">
-            <Tooltip title="Close">
-              <IconButton
-                size="small"
-                onClick={() => setOpenDocumentDialog(false)}
-              >
-                <HighlightOff color="primary" />
-              </IconButton>
-            </Tooltip>
-          </Grid>
-        </Grid>
-      )} */}
-
       <PreviewTopBar
         fileExportGrid={
           <FileExportGrid

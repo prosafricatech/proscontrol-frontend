@@ -1,5 +1,6 @@
 import { readableDate } from '@/app/helpers/input-sanitization-helpers';
 import PageFooter from '@/components/pdf/PageFooter';
+import PageNumber from '@/components/pdf/PageNumber';
 import pdfStyles from '@/components/pdf/pdf-styles';
 import PdfLogo from '@/components/pdf/PdfLogo';
 import { Organization, User } from '@/types/auth-types';
@@ -589,6 +590,7 @@ function ApprovalPDF({
         </View>
 
         <PageFooter />
+        <PageNumber />
       </Page>
     </Document>
   );

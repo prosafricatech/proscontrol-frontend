@@ -8,7 +8,7 @@ const pdfStyles = StyleSheet.create({
   },
   footer: {
     position: 'absolute',
-    bottom: 5,
+    bottom: 15,
     left: 30,
     right: 30,
     textAlign: 'center',
@@ -70,6 +70,7 @@ const pdfStyles = StyleSheet.create({
   minInfo: {
     fontSize: '8px',
     padding: 1,
+    color: '#6d6d6e',
   },
   microInfo: {
     fontSize: '5px',
