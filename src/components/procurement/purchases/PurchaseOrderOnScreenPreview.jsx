@@ -94,7 +94,7 @@ function PurchaseOrderOnScreenPreview({ order }) {
 
       {/* Order Information */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+        <Grid size={{ xs: 6, sm: 6, md: 4 }}>
           <Box>
             <Typography
               variant='subtitle2'
@@ -109,7 +109,7 @@ function PurchaseOrderOnScreenPreview({ order }) {
           </Box>
         </Grid>
         {order?.date_required && (
-          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+          <Grid size={{ xs: 6, sm: 6, md: 4 }}>
             <Box>
               <Typography
                 variant='subtitle2'
@@ -125,7 +125,7 @@ function PurchaseOrderOnScreenPreview({ order }) {
           </Grid>
         )}
         {order?.cost_centers && (
-          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+          <Grid size={{ xs: 6, sm: 6, md: 4 }}>
             <Box>
               <Typography
                 variant='subtitle2'
@@ -140,7 +140,7 @@ function PurchaseOrderOnScreenPreview({ order }) {
             </Box>
           </Grid>
         )}
-        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+        <Grid size={{ xs: 6, sm: 6, md: 4 }}>
           <Box>
             <Typography
               variant='subtitle2'
@@ -153,7 +153,7 @@ function PurchaseOrderOnScreenPreview({ order }) {
           </Box>
         </Grid>
         {(order?.reference || order?.requisitionNo) && (
-          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+          <Grid size={{ xs: 6, sm: 6, md: 4 }}>
             <Box>
               <Typography
                 variant='subtitle2'
@@ -168,7 +168,7 @@ function PurchaseOrderOnScreenPreview({ order }) {
             </Box>
           </Grid>
         )}
-        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+        <Grid size={{ xs: 6, sm: 6, md: 4 }}>
           <Box>
             <Typography
               variant='subtitle2'
@@ -181,7 +181,7 @@ function PurchaseOrderOnScreenPreview({ order }) {
           </Box>
         </Grid>
         {order?.currency_id > 1 && (
-          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+          <Grid size={{ xs: 6, sm: 6, md: 4 }}>
             <Box>
               <Typography
                 variant='subtitle2'
