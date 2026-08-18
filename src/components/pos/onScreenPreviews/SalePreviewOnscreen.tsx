@@ -133,7 +133,7 @@ const SalePreviewOnscreen: React.FC<SalePreviewOnscreenProps> = ({
 
       {/* Sale Information */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+        <Grid size={{ xs: 6, sm: 6, md: 3 }}>
           <Box>
             <Typography
               variant='subtitle2'
@@ -148,7 +148,7 @@ const SalePreviewOnscreen: React.FC<SalePreviewOnscreenProps> = ({
             </Typography>
           </Box>
         </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+        <Grid size={{ xs: 6, sm: 6, md: 3 }}>
           <Box>
             <Typography
               variant='subtitle2'
@@ -162,7 +162,7 @@ const SalePreviewOnscreen: React.FC<SalePreviewOnscreenProps> = ({
           </Box>
         </Grid>
         {sale.sales_person && (
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Grid size={{ xs: 6, sm: 6, md: 3 }}>
             <Box>
               <Typography
                 variant='subtitle2'
@@ -176,7 +176,7 @@ const SalePreviewOnscreen: React.FC<SalePreviewOnscreenProps> = ({
             </Box>
           </Grid>
         )}
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+        <Grid size={{ xs: 6, sm: 6, md: 3 }}>
           <Box>
             <Typography
               variant='subtitle2'
