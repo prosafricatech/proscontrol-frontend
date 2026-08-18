@@ -172,23 +172,35 @@ const PurchaseOrderListItem = ({ order }) => {
                 alignItems={'center'}
                 justifyContent={'space-between'}
               >
-                <Tooltip title={'Status'}>
-                  <Chip
-                    size='small'
-                    label={order.status}
-                    color={
-                      order.status === 'Completed' ||
-                      order.status === 'Fully Received' ||
-                      order.status === 'Instantly Received'
-                        ? 'success'
-                        : order.status === 'Partially Received'
-                          ? 'warning'
-                          : order.status === 'Closed'
-                            ? 'info'
-                            : 'primary'
-                    }
-                  />
-                </Tooltip>
+                <Stack direction='row' spacing={0.5} alignItems='center'>
+                  <Tooltip title={'Status'}>
+                    <Chip
+                      size='small'
+                      label={order.status}
+                      color={
+                        order.status === 'Completed' ||
+                        order.status === 'Fully Received' ||
+                        order.status === 'Instantly Received'
+                          ? 'success'
+                          : order.status === 'Partially Received'
+                            ? 'warning'
+                            : order.status === 'Closed'
+                              ? 'info'
+                              : 'primary'
+                      }
+                    />
+                  </Tooltip>
+                  {order.billed && (
+                    <Tooltip title='A Purchase Bill has been created for this order'>
+                      <Chip size='small' variant='outlined' color='success' label='Billed' />
+                    </Tooltip>
+                  )}
+                  {order.billed === false && order.unbilled_amount > 0 && (
+                    <Tooltip title='Not yet billed to the supplier'>
+                      <Chip size='small' variant='outlined' color='warning' label='Unbilled' />
+                    </Tooltip>
+                  )}
+                </Stack>
                 {checkOrganizationPermission(PERMISSIONS.PURCHASES_CREATE) && (
                   <Tooltip title={'Amount'}>
                     <Typography>

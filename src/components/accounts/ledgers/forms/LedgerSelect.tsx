@@ -34,6 +34,7 @@ interface Ledger {
     name_plural: string;
     symbol_native: string;
   } | null;
+  stakeholders?: { id: number; name: string }[];
 }
 
 type LedgerRef = number | Ledger | { id: number };

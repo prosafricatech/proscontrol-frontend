@@ -4,6 +4,7 @@ export interface Ledger {
   code: string | null;
   ledger_group_id: number;
   alias: string | null;
+  stakeholders?: { id: number; name: string }[];
 }
 
 export interface LedgerGroup {

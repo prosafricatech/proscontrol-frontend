@@ -11,6 +11,8 @@ interface TransactionItem {
   debitLedgerName: string;
   description: string;
   amount: number;
+  relatable_type?: 'purchase' | 'bill';
+  relatableNo?: string;
 }
 
 interface Transaction {
@@ -147,11 +149,16 @@ const PaymentPDF: React.FC<PaymentPDFProps> = ({ transaction, authObject }) => {
                 backgroundColor: index % 2 === 0 ? '#FFFFFF' : lightColor, 
                 flex: 2
               }}>{transactionItem.debitLedgerName}</Text>
-              <Text style={{ 
-                ...pdfStyles.tableCell, 
-                backgroundColor: index % 2 === 0 ? '#FFFFFF' : lightColor, 
+              <Text style={{
+                ...pdfStyles.tableCell,
+                backgroundColor: index % 2 === 0 ? '#FFFFFF' : lightColor,
                 flex: 2
-              }}>{transactionItem.description}</Text>
+              }}>
+                {transactionItem.description}
+                {transactionItem.relatableNo
+                  ? `\n${transactionItem.relatable_type === 'bill' ? 'Bill' : 'P.O'}: ${transactionItem.relatableNo}`
+                  : ''}
+              </Text>
               <Text style={{ 
                 ...pdfStyles.tableCell, 
                 backgroundColor: index % 2 === 0 ? '#FFFFFF' : lightColor, 

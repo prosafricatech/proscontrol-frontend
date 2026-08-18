@@ -4,24 +4,19 @@ import React from 'react';
 import { Box, Chip, Divider, Grid, Tooltip, Typography } from '@mui/material';
 import { readableDate } from '@/app/helpers/input-sanitization-helpers';
 import ProjectClaimItemAction from './ProjectClaimItemAction';
-
-interface Currency {
-  code?: string;
-}
-
-interface ProjectClaim {
-  id: number;
-  claim_date?: string;
-  claimNo?: string;
-  remarks?: string;
-  amount?: number;
-  currency?: Currency;
-  status?: 'draft' | 'invoiced';
-}
+import ProjectClaimApprovalsActionTail from './ProjectClaimApprovalsActionTail';
+import { ProjectClaim } from './ProjectClaimType';
 
 interface ProjectClaimsListItemProps {
   claim: ProjectClaim;
 }
+
+const STATUS_CHIP_COLOR: Record<string, 'default' | 'warning' | 'info' | 'success' | 'error'> = {
+  draft: 'warning',
+  in_review: 'info',
+  approved: 'success',
+  rejected: 'error',
+};
 
 const ProjectClaimsListItem: React.FC<ProjectClaimsListItemProps> = ({
   claim,
@@ -61,8 +56,17 @@ const ProjectClaimsListItem: React.FC<ProjectClaimsListItemProps> = ({
               <Typography noWrap>
                 {claim.claimNo || '-'}
               </Typography>
-              {claim.status === 'draft' && (
-                <Chip label="Draft" size="small" color="warning" variant="outlined" />
+              {claim.approval_chain && claim.status_label ? (
+                <Chip
+                  label={claim.status_label}
+                  size="small"
+                  color={STATUS_CHIP_COLOR[claim.status || ''] || 'default'}
+                  variant="outlined"
+                />
+              ) : (
+                claim.status === 'draft' && (
+                  <Chip label="Draft" size="small" color="warning" variant="outlined" />
+                )
               )}
             </Box>
           </Tooltip>
@@ -93,7 +97,8 @@ const ProjectClaimsListItem: React.FC<ProjectClaimsListItemProps> = ({
 
         {/* Actions */}
         <Grid size={{ xs: 12, md: 1, lg: 1 }}>
-          <Box display="flex" justifyContent="flex-end">
+          <Box display="flex" justifyContent="flex-end" alignItems="center" gap={1}>
+            <ProjectClaimApprovalsActionTail claim={claim} />
             <ProjectClaimItemAction claim={claim} />
           </Box>
         </Grid>

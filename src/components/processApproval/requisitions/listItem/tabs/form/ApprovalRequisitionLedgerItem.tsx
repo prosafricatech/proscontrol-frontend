@@ -37,6 +37,8 @@ import RelatableOrderDetails from './RelatableOrderDetails';
 import CertificateOnScreen from '@/components/projectManagement/projects/profile/subcontracts/tabs/certificatesTab/preview/CertificateOnScreen';
 import projectsServices from '@/components/projectManagement/projects/project-services.js';
 import purchaseServices from '@/components/procurement/purchases/purchase-services';
+import purchaseBillServices from '@/components/procurement/grns/purchaseBill-services';
+import PurchaseBillOnScreenPreview from '@/components/accounts/purchaseBills/PurchaseBillOnScreenPreview';
 import { useQuery } from '@tanstack/react-query';
 
 interface SplitItem {
@@ -97,6 +99,30 @@ const FetchRelatableDetails = ({ relatable, toggleOpen }: FetchRelatableDetailsP
         </Button>
       </DialogActions>
     </>;
+  }
+
+  // If relatable has invoiceNo, treat as a Bill (Supplier Invoice)
+  if ('invoiceNo' in relatable && (relatable as any).invoiceNo) {
+    const { data: billDetails, isFetching } = useQuery({
+      queryKey: ['purchase-bill-details', relatable?.id],
+      queryFn: () => purchaseBillServices.details(relatable?.id),
+    });
+    if (isFetching) {
+      return <LinearProgress />;
+    }
+    return (
+      <>
+        <PurchaseBillOnScreenPreview
+          bill={billDetails}
+          organization={authOrganization?.organization}
+        />
+        <DialogActions sx={{ pb: 2 }}>
+          <Button variant="outlined" color="primary" onClick={() => toggleOpen(false)}>
+            Close
+          </Button>
+        </DialogActions>
+      </>
+    );
   }
 
   return null;
@@ -309,10 +335,16 @@ function ApprovalRequisitionLedgerItem({
                       <>
                         <Tooltip title={'Relatable To'}>
                           <Typography variant="caption" fontSize={14} lineHeight={1.25} mb={0}>
-                            {`${item?.relatable?.orderNo || item?.relatable?.certificateNo || ''} (${readableDate(item.relatable?.order_date || item.relatable?.certificate_date, false)})`}
+                            {`${item?.relatable?.orderNo || item?.relatable?.certificateNo || (item?.relatable as any)?.invoiceNo || ''} (${readableDate(item.relatable?.order_date || item.relatable?.certificate_date || (item?.relatable as any)?.transaction_date, false)})`}
                           </Typography>
                         </Tooltip>
-                        <Tooltip title={item?.relatable_type === 'purchase' ? 'View Order' : 'View Certificate'}>
+                        <Tooltip title={
+                          item?.relatable_type === 'purchase'
+                            ? 'View Order'
+                            : item?.relatable_type === 'bill'
+                              ? 'View Bill'
+                              : 'View Certificate'
+                        }>
                           <IconButton onClick={() => {
                             setSelectedRelated(item?.relatable);
                             setOpenViewDialog(true);

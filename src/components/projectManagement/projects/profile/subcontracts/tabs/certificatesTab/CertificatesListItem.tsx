@@ -11,21 +11,19 @@ import {
 } from '@mui/material';
 import { readableDate } from '@/app/helpers/input-sanitization-helpers';
 import CertificateItemAction from './CertificateItemAction';
-import { Currency } from '@/components/masters/Currencies/CurrencyType';
-
-interface Certificate {
-  id?: number | string;
-  certificateNo?: string;
-  certificate_date?: string | null;
-  remarks?: string | null;
-  total_amount?: number | null;
-  currency?: Currency | null;
-  status?: 'draft' | 'invoiced';
-}
+import CertificateApprovalsActionTail from './CertificateApprovalsActionTail';
+import { Certificate } from './CertificateType';
 
 interface CertificatesListItemProps {
   certificate: Certificate;
 }
+
+const STATUS_CHIP_COLOR: Record<string, 'default' | 'warning' | 'info' | 'success' | 'error'> = {
+  draft: 'warning',
+  in_review: 'info',
+  approved: 'success',
+  rejected: 'error',
+};
 
 const CertificatesListItem: React.FC<CertificatesListItemProps> = ({ certificate }) => {
   const formattedAmount = React.useMemo(() => {
@@ -72,8 +70,17 @@ const CertificatesListItem: React.FC<CertificatesListItemProps> = ({ certificate
             <Tooltip title="Certificate Number">
               <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 {certificate.certificateNo || 'Draft / Pending'}
-                {certificate.status === 'draft' && (
-                  <Chip label="Draft" size="small" color="warning" variant="outlined" />
+                {certificate.approval_chain && certificate.status_label ? (
+                  <Chip
+                    label={certificate.status_label}
+                    size="small"
+                    color={STATUS_CHIP_COLOR[certificate.status || ''] || 'default'}
+                    variant="outlined"
+                  />
+                ) : (
+                  certificate.status === 'draft' && (
+                    <Chip label="Draft" size="small" color="warning" variant="outlined" />
+                  )
                 )}
               </span>
             </Tooltip>
@@ -114,7 +121,8 @@ const CertificatesListItem: React.FC<CertificatesListItemProps> = ({ certificate
       </Grid>
 
       <Grid size={{ xs: 4, md: 1, lg: 0.5 }} textAlign="end">
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 1 }}>
+          <CertificateApprovalsActionTail certificate={certificate} />
           <CertificateItemAction certificate={certificate} />
         </Box>
       </Grid>

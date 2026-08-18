@@ -15,6 +15,7 @@ import {
   DeleteOutlined,
   EditOutlined,
   HighlightOff,
+  ReceiptLongOutlined,
   RestoreOutlined,
   VisibilityOutlined,
 } from '@mui/icons-material';
@@ -39,6 +40,7 @@ import PDFContent from '../../../pdf/PDFContent';
 import purchaseServices from '../purchase-services';
 import PurchaseOrderOnScreenPreview from '../PurchaseOrderOnScreenPreview';
 import PurchaseOrderPDF from '../PurchaseOrderPDF';
+import PurchaseBillFormDialog from '../../grns/PurchaseBillFormDialog';
 import CloseOrReopenForm from './CloseOrReopenForm';
 import PurchaseGrnsReportOnScreen from './purchaseGrnsReport/PurchaseGrnsReportOnScreen';
 import PurchaseGrnsReportPDF from './purchaseGrnsReport/PurchaseGrnsReportPDF';
@@ -302,6 +304,7 @@ function PurchaseOrderListItemAction({ order }) {
   const [openPurchasesGrnsReport, setOpenPurchasesGrnsReport] = useState(false);
   const [openClose, setOpenClose] = useState(false);
   const [openReopen, setOpenReopen] = useState(false);
+  const [openBillDialog, setOpenBillDialog] = useState(false);
   const queryClient = useQueryClient();
   const {
     checkOrganizationPermission,
@@ -385,16 +388,19 @@ function PurchaseOrderListItemAction({ order }) {
           openReceiveDialog ||
           attachDialog ||
           openClose ||
-          openReopen
+          openReopen ||
+          openBillDialog
         }
         fullWidth
         fullScreen={belowLargeScreen}
         maxWidth={
-          openDocumentDialog ||
-          openPurchasesGrnsReport ||
-          attachDialog ||
-          openClose ||
-          openReopen
+          openBillDialog
+            ? 'lg'
+            : openDocumentDialog ||
+              openPurchasesGrnsReport ||
+              attachDialog ||
+              openClose ||
+              openReopen
             ? 'md'
             : 'xl'
         }
@@ -439,6 +445,9 @@ function PurchaseOrderListItemAction({ order }) {
             setOpenDialog={setOpenReopen}
             isReOpen={true}
           />
+        )}
+        {openBillDialog && (
+          <PurchaseBillFormDialog order={order} setOpenDialog={setOpenBillDialog} />
         )}
       </Dialog>
 
@@ -509,6 +518,17 @@ function PurchaseOrderListItemAction({ order }) {
           <Tooltip title={`Receive ${order.orderNo}`}>
             <IconButton onClick={() => setOpenReceiveDialog(true)}>
               <AssignmentTurnedInOutlined />
+            </IconButton>
+          </Tooltip>
+        )}
+
+      {organization?.settings?.defer_grn_billing &&
+        !order.billed &&
+        order.unbilled_amount > 0 &&
+        checkOrganizationPermission(PERMISSIONS.ACCOUNTS_TRANSACTIONS_CREATE) && (
+          <Tooltip title={`Create Purchase Bill for ${order.orderNo}`}>
+            <IconButton onClick={() => setOpenBillDialog(true)}>
+              <ReceiptLongOutlined />
             </IconButton>
           </Tooltip>
         )}

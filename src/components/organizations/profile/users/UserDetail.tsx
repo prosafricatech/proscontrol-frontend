@@ -22,7 +22,7 @@ export const UserDetail: React.FC<UserDetailProps> = ({ user, onClose }) => {
       <CardHeader
         title={user?.name}
         subheader={null}
-        avatar={<Avatar src={user?.profile_pic} alt={user?.name} />}
+        avatar={<Avatar src={user?.photo_path || undefined} alt={user?.name} />}
         action={
           <IconButton onClick={onClose} aria-label="close">
             <CloseOutlined />
