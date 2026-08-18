@@ -546,10 +546,8 @@ const DeductionTypeForm = ({
                     }
                     allowedGroups={
                       isStaffLoanRepayment
-                        ? ['Accounts Receivable']
-                        : isAbsenceDeduction
-                          ? ['Expenses']
-                          : ['Accounts Payable']
+                        ? ['Current Assets']
+                        : ['Current Liabilities']
                     }
                     frontError={errors.payable_ledger_id}
                     key={

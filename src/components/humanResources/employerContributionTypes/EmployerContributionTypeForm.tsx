@@ -542,7 +542,7 @@ const EmployerContributionTypeForm = ({
                   <Div sx={{ my: 1 }}>
                     <LedgerSelect
                       label='Payable Ledger'
-                      allowedGroups={['Accounts Payable']}
+                      allowedGroups={['Current Liabilities']}
                       frontError={errors.payable_ledger_id}
                       key={'account-payable-ledger'}
                       value={recentlyAddedPayableLedger || undefined}
