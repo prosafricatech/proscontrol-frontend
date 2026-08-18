@@ -5,7 +5,7 @@ const PageNumber = () => {
   return (
     <View style={{ ...pdfStyles.footer, bottom: 2 }} fixed>
       <Text
-        style={{ ...pdfStyles.minInfo, marginTop: 2 }}
+        style={{ ...pdfStyles.minInfo, color: '#6d6d6e', marginTop: 2 }}
         render={({ pageNumber, totalPages }) =>
           `Page ${pageNumber} of ${totalPages}`
         }
