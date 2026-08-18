@@ -294,6 +294,12 @@ export async function getMenus(locale: string) {
       type: 'section',
       children: [
         {
+          uri: `/${locale}/procurement/rfqs`,
+          label: 'RFQs',
+          type: 'nav-item',
+          icon: icon('rfq'),
+        },
+        {
           uri: `/${locale}/procurement/approvedPurchases`,
           label: sidebar.menuItem.approvedPurchases,
           type: 'nav-item',
@@ -304,12 +310,6 @@ export async function getMenus(locale: string) {
           label: sidebar.menuItem.purchases,
           type: 'nav-item',
           icon: icon('purchases'),
-        },
-        {
-          uri: `/${locale}/procurement/rfqs`,
-          label: 'RFQs',
-          type: 'nav-item',
-          icon: icon('rfq'),
         },
         {
           uri: `/${locale}/procurement/consumptions`,
