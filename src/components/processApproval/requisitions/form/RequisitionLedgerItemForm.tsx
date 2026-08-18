@@ -190,11 +190,6 @@ function RequisitionLedgerItemForm({
                 'Amount should not exceed unapproved amount of selected relatable',
                 function (value) {
                   const currentRelatable = this.parent?.relatable;
-                  // Bills carry no unapproved/approved payment concept — this
-                  // cap only applies to purchase orders and certificates.
-                  if (this.parent?.relatable_type === 'bill') {
-                    return true;
-                  }
                   const maxAmount = Number(
                     currentRelatable?.unapproved_amount ?? 0
                   );
@@ -289,11 +284,7 @@ function RequisitionLedgerItemForm({
     const calculated = Number(calculateAmount() ?? 0);
     const maxUnapprovedAmount = Number(data?.relatable?.unapproved_amount ?? 0);
 
-    if (
-      data?.relatable_type !== 'bill' &&
-      data?.relatable?.id &&
-      calculated > maxUnapprovedAmount
-    ) {
+    if (data?.relatable?.id && calculated > maxUnapprovedAmount) {
       setError('amount', {
         type: 'manual',
         message: `Amount should not exceed unapproved amount (${maxUnapprovedAmount.toLocaleString()}) of selected relatable`,
@@ -673,6 +664,7 @@ function RequisitionLedgerItemForm({
                 <BillPicker
                   label='Relatable To'
                   value={selectedRelated as any}
+                  stakeholder={selectedLedger?.stakeholders?.[0] ?? null}
                   onChange={(newValue) => {
                     setSelectedRelated(newValue as any);
                     setValue('relatable', (newValue ?? null) as any);

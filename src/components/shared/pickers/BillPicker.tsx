@@ -15,6 +15,8 @@ export interface BillOption {
   vat_amount?: number;
   net_amount?: number;
   total_amount?: number;
+  approved_payment_amount?: number;
+  unapproved_amount?: number;
   stakeholder?: { id: number; name: string } | null;
 }
 
@@ -24,25 +26,45 @@ interface BillPickerProps {
   label?: string;
   size?: 'small' | 'medium';
   frontError?: { message?: string } | null;
+  // When the payee ledger is already selected elsewhere in the form, its
+  // stakeholder is known — pass it here to skip the supplier step entirely.
+  stakeholder?: { id: number; name: string } | null;
 }
 
-// Supplier -> Bill two-step picker. There is no cross-supplier Bill search
-// endpoint on the backend (Bills are only listable per-stakeholder), so this
-// mirrors that constraint instead of pretending a global search exists.
+// Bill picker, optionally narrowed to a known supplier. There is no
+// cross-supplier Bill search endpoint on the backend (Bills are only
+// listable per-stakeholder) — when `stakeholder` isn't supplied, this falls
+// back to a two-step Supplier -> Bill picker instead of pretending a global
+// search exists.
 function BillPicker({
   value = null,
   onChange,
   label = 'Bill',
   size = 'small',
   frontError = null,
+  stakeholder = null,
 }: BillPickerProps) {
   const [stakeholderId, setStakeholderId] = useState<number | null>(
-    value?.stakeholder?.id ?? null
+    stakeholder?.id ?? value?.stakeholder?.id ?? null
   );
   const [stakeholderValue, setStakeholderValue] = useState<{
     id: number;
     name: string;
-  } | null>(value?.stakeholder ? { id: value.stakeholder.id, name: value.stakeholder.name } : null);
+  } | null>(
+    stakeholder ??
+      (value?.stakeholder
+        ? { id: value.stakeholder.id, name: value.stakeholder.name }
+        : null)
+  );
+
+  // Keep in sync when the caller's known stakeholder changes (e.g. the
+  // payee ledger was switched to a different supplier).
+  useEffect(() => {
+    if (stakeholder) {
+      setStakeholderId(stakeholder.id);
+      setStakeholderValue(stakeholder);
+    }
+  }, [stakeholder?.id]);
 
   // When editing an existing item we're only given {id, invoiceNo} for the
   // relatable — resolve the full bill once so the supplier step can be
@@ -63,6 +85,7 @@ function BillPicker({
   const { data: suppliers = [] } = useQuery({
     queryKey: ['billPickerSuppliers'],
     queryFn: () => stakeholderServices.getSelectOptions('suppliers'),
+    enabled: !stakeholder,
   });
 
   const { data: billsResponse, isFetching: isFetchingBills } = useQuery({
@@ -81,24 +104,26 @@ function BillPicker({
 
   return (
     <Grid container spacing={1}>
-      <Grid size={{ xs: 12, md: 5 }}>
-        <Autocomplete
-          size={size}
-          options={suppliers}
-          value={stakeholderValue}
-          getOptionLabel={(option: any) => option?.name || ''}
-          isOptionEqualToValue={(option: any, val: any) => option.id === val?.id}
-          onChange={(e, newValue: any) => {
-            setStakeholderValue(newValue);
-            setStakeholderId(newValue?.id ?? null);
-            onChange(null);
-          }}
-          renderInput={(params) => (
-            <TextField {...params} label='Supplier' size={size} fullWidth />
-          )}
-        />
-      </Grid>
-      <Grid size={{ xs: 12, md: 7 }}>
+      {!stakeholder && (
+        <Grid size={{ xs: 12, md: 5 }}>
+          <Autocomplete
+            size={size}
+            options={suppliers}
+            value={stakeholderValue}
+            getOptionLabel={(option: any) => option?.name || ''}
+            isOptionEqualToValue={(option: any, val: any) => option.id === val?.id}
+            onChange={(e, newValue: any) => {
+              setStakeholderValue(newValue);
+              setStakeholderId(newValue?.id ?? null);
+              onChange(null);
+            }}
+            renderInput={(params) => (
+              <TextField {...params} label='Supplier' size={size} fullWidth />
+            )}
+          />
+        </Grid>
+      )}
+      <Grid size={{ xs: 12, md: stakeholder ? 12 : 7 }}>
         <Autocomplete
           size={size}
           options={mergedBillOptions}
@@ -108,7 +133,7 @@ function BillPicker({
           getOptionLabel={(option: any) =>
             option?.invoiceNo
               ? `${option.invoiceNo} (${readableDate(option.transaction_date, false)} - ${Number(
-                  option.net_amount ?? option.total_amount ?? 0
+                  option.unapproved_amount ?? option.net_amount ?? option.total_amount ?? 0
                 ).toLocaleString()})`
               : ''
           }

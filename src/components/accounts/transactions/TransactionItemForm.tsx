@@ -472,6 +472,9 @@ const TransactionItemForm: React.FC<TransactionItemFormProps> = ({
                 <Div sx={{ mt: 1 }}>
                   <BillPicker
                     value={watch('relatable') as BillOption | null}
+                    stakeholder={
+                      (watch('debit_ledger') as Ledger | undefined)?.stakeholders?.[0] ?? null
+                    }
                     onChange={(newValue) => {
                       setValue('relatable', newValue);
                       setValue('relatable_id', newValue?.id ?? null);

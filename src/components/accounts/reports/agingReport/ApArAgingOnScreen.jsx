@@ -1,5 +1,7 @@
+import { useJumboTheme } from '@jumbo/components/JumboTheme/hooks';
 import {
   Box,
+  Dialog,
   Table,
   TableBody,
   TableCell,
@@ -7,9 +9,13 @@ import {
   TableHead,
   Paper as TablePaper,
   TableRow,
+  Tooltip,
   Typography,
+  useMediaQuery,
   useTheme,
 } from '@mui/material';
+import { useState } from 'react';
+import LedgerStatementDialogContent from '../../ledgers/list/ledgerStatement/LedgerStatementDialogContent';
 
 const BUCKET_COLUMNS = [
   { key: 'current', label: 'Current (0-30)' },
@@ -27,10 +33,28 @@ const formatMoney = (value) =>
 
 const ApArAgingOnScreen = ({ reportData, authOrganization }) => {
   const theme = useTheme();
+  const { theme: jumboTheme } = useJumboTheme();
+  const belowLargeScreen = useMediaQuery(jumboTheme.breakpoints.down('lg'));
   const mainColor =
     authOrganization?.organization.settings?.main_color || '#2113AD';
   const contrastText =
     authOrganization?.organization.settings?.contrast_text || '#FFFFFF';
+
+  const [ledgerDialogOpen, setLedgerDialogOpen] = useState(false);
+  const [ledgerFilters, setLedgerFilters] = useState(null);
+
+  const handleViewLedger = (row) => {
+    const costCenters = reportData.filters?.cost_centers || [];
+    setLedgerFilters({
+      from: authOrganization?.organization?.recording_start_date,
+      to: reportData.as_at,
+      cost_center_ids: costCenters.length ? costCenters.map((cc) => cc.id) : 'all',
+      ledger_id: row.ledger_id,
+      ledgerName: row.name,
+      increasesWith: reportData.filters?.type === 'receivable' ? 'DR' : 'CR',
+    });
+    setLedgerDialogOpen(true);
+  };
 
   if (!reportData) return null;
 
@@ -77,7 +101,19 @@ const ApArAgingOnScreen = ({ reportData, authOrganization }) => {
                 }}
               >
                 <TableCell>{index + 1}</TableCell>
-                <TableCell>{row.name}</TableCell>
+                <TableCell>
+                  <Tooltip title='Click to view statement' placement='top' arrow>
+                    <Typography
+                      component='span'
+                      variant='body2'
+                      color='primary.main'
+                      sx={{ cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}
+                      onClick={() => handleViewLedger(row)}
+                    >
+                      {row.name}
+                    </Typography>
+                  </Tooltip>
+                </TableCell>
                 {BUCKET_COLUMNS.map((col) => (
                   <TableCell key={col.key} align='right'>
                     {formatMoney(row.buckets[col.key])}
@@ -111,6 +147,21 @@ const ApArAgingOnScreen = ({ reportData, authOrganization }) => {
           </TableBody>
         </Table>
       </TableContainer>
+
+      {ledgerDialogOpen && (
+        <Dialog
+          open={ledgerDialogOpen}
+          onClose={() => setLedgerDialogOpen(false)}
+          maxWidth='md'
+          fullWidth
+          fullScreen={belowLargeScreen}
+        >
+          <LedgerStatementDialogContent
+            commingFilters={ledgerFilters}
+            setOpen={setLedgerDialogOpen}
+          />
+        </Dialog>
+      )}
     </Box>
   );
 };

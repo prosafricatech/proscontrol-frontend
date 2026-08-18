@@ -1,6 +1,8 @@
 import { readableDate } from '@/app/helpers/input-sanitization-helpers';
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import purchaseServices from '@/components/procurement/purchases/purchase-services';
+import purchaseBillServices from '@/components/procurement/grns/purchaseBill-services';
+import PurchaseBillOnScreenPreview from '@/components/accounts/purchaseBills/PurchaseBillOnScreenPreview';
 import CertificateOnScreen from '@/components/projectManagement/projects/profile/subcontracts/tabs/certificatesTab/preview/CertificateOnScreen';
 import projectsServices from '@/components/projectManagement/projects/project-services.js';
 import { Organization } from '@/types/auth-types';
@@ -98,41 +100,19 @@ const FetchRelatableDetails = ({
     relatable.relatable_type === 'bill' ||
     ledger_item.relatable_type === 'bill'
   ) {
+    const { data: billDetails, isFetching } = useQuery({
+      queryKey: ['purchase-bill-details', relatable?.id],
+      queryFn: () => purchaseBillServices.details(relatable?.id),
+    });
+    if (isFetching) {
+      return <LinearProgress />;
+    }
     return (
       <>
-        <Grid container spacing={2} sx={{ p: 3 }}>
-          <Grid size={12}>
-            <Typography variant='h5'>{relatable.invoiceNo}</Typography>
-          </Grid>
-          <Grid size={{ xs: 12, md: 4 }}>
-            <Typography variant='caption' color='text.secondary'>
-              Transaction Date
-            </Typography>
-            <Typography>
-              {readableDate(relatable.transaction_date, false)}
-            </Typography>
-          </Grid>
-          <Grid size={{ xs: 12, md: 4 }}>
-            <Typography variant='caption' color='text.secondary'>
-              Amount
-            </Typography>
-            <Typography>{relatable.amount?.toLocaleString()}</Typography>
-          </Grid>
-          <Grid size={{ xs: 12, md: 4 }}>
-            <Typography variant='caption' color='text.secondary'>
-              VAT Amount
-            </Typography>
-            <Typography>{relatable.vat_amount?.toLocaleString()}</Typography>
-          </Grid>
-          <Grid size={{ xs: 12, md: 4 }}>
-            <Typography variant='caption' color='text.secondary'>
-              Net Amount
-            </Typography>
-            <Typography>
-              {relatable.total_amount?.toLocaleString()}
-            </Typography>
-          </Grid>
-        </Grid>
+        <PurchaseBillOnScreenPreview
+          bill={billDetails}
+          organization={authOrganization?.organization}
+        />
         <DialogActions sx={{ pb: 2 }}>
           <Button
             variant='outlined'
@@ -300,10 +280,15 @@ function RequisitionLedgerItemRow({
                           (
                             ledger_item.relatable?.unapproved_amount ??
                             ledger_item.relatable?.total_amount
-                          )?.toLocaleString('en-US', {
-                            style: 'currency',
-                            currency: ledger_item.relatable?.currency?.code,
-                          }) || ''
+                          )?.toLocaleString(
+                            'en-US',
+                            ledger_item.relatable?.currency?.code
+                              ? {
+                                  style: 'currency',
+                                  currency: ledger_item.relatable.currency.code,
+                                }
+                              : { minimumFractionDigits: 2 }
+                          ) || ''
                         }`}
                       </Typography>
                     </Tooltip>

@@ -243,6 +243,12 @@ export async function getMenus(locale: string) {
           icon: icon('transactions'),
         },
         {
+          uri: `/${locale}/accounts/supplierBills`,
+          label: sidebar.menuItem.supplierBills,
+          type: 'nav-item',
+          icon: icon('supplierBills'),
+        },
+        {
           uri: `/${locale}/accounts/reports`,
           label: sidebar.menuItem.reports,
           type: 'nav-item',

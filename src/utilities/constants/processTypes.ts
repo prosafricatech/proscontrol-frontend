@@ -46,3 +46,10 @@ export const getProcessTypes = (
 // Process types whose approval chains can be scoped to a department — kept in
 // sync with ApprovalChainController::validator()'s department_id guard.
 export const DEPARTMENT_SCOPABLE_PROCESS_TYPES = ['LEAVE REQUEST', 'LOAN'];
+
+// Process types that are actual creatable Requisition documents. Everything
+// else in PROCESS_TYPES (Leave Request, Payroll, Loan, Imprest Retirement,
+// and the newer Subcontract Certificate / Project Payment Claim / Stock
+// Adjustment) only shares the process_type field for ApprovalChain
+// configuration purposes — none of those are things a Requisition can be.
+export const REQUISITION_PROCESS_TYPES = ['PURCHASE', 'PAYMENT', 'MATERIAL', 'IMPREST'];

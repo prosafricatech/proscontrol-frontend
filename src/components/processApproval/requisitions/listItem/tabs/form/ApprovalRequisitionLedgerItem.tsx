@@ -37,6 +37,8 @@ import RelatableOrderDetails from './RelatableOrderDetails';
 import CertificateOnScreen from '@/components/projectManagement/projects/profile/subcontracts/tabs/certificatesTab/preview/CertificateOnScreen';
 import projectsServices from '@/components/projectManagement/projects/project-services.js';
 import purchaseServices from '@/components/procurement/purchases/purchase-services';
+import purchaseBillServices from '@/components/procurement/grns/purchaseBill-services';
+import PurchaseBillOnScreenPreview from '@/components/accounts/purchaseBills/PurchaseBillOnScreenPreview';
 import { useQuery } from '@tanstack/react-query';
 
 interface SplitItem {
@@ -101,30 +103,19 @@ const FetchRelatableDetails = ({ relatable, toggleOpen }: FetchRelatableDetailsP
 
   // If relatable has invoiceNo, treat as a Bill (Supplier Invoice)
   if ('invoiceNo' in relatable && (relatable as any).invoiceNo) {
-    const bill = relatable as any;
+    const { data: billDetails, isFetching } = useQuery({
+      queryKey: ['purchase-bill-details', relatable?.id],
+      queryFn: () => purchaseBillServices.details(relatable?.id),
+    });
+    if (isFetching) {
+      return <LinearProgress />;
+    }
     return (
       <>
-        <Box sx={{ p: 3 }}>
-          <Typography variant='h5' gutterBottom>{bill.invoiceNo}</Typography>
-          <Grid container spacing={2}>
-            <Grid size={{ xs: 12, md: 4 }}>
-              <Typography variant='caption' color='text.secondary'>Transaction Date</Typography>
-              <Typography>{readableDate(bill.transaction_date, false)}</Typography>
-            </Grid>
-            <Grid size={{ xs: 12, md: 4 }}>
-              <Typography variant='caption' color='text.secondary'>Amount</Typography>
-              <Typography>{bill.amount?.toLocaleString()}</Typography>
-            </Grid>
-            <Grid size={{ xs: 12, md: 4 }}>
-              <Typography variant='caption' color='text.secondary'>VAT Amount</Typography>
-              <Typography>{bill.vat_amount?.toLocaleString()}</Typography>
-            </Grid>
-            <Grid size={{ xs: 12, md: 4 }}>
-              <Typography variant='caption' color='text.secondary'>Net Amount</Typography>
-              <Typography>{bill.total_amount?.toLocaleString()}</Typography>
-            </Grid>
-          </Grid>
-        </Box>
+        <PurchaseBillOnScreenPreview
+          bill={billDetails}
+          organization={authOrganization?.organization}
+        />
         <DialogActions sx={{ pb: 2 }}>
           <Button variant="outlined" color="primary" onClick={() => toggleOpen(false)}>
             Close

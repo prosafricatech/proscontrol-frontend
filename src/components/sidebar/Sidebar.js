@@ -549,6 +549,22 @@ function Sidebar({ menus }) {
                     }
                 }
 
+                //Accounts > Supplier Bills
+                if (
+                    !authOrganization?.organization?.settings?.defer_grn_billing ||
+                    !checkOrganizationPermission([
+                        PERMISSIONS.PURCHASES_READ,
+                        PERMISSIONS.PURCHASES_CREATE,
+                    ])
+                ) {
+                    const accountsMenuIndex = updatedMenus.findIndex(menu => menu.label === dictionary.sidebar.menu.accounts_and_finance);
+                    if (accountsMenuIndex >= 0) {
+                        updatedMenus[accountsMenuIndex].children = updatedMenus[accountsMenuIndex].children.filter(
+                            item => item.label !== dictionary.sidebar.menuItem.supplierBills
+                        );
+                    }
+                }
+
                 //Accounts > Approved Payments
                 if (!organizationHasSubscribed(MODULES.PROCESS_APPROVAL)) {
                     const accountsMenuIndex = updatedMenus.findIndex(menu => menu.label === dictionary.sidebar.menu.accounts_and_finance);
