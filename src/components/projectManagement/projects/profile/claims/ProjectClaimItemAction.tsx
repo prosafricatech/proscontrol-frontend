@@ -37,6 +37,7 @@ import React, { useState } from 'react';
 import ClaimOnscreen from './ClaimOnscreen';
 import ClaimPDF from './ClaimPDF';
 import ProjectClaimsForm from './form/ProjectClaimsForm';
+import { ProjectClaim } from './ProjectClaimType';
 
 interface DocumentDialogProps {
   open: boolean;
@@ -46,12 +47,12 @@ interface DocumentDialogProps {
 }
 
 interface EditClaimProps {
-  claim: any;
+  claim: ProjectClaim;
   setOpenDialog: (open: boolean) => void;
 }
 
 interface ProjectClaimItemActionProps {
-  claim: any;
+  claim: ProjectClaim;
 }
 
 const DocumentDialog: React.FC<DocumentDialogProps> = ({
@@ -256,8 +257,21 @@ const ProjectClaimItemAction: React.FC<ProjectClaimItemActionProps> = ({
   // have every claim marked 'invoiced' immediately and have always been
   // able to edit freely, so status alone can't gate this.
   const deferredInvoicing = !!organization?.settings?.defer_project_certificate_invoicing;
+  const hasApprovalChain = !!claim.approval_chain;
   const isDraft = claim.status === 'draft';
-  const isLocked = deferredInvoicing && claim.status === 'invoiced';
+  // 'in_review'/'approved' statuses are only ever set by the backend when an
+  // approval chain is configured (see store()), so status alone is a
+  // reliable signal here — this also holds on list items that omit the
+  // `approval_chain` relation (e.g. the org-wide Approved Project Payment
+  // Claims list), where `hasApprovalChain` would otherwise read false.
+  const isLocked =
+    (deferredInvoicing && claim.status === 'invoiced') ||
+    ['in_review', 'approved'].includes(claim.status || '');
+  // Invoicing requires 'approved' status once a chain is configured; legacy
+  // behavior (no chain) still only requires 'draft'. Checking status directly
+  // for the 'approved' case (rather than gating on `hasApprovalChain`) keeps
+  // this correct on list items that don't include the `approval_chain` relation.
+  const canInvoice = claim.status === 'approved' || (!hasApprovalChain && isDraft);
 
   const menuItems = [
     { icon: <VisibilityOutlined />, title: 'View', action: 'view' },
@@ -267,7 +281,7 @@ const ProjectClaimItemAction: React.FC<ProjectClaimItemActionProps> = ({
         title: 'Edit',
         action: 'edit',
       },
-    isDraft &&
+    canInvoice &&
       checkOrganizationPermission(PERMISSIONS.PROJECT_CLAIMS_UPDATE) && {
         icon: <ReceiptLongOutlined />,
         title: 'Create Invoice',

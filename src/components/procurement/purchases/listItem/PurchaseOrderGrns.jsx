@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react'
-import { Box, Dialog, Grid, IconButton, Tooltip, Typography } from '@mui/material';
+import { Box, Chip, Dialog, Grid, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import { AttachmentOutlined, ReceiptLongOutlined, UndoOutlined, VisibilityOutlined, EditOutlined } from '@mui/icons-material';
 import { listItemContext } from './PurchaseOrderListItem';
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
@@ -42,9 +42,21 @@ function PurchaseOrderGrns({order}) {
                     </Tooltip>
                 </Grid>
                 <Grid size={{xs: 6, md: 3}}>
-                    <Tooltip title={'Grn No.'}>
-                        <Typography>{orderGrn?.grnNo}</Typography>
-                    </Tooltip>
+                    <Stack direction="row" spacing={0.5} alignItems="center">
+                        <Tooltip title={'Grn No.'}>
+                            <Typography>{orderGrn?.grnNo}</Typography>
+                        </Tooltip>
+                        {deferGrnBilling && orderGrn.billed && (
+                            <Tooltip title='A Purchase Bill has been created for this GRN'>
+                                <Chip size='small' variant='outlined' color='success' label='Billed' />
+                            </Tooltip>
+                        )}
+                        {deferGrnBilling && orderGrn.billed === false && orderGrn.unbilled_amount > 0 && (
+                            <Tooltip title='Not yet billed to the supplier'>
+                                <Chip size='small' variant='outlined' color='warning' label='Unbilled' />
+                            </Tooltip>
+                        )}
+                    </Stack>
                         <Tooltip title={'Reference'}>
                             <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
                                 {orderGrn?.reference}
@@ -112,7 +124,7 @@ function PurchaseOrderGrns({order}) {
                         </Tooltip>
 
                         {deferGrnBilling && !orderGrn.billed && orderGrn.unbilled_amount > 0 &&
-                            checkOrganizationPermission([PERMISSIONS.PURCHASES_CREATE]) &&
+                            checkOrganizationPermission([PERMISSIONS.ACCOUNTS_TRANSACTIONS_CREATE]) &&
                             <Tooltip title={`Create Purchase Bill for ${orderGrn.grnNo}`}>
                                 <IconButton onClick={() => setBillGrn(orderGrn)}>
                                     <ReceiptLongOutlined />
@@ -128,7 +140,7 @@ function PurchaseOrderGrns({order}) {
             open={!!billGrn}
             onClose={() => setBillGrn(null)}
             fullWidth
-            maxWidth='sm'
+            maxWidth='lg'
         >
             {billGrn && (
                 <PurchaseBillFormDialog

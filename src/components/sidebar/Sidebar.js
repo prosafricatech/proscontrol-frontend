@@ -450,6 +450,26 @@ function Sidebar({ menus }) {
                         }
                     }
                 }
+
+                // Project Management > Approved Subcontract Certificates
+                if (!checkOrganizationPermission(PERMISSIONS.PROJECT_SUBCONTRACT_CERTIFICATES_APPROVE)) {
+                    const projectsMenuIndex = updatedMenus.findIndex(menu => menu.label === dictionary.sidebar.menu.projectManagement);
+                    if (projectsMenuIndex >= 0) {
+                        updatedMenus[projectsMenuIndex].children = updatedMenus[projectsMenuIndex].children.filter(
+                            child => child.label !== dictionary.sidebar.menuItem.approvedSubcontractCertificates
+                        );
+                    }
+                }
+
+                // Project Management > Approved Project Payment Claims
+                if (!checkOrganizationPermission(PERMISSIONS.PROJECT_PAYMENT_CLAIMS_APPROVE)) {
+                    const projectsMenuIndex = updatedMenus.findIndex(menu => menu.label === dictionary.sidebar.menu.projectManagement);
+                    if (projectsMenuIndex >= 0) {
+                        updatedMenus[projectsMenuIndex].children = updatedMenus[projectsMenuIndex].children.filter(
+                            child => child.label !== dictionary.sidebar.menuItem.approvedProjectPaymentClaims
+                        );
+                    }
+                }
             }
 
             if (organizationHasSubscribed(MODULES.ACCOUNTS_AND_FINANCE)) {
@@ -525,6 +545,22 @@ function Sidebar({ menus }) {
                     if (accountsMenuIndex >= 0) {
                         updatedMenus[accountsMenuIndex].children = updatedMenus[accountsMenuIndex].children.filter(
                             item => item.label !== dictionary.sidebar.menuItem.transactions
+                        );
+                    }
+                }
+
+                //Accounts > Supplier Bills
+                if (
+                    !authOrganization?.organization?.settings?.defer_grn_billing ||
+                    !checkOrganizationPermission([
+                        PERMISSIONS.PURCHASES_READ,
+                        PERMISSIONS.PURCHASES_CREATE,
+                    ])
+                ) {
+                    const accountsMenuIndex = updatedMenus.findIndex(menu => menu.label === dictionary.sidebar.menu.accounts_and_finance);
+                    if (accountsMenuIndex >= 0) {
+                        updatedMenus[accountsMenuIndex].children = updatedMenus[accountsMenuIndex].children.filter(
+                            item => item.label !== dictionary.sidebar.menuItem.supplierBills
                         );
                     }
                 }

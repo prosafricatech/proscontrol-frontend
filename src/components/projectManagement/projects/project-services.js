@@ -53,6 +53,24 @@ projectsServices.getCertificates = async (params) => {
     return response.data;
 };
 
+// Org-wide history of certificates/claims that have cleared approval
+// (status approved/invoiced) — not scoped to a single subcontract/project.
+projectsServices.getApprovedSubcontractCertificates = async (params) => {
+    const response = await axios.get(
+        '/api/projectManagement/approvedSubcontractCertificates',
+        { params }
+    );
+    return response.data;
+};
+
+projectsServices.getApprovedProjectPaymentClaims = async (params) => {
+    const response = await axios.get(
+        '/api/projectManagement/approvedProjectPaymentClaims',
+        { params }
+    );
+    return response.data;
+};
+
 projectsServices.getSubContractDetails = async (id) => {
     const { data } = await axios.get(`/api/projectManagement/project/${id}/getSubContractDetails`);
     return data;
@@ -149,6 +167,16 @@ projectsServices.addCertificates = async (certificate) => {
 
 projectsServices.addClaim = async (claim) => {
     const { data } = await axios.post('/api/projectManagement/project/addClaims', claim)
+    return data;
+}
+
+projectsServices.addSubcontractCertificateApproval = async (approval) => {
+    const { data } = await axios.post('/api/projectManagement/project/certificateApprovals', approval)
+    return data;
+}
+
+projectsServices.addProjectPaymentClaimApproval = async (approval) => {
+    const { data } = await axios.post('/api/projectManagement/project/claimApprovals', approval)
     return data;
 }
 

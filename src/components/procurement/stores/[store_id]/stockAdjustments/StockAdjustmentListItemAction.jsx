@@ -108,11 +108,15 @@ function StockAdjustmentListItemAction({stockAdjustment}) {
       },
     });
   
+    // Once submitted for approval, the backend rejects edit/delete until the
+    // chain is resolved (approved -> posted, or rejected -> editable again).
+    const isLocked = stockAdjustment.status === 'in_review';
+
     const menuItems = [
       checkOrganizationPermission(PERMISSIONS.STOCK_ADJUSTMENTS_READ) && {icon: <VisibilityOutlined/> , title : "View" , action : "open"},
-      checkOrganizationPermission(PERMISSIONS.STOCK_ADJUSTMENTS_EDIT) && {icon: <EditOutlined/>, title: 'Edit', action: 'edit'},
-      checkOrganizationPermission(PERMISSIONS.STOCK_ADJUSTMENTS_DELETE) && {icon: <DeleteOutlined color='error'/>, title: 'Delete', action: 'delete'}
-    ];
+      !isLocked && checkOrganizationPermission(PERMISSIONS.STOCK_ADJUSTMENTS_EDIT) && {icon: <EditOutlined/>, title: 'Edit', action: 'edit'},
+      !isLocked && checkOrganizationPermission(PERMISSIONS.STOCK_ADJUSTMENTS_DELETE) && {icon: <DeleteOutlined color='error'/>, title: 'Delete', action: 'delete'}
+    ].filter(Boolean);
   
     const handleItemAction = (menuItem) => {
       switch (menuItem.action) {

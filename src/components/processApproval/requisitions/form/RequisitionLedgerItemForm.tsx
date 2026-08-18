@@ -8,6 +8,7 @@ import measurementUnitServices from '@/components/masters/measurementUnits/measu
 import MeasurementSelector from '@/components/masters/measurementUnits/MeasurementSelector';
 import MeasurementUnitForm from '@/components/masters/measurementUnits/MeasurementUnitForm';
 import { MeasurementUnit } from '@/components/masters/measurementUnits/MeasurementUnitType';
+import BillPicker from '@/components/shared/pickers/BillPicker';
 import CommaSeparatedField from '@/shared/Inputs/CommaSeparatedField';
 import { MODULES } from '@/utilities/constants/modules';
 import { PERMISSIONS } from '@/utilities/constants/permissions';
@@ -102,7 +103,11 @@ function RequisitionLedgerItemForm({
     RelatableTransaction[]
   >([]);
   const [selectedRelated, setSelectedRelated] =
-    useState<RelatableTransaction | null>(null);
+    useState<RelatableTransaction | null>(
+      ledger_item?.relatable_type === 'bill'
+        ? ((ledger_item?.relatable as unknown as RelatableTransaction) ?? null)
+        : null
+    );
   const [openLedgerBudgetDialog, setOpenLedgerBudgetDialog] = useState(false);
   const [ledgerDialogData, setLedgerDialogData] = useState<{
     ledgerId: number;
@@ -122,6 +127,10 @@ function RequisitionLedgerItemForm({
     {
       value: 'subcontract_certificate',
       label: 'Subcontract Certificate',
+    },
+    {
+      value: 'bill',
+      label: 'Bill',
     },
   ];
 
@@ -314,6 +323,14 @@ function RequisitionLedgerItemForm({
     const ledgerId = watch('ledger_id');
     const relatable_type = watch('relatable_type');
     setIsRetrieving(true);
+
+    // Bills are picked via BillPicker (Supplier -> Bill), not through the
+    // ledger-driven related-transactions search used by purchase/certificate.
+    if (relatable_type === 'bill') {
+      setRelatedTransactions([]);
+      setIsRetrieving(false);
+      return;
+    }
 
     if (ledgerId && relatable_type) {
       try {
@@ -641,7 +658,26 @@ function RequisitionLedgerItemForm({
               />
             </Div>
           </Grid>
-          {isRetrieving ? (
+          {watch('relatable_type') === 'bill' ? (
+            <Grid size={{ xs: 12, md: 4 }}>
+              <Div sx={{ mt: 0.3 }}>
+                <BillPicker
+                  label='Relatable To'
+                  value={selectedRelated as any}
+                  stakeholder={selectedLedger?.stakeholders?.[0] ?? null}
+                  onChange={(newValue) => {
+                    setSelectedRelated(newValue as any);
+                    setValue('relatable', (newValue ?? null) as any);
+                    setValue('relatable_id', newValue?.id ?? null);
+                    setValue('amount', watch('amount'), {
+                      shouldValidate: true,
+                      shouldDirty: true,
+                    });
+                  }}
+                />
+              </Div>
+            </Grid>
+          ) : isRetrieving ? (
             <Grid size={{ xs: 12, md: 4 }}>
               <LinearProgress />
             </Grid>

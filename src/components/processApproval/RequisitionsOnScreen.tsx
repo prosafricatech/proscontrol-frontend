@@ -3,6 +3,8 @@ import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import CertificateOnScreen from '@/components/projectManagement/projects/profile/subcontracts/tabs/certificatesTab/preview/CertificateOnScreen';
 import projectsServices from '@/components/projectManagement/projects/project-services.js';
 import { Organization } from '@/types/auth-types';
+import purchaseBillServices from '../procurement/grns/purchaseBill-services';
+import PurchaseBillOnScreenPreview from '../accounts/purchaseBills/PurchaseBillOnScreenPreview';
 import { VisibilityOutlined } from '@mui/icons-material';
 import {
   Box,
@@ -91,6 +93,34 @@ const FetchRelatableDetails: React.FC<{
     );
   }
 
+  if (relatable.invoiceNo) {
+    const { data: billDetails, isFetching } = useQuery({
+      queryKey: ['purchase-bill-details', relatable?.id],
+      queryFn: () => purchaseBillServices.details(relatable?.id),
+    });
+    if (isFetching) {
+      return <LinearProgress />;
+    }
+    return (
+      <>
+        <PurchaseBillOnScreenPreview
+          bill={billDetails}
+          organization={authOrganization?.organization}
+        />
+        <DialogActions sx={{ pb: 2 }}>
+          <Button
+            variant='outlined'
+            size='small'
+            color='primary'
+            onClick={() => toggleOpen(false)}
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </>
+    );
+  }
+
   return null;
 };
 
@@ -108,7 +138,7 @@ const RequisitionsOnScreen: React.FC<Props> = ({
 
   const mainColor = organization.settings?.main_color || '#2113AD';
   const headerColor =
-    theme.type === 'dark'
+    theme.palette.mode === 'dark'
       ? '#29f096'
       : organization.settings?.main_color || '#2113AD';
   const contrastText = organization.settings?.contrast_text || '#FFFFFF';
@@ -197,7 +227,7 @@ const RequisitionsOnScreen: React.FC<Props> = ({
           <Grid container spacing={2} sx={{ mb: 3 }} width={'100%'}>
             <Grid size={{ xs: 12, sm: 6, md: 4 }}>
               <Box>
-                <Typography variant='subtitle2' sx={{ color: headerColor }}>
+                <Typography variant='subtitle2' color='text.secondary'>
                   Requisition Date
                 </Typography>
                 <Typography variant='body1'>
@@ -207,7 +237,7 @@ const RequisitionsOnScreen: React.FC<Props> = ({
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 4 }}>
               <Box>
-                <Typography variant='subtitle2' sx={{ color: headerColor }}>
+                <Typography variant='subtitle2' color='text.secondary'>
                   Date Required
                 </Typography>
                 <Typography variant='body1'>
@@ -219,7 +249,7 @@ const RequisitionsOnScreen: React.FC<Props> = ({
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 4 }}>
               <Box>
-                <Typography variant='subtitle2' sx={{ color: headerColor }}>
+                <Typography variant='subtitle2' color='text.secondary'>
                   Cost Center
                 </Typography>
                 <Typography variant='body1'>
@@ -229,7 +259,7 @@ const RequisitionsOnScreen: React.FC<Props> = ({
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 4 }}>
               <Box>
-                <Typography variant='subtitle2' sx={{ color: headerColor }}>
+                <Typography variant='subtitle2' color='text.secondary'>
                   Requested By
                 </Typography>
                 <Typography variant='body1'>
@@ -353,7 +383,13 @@ const RequisitionsOnScreen: React.FC<Props> = ({
                                       </Typography>
                                     </Tooltip>
                                     <Tooltip
-                                      title={`View ${item?.relatable_type === 'purchase' ? 'Purchase Order' : 'Certificate'}`}
+                                      title={`View ${
+                                        item?.relatable_type === 'purchase'
+                                          ? 'Purchase Order'
+                                          : item?.relatable_type === 'bill'
+                                            ? 'Bill'
+                                            : 'Certificate'
+                                      }`}
                                     >
                                       <IconButton
                                         size='small'
@@ -595,7 +631,7 @@ const RequisitionsOnScreen: React.FC<Props> = ({
           {requisition.remarks && (
             <Grid size={12} sx={{ mt: 2 }}>
               <Box>
-                <Typography variant='subtitle2' sx={{ color: headerColor }}>
+                <Typography variant='subtitle2' color='text.secondary'>
                   Remarks
                 </Typography>
                 <Typography
