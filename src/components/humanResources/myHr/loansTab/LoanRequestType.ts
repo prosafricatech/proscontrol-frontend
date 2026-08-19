@@ -1,4 +1,9 @@
 import { CostCenter } from '@/components/masters/costCenters/CostCenterType';
+import { Department } from '@/components/humanResources/departments/DepartmentsType';
+import {
+  LoanRequestApproval,
+  LoanRequestApprovalChain,
+} from '@/components/humanResources/loanRequests/LoanRequestType';
 
 export type LoanRequestStatus =
   | 'in_review'
@@ -29,13 +34,16 @@ export interface MyHrLoanRequestType {
   reviewed_at: string | null;
   payment_id: number | null;
   disbursed_at: string | null;
-  disbursed_by: number | null;
+  disbursed_by: { id: number; name: string } | null;
   disbursement_reference: string | null;
   created_by: number;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
   cost_center: CostCenter | null;
+  department?: Department | null;
+  approval_chain?: LoanRequestApprovalChain | null;
+  approvals?: LoanRequestApproval[];
   // shape unconfirmed — null in this sample, so left loose on purpose
   deduction_type: Record<string, any> | null;
 }

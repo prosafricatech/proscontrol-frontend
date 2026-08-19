@@ -4,7 +4,7 @@ import { readableDate } from '@/app/helpers/input-sanitization-helpers';
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import organizationServices from '@/components/organizations/organizationServices';
 import { PERMISSIONS } from '@/utilities/constants/permissions';
-import { Verified } from '@mui/icons-material';
+import { PreviewOutlined, Verified } from '@mui/icons-material';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import {
@@ -15,7 +15,12 @@ import {
   Card,
   CardContent,
   Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  Button,
   Grid,
+  IconButton,
   LinearProgress,
   Stack,
   Tab,
@@ -30,6 +35,7 @@ import LoanApprovalItemAction from './LoanApprovalItemAction';
 import LoanApprovalsActionTail from './LoanApprovalsActionTail';
 import { getLoanApprovalDecision } from './loanApprovalUtils';
 import LoanRequestItemAction from './LoanRequestItemAction';
+import LoanRequestPreview from './LoanRequestPreview';
 import { LoanRequestType } from './LoanRequestType';
 
 interface User {
@@ -100,6 +106,7 @@ const LoanRequestsListItem = ({
 
   const [expanded, setExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
+  const [openPreview, setOpenPreview] = useState(false);
 
   const { data: loanDetails, isLoading } = useQuery({
     queryKey: ['showLoanRequest', loanRequest.id],
@@ -243,8 +250,29 @@ const LoanRequestsListItem = ({
 
       {canReadLoanDetails && (
         <AccordionDetails sx={{ backgroundColor: 'background.paper', mb: 3 }}>
+          <Dialog
+            open={openPreview}
+            fullWidth
+            maxWidth='sm'
+            onClose={() => setOpenPreview(false)}
+          >
+            <DialogContent>
+              <LoanRequestPreview loanRequest={details} />
+            </DialogContent>
+            <DialogActions>
+              <Button size='small' onClick={() => setOpenPreview(false)}>
+                Close
+              </Button>
+            </DialogActions>
+          </Dialog>
+
           <Grid container spacing={1}>
             <Grid size={{ xs: 12 }} textAlign='end'>
+              <Tooltip title='Preview'>
+                <IconButton size='small' onClick={() => setOpenPreview(true)}>
+                  <PreviewOutlined color='primary' />
+                </IconButton>
+              </Tooltip>
               <LoanRequestItemAction loanRequest={details} />
             </Grid>
             <Grid size={{ xs: 12 }}>

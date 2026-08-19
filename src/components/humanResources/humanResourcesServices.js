@@ -1080,6 +1080,10 @@ humanResourcesServices.importPeriodAdvances = async (periodId, file) => {
     });
     return data;
 }
+humanResourcesServices.addPeriodAdvanceBatch = async (payload) => {
+    const { data } = await axios.post('/api/humanResources/payrollPeriods/advances/add-batch', payload);
+    return data;
+}
 humanResourcesServices.updatePeriodAdvance = async (advance) => {
     const { data } = await axios.put(`/api/humanResources/payrollPeriods/advances/${advance.id}/update`, advance);
     return data;

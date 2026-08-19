@@ -1,10 +1,14 @@
 import { readableDate } from '@/app/helpers/input-sanitization-helpers';
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
+import LoanRequestPreview from '@/components/humanResources/loanRequests/LoanRequestPreview';
 import { useJumboTheme } from '@jumbo/components/JumboTheme/hooks';
-import { EditOutlined, PaidOutlined } from '@mui/icons-material';
+import { EditOutlined, PaidOutlined, PreviewOutlined } from '@mui/icons-material';
 import {
+  Button,
   Chip,
   Dialog,
+  DialogActions,
+  DialogContent,
   Divider,
   Grid,
   IconButton,
@@ -45,6 +49,7 @@ const MyHrLoanRequestsListItem = ({
   const belowLargeScreen = useMediaQuery(theme.breakpoints.down('lg'));
   const { authUser } = useJumboAuth();
   const [openEditDialog, setOpenEditDialog] = useState(false);
+  const [openPreview, setOpenPreview] = useState(false);
 
   const statusColor = STATUS_COLOR[loanRequest.status] || 'default';
   // status_label is backend-computed — "Waiting for {Role}" while a chain-driven
@@ -77,6 +82,23 @@ const MyHrLoanRequestsListItem = ({
       >
         <LoanRequstForm setOpenDialog={setOpenEditDialog} loan={loanRequest} />
       </Dialog>
+
+      <Dialog
+        open={openPreview}
+        fullWidth
+        maxWidth='sm'
+        onClose={() => setOpenPreview(false)}
+      >
+        <DialogContent>
+          <LoanRequestPreview loanRequest={loanRequest} title='Your Loan Request' />
+        </DialogContent>
+        <DialogActions>
+          <Button size='small' onClick={() => setOpenPreview(false)}>
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       <Divider />
       <Grid
         container
@@ -136,6 +158,11 @@ const MyHrLoanRequestsListItem = ({
                 <PaidOutlined color='success' fontSize='small' />
               </Tooltip>
             )}
+            <Tooltip title='Preview'>
+              <IconButton size='small' onClick={() => setOpenPreview(true)}>
+                <PreviewOutlined color='primary' fontSize='small' />
+              </IconButton>
+            </Tooltip>
             {canEdit && (
               <Tooltip title='Edit'>
                 <IconButton

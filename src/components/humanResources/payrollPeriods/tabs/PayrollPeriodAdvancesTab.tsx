@@ -5,6 +5,7 @@ import { MODULES } from '@/utilities/constants/modules';
 import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import {
   AccountBalanceOutlined,
+  AddCircleOutline,
   ClearOutlined,
   DeleteOutline,
   DescriptionOutlined,
@@ -49,6 +50,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { useSnackbar } from 'notistack';
 import React, { ChangeEvent, useState } from 'react';
 import humanResourcesServices from '../../humanResourcesServices';
+import AddAdvancesBatchDialog from '../advances/AddAdvancesBatchDialog';
 import AdvanceTransferListDialog from '../advances/AdvanceTransferListDialog';
 import { AdvanceSheetType } from '../advances/AdvanceSheetType';
 import MarkAdvancesPaidDialog from '../advances/MarkAdvancesPaidDialog';
@@ -124,6 +126,7 @@ const PayrollPeriodAdvancesTab = ({
 
   const [search, setSearch] = useState('');
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [addBatchDialogOpen, setAddBatchDialogOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [editingAdvance, setEditingAdvance] = useState<PeriodAdvance | null>(null);
@@ -377,6 +380,30 @@ const PayrollPeriodAdvancesTab = ({
           >
             <span>
               <Button
+                variant='outlined'
+                startIcon={<AddCircleOutline />}
+                onClick={() => setAddBatchDialogOpen(true)}
+                disabled={isPeriodLocked}
+                sx={{
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  width: { xs: '100%', sm: 'auto' },
+                }}
+              >
+                Add Advance
+              </Button>
+            </span>
+          </Tooltip>
+          <Tooltip
+            title={
+              isPeriodLocked
+                ? `This period's run is already ${lockedRun?.status} — new advances won't be reflected in it`
+                : ''
+            }
+          >
+            <span>
+              <Button
                 variant='contained'
                 startIcon={<UploadOutlined />}
                 onClick={() => setUploadDialogOpen(true)}
@@ -556,6 +583,14 @@ const PayrollPeriodAdvancesTab = ({
           </TableContainer>
         )}
       </Stack>
+
+      {/* Add Advance (manual, multi-row) Dialog */}
+      <AddAdvancesBatchDialog
+        open={addBatchDialogOpen}
+        onClose={() => setAddBatchDialogOpen(false)}
+        payrollPeriodId={payrollPeriodId}
+        onSaved={() => refetchAdvances()}
+      />
 
       {/* Upload Advances Dialog */}
       <Dialog
