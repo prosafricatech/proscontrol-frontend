@@ -44,6 +44,8 @@ export interface LoanRequestApproval {
   status_label?: string;
   amount_approved?: number | null;
   installments_approved?: number | null;
+  recovery_mode?: 'installments' | 'fixed_amount';
+  installment_amount_approved?: number | null;
   remarks?: string | null;
   approval_date?: string | null;
   creator?: {
@@ -73,6 +75,8 @@ export interface LoanRequestType {
   approval_chain_id: number | null;
   amount: number;
   installments: number;
+  recovery_mode?: 'installments' | 'fixed_amount';
+  installment_amount_requested?: number | null;
   amount_approved: number | null;
   installments_approved: number | null;
   installment_amount: number | null;

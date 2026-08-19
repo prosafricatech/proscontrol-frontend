@@ -11,6 +11,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  MenuItem,
   Stack,
   TextField,
 } from '@mui/material';
@@ -52,13 +53,25 @@ const LoanApprovalForm = ({
 
   const defaultInstallments =
     latestApproval?.installments_approved ?? loanRequest.installments;
+  const defaultRecoveryMode =
+    latestApproval?.recovery_mode ?? loanRequest.recovery_mode ?? 'installments';
+  const defaultInstallmentAmount =
+    latestApproval?.installment_amount_approved ??
+    loanRequest.installment_amount_requested ??
+    '';
 
   const [amountApproved, setAmountApproved] = useState<number | ''>(
     ceilingAmount
   );
+  const [recoveryMode, setRecoveryMode] = useState<
+    'installments' | 'fixed_amount'
+  >(defaultRecoveryMode);
   const [installmentsApproved, setInstallmentsApproved] = useState<number | ''>(
     defaultInstallments
   );
+  const [installmentAmountApproved, setInstallmentAmountApproved] = useState<
+    number | ''
+  >(defaultInstallmentAmount);
   const [remarks, setRemarks] = useState('');
   const [approvalDate, setApprovalDate] = useState(dayjs().toISOString());
   const [amountError, setAmountError] = useState('');
@@ -71,7 +84,9 @@ const LoanApprovalForm = ({
   useEffect(() => {
     if (!open) return;
     setAmountApproved(ceilingAmount);
+    setRecoveryMode(defaultRecoveryMode);
     setInstallmentsApproved(defaultInstallments);
+    setInstallmentAmountApproved(defaultInstallmentAmount);
     setRemarks('');
     setApprovalDate(dayjs().toISOString());
     setAmountError('');
@@ -111,7 +126,18 @@ const LoanApprovalForm = ({
         );
         return;
       }
-      if (installmentsApproved === '' || Number(installmentsApproved) <= 0) {
+      if (recoveryMode === 'fixed_amount') {
+        if (
+          installmentAmountApproved === '' ||
+          Number(installmentAmountApproved) <= 0
+        ) {
+          setInstallmentsError('Amount to deduct per period is required');
+          return;
+        }
+      } else if (
+        installmentsApproved === '' ||
+        Number(installmentsApproved) <= 0
+      ) {
         setInstallmentsError('Installments approved is required');
         return;
       }
@@ -134,8 +160,15 @@ const LoanApprovalForm = ({
       status,
       amount_approved:
         status === 'approved' ? Number(amountApproved) : undefined,
+      recovery_mode: status === 'approved' ? recoveryMode : undefined,
       installments_approved:
-        status === 'approved' ? Number(installmentsApproved) : undefined,
+        status === 'approved' && recoveryMode === 'installments'
+          ? Number(installmentsApproved)
+          : undefined,
+      installment_amount_approved:
+        status === 'approved' && recoveryMode === 'fixed_amount'
+          ? Number(installmentAmountApproved)
+          : undefined,
       remarks,
       approval_date: approvalDate || undefined,
     });
@@ -177,19 +210,54 @@ const LoanApprovalForm = ({
             }}
           />
           <TextField
-            label='Installments Approved'
+            select
+            label='Recovery Mode'
             size='small'
             fullWidth
-            value={installmentsApproved}
-            error={!!installmentsError}
-            helperText={installmentsError}
+            value={recoveryMode}
             onChange={(e: any) => {
               setInstallmentsError('');
-              setInstallmentsApproved(
-                e.target.value === '' ? '' : sanitizedNumber(e.target.value)
-              );
+              setRecoveryMode(e.target.value);
             }}
-          />
+          >
+            <MenuItem value='installments'>By Installment Count</MenuItem>
+            <MenuItem value='fixed_amount'>By Fixed Amount</MenuItem>
+          </TextField>
+          {recoveryMode === 'fixed_amount' ? (
+            <TextField
+              label='Amount To Deduct Per Period'
+              size='small'
+              fullWidth
+              value={installmentAmountApproved}
+              error={!!installmentsError}
+              helperText={
+                installmentsError ||
+                'Installments are derived automatically from this'
+              }
+              InputProps={{ inputComponent: CommaSeparatedField as any }}
+              onChange={(e: any) => {
+                setInstallmentsError('');
+                setInstallmentAmountApproved(
+                  e.target.value === '' ? '' : sanitizedNumber(e.target.value)
+                );
+              }}
+            />
+          ) : (
+            <TextField
+              label='Installments Approved'
+              size='small'
+              fullWidth
+              value={installmentsApproved}
+              error={!!installmentsError}
+              helperText={installmentsError}
+              onChange={(e: any) => {
+                setInstallmentsError('');
+                setInstallmentsApproved(
+                  e.target.value === '' ? '' : sanitizedNumber(e.target.value)
+                );
+              }}
+            />
+          )}
           <DateTimePicker
             label='Approval Date & Time'
             value={approvalDate ? dayjs(approvalDate) : null}

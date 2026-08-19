@@ -18,6 +18,8 @@ export interface MyHrLoanRequestType {
   approval_chain_id: number | null;
   amount: number;
   installments: number;
+  recovery_mode?: 'installments' | 'fixed_amount';
+  installment_amount_requested?: number | null;
   amount_approved: number | null;
   installments_approved: number | null;
   installment_amount: number | null;

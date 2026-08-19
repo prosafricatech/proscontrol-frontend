@@ -49,6 +49,8 @@ export interface LoanRequestPreviewData {
   status_label?: string;
   amount: number;
   installments: number;
+  recovery_mode?: 'installments' | 'fixed_amount';
+  installment_amount_requested?: number | null;
   amount_approved?: number | null;
   installments_approved?: number | null;
   installment_amount?: number | null;
@@ -72,6 +74,8 @@ export interface LoanRequestPreviewData {
     status_label?: string;
     amount_approved?: number | null;
     installments_approved?: number | null;
+    recovery_mode?: 'installments' | 'fixed_amount';
+    installment_amount_approved?: number | null;
     remarks?: string | null;
     approval_date?: string | null;
     creator?: { name?: string } | null;
@@ -240,11 +244,21 @@ const LoanRequestPreview = ({ loanRequest, title }: LoanRequestPreviewProps) => 
               }
             />
             <CompareField
-              label='Installments'
-              requested={`${loanRequest.installments} months`}
+              label={
+                loanRequest.recovery_mode === 'fixed_amount'
+                  ? 'Recovery'
+                  : 'Installments'
+              }
+              requested={
+                loanRequest.recovery_mode === 'fixed_amount'
+                  ? `${formatCurrency(loanRequest.installment_amount_requested)}/period`
+                  : `${loanRequest.installments} months`
+              }
               approved={
                 loanRequest.installments_approved != null
-                  ? `${loanRequest.installments_approved} months`
+                  ? loanRequest.recovery_mode === 'fixed_amount'
+                    ? `${loanRequest.installments_approved} periods`
+                    : `${loanRequest.installments_approved} months`
                   : undefined
               }
             />
@@ -253,6 +267,7 @@ const LoanRequestPreview = ({ loanRequest, title }: LoanRequestPreviewProps) => 
             <Typography variant='body2' color='text.secondary' mt={2}>
               Deducted per period:{' '}
               <strong>{formatCurrency(loanRequest.installment_amount)}</strong>
+              {loanRequest.recovery_mode === 'fixed_amount' && ' (flat rate)'}
             </Typography>
           )}
         </CardContent>
@@ -330,8 +345,11 @@ const LoanRequestPreview = ({ loanRequest, title }: LoanRequestPreviewProps) => 
                           Approved{' '}
                           {approval.amount_approved != null &&
                             formatCurrency(approval.amount_approved)}
-                          {approval.installments_approved != null &&
-                            ` over ${approval.installments_approved} months`}
+                          {approval.recovery_mode === 'fixed_amount'
+                            ? approval.installment_amount_approved != null &&
+                              ` at ${formatCurrency(approval.installment_amount_approved)}/period`
+                            : approval.installments_approved != null &&
+                              ` over ${approval.installments_approved} months`}
                         </Typography>
                       )}
                       {approval.remarks && (

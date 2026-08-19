@@ -9,6 +9,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  MenuItem,
   Stack,
   TextField,
 } from '@mui/material';
@@ -45,6 +46,12 @@ const LoanDirectDecisionForm = ({
   const [installmentsApproved, setInstallmentsApproved] = useState<number | ''>(
     loanRequest.installments
   );
+  const [recoveryMode, setRecoveryMode] = useState<
+    'installments' | 'fixed_amount'
+  >(loanRequest.recovery_mode ?? 'installments');
+  const [installmentAmountApproved, setInstallmentAmountApproved] = useState<
+    number | ''
+  >(loanRequest.installment_amount_requested ?? '');
   const [remarks, setRemarks] = useState('');
   const [reviewedAt, setReviewedAt] = useState(dayjs().toISOString());
   const [amountError, setAmountError] = useState('');
@@ -57,6 +64,8 @@ const LoanDirectDecisionForm = ({
     if (!open) return;
     setAmountApproved(loanRequest.amount);
     setInstallmentsApproved(loanRequest.installments);
+    setRecoveryMode(loanRequest.recovery_mode ?? 'installments');
+    setInstallmentAmountApproved(loanRequest.installment_amount_requested ?? '');
     setRemarks('');
     setReviewedAt(dayjs().toISOString());
     setAmountError('');
@@ -110,9 +119,18 @@ const LoanDirectDecisionForm = ({
       id: loanRequest.id,
       amount_approved:
         isApprove && amountApproved !== '' ? Number(amountApproved) : undefined,
+      recovery_mode: isApprove ? recoveryMode : undefined,
       installments_approved:
-        isApprove && installmentsApproved !== ''
+        isApprove &&
+        recoveryMode === 'installments' &&
+        installmentsApproved !== ''
           ? Number(installmentsApproved)
+          : undefined,
+      installment_amount_approved:
+        isApprove &&
+        recoveryMode === 'fixed_amount' &&
+        installmentAmountApproved !== ''
+          ? Number(installmentAmountApproved)
           : undefined,
       remarks: remarks || undefined,
       reviewed_at: reviewedAt || undefined,
@@ -156,16 +174,43 @@ const LoanDirectDecisionForm = ({
                 }}
               />
               <TextField
-                label='Installments Approved'
+                select
+                label='Recovery Mode'
                 size='small'
                 fullWidth
-                value={installmentsApproved}
-                onChange={(e: any) =>
-                  setInstallmentsApproved(
-                    e.target.value === '' ? '' : sanitizedNumber(e.target.value)
-                  )
-                }
-              />
+                value={recoveryMode}
+                onChange={(e: any) => setRecoveryMode(e.target.value)}
+              >
+                <MenuItem value='installments'>By Installment Count</MenuItem>
+                <MenuItem value='fixed_amount'>By Fixed Amount</MenuItem>
+              </TextField>
+              {recoveryMode === 'fixed_amount' ? (
+                <TextField
+                  label='Amount To Deduct Per Period'
+                  size='small'
+                  fullWidth
+                  value={installmentAmountApproved}
+                  helperText='Installments are derived automatically from this'
+                  InputProps={{ inputComponent: CommaSeparatedField as any }}
+                  onChange={(e: any) =>
+                    setInstallmentAmountApproved(
+                      e.target.value === '' ? '' : sanitizedNumber(e.target.value)
+                    )
+                  }
+                />
+              ) : (
+                <TextField
+                  label='Installments Approved'
+                  size='small'
+                  fullWidth
+                  value={installmentsApproved}
+                  onChange={(e: any) =>
+                    setInstallmentsApproved(
+                      e.target.value === '' ? '' : sanitizedNumber(e.target.value)
+                    )
+                  }
+                />
+              )}
             </>
           )}
           <DateTimePicker
