@@ -886,6 +886,37 @@ humanResourcesServices.exportSalaryComponentsSummaryExcel = async (params = {}) 
     return data;
 };
 
+humanResourcesServices.getPayrollComparison = async (params = {}) => {
+    const { period_a_year, period_a_month, period_b_year, period_b_month, cost_center_ids = [] } = params;
+    const queryParams = {
+        period_a_year,
+        period_a_month,
+        period_b_year,
+        period_b_month,
+        ...(cost_center_ids?.length ? { cost_center_ids } : {}),
+    };
+    const { data } = await axios.get('/api/humanResources/payroll-reports/comparison', {
+        params: queryParams,
+    });
+    return data;
+};
+humanResourcesServices.exportPayrollComparisonExcel = async (params = {}) => {
+    const { period_a_year, period_a_month, period_b_year, period_b_month, cost_center_ids = [] } = params;
+    const queryParams = {
+        period_a_year,
+        period_a_month,
+        period_b_year,
+        period_b_month,
+        ...(cost_center_ids?.length ? { cost_center_ids } : {}),
+    };
+    const { data } = await axios.post(
+        '/api/humanResources/payroll-reports/comparison-excel',
+        {},
+        { params: queryParams, responseType: 'blob' }
+    );
+    return data;
+};
+
 // ===== leave balances report ===== //
 humanResourcesServices.getLeaveBalancesReport = async (params = {}) => {
     const { year, employee_id, department_id, leave_type_id } = params;

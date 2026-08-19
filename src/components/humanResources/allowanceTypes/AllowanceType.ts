@@ -5,6 +5,7 @@ export interface AllowanceType {
   name: string;
   code?: string;
   is_taxable: boolean;
+  default_value?: number;
   expense_ledger_id?: number;
   expense_ledger?: Ledger;
   description?: string;

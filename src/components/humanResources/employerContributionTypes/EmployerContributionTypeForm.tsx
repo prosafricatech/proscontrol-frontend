@@ -40,7 +40,7 @@ interface EmployerContributionTypeFormProps {
 
 interface FormData extends Omit<EmployerContributionType, 'id' | 'created_by'> {
   id?: number;
-  apply_scope?: 'none' | 'all' | 'active_contracts';
+  apply_to_employees?: 'none' | 'all' | 'active_contracts';
   force_update?: boolean;
 }
 
@@ -265,7 +265,7 @@ const EmployerContributionTypeForm = ({
     description: yup
       .string()
       .max(500, 'Description cannot exceed 500 characters'),
-    apply_scope: yup
+    apply_to_employees: yup
       .string()
       .oneOf(['none', 'all', 'active_contracts'])
       .optional(),
@@ -291,11 +291,11 @@ const EmployerContributionTypeForm = ({
       payable_ledger_id: contributionType?.payable_ledger_id ?? undefined,
       expense_ledger_id: contributionType?.expense_ledger_id ?? undefined,
       description: contributionType?.description || '',
-      apply_scope: 'none',
+      apply_to_employees: 'none',
     },
   });
 
-  const applyScope = watch('apply_scope');
+  const applyScope = watch('apply_to_employees');
 
   useEffect(() => {
     reset({
@@ -308,7 +308,7 @@ const EmployerContributionTypeForm = ({
       expense_ledger_id: contributionType?.expense_ledger_id ?? undefined,
       payable_ledger_id: contributionType?.payable_ledger_id ?? undefined,
       description: contributionType?.description || '',
-      apply_scope: 'none',
+      apply_to_employees: 'none',
     });
   }, [contributionType, reset]);
 
@@ -590,7 +590,7 @@ const EmployerContributionTypeForm = ({
             <Grid size={{ xs: 12, md: 12 }}>
               <Div sx={{ mt: 1, mb: 1 }}>
                 <Controller
-                  name='apply_scope'
+                  name='apply_to_employees'
                   control={control}
                   render={({ field }) => (
                     <TextField

@@ -5,6 +5,13 @@ import { Grid } from '@mui/system';
 import { ContractType } from './ContractType';
 import EmployeesContractsItemAction from './EmployeesContractsItemAction';
 
+const CONTRACT_TYPE_LABELS: Record<string, string> = {
+  permanent: 'Permanent',
+  fixed_term: 'Fixed',
+  specific_task: 'Specific',
+  probation: 'Probation',
+};
+
 const EmployeesContractsListItem = ({
   contract,
 }: {
@@ -30,7 +37,10 @@ const EmployeesContractsListItem = ({
       >
         <Grid size={{ xs: 6, md: 2.5 }}>
           <Tooltip title='Contract Type'>
-            <Typography>{contract?.contract_type}</Typography>
+            <Typography>
+              {CONTRACT_TYPE_LABELS[contract?.contract_type ?? ''] ??
+                contract?.contract_type}
+            </Typography>
           </Tooltip>
         </Grid>
         <Grid size={{ xs: 6, md: 3 }}>

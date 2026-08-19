@@ -20,7 +20,7 @@ import {
   TextField,
   Tooltip,
 } from '@mui/material';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import LedgerSelect from '../ledgers/forms/LedgerSelect';
@@ -148,6 +148,31 @@ const TransactionItemForm: React.FC<TransactionItemFormProps> = ({
       .number()
       .required('Amount is required')
       .positive('Amount must be greater than 0')
+      .test(
+        'max-amount',
+        'Amount should not exceed unapproved amount of selected relatable',
+        function (value) {
+          const relatable = this.parent?.relatable as
+            | PurchaseOrderOption
+            | BillOption
+            | null
+            | undefined;
+
+          if (!relatable?.id || value == null) {
+            return true;
+          }
+
+          const maxAmount = Number(relatable.unapproved_amount ?? 0);
+
+          if (Number(value) <= maxAmount) {
+            return true;
+          }
+
+          return this.createError({
+            message: `Amount should not exceed unapproved amount (${maxAmount.toLocaleString()}) of selected relatable`,
+          });
+        }
+      )
       .typeError('Amount is required'),
   });
 
@@ -200,6 +225,26 @@ const TransactionItemForm: React.FC<TransactionItemFormProps> = ({
       setSelectedLedgerCurrencyId(watchedCurrencyId);
     }
   }, [watchedCurrencyId]);
+
+  // A Purchase Order/Bill picked in the "Link To" fields is scoped to (and
+  // its unapproved balance validated in) whatever currency was selected at
+  // pick time. If the payment's currency changes while this not-yet-added
+  // item still holds such a link, it's stale — clear the link so the user
+  // re-picks it under the new currency. Already-added items aren't affected:
+  // the currency locks once an item exists.
+  const previousCurrencyIdRef = useRef(selectedCurrencyId);
+  useEffect(() => {
+    if (
+      previousCurrencyIdRef.current !== undefined &&
+      selectedCurrencyId !== undefined &&
+      previousCurrencyIdRef.current !== selectedCurrencyId
+    ) {
+      setValue('relatable_type', null);
+      setValue('relatable_id', null);
+      setValue('relatable', null);
+    }
+    previousCurrencyIdRef.current = selectedCurrencyId;
+  }, [selectedCurrencyId]);
 
   // Determine which field to show the currency error on
   const getFieldForCurrencyError = () => {
@@ -455,10 +500,12 @@ const TransactionItemForm: React.FC<TransactionItemFormProps> = ({
               </Div>
             </Grid>
             {watch('relatable_type') === 'purchase' && (
-              <Grid size={{ xs: 12, md: 8 }}>
+              <Grid size={{ xs: 12, md: 4 }}>
                 <Div sx={{ mt: 1 }}>
                   <PurchaseOrderPicker
                     value={watch('relatable') as PurchaseOrderOption | null}
+                    ledgerId={watch('debit_ledger_id') ?? null}
+                    currencyId={selectedCurrencyId ?? null}
                     onChange={(newValue) => {
                       setValue('relatable', newValue);
                       setValue('relatable_id', newValue?.id ?? null);
@@ -468,13 +515,14 @@ const TransactionItemForm: React.FC<TransactionItemFormProps> = ({
               </Grid>
             )}
             {watch('relatable_type') === 'bill' && (
-              <Grid size={{ xs: 12, md: 8 }}>
+              <Grid size={{ xs: 12, md: 4 }}>
                 <Div sx={{ mt: 1 }}>
                   <BillPicker
                     value={watch('relatable') as BillOption | null}
                     stakeholder={
                       (watch('debit_ledger') as Ledger | undefined)?.stakeholders?.[0] ?? null
                     }
+                    currencyId={selectedCurrencyId ?? null}
                     onChange={(newValue) => {
                       setValue('relatable', newValue);
                       setValue('relatable_id', newValue?.id ?? null);

@@ -14,6 +14,7 @@ import CurrencySelectProvider from '../../masters/Currencies/CurrencySelectProvi
 import StakeholderSelectProvider from '../../masters/stakeholders/StakeholderSelectProvider';
 import ProductsProvider from '../../productAndServices/products/ProductsProvider';
 import PurchasesOrderStatusSelector from './PurchasesOrderStatusSelector';
+import PurchaseBillingStatusSelector from './PurchaseBillingStatusSelector';
 import { DateTimePicker } from '@mui/x-date-pickers';
 import dayjs from 'dayjs';
 import { EventAvailableOutlined, FilterAltOffOutlined, FilterAltOutlined } from '@mui/icons-material';
@@ -37,7 +38,7 @@ function PurchasesOrdersList() {
     const [mounted, setMounted] = useState(false);
     const [queryOptions, setQueryOptions] = React.useState({
         queryKey: "purchaseOrders",
-        queryParams: {id: params.id, keyword : searchParams?.get('search') || '', status: 'All'},
+        queryParams: {id: params.id, keyword : searchParams?.get('search') || '', status: 'All', billing_status: 'All'},
         countKey: "total",
         dataKey: "data",
     });
@@ -76,6 +77,16 @@ function PurchasesOrdersList() {
         }));
     }, [queryOptions.queryParams.status]);
 
+    const handleOnBillingStatusChange = React.useCallback((billingStatus) => {
+        setQueryOptions(state => ({
+            ...state,
+            queryParams: {
+                ...state.queryParams,
+                billing_status: billingStatus
+            }
+        }));
+    }, [queryOptions.queryParams.billing_status]);
+
     const handleOnKeywordChange = React.useCallback((keyword) => {
         setQueryOptions(state => ({
             ...state,
@@ -97,6 +108,7 @@ function PurchasesOrdersList() {
     }
 
     const multiCostCenters = authOrganization?.costCenters.length > 1
+    const deferGrnBilling = !!authOrganization?.organization?.settings?.defer_grn_billing
 
   return !checkOrganizationPermission([PERMISSIONS.PURCHASES_READ,PERMISSIONS.PURCHASES_RECEIVE,PERMISSIONS.PURCHASES_CREATE,PERMISSIONS.PURCHASES_DELETE]) ? <UnauthorizedAccess/> : (
     <ProductsProvider>
@@ -189,6 +201,14 @@ function PurchasesOrdersList() {
                                                 onChange={handleOnStatusChange}
                                             />
                                         </Grid>
+                                        {deferGrnBilling &&
+                                            <Grid size={{xs: 12, md: 6, lg: 3}} alignItems={'center'}>
+                                                <PurchaseBillingStatusSelector
+                                                    value={queryOptions.queryParams.billing_status}
+                                                    onChange={handleOnBillingStatusChange}
+                                                />
+                                            </Grid>
+                                        }
                                         {multiCostCenters &&
                                             <Grid size={{xs: 12, md: 6, lg: 3}}>
                                                 <CostCenterSelector

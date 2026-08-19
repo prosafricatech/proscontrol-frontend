@@ -665,6 +665,7 @@ function RequisitionLedgerItemForm({
                   label='Relatable To'
                   value={selectedRelated as any}
                   stakeholder={selectedLedger?.stakeholders?.[0] ?? null}
+                  currencyId={currencyDetails?.id ?? null}
                   onChange={(newValue) => {
                     setSelectedRelated(newValue as any);
                     setValue('relatable', (newValue ?? null) as any);

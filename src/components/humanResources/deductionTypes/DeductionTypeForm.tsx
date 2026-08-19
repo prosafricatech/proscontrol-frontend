@@ -42,7 +42,7 @@ interface DeductionTypeFormProps {
 
 interface FormData extends Omit<DeductionType, 'id' | 'created_by'> {
   id?: number;
-  apply_scope?: 'none' | 'all' | 'active_contracts';
+  apply_to_employees?: 'none' | 'all' | 'active_contracts';
   force_update?: boolean;
 }
 
@@ -256,7 +256,7 @@ const DeductionTypeForm = ({
     description: yup
       .string()
       .max(500, 'Description cannot exceed 500 characters'),
-    apply_scope: yup
+    apply_to_employees: yup
       .string()
       .oneOf(['none', 'all', 'active_contracts'])
       .optional(),
@@ -282,11 +282,11 @@ const DeductionTypeForm = ({
       payable_ledger_id: deductionType?.payable_ledger_id ?? undefined,
       is_pre_tax: deductionType?.is_pre_tax || false,
       description: deductionType?.description || '',
-      apply_scope: 'none',
+      apply_to_employees: 'none',
     },
   });
 
-  const applyScope = watch('apply_scope');
+  const applyScope = watch('apply_to_employees');
   // Two codes don't fit the default "this ledger is a payable" assumption,
   // so each needs its own label and allowed ledger group, or it's impossible
   // to map correctly:
@@ -324,7 +324,7 @@ const DeductionTypeForm = ({
       payable_ledger_id: deductionType?.payable_ledger_id ?? 0,
       is_pre_tax: deductionType?.is_pre_tax || false,
       description: deductionType?.description || '',
-      apply_scope: 'none',
+      apply_to_employees: 'none',
     });
   }, [deductionType, reset]);
 
@@ -630,7 +630,7 @@ const DeductionTypeForm = ({
               <Grid size={{ xs: 12, md: 6 }}>
                 <Div sx={{ mt: 1 }}>
                   <Controller
-                    name='apply_scope'
+                    name='apply_to_employees'
                     control={control}
                     render={({ field }) => (
                       <TextField

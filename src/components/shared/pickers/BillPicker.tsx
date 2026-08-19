@@ -29,6 +29,10 @@ interface BillPickerProps {
   // When the payee ledger is already selected elsewhere in the form, its
   // stakeholder is known — pass it here to skip the supplier step entirely.
   stakeholder?: { id: number; name: string } | null;
+  // Scopes results to bills raised against a Purchase Order/Grn in this
+  // currency — a bill has no currency of its own, it inherits one from its
+  // source, see SupplierInvoiceController::index().
+  currencyId?: number | null;
 }
 
 // Bill picker, optionally narrowed to a known supplier. There is no
@@ -43,6 +47,7 @@ function BillPicker({
   size = 'small',
   frontError = null,
   stakeholder = null,
+  currencyId = null,
 }: BillPickerProps) {
   const [stakeholderId, setStakeholderId] = useState<number | null>(
     stakeholder?.id ?? value?.stakeholder?.id ?? null
@@ -89,8 +94,11 @@ function BillPicker({
   });
 
   const { data: billsResponse, isFetching: isFetchingBills } = useQuery({
-    queryKey: ['billPickerBills', stakeholderId],
-    queryFn: () => purchaseBillServices.listByStakeholder(stakeholderId as number),
+    queryKey: ['billPickerBills', stakeholderId, currencyId],
+    queryFn: () =>
+      purchaseBillServices.listByStakeholder(stakeholderId as number, {
+        currency_id: currencyId,
+      }),
     enabled: !!stakeholderId,
   });
 

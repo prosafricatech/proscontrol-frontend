@@ -141,6 +141,17 @@ const PaymentFormDialogContent: React.FC<PaymentFormDialogContentProps> = ({
       shouldValidate: true,
       shouldDirty: true,
     });
+
+    // Once an item has been added, the payment currency is locked — a
+    // ledger pick (top-level "Pay From", or a new item's payee ledger) that
+    // resolves to a different currency must not silently change it
+    // underneath already-added items and their relatable links. Leaving
+    // currency_id unchanged surfaces the mismatch via TransactionItemForm's
+    // own ledger-vs-payment-currency check instead.
+    if (items.length > 0 && Number(currencyId) !== Number(watch('currency_id'))) {
+      return;
+    }
+
     setValue('currency_id', currencyId, {
       shouldValidate: true,
       shouldDirty: true,
@@ -171,6 +182,11 @@ const PaymentFormDialogContent: React.FC<PaymentFormDialogContentProps> = ({
   };
 
   const [items, setItems] = useState<PaymentItem[]>(getInitialItems());
+
+  // Once an item has been added, its amount/ledger/relatable link were all
+  // validated against the current payment currency — lock currency changes
+  // to avoid silently invalidating that data underneath already-added items.
+  const hasItems = items.length > 0;
 
   const haveAllCostCenters = checkOrganizationPermission(
     PERMISSIONS.COST_CENTERS_ALL
@@ -496,28 +512,38 @@ const PaymentFormDialogContent: React.FC<PaymentFormDialogContentProps> = ({
 
           <Grid size={{ xs: 12, md: 4 }} key={prevKey}>
             <Div sx={{ mt: 1, mb: 1 }}>
-              <CurrencySelector
-                frontError={
-                  errors?.currency_id?.message
-                    ? { message: errors.currency_id.message }
-                    : null
+              <Tooltip
+                title={
+                  hasItems
+                    ? 'Currency is locked because an item has been added. Remove all items first to change currency.'
+                    : ''
                 }
-                disabled={watch(`form_ledger_currency_id`) as any}
-                defaultValue={watch(`currency_id`) as any}
-                onChange={(newValue) => {
-                  setValue('currency_id', newValue ? newValue.id : null, {
-                    shouldDirty: true,
-                    shouldValidate: true,
-                  });
+              >
+                <span>
+                  <CurrencySelector
+                    frontError={
+                      errors?.currency_id?.message
+                        ? { message: errors.currency_id.message }
+                        : null
+                    }
+                    disabled={!!watch(`form_ledger_currency_id`) || hasItems}
+                    defaultValue={watch(`currency_id`) as any}
+                    onChange={(newValue) => {
+                      setValue('currency_id', newValue ? newValue.id : null, {
+                        shouldDirty: true,
+                        shouldValidate: true,
+                      });
 
-                  clearErrors('exchange_rate');
+                      clearErrors('exchange_rate');
 
-                  setValue(
-                    'exchange_rate',
-                    newValue?.exchangeRate ? newValue.exchangeRate : 1
-                  );
-                }}
-              />
+                      setValue(
+                        'exchange_rate',
+                        newValue?.exchangeRate ? newValue.exchangeRate : 1
+                      );
+                    }}
+                  />
+                </span>
+              </Tooltip>
             </Div>
           </Grid>
           {Number(watch('currency_id')) > 1 && (
