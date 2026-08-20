@@ -238,7 +238,7 @@ const LoanDirectDecisionForm = ({
           />
         </Stack>
       </DialogContent>
-      <DialogActions>
+      <DialogActions sx={{ flexWrap: 'wrap', gap: 1, rowGap: 1 }}>
         <Button onClick={onClose} disabled={isPending}>
           Cancel
         </Button>

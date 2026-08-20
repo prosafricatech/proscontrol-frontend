@@ -27,6 +27,8 @@ import {
   Tabs,
   Tooltip,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
@@ -103,6 +105,8 @@ const LoanRequestsListItem = ({
   const canReadLoanDetails = checkOrganizationPermission(
     PERMISSIONS.LOANS_READ
   );
+  const theme = useTheme();
+  const belowLargeScreen = useMediaQuery(theme.breakpoints.down('lg'));
 
   const [expanded, setExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
@@ -254,6 +258,8 @@ const LoanRequestsListItem = ({
             open={openPreview}
             fullWidth
             maxWidth='sm'
+            fullScreen={belowLargeScreen}
+            scroll={belowLargeScreen ? 'body' : 'paper'}
             onClose={() => setOpenPreview(false)}
           >
             <DialogContent>

@@ -87,6 +87,8 @@ const MyHrLoanRequestsListItem = ({
         open={openPreview}
         fullWidth
         maxWidth='sm'
+        fullScreen={belowLargeScreen}
+        scroll={belowLargeScreen ? 'body' : 'paper'}
         onClose={() => setOpenPreview(false)}
       >
         <DialogContent>

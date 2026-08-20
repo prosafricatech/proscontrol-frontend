@@ -56,7 +56,7 @@ const ExpandableSummaryCard = ({
 
   if (!hasBreakdown) {
     return (
-      <Card sx={{ minWidth: 275, height: '100%' }}>
+      <Card sx={{ width: '100%', height: '100%' }}>
         <CardContent>
           <Typography gutterBottom sx={{ color: 'text.secondary', fontSize: 16 }}>
             {label}
@@ -74,7 +74,7 @@ const ExpandableSummaryCard = ({
       expanded={expanded}
       onChange={(_e, isExpanded) => setExpanded(isExpanded)}
       variant='outlined'
-      sx={{ minWidth: 275, '&:before': { display: 'none' } }}
+      sx={{ width: '100%', '&:before': { display: 'none' } }}
     >
       <AccordionSummary expandIcon={<ExpandMore />}>
         <Stack sx={{ width: '100%' }}>
@@ -173,7 +173,7 @@ const SummaryTab = ({
       )}
       {plainCards.map(({ label, value }) => (
         <Grid size={{ xs: 12, md: 6, lg: 3 }} key={label}>
-          <Card sx={{ minWidth: 275, height: '100%' }}>
+          <Card sx={{ width: '100%', height: '100%' }}>
             <CardContent>
               <Typography
                 gutterBottom
