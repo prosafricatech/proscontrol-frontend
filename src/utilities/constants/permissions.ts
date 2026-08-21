@@ -162,6 +162,9 @@ export const PERMISSIONS = {
   STORES_REPORTS: 'Stores:Reports',
 
   // human resources
+  APPROVED_PAYROLL_POST_JOURNAL: 'ApprovedPayroll:PostJournal',
+  APPROVED_PAYROLL_PAY: 'ApprovedPayroll:Pay',
+  APPROVED_LOANS_DISBURSE: 'ApprovedLoans:Disburse',
   EMPLOYEES_CREATE: 'Employees:Create',
   EMPLOYEES_READ: 'Employees:Read',
   EMPLOYEES_UPDATE: 'Employees:Update',
