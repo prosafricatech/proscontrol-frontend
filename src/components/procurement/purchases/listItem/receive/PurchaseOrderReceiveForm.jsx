@@ -441,7 +441,7 @@ function PurchaseOrderReceiveForm({ toggleOpen, order, grn }) {
   }, [totalAmount, totalReceivedAmount]);
 
   const [itemsState, setItemsState] = useState(initialItems);
-  // Handler to reset items
+  // Handler to reset items (restores removed rows and autofills full unreceived quantities)
   const handleResetItems = () => {
     setItemsState(initialItems);
     setValue(
@@ -452,6 +452,34 @@ function PurchaseOrderReceiveForm({ toggleOpen, order, grn }) {
         purchase_order_item_id: item.id,
         rate: item.rate,
       }))
+    );
+  };
+
+  // Handler to autofill all currently listed items with their full unreceived quantity
+  const handleAutofillQuantities = () => {
+    setValue(
+      'items',
+      itemsState.map((item) => ({
+        unreceived_quantity: item.unreceived_quantity,
+        quantity: item.unreceived_quantity,
+        purchase_order_item_id: item.id,
+        rate: item.rate,
+      })),
+      { shouldValidate: true, shouldDirty: true }
+    );
+  };
+
+  // Handler to zero out all quantities so receivers can key in only the items actually received in this shipment
+  const handleClearQuantities = () => {
+    setValue(
+      'items',
+      itemsState.map((item) => ({
+        unreceived_quantity: item.unreceived_quantity,
+        quantity: 0,
+        purchase_order_item_id: item.id,
+        rate: item.rate,
+      })),
+      { shouldValidate: true, shouldDirty: true }
     );
   };
 
@@ -765,8 +793,10 @@ function PurchaseOrderReceiveForm({ toggleOpen, order, grn }) {
             onRemoveItem={handleRemoveItem}
             onResetItems={handleResetItems}
             canReset={itemsState.length < initialItems.length}
+            onAutofillQuantities={handleAutofillQuantities}
+            onClearQuantities={handleClearQuantities}
             errors={errors}
-            register={register} 
+            register={register}
             setValue={setValue}
             watch={watch}
           />
