@@ -98,6 +98,13 @@ purchaseServices.exportPurchaseManifestReportToExcel = async (params) => {
     return data;
 }
 
+purchaseServices.exportPurchasesReportToExcel = async (params) => {
+    const { data } = await axios.post(`/api/exports/excel/purchasesReport/`, params, {
+        responseType: 'blob',
+    })
+    return data;
+}
+
 purchaseServices.getLastPrice = async (params) => {
     const { data } = await axios.get(`/api/purchaseOrders/getLastPrice`, {
         params

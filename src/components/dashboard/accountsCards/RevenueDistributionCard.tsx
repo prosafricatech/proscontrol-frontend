@@ -1,10 +1,11 @@
 'use client';
 import JumboCardQuick from '@jumbo/components/JumboCardQuick/JumboCardQuick';
 import { useJumboTheme } from '@jumbo/components/JumboTheme/hooks';
-import { Box, Skeleton, useMediaQuery } from '@mui/material';
+import { Box, Skeleton, Typography, useMediaQuery } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
+import exportingModule from 'highcharts/modules/exporting';
 import { useEffect, useState } from 'react';
 import financialReportsServices from '../../accounts/reports/financial-reports-services';
 import { useDashboardSettings } from '../Dashboard';
@@ -29,10 +30,40 @@ function RevenueDistributionCard() {
     cost_center_ids,
     aggregate_by: 'day' as const,
   });
+  const [modulesLoaded, setModulesLoaded] = useState(false);
 
   useEffect(() => {
     setParams((prev) => ({ ...prev, from, to, cost_center_ids }));
   }, [from, to, cost_center_ids]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const applyModule = (mod: any) => {
+      const init = mod && (mod.default ?? mod);
+      if (typeof init === 'function') {
+        init(Highcharts);
+      }
+    };
+
+    async function load() {
+      try {
+        (window as any).Highcharts = (window as any).Highcharts || Highcharts;
+
+        applyModule(exportingModule);
+      } catch (err) {
+        console.error('Failed to load Highcharts modules:', err);
+      } finally {
+        if (mounted) setModulesLoaded(true);
+      }
+    }
+
+    if (typeof window !== 'undefined') load();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const { theme } = useJumboTheme();
   const xlScreen = useMediaQuery(theme.breakpoints.up('lg'));
@@ -114,14 +145,14 @@ function RevenueDistributionCard() {
 
   return (
     <JumboCardQuick
-      title={'Revenue Composition'}
+      // title={'Revenue Composition'}
       sx={{
         height: midScreen ? 360 : null,
         display: 'flex',
         flexDirection: 'column',
       }}
     >
-      {/* <Box sx={{ px: 2, pt: 1 }}>
+      <Box sx={{ px: 2, pt: 1 }}>
         <Typography
           variant='subtitle1'
           sx={{
@@ -131,7 +162,7 @@ function RevenueDistributionCard() {
         >
           Revenue Composition
         </Typography>
-      </Box> */}
+      </Box>
 
       <Box
         sx={{
@@ -141,7 +172,7 @@ function RevenueDistributionCard() {
           justifyContent: 'center',
         }}
       >
-        {isLoading ? (
+        {isLoading || !modulesLoaded ? (
           <Skeleton
             variant='rectangular'
             width='100%'
