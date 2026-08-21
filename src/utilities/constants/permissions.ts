@@ -151,6 +151,7 @@ export const PERMISSIONS = {
   STAKEHOLDERS_DELETE: 'Stakeholders:Delete',
   STAKEHOLDERS_EDIT: 'Stakeholders:Edit',
   STAKEHOLDERS_READ: 'Stakeholders:Read',
+  STOCK_ADJUSTMENTS_APPROVE: 'StockAdjustments:Approve',
   STOCK_ADJUSTMENTS_CREATE: 'StockAdjustments:Create',
   STOCK_ADJUSTMENTS_DELETE: 'StockAdjustments:Delete',
   STOCK_ADJUSTMENTS_EDIT: 'StockAdjustments:Edit',
@@ -162,9 +163,6 @@ export const PERMISSIONS = {
   STORES_REPORTS: 'Stores:Reports',
 
   // human resources
-  APPROVED_PAYROLL_POST_JOURNAL: 'ApprovedPayroll:PostJournal',
-  APPROVED_PAYROLL_PAY: 'ApprovedPayroll:Pay',
-  APPROVED_LOANS_DISBURSE: 'ApprovedLoans:Disburse',
   EMPLOYEES_CREATE: 'Employees:Create',
   EMPLOYEES_READ: 'Employees:Read',
   EMPLOYEES_UPDATE: 'Employees:Update',
@@ -175,6 +173,9 @@ export const PERMISSIONS = {
   LOANS_CREATE: 'Loans:Create',
   LOANS_EDIT: 'Loans:Edit',
   LOANS_DELETE: 'Loans:Delete',
+  APPROVED_LOANS_DISBURSE: 'ApprovedLoans:Disburse',
+  APPROVED_PAYROLL_POST_JOURNAL: 'ApprovedPayroll:PostJournal',
+  APPROVED_PAYROLL_PAY: 'ApprovedPayroll:Pay',
   LEAVE_ALLOCATIONS_READ: 'LeaveAllocations:Read',
   LEAVE_ALLOCATIONS_CREATE: 'LeaveAllocations:Create',
   LEAVE_ALLOCATIONS_EDIT: 'LeaveAllocations:Edit',
@@ -216,12 +217,15 @@ export const PERMISSIONS = {
   PROJECT_SUBCONTRACTS_CREATE: 'ProjectSubcontracts:Create',
   PROJECT_SUBCONTRACTS_EDIT: 'ProjectSubcontracts:Edit',
   PROJECT_SUBCONTRACTS_DELETE: 'ProjectSubcontracts:Delete',
+  PROJECT_SUBCONTRACT_CERTIFICATES_APPROVE:
+    'ProjectSubcontractCertificates:Approve',
 
   PROJECTS_MANAGE_TEAM: 'Projects:ManageTeam',
 
   PROJECT_CLAIMS_CREATE: 'ProjectClaims:Create',
   PROJECT_CLAIMS_UPDATE: 'ProjectClaims:Update',
   PROJECT_CLAIMS_DELETE: 'ProjectClaims:Delete',
+  PROJECT_PAYMENT_CLAIMS_APPROVE: 'ProjectPaymentClaims:Approve',
 
   // Shared / Organization / Platform
   AUDIT_READ: 'Audit:Read',

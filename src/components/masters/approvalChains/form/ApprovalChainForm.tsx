@@ -48,7 +48,11 @@ function ApprovalChainForm({ toggleOpen }: ApprovalChainFormProps) {
   });
 
   const processTypeOptions = React.useMemo(
-    () => getProcessTypes(organizationHasSubscribed(MODULES.HUMAN_RESOURCES)),
+    () => getProcessTypes(
+      organizationHasSubscribed(MODULES.HUMAN_RESOURCES),
+      organizationHasSubscribed(MODULES.PROJECT_MANAGEMENT),
+      organizationHasSubscribed(MODULES.PROCUREMENT_AND_SUPPLY)
+    ),
     [organizationHasSubscribed]
   );
 

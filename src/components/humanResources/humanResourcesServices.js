@@ -711,6 +711,11 @@ humanResourcesServices.showLoanRequest = async (id) => {
     return data;
 }
 
+humanResourcesServices.getLoanStatement = async (id) => {
+    const { data } = await axios.get(`/api/humanResources/loanRequests/${id}/statement`);
+    return data;
+}
+
 humanResourcesServices.approveLoanRequest = async ({ id, ...payload }) => {
     const { data } = await axios.post(`/api/humanResources/loanRequests/${id}/directApproval`, payload);
     return data;
@@ -886,6 +891,37 @@ humanResourcesServices.exportSalaryComponentsSummaryExcel = async (params = {}) 
     return data;
 };
 
+humanResourcesServices.getPayrollComparison = async (params = {}) => {
+    const { period_a_year, period_a_month, period_b_year, period_b_month, cost_center_ids = [] } = params;
+    const queryParams = {
+        period_a_year,
+        period_a_month,
+        period_b_year,
+        period_b_month,
+        ...(cost_center_ids?.length ? { cost_center_ids } : {}),
+    };
+    const { data } = await axios.get('/api/humanResources/payroll-reports/comparison', {
+        params: queryParams,
+    });
+    return data;
+};
+humanResourcesServices.exportPayrollComparisonExcel = async (params = {}) => {
+    const { period_a_year, period_a_month, period_b_year, period_b_month, cost_center_ids = [] } = params;
+    const queryParams = {
+        period_a_year,
+        period_a_month,
+        period_b_year,
+        period_b_month,
+        ...(cost_center_ids?.length ? { cost_center_ids } : {}),
+    };
+    const { data } = await axios.post(
+        '/api/humanResources/payroll-reports/comparison-excel',
+        {},
+        { params: queryParams, responseType: 'blob' }
+    );
+    return data;
+};
+
 // ===== leave balances report ===== //
 humanResourcesServices.getLeaveBalancesReport = async (params = {}) => {
     const { year, employee_id, department_id, leave_type_id } = params;
@@ -1047,6 +1083,10 @@ humanResourcesServices.importPeriodAdvances = async (periodId, file) => {
     const { data } = await axios.post(`/api/humanResources/payrollPeriods/advances/${periodId}/upload`, file, {
         headers: { 'Content-Type': 'multipart/form-data' },
     });
+    return data;
+}
+humanResourcesServices.addPeriodAdvanceBatch = async (payload) => {
+    const { data } = await axios.post('/api/humanResources/payrollPeriods/advances/add-batch', payload);
     return data;
 }
 humanResourcesServices.updatePeriodAdvance = async (advance) => {

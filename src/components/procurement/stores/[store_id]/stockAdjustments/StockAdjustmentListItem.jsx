@@ -1,7 +1,14 @@
-import { Box, Divider, Grid, Tooltip, Typography } from '@mui/material'
+import { Box, Chip, Divider, Grid, Tooltip, Typography } from '@mui/material'
 import React from 'react'
 import StockAdjustmentListItemAction from './StockAdjustmentListItemAction'
+import StockAdjustmentApprovalsActionTail from './StockAdjustmentApprovalsActionTail'
 import { readableDate } from '@/app/helpers/input-sanitization-helpers'
+
+const STATUS_CHIP_COLOR = {
+  in_review: 'info',
+  posted: 'success',
+  rejected: 'error',
+};
 
 function StockAdjustmentListItem({stockAdjustment}) {
   return (
@@ -25,7 +32,17 @@ function StockAdjustmentListItem({stockAdjustment}) {
             </Grid>
             <Grid size={{xs: 6, md: 2}}>
                 <Tooltip title='Adjustment No.'>
-                    <Typography>{stockAdjustment.adjustmentNo}</Typography>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <Typography>{stockAdjustment.adjustmentNo}</Typography>
+                        {stockAdjustment.approval_chain && stockAdjustment.status_label && (
+                            <Chip
+                                label={stockAdjustment.status_label}
+                                size="small"
+                                color={STATUS_CHIP_COLOR[stockAdjustment.status || ''] || 'default'}
+                                variant="outlined"
+                            />
+                        )}
+                    </span>
                 </Tooltip>
             </Grid>
             <Grid size={{xs: 6, md: 1}}>
@@ -44,7 +61,8 @@ function StockAdjustmentListItem({stockAdjustment}) {
                 </Tooltip>
             </Grid>
             <Grid size={{xs: 2, md: 1}}>
-                <Box display={'flex'} flexDirection={'row'} justifyContent='flex-end' >
+                <Box display={'flex'} flexDirection={'row'} justifyContent='flex-end' alignItems='center' gap={1} >
+                    <StockAdjustmentApprovalsActionTail stockAdjustment={stockAdjustment} />
                     <StockAdjustmentListItemAction stockAdjustment={stockAdjustment} />
                 </Box>
             </Grid>

@@ -4,7 +4,7 @@ import { readableDate } from '@/app/helpers/input-sanitization-helpers';
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import organizationServices from '@/components/organizations/organizationServices';
 import { PERMISSIONS } from '@/utilities/constants/permissions';
-import { Verified } from '@mui/icons-material';
+import { PreviewOutlined, ReceiptLongOutlined, Verified } from '@mui/icons-material';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import {
@@ -15,13 +15,20 @@ import {
   Card,
   CardContent,
   Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  Button,
   Grid,
+  IconButton,
   LinearProgress,
   Stack,
   Tab,
   Tabs,
   Tooltip,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
@@ -30,6 +37,8 @@ import LoanApprovalItemAction from './LoanApprovalItemAction';
 import LoanApprovalsActionTail from './LoanApprovalsActionTail';
 import { getLoanApprovalDecision } from './loanApprovalUtils';
 import LoanRequestItemAction from './LoanRequestItemAction';
+import LoanRequestPreview from './LoanRequestPreview';
+import LoanStatement from './LoanStatement';
 import { LoanRequestType } from './LoanRequestType';
 
 interface User {
@@ -97,9 +106,13 @@ const LoanRequestsListItem = ({
   const canReadLoanDetails = checkOrganizationPermission(
     PERMISSIONS.LOANS_READ
   );
+  const theme = useTheme();
+  const belowLargeScreen = useMediaQuery(theme.breakpoints.down('lg'));
 
   const [expanded, setExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
+  const [openPreview, setOpenPreview] = useState(false);
+  const [openStatement, setOpenStatement] = useState(false);
 
   const { data: loanDetails, isLoading } = useQuery({
     queryKey: ['showLoanRequest', loanRequest.id],
@@ -243,8 +256,56 @@ const LoanRequestsListItem = ({
 
       {canReadLoanDetails && (
         <AccordionDetails sx={{ backgroundColor: 'background.paper', mb: 3 }}>
+          <Dialog
+            open={openPreview}
+            fullWidth
+            maxWidth='sm'
+            fullScreen={belowLargeScreen}
+            scroll={belowLargeScreen ? 'body' : 'paper'}
+            onClose={() => setOpenPreview(false)}
+          >
+            <DialogContent>
+              <LoanRequestPreview loanRequest={details} />
+            </DialogContent>
+            <DialogActions>
+              <Button size='small' onClick={() => setOpenPreview(false)}>
+                Close
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          <Dialog
+            open={openStatement}
+            fullWidth
+            maxWidth='md'
+            fullScreen={belowLargeScreen}
+            scroll={belowLargeScreen ? 'body' : 'paper'}
+            onClose={() => setOpenStatement(false)}
+          >
+            <DialogContent>
+              {openStatement && <LoanStatement loanId={details.id} />}
+            </DialogContent>
+            <DialogActions>
+              <Button size='small' onClick={() => setOpenStatement(false)}>
+                Close
+              </Button>
+            </DialogActions>
+          </Dialog>
+
           <Grid container spacing={1}>
             <Grid size={{ xs: 12 }} textAlign='end'>
+              <Tooltip title='Preview'>
+                <IconButton size='small' onClick={() => setOpenPreview(true)}>
+                  <PreviewOutlined color='primary' />
+                </IconButton>
+              </Tooltip>
+              {details.status === 'approved' && (
+                <Tooltip title='Statement'>
+                  <IconButton size='small' onClick={() => setOpenStatement(true)}>
+                    <ReceiptLongOutlined color='primary' />
+                  </IconButton>
+                </Tooltip>
+              )}
               <LoanRequestItemAction loanRequest={details} />
             </Grid>
             <Grid size={{ xs: 12 }}>

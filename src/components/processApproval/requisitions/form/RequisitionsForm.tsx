@@ -4,7 +4,7 @@ import userLedgerServices from '@/components/accounts/ledgers/user-ledger-servic
 import { useCurrencySelect } from '@/components/masters/Currencies/CurrencySelectProvider';
 import CommaSeparatedField from '@/shared/Inputs/CommaSeparatedField';
 import { PERMISSIONS } from '@/utilities/constants/permissions';
-import { PROCESS_TYPES } from '@/utilities/constants/processTypes';
+import { REQUISITION_PROCESS_TYPES } from '@/utilities/constants/processTypes';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Div } from '@jumbo/shared';
 import { HighlightOff } from '@mui/icons-material';
@@ -307,17 +307,7 @@ function RequisitionsForm({
   const isMaterialType = selectedProcessType === 'MATERIAL';
   const isProductType = isPurchaseType || isMaterialType;
   const isPurchaseLastTab = activeTab === 1;
-  const processTypeOptions = React.useMemo(
-    () =>
-      PROCESS_TYPES.filter(
-        (type) =>
-          type !== 'LOAN' &&
-          !String(type).includes('LEAVE') &&
-          type !== 'IMPREST RETIREMENT' &&
-          type !== 'PAYROLL'
-      ),
-    []
-  );
+  const processTypeOptions = React.useMemo(() => REQUISITION_PROCESS_TYPES, []);
 
   const { data: myLedgersResponse } = useQuery({
     queryKey: ['my-ledgers'],

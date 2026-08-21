@@ -230,7 +230,7 @@ export const UserListItem: React.FC<UserListItemProps> = ({ user, view }) => {
                     <Card variant="outlined" elevation={0}>
                         <CardHeader
                             avatar={
-                                <Avatar sx={{ width: 48, height: 48 }} alt={user.name} src={user?.profile_pic} />
+                                <Avatar sx={{ width: 48, height: 48 }} alt={user.name} src={user?.photo_path || undefined} />
                             }
                             action={<ItemAction />}
                             title={
@@ -311,7 +311,7 @@ export const UserListItem: React.FC<UserListItemProps> = ({ user, view }) => {
                 >
                     <Grid size={{xs: 0, md: 1, lg: 0.5}}>
                         <ListItemAvatar sx={{ display: { xs: 'none', md: 'block' } }}>
-                            <Avatar alt={user.name} src={user?.profile_pic} />
+                            <Avatar alt={user.name} src={user?.photo_path || undefined} />
                         </ListItemAvatar>
                     </Grid>
                     <Grid size={{xs: 4, md: 2, lg: 2.5}}>

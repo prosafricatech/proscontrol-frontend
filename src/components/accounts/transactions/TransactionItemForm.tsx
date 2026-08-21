@@ -1,4 +1,8 @@
 import { sanitizedNumber } from '@/app/helpers/input-sanitization-helpers';
+import BillPicker, { BillOption } from '@/components/shared/pickers/BillPicker';
+import PurchaseOrderPicker, {
+  PurchaseOrderOption,
+} from '@/components/shared/pickers/PurchaseOrderPicker';
 import CommaSeparatedField from '@/shared/Inputs/CommaSeparatedField';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Div } from '@jumbo/shared';
@@ -9,13 +13,14 @@ import {
 } from '@mui/icons-material';
 import { LoadingButton } from '@mui/lab';
 import {
+  Autocomplete,
   Grid,
   IconButton,
   LinearProgress,
   TextField,
   Tooltip,
 } from '@mui/material';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import LedgerSelect from '../ledgers/forms/LedgerSelect';
@@ -23,13 +28,26 @@ import { useLedgerSelect } from '../ledgers/forms/LedgerSelectProvider';
 import QuickAddLedger from '../ledgers/forms/QuickAddLedger';
 import { Ledger } from '../ledgers/LedgerType';
 
+// Traceability-only link from a payment item to a Bill or Purchase Order it
+// settles/relates to. Only meaningful for Payments (isPayment).
+type ItemRelatableType = 'purchase' | 'bill';
+
 type TransactionItem = {
   debit_ledger_id?: number;
   item_form_ledger_currency_id?: number;
   credit_ledger_id?: number;
   amount: number;
   description: string;
+  relatable_type?: ItemRelatableType | null;
+  relatable_id?: number | null;
+  relatable?: PurchaseOrderOption | BillOption | null;
+  relatableNo?: string;
 };
+
+const relatableTypeOptions: { value: ItemRelatableType; label: string }[] = [
+  { value: 'purchase', label: 'Purchase Order' },
+  { value: 'bill', label: 'Bill' },
+];
 
 type TransactionItemFormProps = {
   setClearFormKey: React.Dispatch<React.SetStateAction<number>>;
@@ -59,6 +77,9 @@ type FormValues = {
   credit_ledger_id?: number;
   amount: number;
   description: string;
+  relatable_type?: ItemRelatableType | null;
+  relatable_id?: number | null;
+  relatable?: PurchaseOrderOption | BillOption | null;
 };
 
 const TransactionItemForm: React.FC<TransactionItemFormProps> = ({
@@ -127,6 +148,31 @@ const TransactionItemForm: React.FC<TransactionItemFormProps> = ({
       .number()
       .required('Amount is required')
       .positive('Amount must be greater than 0')
+      .test(
+        'max-amount',
+        'Amount should not exceed unapproved amount of selected relatable',
+        function (value) {
+          const relatable = this.parent?.relatable as
+            | PurchaseOrderOption
+            | BillOption
+            | null
+            | undefined;
+
+          if (!relatable?.id || value == null) {
+            return true;
+          }
+
+          const maxAmount = Number(relatable.unapproved_amount ?? 0);
+
+          if (Number(value) <= maxAmount) {
+            return true;
+          }
+
+          return this.createError({
+            message: `Amount should not exceed unapproved amount (${maxAmount.toLocaleString()}) of selected relatable`,
+          });
+        }
+      )
       .typeError('Amount is required'),
   });
 
@@ -156,6 +202,17 @@ const TransactionItemForm: React.FC<TransactionItemFormProps> = ({
       item_form_ledger_currency_id: item?.item_form_ledger_currency_id,
       amount: item?.amount || (items.length === 0 ? defaultAmount : 0) || 0,
       description: item?.description || '',
+      relatable_type: item?.relatable_type ?? null,
+      relatable_id: item?.relatable_id ?? null,
+      relatable:
+        item?.relatable ??
+        (item?.relatable_id && item?.relatableNo
+          ? ({
+              id: item.relatable_id,
+              orderNo: item.relatableNo,
+              invoiceNo: item.relatableNo,
+            } as any)
+          : null),
     },
   });
 
@@ -168,6 +225,26 @@ const TransactionItemForm: React.FC<TransactionItemFormProps> = ({
       setSelectedLedgerCurrencyId(watchedCurrencyId);
     }
   }, [watchedCurrencyId]);
+
+  // A Purchase Order/Bill picked in the "Link To" fields is scoped to (and
+  // its unapproved balance validated in) whatever currency was selected at
+  // pick time. If the payment's currency changes while this not-yet-added
+  // item still holds such a link, it's stale — clear the link so the user
+  // re-picks it under the new currency. Already-added items aren't affected:
+  // the currency locks once an item exists.
+  const previousCurrencyIdRef = useRef(selectedCurrencyId);
+  useEffect(() => {
+    if (
+      previousCurrencyIdRef.current !== undefined &&
+      selectedCurrencyId !== undefined &&
+      previousCurrencyIdRef.current !== selectedCurrencyId
+    ) {
+      setValue('relatable_type', null);
+      setValue('relatable_id', null);
+      setValue('relatable', null);
+    }
+    previousCurrencyIdRef.current = selectedCurrencyId;
+  }, [selectedCurrencyId]);
 
   // Determine which field to show the currency error on
   const getFieldForCurrencyError = () => {
@@ -218,12 +295,18 @@ const TransactionItemForm: React.FC<TransactionItemFormProps> = ({
     }
 
     setIsAdding(true);
+    const relatable = formData.relatable_type ? formData.relatable : null;
     const newItem: TransactionItem = {
       debit_ledger_id: formData.debit_ledger_id,
       item_form_ledger_currency_id: formData.item_form_ledger_currency_id,
       credit_ledger_id: formData.credit_ledger_id,
       amount: formData.amount,
       description: formData.description,
+      relatable_type: formData.relatable_type || null,
+      relatable_id: relatable?.id ?? null,
+      relatable: relatable ?? null,
+      relatableNo:
+        (relatable as any)?.orderNo || (relatable as any)?.invoiceNo || undefined,
     };
 
     if (index > -1) {
@@ -382,6 +465,73 @@ const TransactionItemForm: React.FC<TransactionItemFormProps> = ({
               />
             </Div>
           </Grid>
+        )}
+
+        {/* Traceability-only link to a Bill/Purchase Order this item relates to */}
+        {isPayment && (
+          <>
+            <Grid size={{ xs: 12, md: 4 }}>
+              <Div sx={{ mt: 1 }}>
+                <Autocomplete
+                  options={relatableTypeOptions}
+                  isOptionEqualToValue={(option, value) =>
+                    option.value === value.value
+                  }
+                  getOptionLabel={(option) => option.label}
+                  value={
+                    relatableTypeOptions.find(
+                      (opt) => opt.value === watch('relatable_type')
+                    ) || null
+                  }
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label='Link To (optional)'
+                      size='small'
+                      fullWidth
+                    />
+                  )}
+                  onChange={(e, newValue) => {
+                    setValue('relatable_type', newValue?.value ?? null);
+                    setValue('relatable_id', null);
+                    setValue('relatable', null);
+                  }}
+                />
+              </Div>
+            </Grid>
+            {watch('relatable_type') === 'purchase' && (
+              <Grid size={{ xs: 12, md: 4 }}>
+                <Div sx={{ mt: 1 }}>
+                  <PurchaseOrderPicker
+                    value={watch('relatable') as PurchaseOrderOption | null}
+                    ledgerId={watch('debit_ledger_id') ?? null}
+                    currencyId={selectedCurrencyId ?? null}
+                    onChange={(newValue) => {
+                      setValue('relatable', newValue);
+                      setValue('relatable_id', newValue?.id ?? null);
+                    }}
+                  />
+                </Div>
+              </Grid>
+            )}
+            {watch('relatable_type') === 'bill' && (
+              <Grid size={{ xs: 12, md: 4 }}>
+                <Div sx={{ mt: 1 }}>
+                  <BillPicker
+                    value={watch('relatable') as BillOption | null}
+                    stakeholder={
+                      (watch('debit_ledger') as Ledger | undefined)?.stakeholders?.[0] ?? null
+                    }
+                    currencyId={selectedCurrencyId ?? null}
+                    onChange={(newValue) => {
+                      setValue('relatable', newValue);
+                      setValue('relatable_id', newValue?.id ?? null);
+                    }}
+                  />
+                </Div>
+              </Grid>
+            )}
+          </>
         )}
 
         <Grid size={{ xs: 12, md: 4 }}>

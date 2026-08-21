@@ -1,10 +1,12 @@
 'use client';
 
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
+import { PERMISSIONS } from '@/utilities/constants/permissions';
 import { MODULES } from '@/utilities/constants/modules';
 import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import {
   AccountBalanceOutlined,
+  AddCircleOutline,
   ClearOutlined,
   DeleteOutline,
   DescriptionOutlined,
@@ -49,6 +51,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { useSnackbar } from 'notistack';
 import React, { ChangeEvent, useState } from 'react';
 import humanResourcesServices from '../../humanResourcesServices';
+import AddAdvancesBatchDialog from '../advances/AddAdvancesBatchDialog';
 import AdvanceTransferListDialog from '../advances/AdvanceTransferListDialog';
 import { AdvanceSheetType } from '../advances/AdvanceSheetType';
 import MarkAdvancesPaidDialog from '../advances/MarkAdvancesPaidDialog';
@@ -117,13 +120,18 @@ const PayrollPeriodAdvancesTab = ({
   const theme = useTheme();
   const belowLargeScreen = useMediaQuery(theme.breakpoints.down('lg'));
   const { enqueueSnackbar } = useSnackbar();
-  const { organizationHasSubscribed } = useJumboAuth();
+  const { organizationHasSubscribed, checkOrganizationPermission } =
+    useJumboAuth();
+  const canPayApprovedPayroll = checkOrganizationPermission(
+    PERMISSIONS.APPROVED_PAYROLL_PAY
+  );
   const orgHasAccountsAndFinance = organizationHasSubscribed(MODULES.ACCOUNTS_AND_FINANCE);
   const isDark = theme.type === 'dark';
   const monthName = MONTH_NAMES[month] || month;
 
   const [search, setSearch] = useState('');
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [addBatchDialogOpen, setAddBatchDialogOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [editingAdvance, setEditingAdvance] = useState<PeriodAdvance | null>(null);
@@ -335,7 +343,7 @@ const PayrollPeriodAdvancesTab = ({
           >
             Generate Transfer Sheet
           </Button>
-          {orgHasAccountsAndFinance ? (
+          {canPayApprovedPayroll && (orgHasAccountsAndFinance ? (
             <Button
               variant='outlined'
               color='success'
@@ -367,7 +375,31 @@ const PayrollPeriodAdvancesTab = ({
             >
               Mark Advances as Paid
             </Button>
-          )}
+          ))}
+          <Tooltip
+            title={
+              isPeriodLocked
+                ? `This period's run is already ${lockedRun?.status} — new advances won't be reflected in it`
+                : ''
+            }
+          >
+            <span>
+              <Button
+                variant='outlined'
+                startIcon={<AddCircleOutline />}
+                onClick={() => setAddBatchDialogOpen(true)}
+                disabled={isPeriodLocked}
+                sx={{
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  width: { xs: '100%', sm: 'auto' },
+                }}
+              >
+                Add Advance
+              </Button>
+            </span>
+          </Tooltip>
           <Tooltip
             title={
               isPeriodLocked
@@ -556,6 +588,14 @@ const PayrollPeriodAdvancesTab = ({
           </TableContainer>
         )}
       </Stack>
+
+      {/* Add Advance (manual, multi-row) Dialog */}
+      <AddAdvancesBatchDialog
+        open={addBatchDialogOpen}
+        onClose={() => setAddBatchDialogOpen(false)}
+        payrollPeriodId={payrollPeriodId}
+        onSaved={() => refetchAdvances()}
+      />
 
       {/* Upload Advances Dialog */}
       <Dialog

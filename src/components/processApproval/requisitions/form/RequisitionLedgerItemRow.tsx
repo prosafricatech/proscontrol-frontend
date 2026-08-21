@@ -1,6 +1,8 @@
 import { readableDate } from '@/app/helpers/input-sanitization-helpers';
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import purchaseServices from '@/components/procurement/purchases/purchase-services';
+import purchaseBillServices from '@/components/procurement/grns/purchaseBill-services';
+import PurchaseBillOnScreenPreview from '@/components/accounts/purchaseBills/PurchaseBillOnScreenPreview';
 import CertificateOnScreen from '@/components/projectManagement/projects/profile/subcontracts/tabs/certificatesTab/preview/CertificateOnScreen';
 import projectsServices from '@/components/projectManagement/projects/project-services.js';
 import { Organization } from '@/types/auth-types';
@@ -14,6 +16,8 @@ import {
 } from '@mui/icons-material';
 import {
   Dialog,
+  DialogActions,
+  Button,
   Divider,
   Grid,
   IconButton,
@@ -89,6 +93,36 @@ const FetchRelatableDetails = ({
         certificate={certificateDetails}
         organization={authOrganization?.organization as Organization}
       />
+    );
+  }
+
+  if (
+    relatable.relatable_type === 'bill' ||
+    ledger_item.relatable_type === 'bill'
+  ) {
+    const { data: billDetails, isFetching } = useQuery({
+      queryKey: ['purchase-bill-details', relatable?.id],
+      queryFn: () => purchaseBillServices.details(relatable?.id),
+    });
+    if (isFetching) {
+      return <LinearProgress />;
+    }
+    return (
+      <>
+        <PurchaseBillOnScreenPreview
+          bill={billDetails}
+          organization={authOrganization?.organization}
+        />
+        <DialogActions sx={{ pb: 2 }}>
+          <Button
+            variant='outlined'
+            color='primary'
+            onClick={() => toggleOpen(false)}
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </>
     );
   }
 
@@ -242,19 +276,30 @@ function RequisitionLedgerItemRow({
                         lineHeight={1.25}
                         mb={0}
                       >
-                        {`${readableDate(ledger_item.relatable?.order_date || ledger_item.relatable?.certificate_date, false)} - ${
-                          ledger_item.relatable?.unapproved_amount?.toLocaleString(
+                        {`${readableDate(ledger_item.relatable?.order_date || ledger_item.relatable?.certificate_date || ledger_item.relatable?.transaction_date, false)} - ${
+                          (
+                            ledger_item.relatable?.unapproved_amount ??
+                            ledger_item.relatable?.total_amount
+                          )?.toLocaleString(
                             'en-US',
-                            {
-                              style: 'currency',
-                              currency: ledger_item.relatable?.currency?.code,
-                            }
+                            ledger_item.relatable?.currency?.code
+                              ? {
+                                  style: 'currency',
+                                  currency: ledger_item.relatable.currency.code,
+                                }
+                              : { minimumFractionDigits: 2 }
                           ) || ''
                         }`}
                       </Typography>
                     </Tooltip>
                     <Tooltip
-                      title={`View ${ledger_item.relatable_type === 'purchase' ? 'Order' : 'Certificate'} Details`}
+                      title={`View ${
+                        ledger_item.relatable_type === 'purchase'
+                          ? 'Order'
+                          : ledger_item.relatable_type === 'bill'
+                            ? 'Bill'
+                            : 'Certificate'
+                      } Details`}
                     >
                       <IconButton
                         onClick={() => {

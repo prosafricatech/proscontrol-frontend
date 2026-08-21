@@ -3,6 +3,7 @@
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import LedgerSelect from '@/components/accounts/ledgers/forms/LedgerSelect';
 import { MODULES } from '@/utilities/constants/modules';
+import { PERMISSIONS } from '@/utilities/constants/permissions';
 import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { faMoneyBill1 } from '@fortawesome/free-regular-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -119,12 +120,19 @@ export const PayrollRunActions = ({
   selectedPayrollPeriod,
 }: PayrollRunActionsProps) => {
   const { enqueueSnackbar } = useSnackbar();
-  const { organizationHasSubscribed } = useJumboAuth();
+  const { organizationHasSubscribed, checkOrganizationPermission } =
+    useJumboAuth();
   const { showDialog, hideDialog } = useJumboDialog();
   const { theme } = useJumboTheme();
   const belowLargeScreen = useMediaQuery(theme.breakpoints.down('lg'));
   const orgHasSubscribedAccountsAndFinance = organizationHasSubscribed(
     MODULES.ACCOUNTS_AND_FINANCE
+  );
+  const canPostJournal = checkOrganizationPermission(
+    PERMISSIONS.APPROVED_PAYROLL_POST_JOURNAL
+  );
+  const canPayApprovedPayroll = checkOrganizationPermission(
+    PERMISSIONS.APPROVED_PAYROLL_PAY
   );
   const queryClient = useQueryClient();
   const [openPostDialog, setOpenPostDialog] = useState(false);
@@ -471,7 +479,7 @@ export const PayrollRunActions = ({
         )}
 
         {/* 4. POST PAYROLL TRANSACTIONS - For approved runs */}
-        {isApproved && orgHasSubscribedAccountsAndFinance && (
+        {isApproved && orgHasSubscribedAccountsAndFinance && canPostJournal && (
           <Tooltip title='Post Payroll Transactions'>
             <IconButton
               size='small'
@@ -501,7 +509,8 @@ export const PayrollRunActions = ({
              full or partial/multiple installments — see PayEmployeesDialog. */}
         {(isPosted || isPartiallyPaid) &&
           !isPaid &&
-          orgHasSubscribedAccountsAndFinance && (
+          orgHasSubscribedAccountsAndFinance &&
+          canPayApprovedPayroll && (
             <Tooltip title='Pay Employees'>
               <IconButton
                 size='small'
@@ -517,7 +526,8 @@ export const PayrollRunActions = ({
              payables (NSSF, PAYE, etc.), independent of whether employees
              themselves are fully paid yet. */}
         {(isPosted || isPartiallyPaid || isPaid) &&
-          orgHasSubscribedAccountsAndFinance && (
+          orgHasSubscribedAccountsAndFinance &&
+          canPayApprovedPayroll && (
             <Tooltip title='Pay Payables'>
               <IconButton
                 size='small'

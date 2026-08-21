@@ -1,7 +1,9 @@
 // components/humanResources/payrollRuns/PayrollRunItemAction.tsx
 'use client';
 
+import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import LedgerSelect from '@/components/accounts/ledgers/forms/LedgerSelect';
+import { PERMISSIONS } from '@/utilities/constants/permissions';
 import { useJumboDialog } from '@jumbo/components/JumboDialog/hooks/useJumboDialog';
 import { useJumboTheme } from '@jumbo/components/JumboTheme/hooks';
 import {
@@ -40,6 +42,21 @@ import PayPayablesDialog from './PayPayablesDialog';
 import { PayrollRunType } from './PayrollRunType';
 import { getPayslipCalculations } from './payslipCalculations';
 
+const MONTH_NAMES = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
+
 const getErrorMessage = (error: any) => {
   const validationErrors = error?.response?.data?.validation_errors;
   if (validationErrors && typeof validationErrors === 'object') {
@@ -73,10 +90,14 @@ const PayrollRunItemAction = ({
   isFromPayrollPeriodsList?: boolean;
 }) => {
   const { showDialog, hideDialog } = useJumboDialog();
+  const { checkOrganizationPermission } = useJumboAuth();
   const { enqueueSnackbar } = useSnackbar();
   const queryClient = useQueryClient();
   const { theme } = useJumboTheme();
   const belowLargeScreen = useMediaQuery(theme.breakpoints.down('lg'));
+  const canPayApprovedPayroll = checkOrganizationPermission(
+    PERMISSIONS.APPROVED_PAYROLL_PAY
+  );
 
   const [openPostDialog, setOpenPostDialog] = useState(false);
   const [openPayDialog, setOpenPayDialog] = useState(false);
@@ -160,25 +181,11 @@ const PayrollRunItemAction = ({
       let periodLabel = payrollRun.cost_center?.name || 'Company-wide Run';
 
       if (payrollRun?.payroll_period) {
-        const monthNames = [
-          'January',
-          'February',
-          'March',
-          'April',
-          'May',
-          'June',
-          'July',
-          'August',
-          'September',
-          'October',
-          'November',
-          'December',
-        ];
         const monthIndex = payrollRun.payroll_period.month;
         // Ensure month is within valid range (1-12)
         const monthName =
           monthIndex && monthIndex >= 1 && monthIndex <= 12
-            ? monthNames[monthIndex - 1]
+            ? MONTH_NAMES[monthIndex - 1]
             : '';
         const year = payrollRun.payroll_period.year || '';
         periodLabel = `${monthName} ${year} - ${periodLabel}`;
@@ -382,7 +389,10 @@ const PayrollRunItemAction = ({
         </Tooltip>
       )}
 
-      {!isFromPayrollPeriodsList && (isPosted || isPartiallyPaid) && !isPaid && (
+      {!isFromPayrollPeriodsList &&
+        (isPosted || isPartiallyPaid) &&
+        !isPaid &&
+        canPayApprovedPayroll && (
         <Tooltip title='Pay Employees'>
           <IconButton size='small' color='success' onClick={() => setOpenPayDialog(true)}>
             <FontAwesomeIcon icon={faMoneyBill1} size='lg' />
@@ -391,7 +401,8 @@ const PayrollRunItemAction = ({
       )}
 
       {!isFromPayrollPeriodsList &&
-        (isPosted || isPartiallyPaid || isPaid) && (
+        (isPosted || isPartiallyPaid || isPaid) &&
+        canPayApprovedPayroll && (
           <Tooltip title='Pay Payables'>
             <IconButton
               size='small'
@@ -598,6 +609,23 @@ const PayrollRunItemAction = ({
               setSalarySheetData(null);
             }}
             periodLabel={salarySheetData.periodLabel}
+            selectedPayrollPeriod={
+              payrollRun.payroll_period
+                ? {
+                    id: payrollRun.payroll_period.id,
+                    year: payrollRun.payroll_period.year || 0,
+                    month: payrollRun.payroll_period.month || 0,
+                    monthName:
+                      payrollRun.payroll_period.month &&
+                      payrollRun.payroll_period.month >= 1 &&
+                      payrollRun.payroll_period.month <= 12
+                        ? MONTH_NAMES[payrollRun.payroll_period.month - 1]
+                        : '',
+                    status: '',
+                    remarks: '',
+                  }
+                : undefined
+            }
             rows={salarySheetData.rows}
             isLoading={isLoadingSalarySheet}
           />

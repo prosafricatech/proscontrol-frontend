@@ -68,7 +68,8 @@ const EmployeesContractsForm = ({
 
   const contractOptions = [
     { label: 'Permanent', value: 'permanent' },
-    { label: 'Fixed Term', value: 'fixed_term' },
+    { label: 'Fixed', value: 'fixed_term' },
+    { label: 'Specific', value: 'specific_task' },
     { label: 'Probation', value: 'probation' },
   ];
 

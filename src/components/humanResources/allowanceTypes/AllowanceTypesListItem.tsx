@@ -59,7 +59,20 @@ const AllowanceTypesListItem = ({
           )}
         </Grid>
 
-        <Grid size={{ xs: 5, md: 4.5 }}>
+        <Grid
+          size={{ xs: 5, md: 1.5 }}
+          textAlign={{ xs: 'start', md: 'center' }}
+        >
+          <Tooltip title='Default Value'>
+            <Typography>
+              {Number(allowanceType.default_value || 0).toLocaleString(
+                'en-US'
+              )}
+            </Typography>
+          </Tooltip>
+        </Grid>
+
+        <Grid size={{ xs: 5, md: 3 }}>
           <Tooltip title='Description'>
             <Typography noWrap>{allowanceType.description || '-'}</Typography>
           </Tooltip>

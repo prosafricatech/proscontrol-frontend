@@ -4,6 +4,8 @@ import purchaseServices from '@/components/procurement/purchases/purchase-servic
 import CertificateOnScreen from '@/components/projectManagement/projects/profile/subcontracts/tabs/certificatesTab/preview/CertificateOnScreen';
 import projectsServices from '@/components/projectManagement/projects/project-services.js';
 import { Organization } from '@/types/auth-types';
+import purchaseBillServices from '@/components/procurement/grns/purchaseBill-services';
+import PurchaseBillOnScreenPreview from '@/components/accounts/purchaseBills/PurchaseBillOnScreenPreview';
 import { VisibilityOutlined } from '@mui/icons-material';
 import {
   Alert,
@@ -100,6 +102,35 @@ const FetchRelatableDetails = ({
     );
   }
 
+  // If relatable has invoiceNo, treat as a Bill (Supplier Invoice)
+  if ('invoiceNo' in relatable && (relatable as any).invoiceNo) {
+    const { data: billDetails, isFetching } = useQuery({
+      queryKey: ['purchase-bill-details', relatable?.id],
+      queryFn: () => purchaseBillServices.details(relatable?.id),
+    });
+    if (isFetching) {
+      return <LinearProgress />;
+    }
+    return (
+      <>
+        <PurchaseBillOnScreenPreview
+          bill={billDetails}
+          organization={authOrganization?.organization}
+        />
+        <DialogActions sx={{ pb: 2 }}>
+          <Button
+            variant='outlined'
+            size='small'
+            color='primary'
+            onClick={() => toggleOpen(false)}
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </>
+    );
+  }
+
   return null;
 };
 
@@ -115,7 +146,7 @@ function ApprovalOnScreen({
 
   const mainColor = organization.settings?.main_color || '#2113AD';
   const headerColor =
-    theme.type === 'dark'
+    theme.palette.mode === 'dark'
       ? '#29f096'
       : organization.settings?.main_color || '#2113AD';
   const contrastText = organization.settings?.contrast_text || '#FFFFFF';
@@ -220,7 +251,7 @@ function ApprovalOnScreen({
           <Grid container spacing={2} sx={{ mb: 3 }} width={'100%'}>
             <Grid size={{ xs: 12, md: 4 }}>
               <Box>
-                <Typography variant='subtitle2' sx={{ color: headerColor }}>
+                <Typography variant='subtitle2' color='text.secondary'>
                   Approval Date
                 </Typography>
                 <Typography variant='body1'>
@@ -230,7 +261,7 @@ function ApprovalOnScreen({
             </Grid>
             <Grid size={{ xs: 12, md: 4 }}>
               <Box>
-                <Typography variant='subtitle2' sx={{ color: headerColor }}>
+                <Typography variant='subtitle2' color='text.secondary'>
                   Date Required
                 </Typography>
                 <Typography variant='body1'>
@@ -243,7 +274,7 @@ function ApprovalOnScreen({
             {requisition?.cost_center.name && (
               <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                 <Box>
-                  <Typography variant='subtitle2' sx={{ color: headerColor }}>
+                  <Typography variant='subtitle2' color='text.secondary'>
                     Cost Center
                   </Typography>
                   <Typography variant='body1'>
@@ -413,7 +444,13 @@ function ApprovalOnScreen({
                                         </Typography>
                                       </Tooltip>
                                       <Tooltip
-                                        title={`View ${item?.relatable_type === 'purchase' ? 'Purchase Order' : 'Certificate'}`}
+                                        title={`View ${
+                                          item?.relatable_type === 'purchase'
+                                            ? 'Purchase Order'
+                                            : item?.relatable_type === 'bill'
+                                              ? 'Bill'
+                                              : 'Certificate'
+                                        }`}
                                       >
                                         <IconButton
                                           size='small'
@@ -652,7 +689,7 @@ function ApprovalOnScreen({
           {/* Remarks Section */}
           {approval.remarks && (
             <Grid size={12} sx={{ mt: 2 }}>
-              <Typography variant='subtitle2' sx={{ color: headerColor }}>
+              <Typography variant='subtitle2' color='text.secondary'>
                 Approval Remarks
               </Typography>
               <Typography variant='body1'>{approval.remarks}</Typography>
@@ -661,7 +698,7 @@ function ApprovalOnScreen({
 
           <Grid size={{ xs: 12, sm: 6 }}>
             <Box>
-              <Typography variant='subtitle2' sx={{ color: headerColor }}>
+              <Typography variant='subtitle2' color='text.secondary'>
                 Requested By
               </Typography>
               <Typography variant='body1'>
@@ -672,7 +709,7 @@ function ApprovalOnScreen({
 
           <Grid size={{ xs: 12, sm: 6 }}>
             <Box>
-              <Typography variant='subtitle2' sx={{ color: headerColor }}>
+              <Typography variant='subtitle2' color='text.secondary'>
                 Approved By
               </Typography>
 

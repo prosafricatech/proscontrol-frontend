@@ -102,6 +102,13 @@ financialReportsServices.exportDebtorsOrCreditorsToExcel = async (params) => {
   return data;
 }
 
+financialReportsServices.exportApArAgingToExcel = async (params) => {
+  const { data } = await axios.post(`/api/exports/excel/apArAging/`, params, {
+    responseType: 'blob',
+  })
+  return data;
+}
+
 
 financialReportsServices.cashierReport = async ({ from, to, detailed, ledger_ids, groupBy }) => {
   const { data: reportData } = await axios.get(`/api/financialReports/cashierReport`, {

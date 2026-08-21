@@ -2,10 +2,11 @@
 
 import JumboCardQuick from '@jumbo/components/JumboCardQuick/JumboCardQuick';
 import { useJumboTheme } from '@jumbo/components/JumboTheme/hooks';
-import { AssessmentOutlined, BeachAccessOutlined, RequestQuoteOutlined } from '@mui/icons-material';
+import { AssessmentOutlined, BeachAccessOutlined, CompareArrowsOutlined, RequestQuoteOutlined } from '@mui/icons-material';
 import { Button, Dialog, DialogActions, Grid, Typography, useMediaQuery } from '@mui/material';
 import { useSearchParams } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
+import PayrollComparisonDashboard from '../payrollPeriods/PayrollComparison/PayrollComparisonDashboard';
 import PayrollSalaryComponentsDashboard from '../payrollPeriods/PayrollSalaryComponents/PayrollSalaryComponentsDashboard';
 import LeaveBalancesReport from './leaveBalances/LeaveBalancesReport';
 import StaffLoanReport from './staffLoans/StaffLoanReport';
@@ -23,6 +24,12 @@ const reportCards: ReportCardItem[] = [
     title: 'Salary Components Summary',
     icon: <AssessmentOutlined sx={{ fontSize: '40px' }} />,
     component: <PayrollSalaryComponentsDashboard />,
+  },
+  {
+    key: 'payroll-comparison',
+    title: 'Payroll Comparison',
+    icon: <CompareArrowsOutlined sx={{ fontSize: '40px' }} />,
+    component: <PayrollComparisonDashboard />,
   },
   {
     key: 'leave-balances',

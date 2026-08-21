@@ -10,6 +10,7 @@ import {
   DialogContent,
   DialogTitle,
   Grid,
+  MenuItem,
   TextField,
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers';
@@ -32,7 +33,9 @@ interface FormData {
   id?: number;
   employee_id?: number | null;
   amount?: number | null;
+  recovery_mode?: 'installments' | 'fixed_amount';
   installments?: string;
+  installment_amount_requested?: number | null;
   reason?: string | null;
   requested_at?: string | null;
 }
@@ -114,7 +117,32 @@ const LoanRequestsForm = ({
       )
       .min(0, 'Basic salary must be >= 0')
       .typeError('Basic salary must be a number'),
-    installments: yup.string().required('Please enter an installments amount'),
+    recovery_mode: yup
+      .string()
+      .oneOf(['installments', 'fixed_amount'])
+      .required(),
+    installments: yup.string().when('recovery_mode', {
+      is: 'installments',
+      then: (schema) => schema.required('Please enter an installments count'),
+      otherwise: (schema) => schema.nullable(),
+    }),
+    installment_amount_requested: yup
+      .number()
+      .nullable()
+      .transform((_, val) =>
+        val === '' || val === undefined || val === null ? null : Number(val)
+      )
+      .when('recovery_mode', {
+        is: 'fixed_amount',
+        then: (schema) =>
+          schema
+            .required('Please enter the flat amount to deduct per period')
+            .max(
+              yup.ref('amount'),
+              'Cannot exceed the requested loan amount'
+            ),
+        otherwise: (schema) => schema.nullable(),
+      }),
     reason: yup.string().nullable(),
     requested_at: yup.string().nullable(),
   });
@@ -133,11 +161,15 @@ const LoanRequestsForm = ({
     defaultValues: {
       employee_id: loan?.employee_id ?? null,
       amount: loan?.amount ?? null,
+      recovery_mode: loan?.recovery_mode ?? 'installments',
       installments: loan?.installments ? String(loan.installments) : '',
+      installment_amount_requested: loan?.installment_amount_requested ?? null,
       reason: loan?.reason ?? '',
       requested_at: loan?.requested_at || dayjs().format('YYYY-MM-DD'),
     },
   });
+
+  const recoveryMode = watch('recovery_mode');
 
   const onSubmit = (data: FormData) => {
     submitLoan(data);
@@ -209,21 +241,65 @@ const LoanRequestsForm = ({
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
               <TextField
-                label='Installments'
+                select
+                label='Recovery Mode'
                 size='small'
                 fullWidth
-                value={watch('installments')}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setValue('installments', val ? val : undefined, {
-                    shouldValidate: true,
-                    shouldDirty: true,
-                  });
-                }}
-                error={!!errors.installments}
-                helperText={errors.installments?.message}
-              />
+                value={recoveryMode}
+                onChange={(e) =>
+                  setValue(
+                    'recovery_mode',
+                    e.target.value as 'installments' | 'fixed_amount',
+                    { shouldValidate: true, shouldDirty: true }
+                  )
+                }
+              >
+                <MenuItem value='installments'>By Installment Count</MenuItem>
+                <MenuItem value='fixed_amount'>By Fixed Amount</MenuItem>
+              </TextField>
             </Grid>
+            {recoveryMode === 'fixed_amount' ? (
+              <Grid size={{ xs: 12, md: 6 }}>
+                <TextField
+                  label='Amount To Deduct Per Period'
+                  size='small'
+                  fullWidth
+                  value={watch('installment_amount_requested') ?? ''}
+                  onChange={(e) => {
+                    const val = sanitizedNumber(e.target.value);
+                    setValue(
+                      'installment_amount_requested',
+                      Number.isNaN(val) ? null : val,
+                      { shouldValidate: true, shouldDirty: true }
+                    );
+                  }}
+                  InputProps={{ inputComponent: CommaSeparatedField as any }}
+                  error={!!errors.installment_amount_requested}
+                  helperText={
+                    errors.installment_amount_requested?.message ||
+                    'Installments are derived automatically from this'
+                  }
+                />
+              </Grid>
+            ) : (
+              <Grid size={{ xs: 12, md: 6 }}>
+                <TextField
+                  label='Installments'
+                  size='small'
+                  fullWidth
+                  value={watch('installments')}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setValue('installments', val ? val : undefined, {
+                      shouldValidate: true,
+                      shouldDirty: true,
+                    });
+                  }}
+                  error={!!errors.installments}
+                  helperText={errors.installments?.message}
+                />
+              </Grid>
+            )}
             <Grid size={{ xs: 12, md: 6 }}>
               <DatePicker
                 label='Request Date'

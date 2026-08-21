@@ -53,4 +53,9 @@ stockAdjustmentServices.show = async(id) => {
     return data;
 }
 
+stockAdjustmentServices.addApproval = async (approval) => {
+    const { data } = await axios.post('/api/stockAdjustment/approvals', approval)
+    return data;
+}
+
 export default stockAdjustmentServices;
