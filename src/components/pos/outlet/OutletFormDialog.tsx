@@ -15,18 +15,20 @@ import { LoadingButton } from '@mui/lab';
 import {
   Autocomplete,
   Button,
+  Chip,
   DialogActions,
   DialogContent,
   DialogTitle,
   Grid,
   IconButton,
+  Stack,
   TextField,
   Typography,
 } from '@mui/material';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSnackbar } from 'notistack';
 import React, { useMemo } from 'react';
-import { Controller, useFieldArray, useForm } from 'react-hook-form';
+import { Controller, useFieldArray, useForm, useWatch } from 'react-hook-form';
 import * as yup from 'yup';
 import outletServices from './outlet-services';
 import type {
@@ -66,6 +68,7 @@ const validationSchema = yup.object({
   name: yup.string().required('Outlet name is required'),
   address: yup.string().optional(),
   type: yup.string().required('Outlet type is required'),
+  project_id: yup.number().nullable().optional(),
   users: yup
     .array()
     .of(
@@ -74,8 +77,14 @@ const validationSchema = yup.object({
         name: yup.string().required(),
       })
     )
-    .min(1, 'At least one user is required')
-    .required('At least one user is required'),
+    .when('project_id', {
+      is: (value: number | null | undefined) => !value,
+      then: (schema) =>
+        schema
+          .min(1, 'At least one user is required')
+          .required('At least one user is required'),
+      otherwise: (schema) => schema.notRequired(),
+    }),
   stores: yup
     .array()
     .of(
@@ -146,6 +155,8 @@ const OutletFormDialog: React.FC<OutletFormProps> = ({
     control,
     name: 'counters',
   });
+
+  const projectId = useWatch({ control, name: 'project_id' });
 
   const { mutate: addOutlet, isPending: addLoading } = useMutation<
     AddOutletResponse,
@@ -363,18 +374,32 @@ const OutletFormDialog: React.FC<OutletFormProps> = ({
             />
           </Grid>
           <Grid size={12} sx={{ mt: 1, mb: 1 }}>
-            <Controller
-              name='users'
-              control={control}
-              render={({ field }) => (
-                <UsersSelector
-                  multiple
-                  defaultValue={outlet && outlet.users}
-                  onChange={field.onChange}
-                  frontError={errors.users}
-                />
-              )}
-            />
+            {projectId ? (
+              <Div>
+                <Typography variant='body2' color='text.secondary' mb={0.5}>
+                  Users are managed via the linked project&apos;s cost center,
+                  not per outlet.
+                </Typography>
+                <Stack direction='row' flexWrap='wrap' gap={0.5}>
+                  {(outlet?.users ?? []).map((user) => (
+                    <Chip key={user.id} label={user.name} size='small' />
+                  ))}
+                </Stack>
+              </Div>
+            ) : (
+              <Controller
+                name='users'
+                control={control}
+                render={({ field }) => (
+                  <UsersSelector
+                    multiple
+                    defaultValue={outlet && outlet.users}
+                    onChange={field.onChange}
+                    frontError={errors.users}
+                  />
+                )}
+              />
+            )}
           </Grid>
         </Grid>
       </DialogContent>

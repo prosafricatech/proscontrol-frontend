@@ -1,7 +1,9 @@
 // components/humanResources/payrollRuns/PayrollRunItemAction.tsx
 'use client';
 
+import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import LedgerSelect from '@/components/accounts/ledgers/forms/LedgerSelect';
+import { PERMISSIONS } from '@/utilities/constants/permissions';
 import { useJumboDialog } from '@jumbo/components/JumboDialog/hooks/useJumboDialog';
 import { useJumboTheme } from '@jumbo/components/JumboTheme/hooks';
 import {
@@ -88,10 +90,14 @@ const PayrollRunItemAction = ({
   isFromPayrollPeriodsList?: boolean;
 }) => {
   const { showDialog, hideDialog } = useJumboDialog();
+  const { checkOrganizationPermission } = useJumboAuth();
   const { enqueueSnackbar } = useSnackbar();
   const queryClient = useQueryClient();
   const { theme } = useJumboTheme();
   const belowLargeScreen = useMediaQuery(theme.breakpoints.down('lg'));
+  const canPayApprovedPayroll = checkOrganizationPermission(
+    PERMISSIONS.APPROVED_PAYROLL_PAY
+  );
 
   const [openPostDialog, setOpenPostDialog] = useState(false);
   const [openPayDialog, setOpenPayDialog] = useState(false);
@@ -383,7 +389,10 @@ const PayrollRunItemAction = ({
         </Tooltip>
       )}
 
-      {!isFromPayrollPeriodsList && (isPosted || isPartiallyPaid) && !isPaid && (
+      {!isFromPayrollPeriodsList &&
+        (isPosted || isPartiallyPaid) &&
+        !isPaid &&
+        canPayApprovedPayroll && (
         <Tooltip title='Pay Employees'>
           <IconButton size='small' color='success' onClick={() => setOpenPayDialog(true)}>
             <FontAwesomeIcon icon={faMoneyBill1} size='lg' />
@@ -392,7 +401,8 @@ const PayrollRunItemAction = ({
       )}
 
       {!isFromPayrollPeriodsList &&
-        (isPosted || isPartiallyPaid || isPaid) && (
+        (isPosted || isPartiallyPaid || isPaid) &&
+        canPayApprovedPayroll && (
           <Tooltip title='Pay Payables'>
             <IconButton
               size='small'

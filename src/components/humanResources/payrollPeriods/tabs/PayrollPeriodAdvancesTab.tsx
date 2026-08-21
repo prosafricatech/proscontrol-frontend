@@ -1,6 +1,7 @@
 'use client';
 
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
+import { PERMISSIONS } from '@/utilities/constants/permissions';
 import { MODULES } from '@/utilities/constants/modules';
 import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import {
@@ -119,7 +120,11 @@ const PayrollPeriodAdvancesTab = ({
   const theme = useTheme();
   const belowLargeScreen = useMediaQuery(theme.breakpoints.down('lg'));
   const { enqueueSnackbar } = useSnackbar();
-  const { organizationHasSubscribed } = useJumboAuth();
+  const { organizationHasSubscribed, checkOrganizationPermission } =
+    useJumboAuth();
+  const canPayApprovedPayroll = checkOrganizationPermission(
+    PERMISSIONS.APPROVED_PAYROLL_PAY
+  );
   const orgHasAccountsAndFinance = organizationHasSubscribed(MODULES.ACCOUNTS_AND_FINANCE);
   const isDark = theme.type === 'dark';
   const monthName = MONTH_NAMES[month] || month;
@@ -338,7 +343,7 @@ const PayrollPeriodAdvancesTab = ({
           >
             Generate Transfer Sheet
           </Button>
-          {orgHasAccountsAndFinance ? (
+          {canPayApprovedPayroll && (orgHasAccountsAndFinance ? (
             <Button
               variant='outlined'
               color='success'
@@ -370,7 +375,7 @@ const PayrollPeriodAdvancesTab = ({
             >
               Mark Advances as Paid
             </Button>
-          )}
+          ))}
           <Tooltip
             title={
               isPeriodLocked

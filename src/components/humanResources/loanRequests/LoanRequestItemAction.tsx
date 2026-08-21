@@ -94,7 +94,8 @@ const LoanRequestItemAction = ({
   const canDisburseWithLedger =
     isApprovedNotDisbursed &&
     orgHasAccountsAndFinance &&
-    checkOrganizationPermission(PERMISSIONS.ACCOUNTS_TRANSACTIONS_CREATE);
+    checkOrganizationPermission(PERMISSIONS.ACCOUNTS_TRANSACTIONS_CREATE) &&
+    checkOrganizationPermission(PERMISSIONS.APPROVED_LOANS_DISBURSE);
 
   const canMarkDisbursed = isApprovedNotDisbursed && !orgHasAccountsAndFinance;
 

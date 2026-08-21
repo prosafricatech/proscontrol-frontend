@@ -711,6 +711,11 @@ humanResourcesServices.showLoanRequest = async (id) => {
     return data;
 }
 
+humanResourcesServices.getLoanStatement = async (id) => {
+    const { data } = await axios.get(`/api/humanResources/loanRequests/${id}/statement`);
+    return data;
+}
+
 humanResourcesServices.approveLoanRequest = async ({ id, ...payload }) => {
     const { data } = await axios.post(`/api/humanResources/loanRequests/${id}/directApproval`, payload);
     return data;

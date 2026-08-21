@@ -4,7 +4,7 @@ import { readableDate } from '@/app/helpers/input-sanitization-helpers';
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import organizationServices from '@/components/organizations/organizationServices';
 import { PERMISSIONS } from '@/utilities/constants/permissions';
-import { PreviewOutlined, Verified } from '@mui/icons-material';
+import { PreviewOutlined, ReceiptLongOutlined, Verified } from '@mui/icons-material';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import {
@@ -38,6 +38,7 @@ import LoanApprovalsActionTail from './LoanApprovalsActionTail';
 import { getLoanApprovalDecision } from './loanApprovalUtils';
 import LoanRequestItemAction from './LoanRequestItemAction';
 import LoanRequestPreview from './LoanRequestPreview';
+import LoanStatement from './LoanStatement';
 import { LoanRequestType } from './LoanRequestType';
 
 interface User {
@@ -111,6 +112,7 @@ const LoanRequestsListItem = ({
   const [expanded, setExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
   const [openPreview, setOpenPreview] = useState(false);
+  const [openStatement, setOpenStatement] = useState(false);
 
   const { data: loanDetails, isLoading } = useQuery({
     queryKey: ['showLoanRequest', loanRequest.id],
@@ -272,6 +274,24 @@ const LoanRequestsListItem = ({
             </DialogActions>
           </Dialog>
 
+          <Dialog
+            open={openStatement}
+            fullWidth
+            maxWidth='md'
+            fullScreen={belowLargeScreen}
+            scroll={belowLargeScreen ? 'body' : 'paper'}
+            onClose={() => setOpenStatement(false)}
+          >
+            <DialogContent>
+              {openStatement && <LoanStatement loanId={details.id} />}
+            </DialogContent>
+            <DialogActions>
+              <Button size='small' onClick={() => setOpenStatement(false)}>
+                Close
+              </Button>
+            </DialogActions>
+          </Dialog>
+
           <Grid container spacing={1}>
             <Grid size={{ xs: 12 }} textAlign='end'>
               <Tooltip title='Preview'>
@@ -279,6 +299,13 @@ const LoanRequestsListItem = ({
                   <PreviewOutlined color='primary' />
                 </IconButton>
               </Tooltip>
+              {details.status === 'approved' && (
+                <Tooltip title='Statement'>
+                  <IconButton size='small' onClick={() => setOpenStatement(true)}>
+                    <ReceiptLongOutlined color='primary' />
+                  </IconButton>
+                </Tooltip>
+              )}
               <LoanRequestItemAction loanRequest={details} />
             </Grid>
             <Grid size={{ xs: 12 }}>
