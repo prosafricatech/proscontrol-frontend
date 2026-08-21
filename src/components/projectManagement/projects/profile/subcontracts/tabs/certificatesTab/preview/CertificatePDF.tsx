@@ -50,6 +50,9 @@ interface Certificate {
   creator?: Creator;
   currency?: Currency;
   amount: number;
+  subcontractor?: {
+    name?: string;
+  };
   vat_percentage?: number;
   adjustments?: Adjustment[];
   items: CertifiedItem[];
@@ -191,6 +194,15 @@ const CertificatePDF: React.FC<CertificatePDFProps> = ({
             </Text>
             <Text style={pdfStyles.minInfo}>
               {readableDate(certificate.certificate_date, false)}
+            </Text>
+          </View>
+
+          <View style={{ flex: 1 }}>
+            <Text style={{ ...pdfStyles.minInfo, color: mainColor }}>
+              SubContractor
+            </Text>
+            <Text style={pdfStyles.minInfo}>
+              {certificate?.subcontractor?.name}
             </Text>
           </View>
 
@@ -755,8 +767,7 @@ const CertificatePDF: React.FC<CertificatePDFProps> = ({
             <Text
               style={{
                 ...pdfStyles.minInfo,
-                borderTop: '1pt solid #000',
-                paddingTop: 30,
+                paddingTop: 5,
               }}
             >
               {certificate.creator?.name || ''}

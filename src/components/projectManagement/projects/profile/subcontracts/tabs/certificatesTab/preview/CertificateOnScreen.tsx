@@ -52,6 +52,9 @@ interface Certificate {
   certificate_date: string;
   remarks?: string | null;
   currency?: Currency;
+  subcontractor?: {
+    name?: string;
+  };
   creator?: Creator;
   amount?: number | string;
   vat_percentage?: number;
@@ -177,6 +180,15 @@ const CertificateOnScreen: React.FC<CertificateOnScreenProps> = ({ certificate, 
           </Typography>
           <Typography variant="h6" fontWeight="medium">
             {readableDate(certificate.certificate_date, false)}
+          </Typography>
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+            SubContractor
+          </Typography>
+          <Typography variant="h6">
+            {certificate?.subcontractor?.name}
           </Typography>
         </Grid>
 
