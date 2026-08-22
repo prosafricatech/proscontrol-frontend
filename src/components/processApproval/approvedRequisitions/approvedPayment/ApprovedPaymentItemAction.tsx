@@ -5,6 +5,7 @@ import paymentServices from '@/components/accounts/transactions/payments/payment
 import PaymentOnScreenPreview from '@/components/accounts/transactions/payments/PaymentOnScreenPreview';
 import PaymentPDF from '@/components/accounts/transactions/payments/PaymentPDF';
 import PDFContent from '@/components/pdf/PDFContent';
+import TabbedAttachmentsDialog from '@/components/filesShelf/attachments/TabbedAttachmentsDialog';
 import { FileExportGrid } from '@/components/sharedComponents/FileExportGrid';
 import PreviewTopBar from '@/components/sharedComponents/PreviewTopBar';
 import UnauthorizedAccess from '@/shared/Information/UnauthorizedAccess';
@@ -14,6 +15,7 @@ import { useJumboDialog } from '@jumbo/components/JumboDialog/hooks/useJumboDial
 import { useJumboTheme } from '@jumbo/components/JumboTheme/hooks';
 import { MenuItemProps } from '@jumbo/types';
 import {
+  AttachmentOutlined,
   DeleteOutlined,
   EditOutlined,
   HighlightOff,
@@ -163,6 +165,7 @@ const ApprovedPaymentItemAction: React.FC<ApprovedPaymentItemActionProps> = ({
   const { enqueueSnackbar } = useSnackbar();
   const [openEditDialog, setOpenEditDialog] = useState(false);
   const [openDocumentDialog, setOpenDocumentDialog] = useState(false);
+  const [attachDialog, setAttachDialog] = useState(false);
 
   const authObject = useJumboAuth();
   const checkOrganizationPermission = authObject.checkOrganizationPermission;
@@ -186,6 +189,7 @@ const ApprovedPaymentItemAction: React.FC<ApprovedPaymentItemActionProps> = ({
 
   const menuItems = [
     { icon: <VisibilityOutlined />, title: 'View', action: 'open' },
+    { icon: <AttachmentOutlined />, title: 'Attachments', action: 'attach' },
     (checkOrganizationPermission(PERMISSIONS.ACCOUNTS_TRANSACTIONS_BACKDATE) ||
       payment.transaction_date >= dayjs().startOf('date').toISOString()) && {
       icon: <EditOutlined />,
@@ -208,6 +212,9 @@ const ApprovedPaymentItemAction: React.FC<ApprovedPaymentItemActionProps> = ({
       case 'edit':
         setOpenEditDialog(true);
         break;
+      case 'attach':
+        setAttachDialog(true);
+        break;
       case 'delete':
         showDialog({
           title: 'Confirm Order',
@@ -228,7 +235,7 @@ const ApprovedPaymentItemAction: React.FC<ApprovedPaymentItemActionProps> = ({
   return (
     <>
       <Dialog
-        open={openDocumentDialog || openEditDialog}
+        open={openDocumentDialog || openEditDialog || attachDialog}
         scroll={belowLargeScreen || !openDocumentDialog ? 'body' : 'paper'}
         fullWidth
         fullScreen={belowLargeScreen}
@@ -237,6 +244,25 @@ const ApprovedPaymentItemAction: React.FC<ApprovedPaymentItemActionProps> = ({
           setOpenDocumentDialog(false);
         }}
       >
+        {attachDialog && (
+          <TabbedAttachmentsDialog
+            title={`Attachments For ${payment.voucherNo}`}
+            setOpen={setAttachDialog}
+            tabs={[
+              {
+                label: 'Payment',
+                attachmentable_type: 'payment',
+                attachmentable_id: payment.id,
+              },
+              {
+                label: 'Requisition',
+                attachmentable_type: 'requisition',
+                attachmentable_id: approvedRequisition.requisition.id,
+                readOnly: true,
+              },
+            ]}
+          />
+        )}
         {openEditDialog &&
           (checkOrganizationPermission(
             PERMISSIONS.ACCOUNTS_TRANSACTIONS_EDIT

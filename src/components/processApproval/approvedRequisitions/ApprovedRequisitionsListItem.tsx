@@ -104,6 +104,7 @@ const ApprovedRequisitionsListItem: React.FC<ApprovedRequisitionsListItemProps> 
           flexDirection: 'row-reverse',
           '.MuiAccordionSummary-content': {
             alignItems: 'center',
+            minWidth: 0,
             '&.Mui-expanded': {
               margin: '10px 0',
             },
@@ -125,7 +126,7 @@ const ApprovedRequisitionsListItem: React.FC<ApprovedRequisitionsListItemProps> 
           },
         }}
       >
-        <Grid container spacing={1} alignItems="center" width="100%" sx={{ paddingLeft: 1, paddingRight: 1 }}>
+        <Grid container spacing={1} alignItems="center" width="100%" sx={{ paddingLeft: 1, paddingRight: 1, minWidth: 0 }}>
           <Grid size={{ xs: 12, md: 2 }}>
             <Tooltip title="Requisition No.">
               <Typography>{approvedRequisition.requisition.requisitionNo}</Typography>
@@ -135,19 +136,27 @@ const ApprovedRequisitionsListItem: React.FC<ApprovedRequisitionsListItemProps> 
             </Tooltip>
           </Grid>
 
-          <Grid size={{ xs: 12, md: 2.5 }}>
+          <Grid size={{ xs: 12, md: 2.5 }} sx={{ minWidth: 0 }}>
             <Tooltip title="Process">
               <Typography variant="body2">{processConfig.label}</Typography>
             </Tooltip>
-            <Tooltip title="Cost Center">
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{ display: 'block', mt: 0.5 }}
-              >
-                {approvedRequisition.requisition.cost_center?.name || '-'}
-              </Typography>
-            </Tooltip>
+            {approvedRequisition.requisition.cost_center?.name && (
+              <Tooltip title={approvedRequisition.requisition.cost_center.name}>
+                <Chip
+                  size="small"
+                  label={approvedRequisition.requisition.cost_center.name}
+                  sx={{
+                    mt: 0.5,
+                    maxWidth: '100%',
+                    minWidth: 0,
+                    '& .MuiChip-label': {
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    },
+                  }}
+                />
+              </Tooltip>
+            )}
           </Grid>
 
           <Grid size={{ xs: 12, md: 4, lg: 4.8 }}>

@@ -1,5 +1,6 @@
 'use client';
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
+import AttachmentForm from '@/components/filesShelf/attachments/AttachmentForm';
 import PDFContent from '@/components/pdf/PDFContent';
 import requisitionsServices from '@/components/processApproval/requisitionsServices';
 import { FileExportGrid } from '@/components/sharedComponents/FileExportGrid';
@@ -9,6 +10,7 @@ import { PERMISSIONS } from '@/utilities/constants/permissions';
 import { useJumboDialog } from '@jumbo/components/JumboDialog/hooks/useJumboDialog';
 import { useJumboTheme } from '@jumbo/components/JumboTheme/hooks';
 import {
+  AttachmentOutlined,
   DeleteOutlined,
   EditOutlined,
   FactCheckOutlined,
@@ -16,6 +18,7 @@ import {
   VisibilityOutlined,
 } from '@mui/icons-material';
 import {
+  Badge,
   Box,
   Button,
   Dialog,
@@ -230,6 +233,7 @@ const ApprovalItemAction: React.FC<ApprovalItemActionProps> = ({
   const [openApproveDialog, setOpenApproveDialog] = useState(false);
   const { showDialog, hideDialog } = useJumboDialog();
   const [openDocumentDialog, setOpenDocumentDialog] = useState(false);
+  const [attachDialog, setAttachDialog] = useState(false);
   const { enqueueSnackbar } = useSnackbar();
   const queryClient = useQueryClient();
   const { authUser, authOrganization, hasOrganizationRole } = useJumboAuth();
@@ -267,10 +271,19 @@ const ApprovalItemAction: React.FC<ApprovalItemActionProps> = ({
     checkOrganizationPermission(PERMISSIONS.APPROVAL_BACKDATE) ||
     dayjs(approval.approval_date).isSameOrAfter(dayjs().startOf('day'));
 
+  const requisitionId = requisition?.id ?? approval.requisition?.id;
+  const requisitionAttachmentsCount =
+    requisition?.attachments_count ?? approval.requisition?.attachments_count ?? 0;
+
   return (
     <>
       <Dialog
-        open={openApproveDialog || openEditDialog || openDocumentDialog}
+        open={
+          openApproveDialog ||
+          openEditDialog ||
+          openDocumentDialog ||
+          attachDialog
+        }
         fullWidth
         fullScreen={belowLargeScreen}
         maxWidth={'lg'}
@@ -279,8 +292,21 @@ const ApprovalItemAction: React.FC<ApprovalItemActionProps> = ({
           setOpenApproveDialog(false);
           setOpenEditDialog(false);
           setOpenDocumentDialog(false);
+          setAttachDialog(false);
         }}
       >
+        {attachDialog && requisitionId && (
+          <AttachmentForm
+            readOnly
+            setAttachDialog={setAttachDialog}
+            attachment_sourceNo={
+              requisition?.requisitionNo ?? approval.requisition?.requisitionNo
+            }
+            attachmentable_type={'requisition'}
+            attachment_name={'Requisition'}
+            attachmentable_id={requisitionId}
+          />
+        )}
         {openApproveDialog && (
           <NextApproval
             requisition={requisition as Requisition}
@@ -311,6 +337,16 @@ const ApprovalItemAction: React.FC<ApprovalItemActionProps> = ({
           <VisibilityOutlined />
         </IconButton>
       </Tooltip>
+
+      {requisitionId && (
+        <Tooltip title='Attachments'>
+          <IconButton onClick={() => setAttachDialog(true)}>
+            <Badge badgeContent={requisitionAttachmentsCount} color='info'>
+              <AttachmentOutlined />
+            </Badge>
+          </IconButton>
+        </Tooltip>
+      )}
 
       {canEditOrDeleteDate &&
         !hideOtherActions &&

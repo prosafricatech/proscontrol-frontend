@@ -7,6 +7,7 @@ import PDFContent from '@/components/pdf/PDFContent';
 import purchaseServices from '@/components/procurement/purchases/purchase-services';
 import PurchaseOrderOnScreenPreview from '@/components/procurement/purchases/PurchaseOrderOnScreenPreview';
 import PurchaseOrderPDF from '@/components/procurement/purchases/PurchaseOrderPDF';
+import TabbedAttachmentsDialog from '@/components/filesShelf/attachments/TabbedAttachmentsDialog';
 import { FileExportGrid } from '@/components/sharedComponents/FileExportGrid';
 import PreviewTopBar from '@/components/sharedComponents/PreviewTopBar';
 import { PERMISSIONS } from '@/utilities/constants/permissions';
@@ -15,6 +16,7 @@ import { useJumboDialog } from '@jumbo/components/JumboDialog/hooks/useJumboDial
 import { useJumboTheme } from '@jumbo/components/JumboTheme/hooks';
 import { MenuItemProps } from '@jumbo/types';
 import {
+  AttachmentOutlined,
   DeleteOutlined,
   EditOutlined,
   HighlightOff,
@@ -199,6 +201,7 @@ const ApprovedPurchaseItemAction: React.FC<ApprovedPurchaseItemActionProps> = ({
   const { enqueueSnackbar } = useSnackbar();
   const [openEditDialog, setOpenEditDialog] = useState(false);
   const [openDocumentDialog, setOpenDocumentDialog] = useState(false);
+  const [attachDialog, setAttachDialog] = useState(false);
   const { checkOrganizationPermission, authOrganization } = useJumboAuth();
   const organization = authOrganization?.organization;
   const { theme } = useJumboTheme();
@@ -233,6 +236,7 @@ const ApprovedPurchaseItemAction: React.FC<ApprovedPurchaseItemActionProps> = ({
 
   const menuItems: MenuItemProps[] = [
     { icon: <VisibilityOutlined />, title: 'View', action: 'open' },
+    { icon: <AttachmentOutlined />, title: 'Attachments', action: 'attach' },
     ...(canEdit
       ? [{ icon: <EditOutlined />, title: 'Edit', action: 'edit' }]
       : []),
@@ -255,6 +259,9 @@ const ApprovedPurchaseItemAction: React.FC<ApprovedPurchaseItemActionProps> = ({
       case 'edit':
         setOpenEditDialog(true);
         break;
+      case 'attach':
+        setAttachDialog(true);
+        break;
       case 'delete':
         showDialog({
           title: 'Confirm Order',
@@ -275,7 +282,7 @@ const ApprovedPurchaseItemAction: React.FC<ApprovedPurchaseItemActionProps> = ({
   return (
     <>
       <Dialog
-        open={openDocumentDialog || openEditDialog}
+        open={openDocumentDialog || openEditDialog || attachDialog}
         scroll={belowLargeScreen || !openDocumentDialog ? 'body' : 'paper'}
         fullWidth
         fullScreen={belowLargeScreen}
@@ -295,6 +302,25 @@ const ApprovedPurchaseItemAction: React.FC<ApprovedPurchaseItemActionProps> = ({
             organization={organization}
             checkOrganizationPermission={checkOrganizationPermission}
             setOpenDocumentDialog={setOpenDocumentDialog}
+          />
+        )}
+        {attachDialog && (
+          <TabbedAttachmentsDialog
+            title={`Attachments For ${order.orderNo}`}
+            setOpen={setAttachDialog}
+            tabs={[
+              {
+                label: 'Purchase Order',
+                attachmentable_type: 'purchase_order',
+                attachmentable_id: order.id,
+              },
+              {
+                label: 'Requisition',
+                attachmentable_type: 'requisition',
+                attachmentable_id: approvedRequisition.requisition.id,
+                readOnly: true,
+              },
+            ]}
           />
         )}
       </Dialog>
