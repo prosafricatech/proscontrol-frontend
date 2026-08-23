@@ -12,6 +12,7 @@ import {
   DownloadOutlined,
   InfoOutlined,
   PreviewOutlined,
+  UndoOutlined,
 } from '@mui/icons-material';
 import { faMoneyBill1 } from '@fortawesome/free-regular-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -230,6 +231,20 @@ const PayrollRunItemAction = ({
       enqueueSnackbar(getErrorMessage(error), { variant: 'error' }),
   });
 
+  const { mutate: withdrawPayrollRun, isPending: isWithdrawing } = useMutation(
+    {
+      mutationFn: () => humanResourcesServices.withdrawPayrollRun(payrollRun.id),
+      onSuccess: () => {
+        invalidatePayrollRunQueries();
+        enqueueSnackbar('Payroll run withdrawn back to draft', {
+          variant: 'success',
+        });
+      },
+      onError: (error: any) =>
+        enqueueSnackbar(getErrorMessage(error), { variant: 'error' }),
+    }
+  );
+
   const { mutate: approveChainPayrollRun, isPending: isApprovingChain } =
     useMutation({
       mutationFn: () =>
@@ -290,6 +305,7 @@ const PayrollRunItemAction = ({
   const isPosted = status === 'posted';
   const isPartiallyPaid = status === 'partially_paid';
   const isPaid = status === 'paid';
+  const canWithdraw = isSubmitted && !((payrollRun?.approvals?.length ?? 0) > 0);
 
   const handleItemAction = (action: string) => {
     switch (action) {
@@ -350,6 +366,19 @@ const PayrollRunItemAction = ({
           variant: 'confirm',
         });
         break;
+      case 'withdraw':
+        showDialog({
+          title: 'Withdraw Submission',
+          content:
+            'This puts the run back to Draft so it can be corrected before re-submitting. Continue?',
+          onYes: () => {
+            hideDialog();
+            withdrawPayrollRun();
+          },
+          onNo: () => hideDialog(),
+          variant: 'confirm',
+        });
+        break;
       case 'export':
         enqueueSnackbar('Export started', { variant: 'info' });
         break;
@@ -372,6 +401,19 @@ const PayrollRunItemAction = ({
         <Tooltip title='Delete'>
           <IconButton size='small' onClick={() => handleItemAction('delete')}>
             <DeleteOutlined color='error' />
+          </IconButton>
+        </Tooltip>
+      )}
+
+      {!isFromPayrollPeriodsList && canWithdraw && (
+        <Tooltip title='Withdraw Submission'>
+          <IconButton
+            size='small'
+            color='warning'
+            onClick={() => handleItemAction('withdraw')}
+            disabled={isWithdrawing}
+          >
+            <UndoOutlined />
           </IconButton>
         </Tooltip>
       )}

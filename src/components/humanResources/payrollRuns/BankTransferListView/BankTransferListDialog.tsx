@@ -4,7 +4,6 @@ import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import PDFContent from '@/components/pdf/PDFContent';
 import { FileExportGrid } from '@/components/sharedComponents/FileExportGrid';
 import PreviewTopBar from '@/components/sharedComponents/PreviewTopBar';
-import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { useJumboTheme } from '@jumbo/components/JumboTheme/hooks';
 import { HighlightOff } from '@mui/icons-material';
 import {
@@ -25,9 +24,9 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material';
-import { useSnackbar } from 'notistack';
 import { useState } from 'react';
 import humanResourcesServices from '../../humanResourcesServices';
+import BankFileDownloadMenu from '../../bankFile/BankFileDownloadMenu';
 import { SalarySheetType } from '../salarySheetType';
 import BankTransferListDialogPDF from './BankTransferListDialogPDF';
 
@@ -42,7 +41,6 @@ const BankTransferListDialog = ({
   open = false,
   setOpen,
 }: BankTransferListDialogProps) => {
-  const { enqueueSnackbar } = useSnackbar();
   const theme = useTheme();
   const { theme: jumboTheme } = useJumboTheme();
   const belowLargeScreen = useMediaQuery(jumboTheme.breakpoints.down('lg'));
@@ -57,7 +55,6 @@ const BankTransferListDialog = ({
   const contrastText = organization.settings?.contrast_text || '#FFFFFF';
 
   const [showOnScreen, setShowOnScreen] = useState(true);
-  const [isExporting, setIsExporting] = useState(false);
   const [pdfKey, setPdfKey] = useState(0);
 
   const payrollRun = bankTransfer.run;
@@ -83,29 +80,19 @@ const BankTransferListDialog = ({
   const costCenter = bankTransfer.run.cost_center;
   const rows = bankTransfer.rows;
 
-  const exportedData = {};
-  const handlExcelExport = async () => {
-    setIsExporting(true);
-    try {
-      const response = await humanResourcesServices.bankTransferListExcel(
-        bankTransfer.run.id
-      );
-
-      // Create download link
-      const url = window.URL.createObjectURL(response);
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `Salary Sheet-${payrollPeriod}.xlsx`); // or use response headers
-      document.body.appendChild(link);
-      link.click();
-      // Cleanup
-      link.remove();
-      window.URL.revokeObjectURL(url);
-      setIsExporting(false);
-    } catch (error) {
-      enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
-      setIsExporting(false);
-    }
+  const handleDownloadBankFile = async (format: string) => {
+    const blob = await humanResourcesServices.salaryBankFile(
+      bankTransfer.run.id,
+      format
+    );
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `Salary Bank File - ${format}.xlsx`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
   };
 
   return (
@@ -120,9 +107,9 @@ const BankTransferListDialog = ({
         <PreviewTopBar
           fileExportGrid={
             <FileExportGrid
-              exportExcel
-              handlExcelExport={() => handlExcelExport()}
-              exportingExcel={isExporting}
+              startComponent={
+                <BankFileDownloadMenu onDownload={handleDownloadBankFile} />
+              }
               exportPdf
               handlePdf={() => {
                 setShowOnScreen((prev) => !prev);

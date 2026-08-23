@@ -18,6 +18,7 @@ import {
   PreviewOutlined,
   ReceiptLongOutlined,
   SendOutlined,
+  UndoOutlined,
 } from '@mui/icons-material';
 import {
   Alert,
@@ -55,6 +56,7 @@ interface PayrollRunActionsProps {
   isPosted: boolean;
   isPartiallyPaid: boolean;
   isPaid: boolean;
+  isCompleted: boolean;
   hasChain: boolean;
   payrollRunId: number;
   onAction: (action: string, data?: any) => void;
@@ -63,6 +65,9 @@ interface PayrollRunActionsProps {
   isApproving: boolean;
   isPosting: boolean;
   isCompleting: boolean;
+  isReversingComplete: boolean;
+  isWithdrawing: boolean;
+  isReversingTransactions: boolean;
   runLabel?: string;
   payrollRun?: any;
   previewRows?: any[]; // Add previewRows prop
@@ -106,6 +111,7 @@ export const PayrollRunActions = ({
   isPosted,
   isPartiallyPaid,
   isPaid,
+  isCompleted,
   hasChain,
   payrollRunId,
   onAction,
@@ -114,6 +120,9 @@ export const PayrollRunActions = ({
   isApproving,
   isPosting,
   isCompleting,
+  isReversingComplete,
+  isWithdrawing,
+  isReversingTransactions,
   runLabel = 'this run',
   payrollRun,
   previewRows = [], // Default to empty array
@@ -354,6 +363,48 @@ export const PayrollRunActions = ({
         break;
     }
   };
+  const handleReverseComplete = () => {
+    showDialog({
+      title: 'Revert to Approved',
+      content:
+        'This puts the run back to Approved so it can be corrected. No payment was ever created for this path, so nothing else changes. Continue?',
+      onYes: () => {
+        hideDialog();
+        onAction('reverse-complete');
+      },
+      onNo: () => hideDialog(),
+      variant: 'confirm',
+    });
+  };
+
+  const handleWithdraw = () => {
+    showDialog({
+      title: 'Withdraw Submission',
+      content:
+        'This puts the run back to Draft so it can be corrected before re-submitting. Continue?',
+      onYes: () => {
+        hideDialog();
+        onAction('withdraw');
+      },
+      onNo: () => hideDialog(),
+      variant: 'confirm',
+    });
+  };
+
+  const handleReverseTransactions = () => {
+    showDialog({
+      title: 'Reverse Posted Transactions',
+      content:
+        'This deletes the journal voucher posted to the GL and puts the run back to Approved so it can be corrected before re-posting. Continue?',
+      onYes: () => {
+        hideDialog();
+        onAction('reverse-transactions');
+      },
+      onNo: () => hideDialog(),
+      variant: 'confirm',
+    });
+  };
+
   const handleDirectApprove = () => {
     showDialog({
       title: 'Approve Payroll Run',
@@ -404,6 +455,7 @@ export const PayrollRunActions = ({
 
   const isDirectFlow = !payrollRun.approval_chain_id;
   const canDirectDecide = isDirectFlow && payrollRun.status === 'submitted';
+  const canWithdraw = isSubmitted && !((payrollRun?.approvals?.length ?? 0) > 0);
 
   return (
     <>
@@ -467,6 +519,24 @@ export const PayrollRunActions = ({
           </Tooltip>
         )}
 
+        {/* WITHDRAW SUBMISSION - back to draft, before any approval decision is recorded */}
+        {canWithdraw && (
+          <Tooltip title='Withdraw Submission'>
+            <IconButton
+              size='small'
+              onClick={handleWithdraw}
+              disabled={isWithdrawing}
+              color='warning'
+            >
+              {isWithdrawing ? (
+                <CircularProgress size={18} color='inherit' />
+              ) : (
+                <UndoOutlined fontSize='medium' />
+              )}
+            </IconButton>
+          </Tooltip>
+        )}
+
         {/* DIRECT APPROVE PAYROLL */}
         {canDirectDecide && (
           <>
@@ -500,6 +570,25 @@ export const PayrollRunActions = ({
                 <CircularProgress size={18} color='inherit' />
               ) : (
                 <ReceiptLongOutlined fontSize='medium' />
+              )}
+            </IconButton>
+          </Tooltip>
+        )}
+
+        {/* Undo Post Transactions — only while still 'posted' (nothing paid/
+             settled yet); deletes the journal voucher back to Approved. */}
+        {isPosted && orgHasSubscribedAccountsAndFinance && canPostJournal && (
+          <Tooltip title='Reverse Posted Transactions'>
+            <IconButton
+              size='small'
+              onClick={handleReverseTransactions}
+              disabled={isReversingTransactions}
+              color='warning'
+            >
+              {isReversingTransactions ? (
+                <CircularProgress size={18} color='inherit' />
+              ) : (
+                <UndoOutlined fontSize='medium' />
               )}
             </IconButton>
           </Tooltip>
@@ -552,6 +641,25 @@ export const PayrollRunActions = ({
                 <CircularProgress size={18} color='inherit' />
               ) : (
                 <DoneAllOutlined fontSize='small' />
+              )}
+            </IconButton>
+          </Tooltip>
+        )}
+
+        {/* Undo Complete — no Payment ever exists on this path, so it's a
+             plain status revert back to Approved. */}
+        {isCompleted && !orgHasSubscribedAccountsAndFinance && (
+          <Tooltip title='Revert to Approved'>
+            <IconButton
+              size='small'
+              onClick={handleReverseComplete}
+              disabled={isReversingComplete}
+              color='warning'
+            >
+              {isReversingComplete ? (
+                <CircularProgress size={18} color='inherit' />
+              ) : (
+                <UndoOutlined fontSize='small' />
               )}
             </IconButton>
           </Tooltip>

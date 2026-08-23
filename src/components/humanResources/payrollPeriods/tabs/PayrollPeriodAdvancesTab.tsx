@@ -1,6 +1,7 @@
 'use client';
 
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
+import { useJumboDialog } from '@jumbo/components/JumboDialog/hooks/useJumboDialog';
 import { PERMISSIONS } from '@/utilities/constants/permissions';
 import { MODULES } from '@/utilities/constants/modules';
 import { getErrorMessage } from '@/utilities/helpers/errorHandler';
@@ -16,6 +17,7 @@ import {
   InsertDriveFileOutlined,
   ReceiptLongOutlined,
   SearchOutlined,
+  UndoOutlined,
   UploadOutlined,
 } from '@mui/icons-material';
 import {
@@ -51,6 +53,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { useSnackbar } from 'notistack';
 import React, { ChangeEvent, useState } from 'react';
 import humanResourcesServices from '../../humanResourcesServices';
+import BankFileDownloadMenu from '../../bankFile/BankFileDownloadMenu';
 import AddAdvancesBatchDialog from '../advances/AddAdvancesBatchDialog';
 import AdvanceTransferListDialog from '../advances/AdvanceTransferListDialog';
 import { AdvanceSheetType } from '../advances/AdvanceSheetType';
@@ -77,6 +80,7 @@ interface PeriodAdvance {
   amount: number;
   remarks: string | null;
   paid_at: string | null;
+  payment_id: number | null;
   employee: AdvanceEmployee;
 }
 
@@ -120,6 +124,7 @@ const PayrollPeriodAdvancesTab = ({
   const theme = useTheme();
   const belowLargeScreen = useMediaQuery(theme.breakpoints.down('lg'));
   const { enqueueSnackbar } = useSnackbar();
+  const { showDialog, hideDialog } = useJumboDialog();
   const { organizationHasSubscribed, checkOrganizationPermission } =
     useJumboAuth();
   const canPayApprovedPayroll = checkOrganizationPermission(
@@ -255,6 +260,79 @@ const PayrollPeriodAdvancesTab = ({
     onError: (error: any) => enqueueSnackbar(getErrMsg(error), { variant: 'error' }),
   });
 
+  const { mutate: reverseAdvancesPayment, isPending: isReversingPayment } =
+    useMutation({
+      mutationFn: (paymentId: number) =>
+        humanResourcesServices.reverseAdvancesPayment({
+          id: payrollPeriodId,
+          payment_id: paymentId,
+        }),
+      onSuccess: () => {
+        refetchAdvances();
+        enqueueSnackbar('Advance payment reversed', { variant: 'success' });
+      },
+      onError: (error: any) =>
+        enqueueSnackbar(getErrMsg(error), { variant: 'error' }),
+    });
+
+  const { mutate: reverseAdvancesMarkPaid, isPending: isReversingMarkPaid } =
+    useMutation({
+      mutationFn: () =>
+        humanResourcesServices.reverseAdvancesMarkPaid(payrollPeriodId),
+      onSuccess: () => {
+        refetchAdvances();
+        enqueueSnackbar('Advances reverted to unpaid', { variant: 'success' });
+      },
+      onError: (error: any) =>
+        enqueueSnackbar(getErrMsg(error), { variant: 'error' }),
+    });
+
+  const handleReverseAdvancesPayment = () => {
+    const paidRow = advances.find((a) => a.paid_at && a.payment_id);
+    if (!paidRow?.payment_id) return;
+
+    showDialog({
+      title: 'Reverse Advance Payment',
+      content:
+        'This deletes the payment and its journals, and puts every advance it covered back to unpaid so the batch can be corrected and re-paid. Continue?',
+      onYes: () => {
+        hideDialog();
+        reverseAdvancesPayment(paidRow.payment_id!);
+      },
+      onNo: () => hideDialog(),
+      variant: 'confirm',
+    });
+  };
+
+  const handleReverseAdvancesMarkPaid = () => {
+    showDialog({
+      title: 'Undo Mark as Paid',
+      content:
+        'This puts this period\'s manually marked-paid advances back to unpaid so they can be corrected. Continue?',
+      onYes: () => {
+        hideDialog();
+        reverseAdvancesMarkPaid();
+      },
+      onNo: () => hideDialog(),
+      variant: 'confirm',
+    });
+  };
+
+  const handleDownloadBankFile = async (format: string) => {
+    const blob = await humanResourcesServices.advancesBankFile(
+      payrollPeriodId,
+      format
+    );
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `Advance Bank File - ${format}.xlsx`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  };
+
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     setFile(event.target.files?.[0] || null);
     setImportResult(null);
@@ -303,8 +381,10 @@ const PayrollPeriodAdvancesTab = ({
     return haystack.includes(q);
   });
 
-  const total = advances.reduce((sum, a) => sum + (a.amount || 0), 0);
+  const total = advances.reduce((sum, a) => sum + Number(a.amount || 0), 0);
   const hasUnpaid = advances.some((a) => !a.paid_at);
+  const hasPaidViaPayment = advances.some((a) => a.paid_at && a.payment_id);
+  const hasPaidManually = advances.some((a) => a.paid_at && !a.payment_id);
 
   return (
     <Box>
@@ -343,6 +423,10 @@ const PayrollPeriodAdvancesTab = ({
           >
             Generate Transfer Sheet
           </Button>
+          <BankFileDownloadMenu
+            onDownload={handleDownloadBankFile}
+            disabled={advances.length === 0}
+          />
           {canPayApprovedPayroll && (orgHasAccountsAndFinance ? (
             <Button
               variant='outlined'
@@ -376,6 +460,40 @@ const PayrollPeriodAdvancesTab = ({
               Mark Advances as Paid
             </Button>
           ))}
+          {canPayApprovedPayroll && orgHasAccountsAndFinance && hasPaidViaPayment && (
+            <Button
+              variant='outlined'
+              color='warning'
+              startIcon={<UndoOutlined />}
+              onClick={handleReverseAdvancesPayment}
+              disabled={isReversingPayment}
+              sx={{
+                borderRadius: 2,
+                textTransform: 'none',
+                fontWeight: 600,
+                width: { xs: '100%', sm: 'auto' },
+              }}
+            >
+              Reverse Payment
+            </Button>
+          )}
+          {canPayApprovedPayroll && !orgHasAccountsAndFinance && hasPaidManually && (
+            <Button
+              variant='outlined'
+              color='warning'
+              startIcon={<UndoOutlined />}
+              onClick={handleReverseAdvancesMarkPaid}
+              disabled={isReversingMarkPaid}
+              sx={{
+                borderRadius: 2,
+                textTransform: 'none',
+                fontWeight: 600,
+                width: { xs: '100%', sm: 'auto' },
+              }}
+            >
+              Undo Mark as Paid
+            </Button>
+          )}
           <Tooltip
             title={
               isPeriodLocked
