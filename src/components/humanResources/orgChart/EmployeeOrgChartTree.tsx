@@ -167,7 +167,8 @@ export default function EmployeeOrgChartTree() {
           },
         },
       ],
-    },
+    }, 
+    
   };
 
   return (
