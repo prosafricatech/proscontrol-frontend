@@ -1,6 +1,6 @@
 'use client';
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
-import AttachmentForm from '@/components/filesShelf/attachments/AttachmentForm';
+import TabbedAttachmentsDialog from '@/components/filesShelf/attachments/TabbedAttachmentsDialog';
 import { FileExportGrid } from '@/components/sharedComponents/FileExportGrid';
 import PreviewTopBar from '@/components/sharedComponents/PreviewTopBar';
 import { PERMISSIONS } from '@/utilities/constants/permissions';
@@ -20,6 +20,7 @@ import {
   VisibilityOutlined,
 } from '@mui/icons-material';
 import {
+  Badge,
   Box,
   Button,
   Dialog,
@@ -35,13 +36,14 @@ import {
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { useSnackbar } from 'notistack';
-import React, { lazy, useState } from 'react';
+import React, { lazy, useContext, useState } from 'react';
 import PDFContent from '../../../pdf/PDFContent';
 import purchaseServices from '../purchase-services';
 import PurchaseOrderOnScreenPreview from '../PurchaseOrderOnScreenPreview';
 import PurchaseOrderPDF from '../PurchaseOrderPDF';
 import PurchaseBillFormDialog from '../../grns/PurchaseBillFormDialog';
 import CloseOrReopenForm from './CloseOrReopenForm';
+import { listItemContext } from './PurchaseOrderListItem';
 import PurchaseGrnsReportOnScreen from './purchaseGrnsReport/PurchaseGrnsReportOnScreen';
 import PurchaseGrnsReportPDF from './purchaseGrnsReport/PurchaseGrnsReportPDF';
 const PurchaseOrderReceiveForm = lazy(
@@ -283,13 +285,29 @@ const DocumentDialog = ({
 };
 
 const AttachDialog = ({ order, setAttachDialog }) => {
+  const tabs = [
+    {
+      label: 'Purchase Order',
+      attachmentable_type: 'purchase_order',
+      attachmentable_id: order.id,
+    },
+    ...(order.requisition_id
+      ? [
+          {
+            label: 'Requisition',
+            attachmentable_type: 'requisition',
+            attachmentable_id: order.requisition_id,
+            readOnly: true,
+          },
+        ]
+      : []),
+  ];
+
   return (
-    <AttachmentForm
-      setAttachDialog={setAttachDialog}
-      attachment_sourceNo={order.orderNo}
-      attachmentable_type={'purchase_order'}
-      attachment_name={'Purchase Order'}
-      attachmentable_id={order.id}
+    <TabbedAttachmentsDialog
+      title={`Attachments For ${order.orderNo}`}
+      tabs={tabs}
+      setOpen={setAttachDialog}
     />
   );
 };
@@ -298,7 +316,8 @@ function PurchaseOrderListItemAction({ order }) {
   const { showDialog, hideDialog } = useJumboDialog();
   const { enqueueSnackbar } = useSnackbar();
   const [openEditDialog, setOpenEditDialog] = useState(false);
-  const [attachDialog, setAttachDialog] = useState(false);
+  const { poAttachDialog: attachDialog, setPoAttachDialog: setAttachDialog } =
+    useContext(listItemContext);
   const [openReceiveDialog, setOpenReceiveDialog] = useState(false);
   const [openDocumentDialog, setOpenDocumentDialog] = useState(false);
   const [openPurchasesGrnsReport, setOpenPurchasesGrnsReport] = useState(false);
@@ -494,7 +513,15 @@ function PurchaseOrderListItemAction({ order }) {
 
       <Tooltip title={`${order.orderNo} Attachments`}>
         <IconButton onClick={() => setAttachDialog(true)}>
-          <AttachmentOutlined />
+          <Badge
+            badgeContent={
+              (order.attachments_count || 0) +
+              (order.requisition_attachments_count || 0)
+            }
+            color='info'
+          >
+            <AttachmentOutlined />
+          </Badge>
         </IconButton>
       </Tooltip>
 

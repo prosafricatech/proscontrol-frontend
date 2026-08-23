@@ -187,27 +187,12 @@ function ReceiptFormDialogContent({
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
     },
     onError: (error: Error & { response?: any }) => {
-      const message = getErrorMessage(error);
-      setServerError(message);
-      enqueueSnackbar(message, {
+      if (error.response?.status === 400) {
+        setServerError(error.response?.data?.validation_errors);
+      }
+      enqueueSnackbar(getErrorMessage(error), {
         variant: 'error',
       });
-
-      // if (error.response) {
-      //   const validationErrors = error.response?.data?.validation_errors;
-      //   if (validationErrors?.currency_id?.[0]) {
-      //     setError('currency_id', {
-      //       type: 'manual',
-      //       message: validationErrors.currency_id[0],
-      //     });
-      //   }
-
-      //   if (error.response.status === 400 || error.response.status === 422) {
-      //     setServerError(validationErrors);
-      //   } else {
-      //     enqueueSnackbar(error.response?.data?.message, { variant: 'error' });
-      //   }
-      // }
     },
   });
 
@@ -219,26 +204,12 @@ function ReceiptFormDialogContent({
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
     },
     onError: (error: Error & { response?: any }) => {
-      const message = getErrorMessage(error);
-      setServerError(message);
-      enqueueSnackbar(message, {
+      if (error.response?.status === 400) {
+        setServerError(error.response?.data?.validation_errors);
+      }
+      enqueueSnackbar(getErrorMessage(error), {
         variant: 'error',
       });
-      // if (error.response) {
-      //   const validationErrors = error.response?.data?.validation_errors;
-      //   if (validationErrors?.currency_id?.[0]) {
-      //     setError('currency_id', {
-      //       type: 'manual',
-      //       message: validationErrors.currency_id[0],
-      //     });
-      //   }
-
-      //   if (error.response.status === 400 || error.response.status === 422) {
-      //     setServerError(validationErrors);
-      //   } else {
-      //     enqueueSnackbar(error.response?.data?.message, { variant: 'error' });
-      //   }
-      // }
     },
   });
 

@@ -3,6 +3,8 @@
 import { readableDate } from '@/app/helpers/input-sanitization-helpers';
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import organizationServices from '@/components/organizations/organizationServices';
+import PDFContent from '@/components/pdf/PDFContent';
+import { FileExportGrid } from '@/components/sharedComponents/FileExportGrid';
 import { PERMISSIONS } from '@/utilities/constants/permissions';
 import { PreviewOutlined, ReceiptLongOutlined, Verified } from '@mui/icons-material';
 import AddIcon from '@mui/icons-material/Add';
@@ -18,6 +20,7 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
+  DialogTitle,
   Button,
   Grid,
   IconButton,
@@ -39,6 +42,7 @@ import { getLoanApprovalDecision } from './loanApprovalUtils';
 import LoanRequestItemAction from './LoanRequestItemAction';
 import LoanRequestPreview from './LoanRequestPreview';
 import LoanStatement from './LoanStatement';
+import LoanStatementPDF from './LoanStatementPDF';
 import { LoanRequestType } from './LoanRequestType';
 
 interface User {
@@ -101,7 +105,8 @@ const LoanRequestsListItem = ({
 }: {
   loanRequest: LoanRequestType;
 }) => {
-  const { authOrganization, checkOrganizationPermission } = useJumboAuth();
+  const { authOrganization, authUser, checkOrganizationPermission } =
+    useJumboAuth();
   const organization = authOrganization && authOrganization?.organization;
   const canReadLoanDetails = checkOrganizationPermission(
     PERMISSIONS.LOANS_READ
@@ -113,6 +118,13 @@ const LoanRequestsListItem = ({
   const [activeTab, setActiveTab] = useState(0);
   const [openPreview, setOpenPreview] = useState(false);
   const [openStatement, setOpenStatement] = useState(false);
+  const [showStatementOnScreen, setShowStatementOnScreen] = useState(true);
+
+  const { data: statementData } = useQuery({
+    queryKey: ['loanStatement', loanRequest.id],
+    queryFn: () => humanResourcesServices.getLoanStatement(loanRequest.id),
+    enabled: openStatement,
+  });
 
   const { data: loanDetails, isLoading } = useQuery({
     queryKey: ['showLoanRequest', loanRequest.id],
@@ -282,8 +294,40 @@ const LoanRequestsListItem = ({
             scroll={belowLargeScreen ? 'body' : 'paper'}
             onClose={() => setOpenStatement(false)}
           >
+            <DialogTitle>
+              <Stack
+                direction='row'
+                justifyContent='flex-end'
+                alignItems='center'
+              >
+                <FileExportGrid
+                  exportPdf
+                  handlePdf={() =>
+                    setShowStatementOnScreen((prev) => !prev)
+                  }
+                />
+              </Stack>
+            </DialogTitle>
             <DialogContent>
-              {openStatement && <LoanStatement loanId={details.id} />}
+              {openStatement && showStatementOnScreen && (
+                <LoanStatement loanId={details.id} />
+              )}
+              {openStatement && !showStatementOnScreen && statementData && (
+                <PDFContent
+                  document={
+                    <LoanStatementPDF
+                      data={statementData}
+                      organization={organization}
+                      userName={authUser?.user?.name || 'ProsERP'}
+                    />
+                  }
+                  fileName={`Loan Statement - ${
+                    details.employee
+                      ? `${details.employee.first_name} ${details.employee.last_name}`
+                      : `Employee ${details.employee_id}`
+                  }`}
+                />
+              )}
             </DialogContent>
             <DialogActions>
               <Button size='small' onClick={() => setOpenStatement(false)}>

@@ -12,6 +12,7 @@ import {
   Chip,
   Divider,
   Grid,
+  IconButton,
   LinearProgress,
   ListItemText,
   Stack,
@@ -36,6 +37,7 @@ const PurchaseOrderListItem = ({ order }) => {
   const [selectedOrderGrn, setSelectedOrderGrn] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [attachDialog, setAttachDialog] = useState(false);
+  const [poAttachDialog, setPoAttachDialog] = useState(false);
   const [openDocumentDialog, setOpenDocumentDialog] = useState(false);
   const [openEditReceive, setOpenEditReceive] = React.useState(false);
 
@@ -50,6 +52,8 @@ const PurchaseOrderListItem = ({ order }) => {
       value={{
         attachDialog,
         setAttachDialog,
+        poAttachDialog,
+        setPoAttachDialog,
         purchaseOrderGrns,
         expanded,
         setExpanded,
@@ -84,6 +88,7 @@ const PurchaseOrderListItem = ({ order }) => {
               flexDirection: 'row-reverse',
               '.MuiAccordionSummary-content': {
                 alignItems: 'center',
+                minWidth: 0,
                 '&.Mui-expanded': {
                   margin: '10px 0',
                 },
@@ -109,9 +114,9 @@ const PurchaseOrderListItem = ({ order }) => {
               container
               spacing={1}
               alignItems='center'
-              sx={{ width: '100%', m: 0 }}
+              sx={{ width: '100%', m: 0, minWidth: 0 }}
             >
-              <Grid size={{ xs: 6, md: 2.5 }}>
+              <Grid size={{ xs: 12, md: 2.5 }}>
                 <ListItemText
                   primary={
                     <>
@@ -146,23 +151,35 @@ const PurchaseOrderListItem = ({ order }) => {
                   }
                 />
               </Grid>
-              <Grid size={{ xs: 6, md: 4.5 }}>
-                <Tooltip title={'Supplier'}>
-                  <Typography>{order.stakeholder.name}</Typography>
+              <Grid size={{ xs: 12, md: 4.5 }} sx={{ minWidth: 0 }}>
+                <Tooltip title={order.stakeholder.name}>
+                  <Typography noWrap>{order.stakeholder.name}</Typography>
                 </Tooltip>
                 {order.cost_centers.length > 0 && (
-                  <Tooltip title='Cost Centers'>
-                    <div>
-                      {order.cost_centers.map((cc) => (
+                  <Stack
+                    direction='row'
+                    flexWrap='wrap'
+                    gap={0.5}
+                    mt={0.5}
+                    sx={{ width: '100%', minWidth: 0 }}
+                  >
+                    {order.cost_centers.map((cc) => (
+                      <Tooltip key={cc.id} title={cc.name}>
                         <Chip
-                          key={cc.id}
                           size='small'
                           label={cc.name}
-                          style={{ margin: '1px' }}
+                          sx={{
+                            maxWidth: '100%',
+                            minWidth: 0,
+                            '& .MuiChip-label': {
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                            },
+                          }}
                         />
-                      ))}
-                    </div>
-                  </Tooltip>
+                      </Tooltip>
+                    ))}
+                  </Stack>
                 )}
               </Grid>
 
@@ -217,17 +234,25 @@ const PurchaseOrderListItem = ({ order }) => {
               </Grid>
 
               <Grid size={{ xs: 1, md: 1 }} textAlign={'right'}>
-                {order.attachments_count !== undefined &&
-                  order.attachments_count > 0 && (
-                    <Tooltip title='Attachments Count'>
-                      <Badge
-                        badgeContent={order.attachments_count}
-                        color='info'
-                      >
-                        <Attachment fontSize='small' />
-                      </Badge>
-                    </Tooltip>
-                  )}
+                <Tooltip title='Attachments'>
+                  <IconButton
+                    size='small'
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setPoAttachDialog(true);
+                    }}
+                  >
+                    <Badge
+                      badgeContent={
+                        (order.attachments_count || 0) +
+                        (order.requisition_attachments_count || 0)
+                      }
+                      color='info'
+                    >
+                      <Attachment fontSize='small' />
+                    </Badge>
+                  </IconButton>
+                </Tooltip>
               </Grid>
             </Grid>
             <Divider />

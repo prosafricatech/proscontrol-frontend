@@ -244,6 +244,7 @@ function PurchasesOrdersList() {
                                             <JumboSearch
                                                 onChange={handleOnKeywordChange}
                                                 value={queryOptions.queryParams.keyword}
+                                                placeholder="Search by order/requisition no, supplier, item..."
                                             />
                                         </Grid>
                                         <Grid size={{xs: 1, lg: 0.5}}>

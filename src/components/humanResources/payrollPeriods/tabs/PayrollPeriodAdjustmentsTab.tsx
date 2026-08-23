@@ -974,7 +974,7 @@ const PayrollPeriodAdjustmentsTab = ({
       );
     }
 
-    const total = items.reduce((sum, item) => sum + (item.amount || 0), 0);
+    const total = items.reduce((sum, item) => sum + Number(item.amount || 0), 0);
 
     const renderTableRows = (
       items: (PeriodAllowance | PeriodDeduction)[],
@@ -990,7 +990,7 @@ const PayrollPeriodAdjustmentsTab = ({
         return (
           <TableRow key={item.id} hover>
             <TableCell>
-              <Typography variant='body2'>
+              <Typography variant='body2' noWrap>
                 {employee?.employee_number || 'N/A'} —{' '}
                 {employee?.first_name || ''} {employee?.last_name || ''}
               </Typography>
@@ -1050,9 +1050,9 @@ const PayrollPeriodAdjustmentsTab = ({
       <TableContainer
         component={Paper}
         variant='outlined'
-        sx={{ borderRadius: 2 }}
+        sx={{ borderRadius: 2, overflowX: 'auto' }}
       >
-        <Table size='small'>
+        <Table size='small' sx={{ minWidth: 650 }}>
           <TableHead>
             <TableRow sx={{ bgcolor: isDark ? 'action.hover' : 'grey.50' }}>
               <TableCell>Employee</TableCell>
@@ -1109,15 +1109,15 @@ const PayrollPeriodAdjustmentsTab = ({
       );
     }
 
-    const totalHours = items.reduce((sum, item) => sum + (item.hours || 0), 0);
+    const totalHours = items.reduce((sum, item) => sum + Number(item.hours || 0), 0);
 
     return (
       <TableContainer
         component={Paper}
         variant='outlined'
-        sx={{ borderRadius: 2 }}
+        sx={{ borderRadius: 2, overflowX: 'auto' }}
       >
-        <Table size='small'>
+        <Table size='small' sx={{ minWidth: 750 }}>
           <TableHead>
             <TableRow sx={{ bgcolor: isDark ? 'action.hover' : 'grey.50' }}>
               <TableCell>Employee</TableCell>
@@ -1135,7 +1135,7 @@ const PayrollPeriodAdjustmentsTab = ({
               return (
                 <TableRow key={item.id} hover>
                   <TableCell>
-                    <Typography variant='body2'>
+                    <Typography variant='body2' noWrap>
                       {employee?.employee_number || 'N/A'} —{' '}
                       {employee?.first_name || ''} {employee?.last_name || ''}
                     </Typography>
@@ -1153,7 +1153,7 @@ const PayrollPeriodAdjustmentsTab = ({
                     />
                   </TableCell>
                   <TableCell>
-                    <Typography variant='body2'>
+                    <Typography variant='body2' noWrap>
                       {dayjs(item.date).format('DD MMM YYYY')}
                     </Typography>
                   </TableCell>
@@ -1245,15 +1245,15 @@ const PayrollPeriodAdjustmentsTab = ({
       );
     }
 
-    const totalHours = items.reduce((sum, item) => sum + (item.hours || 0), 0);
+    const totalHours = items.reduce((sum, item) => sum + Number(item.hours || 0), 0);
 
     return (
       <TableContainer
         component={Paper}
         variant='outlined'
-        sx={{ borderRadius: 2 }}
+        sx={{ borderRadius: 2, overflowX: 'auto' }}
       >
-        <Table size='small'>
+        <Table size='small' sx={{ minWidth: 650 }}>
           <TableHead>
             <TableRow sx={{ bgcolor: isDark ? 'action.hover' : 'grey.50' }}>
               <TableCell>Employee</TableCell>
@@ -1270,13 +1270,13 @@ const PayrollPeriodAdjustmentsTab = ({
               return (
                 <TableRow key={item.id} hover>
                   <TableCell>
-                    <Typography variant='body2'>
+                    <Typography variant='body2' noWrap>
                       {employee?.employee_number || 'N/A'} —{' '}
                       {employee?.first_name || ''} {employee?.last_name || ''}
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant='body2'>
+                    <Typography variant='body2' noWrap>
                       {dayjs(item.date).format('DD MMM YYYY')}
                     </Typography>
                   </TableCell>
@@ -1370,11 +1370,11 @@ const PayrollPeriodAdjustmentsTab = ({
     }
 
     const totalDays = items.reduce(
-      (sum, item) => sum + (item.days_bought || 0),
+      (sum, item) => sum + Number(item.days_bought || 0),
       0
     );
     const totalAmount = items.reduce(
-      (sum, item) => sum + (item.amount || 0),
+      (sum, item) => sum + Number(item.amount || 0),
       0
     );
 
@@ -1382,9 +1382,9 @@ const PayrollPeriodAdjustmentsTab = ({
       <TableContainer
         component={Paper}
         variant='outlined'
-        sx={{ borderRadius: 2 }}
+        sx={{ borderRadius: 2, overflowX: 'auto' }}
       >
-        <Table size='small'>
+        <Table size='small' sx={{ minWidth: 750 }}>
           <TableHead>
             <TableRow sx={{ bgcolor: isDark ? 'action.hover' : 'grey.50' }}>
               <TableCell>Employee</TableCell>
@@ -1402,7 +1402,7 @@ const PayrollPeriodAdjustmentsTab = ({
               return (
                 <TableRow key={item.id} hover>
                   <TableCell>
-                    <Typography variant='body2'>
+                    <Typography variant='body2' noWrap>
                       {employee?.employee_number || 'N/A'} —{' '}
                       {employee?.first_name || ''} {employee?.last_name || ''}
                     </Typography>

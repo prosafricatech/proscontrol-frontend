@@ -71,6 +71,7 @@ const PayrollRunsListItem = ({
   const isPosted = status === 'posted';
   const isPartiallyPaid = status === 'partially_paid';
   const isPaid = status === 'paid';
+  const isCompleted = status === 'completed';
   const hasChain = Boolean(
     payrollRun.approval_chain_id || payrollRun.approval_chain
   );
@@ -260,6 +261,50 @@ const PayrollRunsListItem = ({
       enqueueSnackbar(getErrorMessage(error), { variant: 'error' }),
   });
 
+  const { mutate: reverseCompletePayrollRun, isPending: isReversingComplete } =
+    useMutation({
+      mutationFn: () =>
+        humanResourcesServices.reverseCompletePayrollRun(payrollRun.id),
+      onSuccess: () => {
+        invalidatePayrollRunQueries();
+        enqueueSnackbar('Payroll run reverted to approved', {
+          variant: 'success',
+        });
+      },
+      onError: (error) =>
+        enqueueSnackbar(getErrorMessage(error), { variant: 'error' }),
+    });
+
+  const { mutate: withdrawPayrollRun, isPending: isWithdrawing } = useMutation(
+    {
+      mutationFn: () => humanResourcesServices.withdrawPayrollRun(payrollRun.id),
+      onSuccess: () => {
+        invalidatePayrollRunQueries();
+        enqueueSnackbar('Payroll run withdrawn back to draft', {
+          variant: 'success',
+        });
+      },
+      onError: (error) =>
+        enqueueSnackbar(getErrorMessage(error), { variant: 'error' }),
+    }
+  );
+
+  const {
+    mutate: reversePayrollRunTransactions,
+    isPending: isReversingTransactions,
+  } = useMutation({
+    mutationFn: () =>
+      humanResourcesServices.reversePayrollRunTransactions(payrollRun.id),
+    onSuccess: () => {
+      invalidatePayrollRunQueries();
+      enqueueSnackbar('Payroll transactions reversed; run reverted to approved', {
+        variant: 'success',
+      });
+    },
+    onError: (error) =>
+      enqueueSnackbar(getErrorMessage(error), { variant: 'error' }),
+  });
+
   const { mutate: postPayrollRun, isPending: isPosting } = useMutation({
     mutationFn: (data: any) => {
       return humanResourcesServices.postPayrollRunTransactions({
@@ -304,6 +349,15 @@ const PayrollRunsListItem = ({
         break;
       case 'complete':
         completePayrollRun();
+        break;
+      case 'reverse-complete':
+        reverseCompletePayrollRun();
+        break;
+      case 'withdraw':
+        withdrawPayrollRun();
+        break;
+      case 'reverse-transactions':
+        reversePayrollRunTransactions();
         break;
       case 'delete':
         deletePayrollRun();
@@ -436,6 +490,7 @@ const PayrollRunsListItem = ({
                 isPosted={isPosted}
                 isPartiallyPaid={isPartiallyPaid}
                 isPaid={isPaid}
+                isCompleted={isCompleted}
                 hasChain={hasChain}
                 payrollRunId={payrollRun.id}
                 payrollRun={payrollRun}
@@ -447,6 +502,9 @@ const PayrollRunsListItem = ({
                 isPosting={isPosting}
                 runLabel={runLabel}
                 isCompleting={isCompleting}
+                isReversingComplete={isReversingComplete}
+                isWithdrawing={isWithdrawing}
+                isReversingTransactions={isReversingTransactions}
                 selectedPayrollPeriod={selectedPayrollPeriod}
               />
 

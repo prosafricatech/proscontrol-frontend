@@ -199,32 +199,13 @@ const PaymentFormDialogContent: React.FC<PaymentFormDialogContentProps> = ({
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       setOpen(false);
     },
-    onError: (error: Error) => {
-      const message = getErrorMessage(error);
-      setServerError(message);
-      enqueueSnackbar(message, {
+    onError: (error: any) => {
+      if (error?.response?.status === 400) {
+        setServerError(error.response?.data?.validation_errors);
+      }
+      enqueueSnackbar(getErrorMessage(error), {
         variant: 'error',
       });
-
-      // if (error instanceof Error && 'response' in error) {
-      //   const axiosError = error as {
-      //     response?: { status?: number; data?: any };
-      //   };
-      //   const validationErrors = axiosError.response?.data?.validation_errors;
-      //   if (validationErrors?.currency_id?.[0]) {
-      //     setError('currency_id', {
-      //       type: 'manual',
-      //       message: validationErrors.currency_id[0],
-      //     });
-      //   }
-      //   if (axiosError.response?.status === 400 || axiosError.response?.status === 422) {
-      //     setServerError(validationErrors);
-      //   } else {
-      //     enqueueSnackbar(axiosError.response?.data?.message, {
-      //       variant: 'error',
-      //     });
-      //   }
-      // }
     },
   });
 
@@ -235,31 +216,13 @@ const PaymentFormDialogContent: React.FC<PaymentFormDialogContentProps> = ({
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       setOpen(false);
     },
-    onError: (error: Error) => {
-      const message = getErrorMessage(error);
-      setServerError(message);
-      enqueueSnackbar(message, {
+    onError: (error: any) => {
+      if (error?.response?.status === 400) {
+        setServerError(error.response?.data?.validation_errors);
+      }
+      enqueueSnackbar(getErrorMessage(error), {
         variant: 'error',
       });
-      // if (error instanceof Error && 'response' in error) {
-      //   const axiosError = error as {
-      //     response?: { status?: number; data?: any };
-      //   };
-      //   const validationErrors = axiosError.response?.data?.validation_errors;
-      //   if (validationErrors?.currency_id?.[0]) {
-      //     setError('currency_id', {
-      //       type: 'manual',
-      //       message: validationErrors.currency_id[0],
-      //     });
-      //   }
-      //   if (axiosError.response?.status === 400 || axiosError.response?.status === 422) {
-      //     setServerError(validationErrors);
-      //   } else {
-      //     enqueueSnackbar(axiosError.response?.data?.message, {
-      //       variant: 'error',
-      //     });
-      //   }
-      // }
     },
   });
 

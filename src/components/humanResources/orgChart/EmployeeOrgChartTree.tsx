@@ -1,28 +1,19 @@
 'use client';
 
 import { useLanguage } from '@/app/[lang]/contexts/LanguageContext';
+import { useHighcharts } from '@/app/providers/HighchartsProvider';
 import { BackdropSpinner } from '@/shared/ProgressIndicators/BackdropSpinner';
 import JumboCardQuick from '@jumbo/components/JumboCardQuick';
 import { Typography } from '@mui/material';
-import Highcharts from 'highcharts';
-import exportDataModule from 'highcharts/modules/export-data';
-import exportingModule from 'highcharts/modules/exporting';
-import offlineExportingModule from 'highcharts/modules/offline-exporting';
-import treegraphModule from 'highcharts/modules/treegraph';
-import treemapModule from 'highcharts/modules/treemap';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
 import { OrgChartNode, useEmployeeOrgChart } from './EmployeeOrgChartProvider';
 
 const HighchartsReact = dynamic(
-  () => import('highcharts-react-official').then((m) => m && (m.default ?? m)),
-  { ssr: false }
+  () => import('highcharts-react-official'),
+  { ssr: false, loading: () => <BackdropSpinner /> }
 );
 
-// Flattens the nested manager_id tree into the flat {id, parent} list
-// Highcharts' treegraph series needs — same technique as
-// TasksTreeView.jsx's flattenGroups(), just without the group/task duality.
 const flattenOrgChart = (
   nodes: OrgChartNode[] = [],
   parentId: string | null = null
@@ -36,51 +27,18 @@ const flattenOrgChart = (
       department: node.department?.name || '',
       employeeId: node.id,
     };
-
     return [flatNode, ...flattenOrgChart(node.children || [], flatId)];
   });
 };
 
 export default function EmployeeOrgChartTree() {
   const { orgChart, isLoading } = useEmployeeOrgChart();
-  const [modulesLoaded, setModulesLoaded] = useState(false);
+  const { Highcharts, isReady } = useHighcharts();
   const router = useRouter();
   const lang = useLanguage();
 
-  useEffect(() => {
-    let mounted = true;
-
-    const applyModule = (mod: any) => {
-      const init = mod && (mod.default ?? mod);
-      if (typeof init === 'function') {
-        init(Highcharts);
-      }
-    };
-
-    async function load() {
-      try {
-        (window as any).Highcharts = (window as any).Highcharts || Highcharts;
-
-        applyModule(treemapModule);
-        applyModule(treegraphModule);
-        applyModule(exportingModule);
-        applyModule(exportDataModule);
-        applyModule(offlineExportingModule);
-      } catch (err) {
-        console.error('Failed to load Highcharts modules:', err);
-      } finally {
-        if (mounted) setModulesLoaded(true);
-      }
-    }
-
-    if (typeof window !== 'undefined') load();
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  if (isLoading || !modulesLoaded) {
+  // Show loading states
+  if (isLoading || !isReady || !Highcharts) {
     return <BackdropSpinner />;
   }
 
@@ -130,10 +88,12 @@ export default function EmployeeOrgChartTree() {
         cursor: 'pointer',
         point: {
           events: {
-            click: function (this: any) {
-              router.push(
-                `/${lang}/humanResources/employees/${this.employeeId}`
-              );
+            click: function (this: any, event: any) {
+              const target = event?.target as Element | undefined;
+              if (target?.closest?.('.highcharts-collapse-button')) {
+                return;
+              }
+              router.push(`/${lang}/humanResources/employees/${this.employeeId}`);
             },
           },
         },

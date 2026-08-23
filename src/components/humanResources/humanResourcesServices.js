@@ -1107,12 +1107,28 @@ humanResourcesServices.advanceTransferSheetExcel = async (periodId) => {
     });
     return data;
 }
+humanResourcesServices.advancesBankFile = async (periodId, format) => {
+    const { data } = await axios.post(
+        `/api/humanResources/payrollPeriods/advances/${periodId}/bank-file`,
+        {},
+        { params: { format }, responseType: 'blob' }
+    );
+    return data;
+}
 humanResourcesServices.payAdvances = async ({ id, ...payload }) => {
     const { data } = await axios.post(`/api/humanResources/payrollPeriods/advances/${id}/pay`, payload);
     return data;
 }
 humanResourcesServices.markAdvancesPaid = async ({ id, ...payload }) => {
     const { data } = await axios.post(`/api/humanResources/payrollPeriods/advances/${id}/mark-paid`, payload);
+    return data;
+}
+humanResourcesServices.reverseAdvancesPayment = async ({ id, ...payload }) => {
+    const { data } = await axios.post(`/api/humanResources/payrollPeriods/advances/${id}/reverse-payment`, payload);
+    return data;
+}
+humanResourcesServices.reverseAdvancesMarkPaid = async (id) => {
+    const { data } = await axios.post(`/api/humanResources/payrollPeriods/advances/${id}/reverse-mark-paid`);
     return data;
 }
 
@@ -1198,6 +1214,12 @@ humanResourcesServices.approvePayrollRun = async (id) => {
     return data;
 }
 
+// Withdraw a submitted run back to draft (before any approval decision is recorded)
+humanResourcesServices.withdrawPayrollRun = async (id) => {
+    const { data } = await axios.post(`/api/humanResources/payrollRuns/${id}/withdraw`);
+    return data;
+}
+
 // Chain Approval
 humanResourcesServices.addPayrollRunApproval = async (approval) => {
     const { data } = await axios.post('/api/humanResources/payrollRunApprovals', approval);
@@ -1211,6 +1233,12 @@ humanResourcesServices.deletePayrollRunApproval = async (id) => {
 
 humanResourcesServices.updatePayrollRunApproval = async (id, payload) => {
     const { data } = await axios.put(`/api/humanResources/payrollRunApprovals/${id}`, payload);
+    return data;
+}
+
+// Undo Post Transactions - deletes the Journal Voucher, back to approved
+humanResourcesServices.reversePayrollRunTransactions = async (id) => {
+    const { data } = await axios.post(`/api/humanResources/payrollRuns/${id}/reverse-transactions`);
     return data;
 }
 
@@ -1280,6 +1308,10 @@ humanResourcesServices.completePayrollRun = async (id) => {
     const { data } = await axios.post(`/api/humanResources/payrollRuns/${id}/complete`);
     return data;
 }
+humanResourcesServices.reverseCompletePayrollRun = async (id) => {
+    const { data } = await axios.post(`/api/humanResources/payrollRuns/${id}/reverse-complete`);
+    return data;
+}
 
 // salary sheet (Bnk transfer list)
 humanResourcesServices.bankTransferList = async (id) => {
@@ -1291,6 +1323,28 @@ humanResourcesServices.bankTransferListExcel = async (id) => {
     const { data } = await axios.post(`/api/humanResources/payrollRuns/${id}/salary-sheet`, {}, {
         responseType: 'blob',
     });
+    return data;
+}
+
+// ===== bank disbursement file formats ===== //
+humanResourcesServices.getBankFileFormats = async () => {
+    const { data } = await axios.get('/api/humanResources/bankFileFormats');
+    return data;
+}
+humanResourcesServices.getBankFileFormatSettings = async (code) => {
+    const { data } = await axios.get(`/api/humanResources/bankFileFormats/${code}`);
+    return data;
+}
+humanResourcesServices.saveBankFileFormatSettings = async (code, settings) => {
+    const { data } = await axios.put(`/api/humanResources/bankFileFormats/${code}`, { settings });
+    return data;
+}
+humanResourcesServices.salaryBankFile = async (runId, format) => {
+    const { data } = await axios.post(
+        `/api/humanResources/payrollRuns/${runId}/bank-file`,
+        {},
+        { params: { format }, responseType: 'blob' }
+    );
     return data;
 }
 
