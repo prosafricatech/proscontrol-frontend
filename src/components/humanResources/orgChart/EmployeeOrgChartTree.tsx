@@ -130,7 +130,14 @@ export default function EmployeeOrgChartTree() {
         cursor: 'pointer',
         point: {
           events: {
-            click: function (this: any) {
+            // Highcharts' own collapse/expand button lives inside the same
+            // point graphic and fires this same 'click' event — without this
+            // guard, toggling collapse also navigated to the employee profile.
+            click: function (this: any, event: any) {
+              const target = event?.target as Element | undefined;
+              if (target?.closest?.('.highcharts-collapse-button')) {
+                return;
+              }
               router.push(
                 `/${lang}/humanResources/employees/${this.employeeId}`
               );

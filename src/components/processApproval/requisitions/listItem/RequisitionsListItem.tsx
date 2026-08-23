@@ -8,13 +8,15 @@ import {
   AccordionSummary,
   Badge,
   Chip,
+  Dialog,
   Grid,
+  IconButton,
   Stack,
-  Tab,
-  Tabs,
   Tooltip,
   Typography,
+  useMediaQuery,
 } from '@mui/material';
+import { useJumboTheme } from '@jumbo/components/JumboTheme/hooks';
 import React, { useState } from 'react';
 import AttachmentForm from '../../../filesShelf/attachments/AttachmentForm';
 import { Requisition } from '../../RequisitionType';
@@ -31,17 +33,15 @@ interface RequisitionsListItemProps {
 
 const RequisitionsListItem = ({ requisition }: RequisitionsListItemProps) => {
   const [expanded, setExpanded] = useState<Record<number, boolean>>({});
-  const [activeTab, setActiveTab] = useState(0);
+  const [attachDialog, setAttachDialog] = useState(false);
+  const { theme } = useJumboTheme();
+  const belowLargeScreen = useMediaQuery(theme.breakpoints.down('lg'));
 
   const handleChange = (id: number) => {
     setExpanded((prevExpanded) => ({
       ...prevExpanded,
       [id]: !prevExpanded[id],
     }));
-  };
-
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setActiveTab(newValue);
   };
 
   const processConfig = processTypeConfig[
@@ -73,6 +73,7 @@ const RequisitionsListItem = ({ requisition }: RequisitionsListItemProps) => {
           flexDirection: 'row-reverse',
           '.MuiAccordionSummary-content': {
             alignItems: 'center',
+            minWidth: 0,
             '&.Mui-expanded': {
               margin: '10px 0',
             },
@@ -101,6 +102,7 @@ const RequisitionsListItem = ({ requisition }: RequisitionsListItemProps) => {
           width={'100%'}
           paddingLeft={1}
           paddingRight={1}
+          sx={{ minWidth: 0 }}
         >
           <Grid size={{ xs: 12, md: 2 }}>
             <Tooltip title='Requistion No.'>
@@ -112,19 +114,27 @@ const RequisitionsListItem = ({ requisition }: RequisitionsListItemProps) => {
               </Typography>
             </Tooltip>
           </Grid>
-          <Grid size={{ xs: 12, md: 3 }}>
+          <Grid size={{ xs: 12, md: 3 }} sx={{ minWidth: 0 }}>
             <Tooltip title='Process'>
               <Typography variant='body2'>{processConfig.label}</Typography>
             </Tooltip>
-            <Tooltip title={'Cost Center'}>
-              <Typography
-                variant='caption'
-                color='text.secondary'
-                sx={{ display: 'block', mt: 0.5 }}
-              >
-                {requisition.cost_center?.name || '-'}
-              </Typography>
-            </Tooltip>
+            {requisition.cost_center?.name && (
+              <Tooltip title={requisition.cost_center.name}>
+                <Chip
+                  size='small'
+                  label={requisition.cost_center.name}
+                  sx={{
+                    mt: 0.5,
+                    maxWidth: '100%',
+                    minWidth: 0,
+                    '& .MuiChip-label': {
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    },
+                  }}
+                />
+              </Tooltip>
+            )}
           </Grid>
           <Grid size={{ xs: 12, md: 4, lg: 4 }}>
             <Tooltip title={'Remarks'}>
@@ -178,16 +188,22 @@ const RequisitionsListItem = ({ requisition }: RequisitionsListItemProps) => {
               justifyContent='flex-end'
               alignItems='center'
             >
-              {!!requisition?.attachments_count && (
-                <Tooltip title='Attachments Count'>
+              <Tooltip title='Attachments'>
+                <IconButton
+                  size='small'
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setAttachDialog(true);
+                  }}
+                >
                   <Badge
                     badgeContent={requisition.attachments_count}
                     color='info'
                   >
                     <Attachment fontSize='small' />
                   </Badge>
-                </Tooltip>
-              )}
+                </IconButton>
+              </Tooltip>
               {(requisition.process_type === 'PAYMENT'
                 ? requisition.is_fully_paid
                 : requisition.process_type === 'MATERIAL'
@@ -219,58 +235,44 @@ const RequisitionsListItem = ({ requisition }: RequisitionsListItemProps) => {
           <Grid size={{ xs: 12 }} textAlign={'end'}>
             <RequisitionsItemAction requisition={requisition} />
           </Grid>
-          <Grid size={{ xs: 12 }}>
-            <Tabs
-              value={activeTab}
-              onChange={handleTabChange}
-              variant='scrollable'
-              scrollButtons='auto'
-              allowScrollButtonsMobile
-              sx={{ display: 'flex', justifyContent: 'center' }}
-            >
-              <Tab label='Approvals' />
-              <Tab label='Attachments' />
-            </Tabs>
-          </Grid>
         </Grid>
 
         <Grid container>
-          {activeTab === 0 && (
-            <Grid
-              container
-              spacing={1}
-              justifyContent='center'
-              width={'100%'}
-              marginTop={1}
-            >
-              <Grid size={{ xs: 12 }}>
-                <ApprovalsTab
-                  isExpanded={expanded[requisition.id]}
-                  requisition={requisition}
-                />
-              </Grid>
+          <Grid
+            container
+            spacing={1}
+            justifyContent='center'
+            width={'100%'}
+            marginTop={1}
+          >
+            <Grid size={{ xs: 12 }}>
+              <ApprovalsTab
+                isExpanded={expanded[requisition.id]}
+                requisition={requisition}
+              />
             </Grid>
-          )}
-          {activeTab === 1 && (
-            <Grid
-              container
-              spacing={1}
-              justifyContent='center'
-              marginTop={1}
-              width={'100%'}
-            >
-              <Grid size={{ xs: 12 }}>
-                <AttachmentForm
-                  hideFeatures={true}
-                  attachment_name={'Requisition'}
-                  attachmentable_type={'requisition'}
-                  attachmentable_id={requisition.id}
-                />
-              </Grid>
-            </Grid>
-          )}
+          </Grid>
         </Grid>
       </AccordionDetails>
+
+      <Dialog
+        open={attachDialog}
+        onClose={() => setAttachDialog(false)}
+        fullWidth
+        fullScreen={belowLargeScreen}
+        maxWidth='md'
+        scroll={belowLargeScreen ? 'body' : 'paper'}
+      >
+        {attachDialog && (
+          <AttachmentForm
+            setAttachDialog={setAttachDialog}
+            attachment_sourceNo={requisition.requisitionNo}
+            attachment_name={'Requisition'}
+            attachmentable_type={'requisition'}
+            attachmentable_id={requisition.id}
+          />
+        )}
+      </Dialog>
     </Accordion>
   );
 };

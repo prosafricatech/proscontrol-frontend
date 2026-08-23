@@ -4,6 +4,7 @@ import {
   Divider,
   Grid,
   IconButton,
+  Stack,
   TextField,
   Tooltip,
   Typography,
@@ -16,22 +17,50 @@ function ItemsTab({
   onRemoveItem,
   onResetItems,
   canReset,
+  onAutofillQuantities,
+  onClearQuantities,
   errors, register, setValue, watch
 }) {
 
   return (
     <>
-      {canReset && (
-        <Button
-          variant='outlined'
-          color='secondary'
-          size='small'
-          style={{ marginBottom: 12 }}
-          onClick={onResetItems}
-        >
-          Reset Items
-        </Button>
-      )}
+      <Stack
+        direction='row'
+        spacing={1}
+        sx={{ mb: 1.5 }}
+        flexWrap='wrap'
+        justifyContent='flex-end'
+      >
+        <Tooltip title='Fill every item with its full unreceived quantity, for shipments received exactly as ordered'>
+          <Button
+            variant='outlined'
+            size='small'
+            onClick={onAutofillQuantities}
+          >
+            Autofill All
+          </Button>
+        </Tooltip>
+        <Tooltip title='Set every item to 0 quantity, then fill in only the items actually received in this shipment'>
+          <Button
+            variant='outlined'
+            color='secondary'
+            size='small'
+            onClick={onClearQuantities}
+          >
+            Clear All
+          </Button>
+        </Tooltip>
+        {canReset && (
+          <Button
+            variant='outlined'
+            color='secondary'
+            size='small'
+            onClick={onResetItems}
+          >
+            Reset Items
+          </Button>
+        )}
+      </Stack>
       {purchase_order_items?.map((item, index) => {
         return (
           <React.Fragment key={item.id}>
