@@ -138,10 +138,14 @@ export default function EmployeeOrgChartTree() {
   // and same-coloured neighbours merge into one continuous pill.
   const NODE_SLOT = 210;
   const NODE_BOX = 120;
+  // Levels stack vertically (siblings spread horizontally within a row),
+  // so this is what actually controls the level-to-level gap — a quarter
+  // of NODE_SLOT, tightening that gap without touching sibling spacing.
+  const LEVEL_SLOT = NODE_SLOT * 0.25;
 
   const roomyUnit = Math.max(maxDepth, maxLevelWidth);
   const chartWidth = Math.max(1000, roomyUnit * NODE_SLOT + 300);
-  const chartHeight = Math.max(700, roomyUnit * NODE_SLOT + 300);
+  const chartHeight = Math.max(700, roomyUnit * LEVEL_SLOT + 300);
 
   const chartOptions = {
     chart: {
