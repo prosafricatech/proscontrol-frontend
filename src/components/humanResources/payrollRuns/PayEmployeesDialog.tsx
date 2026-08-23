@@ -260,7 +260,7 @@ const PayEmployeesDialog = ({
                 </Button>
               </Stack>
               <TableContainer sx={{ overflowX: 'auto' }}>
-              <Table size='small'>
+              <Table size='small' sx={{ minWidth: 480 }}>
                 <TableHead>
                   <TableRow>
                     <TableCell padding='checkbox'>
@@ -294,8 +294,10 @@ const PayEmployeesDialog = ({
                         />
                       </TableCell>
                       <TableCell>
-                        <Typography variant='body2'>{row.name}</Typography>
-                        <Typography variant='caption' color='text.secondary'>
+                        <Typography variant='body2' noWrap>
+                          {row.name}
+                        </Typography>
+                        <Typography variant='caption' color='text.secondary' noWrap component='div'>
                           {row.employee_number}
                           {row.paid_amount > 0 && (
                             <Chip
@@ -314,6 +316,7 @@ const PayEmployeesDialog = ({
                       <TableCell align='right'>
                         <TextField
                           size='small'
+                          sx={{ minWidth: 110 }}
                           value={
                             amounts[row.payslip_id]
                               ? Number(amounts[row.payslip_id]).toLocaleString()
