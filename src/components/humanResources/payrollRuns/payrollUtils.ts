@@ -3,6 +3,38 @@
 export const formatMoney = (value: number) =>
   Number(value || 0).toLocaleString();
 
+const MONTH_NAMES = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
+
+/** "July 2026" from a payslip's period — whether it arrived pre-formatted
+ * (`payroll_period` string) or as the run's own `{ year, month }` object. */
+export const formatPayslipPeriod = (payslip: any): string => {
+  if (typeof payslip?.payroll_period === 'string' && payslip.payroll_period) {
+    return payslip.payroll_period;
+  }
+
+  const period = payslip?.payroll_period || payslip?.run?.period;
+  const year = period?.year;
+  const month = period?.month;
+
+  if (!year || !month) return '-';
+
+  const monthName = month >= 1 && month <= 12 ? MONTH_NAMES[month - 1] : month;
+  return `${monthName} ${year}`;
+};
+
 export const getEmployeeName = (employee: any) => {
   if (!employee) return '';
   return (

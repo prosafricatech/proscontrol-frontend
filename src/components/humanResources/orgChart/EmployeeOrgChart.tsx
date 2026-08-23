@@ -21,7 +21,9 @@ const EmployeeOrgChartTree = dynamic(() => import('./EmployeeOrgChartTree'), {
 });
 
 export default function EmployeeOrgChart() {
-  const { checkOrganizationPermission, organizationHasSubscribed } = useJumboAuth();
+  const { checkOrganizationPermission, organizationHasSubscribed, authOrganization } =
+    useJumboAuth() as any;
+  const organizationName = authOrganization?.organization?.name;
 
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
@@ -41,10 +43,15 @@ export default function EmployeeOrgChart() {
   return (
     <EmployeeOrgChartProvider>
       <Typography variant='h4' sx={{ mb: 2 }}>
-        Org Chart
+        {organizationName
+          ? `${organizationName} Organization Chart`
+          : 'Organization Chart'}
       </Typography>
       <Grid container spacing={2}>
-        <Grid size={12}>
+        {/* minWidth:0 overrides Grid's flex-item default of min-width:auto —
+            without it, a wide org chart stretches this whole grid item (and
+            the page) instead of scrolling within its own box below. */}
+        <Grid size={12} sx={{ minWidth: 0 }}>
           <EmployeeOrgChartTree />
         </Grid>
       </Grid>

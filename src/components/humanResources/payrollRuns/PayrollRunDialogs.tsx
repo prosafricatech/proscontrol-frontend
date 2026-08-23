@@ -31,7 +31,7 @@ import {
   useMediaQuery,
 } from '@mui/material';
 import { Suspense, useState } from 'react';
-import { formatMoney, getEmployeeName } from './payrollUtils';
+import { formatMoney, formatPayslipPeriod, getEmployeeName } from './payrollUtils';
 import PayslipPDF from './PayslipPDF';
 
 interface SimulationDialogProps {
@@ -304,6 +304,11 @@ export const PayslipViewDialog = ({
                 ? getEmployeeName(payslip.employee || payslip)
                 : 'Employee'}
             </Typography>
+            {payslip && (
+              <Typography variant='caption' color='text.secondary' component='div'>
+                {formatPayslipPeriod(payslip)}
+              </Typography>
+            )}
           </DialogTitle>
           <DialogContent>
             {payslip ? (

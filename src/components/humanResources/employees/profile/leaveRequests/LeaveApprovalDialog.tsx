@@ -3,6 +3,7 @@
 import { sanitizedNumber } from '@/app/helpers/input-sanitization-helpers';
 import { LoadingButton } from '@mui/lab';
 import {
+  Alert,
   Button,
   Dialog,
   DialogActions,
@@ -110,6 +111,13 @@ const LeaveApprovalDialog = ({
   const queryClient = useQueryClient();
   const pendingLevel = getNextPendingLeaveLevel(leaveRequest);
 
+  const balance = leaveRequest.leave_balance;
+  const remainingDays = balance?.remaining_days ?? null;
+  const wouldExceedBalance =
+    balance?.has_allocation &&
+    daysApproved !== '' &&
+    Number(daysApproved) > (remainingDays ?? 0);
+
   useEffect(() => {
     if (!open) return;
 
@@ -200,6 +208,25 @@ const LeaveApprovalDialog = ({
       <DialogTitle>{isEditMode ? 'Edit' : ''} Leave Approval</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
+          {balance && (
+            <Alert severity={balance.has_allocation ? 'info' : 'warning'}>
+              {balance.has_allocation ? (
+                <>
+                  Balance for {balance.year}: <strong>{balance.remaining_days}</strong>{' '}
+                  day{balance.remaining_days === 1 ? '' : 's'} remaining ({balance.used_days}{' '}
+                  used of {balance.allocated_days} allocated), before this request.
+                </>
+              ) : (
+                <>No leave allocation found for {balance.year} — nothing to grant against.</>
+              )}
+            </Alert>
+          )}
+          {wouldExceedBalance && (
+            <Alert severity='error'>
+              Approving {daysApproved} day{Number(daysApproved) === 1 ? '' : 's'} exceeds the
+              requester&apos;s remaining balance of {remainingDays}.
+            </Alert>
+          )}
           <TextField
             label='Days Approved'
             size='small'
@@ -253,6 +280,7 @@ const LeaveApprovalDialog = ({
         </LoadingButton>
         <LoadingButton
           loading={isSubmitting}
+          disabled={wouldExceedBalance}
           variant='contained'
           color='success'
           size='small'

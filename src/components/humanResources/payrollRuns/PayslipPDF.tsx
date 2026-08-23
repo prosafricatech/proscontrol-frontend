@@ -4,7 +4,7 @@ import React from 'react';
 import PageFooter from '../../pdf/PageFooter';
 import pdfStyles from '../../pdf/pdf-styles';
 import PdfLogo from '../../pdf/PdfLogo';
-import { getEmployeeName } from './payrollUtils';
+import { formatPayslipPeriod, getEmployeeName } from './payrollUtils';
 
 interface PayslipPDFProps {
   payslip: any;
@@ -33,11 +33,7 @@ const PayslipPDF: React.FC<PayslipPDFProps> = ({
   const employeeNo =
     payslip?.employee?.employee_number || payslip?.employee_number || 'N/A';
 
-  const period =
-    payslip?.payroll_period ||
-    (payslip?.run?.period
-      ? `${payslip.run.period.year} - ${payslip.run.period.month}`
-      : '-');
+  const period = formatPayslipPeriod(payslip);
 
   // 80mm Thermal Version
   const PDF80mm = () => (
