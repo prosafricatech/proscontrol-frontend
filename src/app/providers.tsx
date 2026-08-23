@@ -17,6 +17,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { BackdropSpinner } from '@/shared/ProgressIndicators/BackdropSpinner';
 import { SpinnerProvider } from '@/shared/ProgressIndicators/SpinnerContext';
 import { VFDProvider } from '@/components/vfd/VFDProvider';
+import { HighchartsProvider } from './providers/HighchartsProvider';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient({
@@ -39,14 +40,16 @@ export function Providers({ children }: { children: React.ReactNode }) {
                   <JumboTheme init={CONFIG.THEME}>
                     <CssBaseline />
                     <SpinnerProvider>
-                      <JumboDialogProvider>
-                        <AuthInitializer>
-                          <JumboDialog />
-                            <Suspense fallback={<BackdropSpinner />}>
-                              {children}
-                            </Suspense>
-                        </AuthInitializer>
-                      </JumboDialogProvider>
+                      <HighchartsProvider>
+                        <JumboDialogProvider>
+                          <AuthInitializer>
+                            <JumboDialog />
+                              <Suspense fallback={<BackdropSpinner />}>
+                                {children}
+                              </Suspense>
+                          </AuthInitializer>
+                        </JumboDialogProvider>
+                      </HighchartsProvider>
                     </SpinnerProvider>
                   </JumboTheme>
                 </JumboConfigProvider>
