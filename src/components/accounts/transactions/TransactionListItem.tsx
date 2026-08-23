@@ -1,21 +1,30 @@
 import { readableDate } from '@/app/helpers/input-sanitization-helpers';
+import AttachmentForm from '@/components/filesShelf/attachments/AttachmentForm';
 import SaleInvoiceAdjustmentItemAction from '@/components/pos/counter/salesListItem/invoice/saleAdjustment/SaleInvoiceAdjustmentItemAction';
+import { useJumboTheme } from '@jumbo/components/JumboTheme/hooks';
 import JumboChipsGroup from '@jumbo/components/JumboChipsGroup/JumboChipsGroup';
 import { Attachment } from '@mui/icons-material';
 import {
   Badge,
   Box,
+  Dialog,
   Grid,
+  IconButton,
   ListItemText,
   Stack,
   Tooltip,
   Typography,
+  useMediaQuery,
 } from '@mui/material';
+import { useState } from 'react';
 import JournalItemAction from './journals/JournalItemAction';
 import PaymentItemAction from './payments/PaymentItemAction';
 import ReceiptItemAction from './receipts/ReceiptItemAction';
 import TransferItemAction from './tranfers/TransferItemAction';
 import { Transaction, TransactionTypes } from './TransactionTypes';
+
+const attachmentableTypeFor = (transaction: Transaction) =>
+  transaction.type === 'transfer' ? 'fund_transfer' : transaction.type;
 
 function TransactionListItem({
   transaction,
@@ -24,6 +33,10 @@ function TransactionListItem({
   transaction: Transaction;
   type: TransactionTypes;
 }) {
+  const [attachDialog, setAttachDialog] = useState(false);
+  const { theme } = useJumboTheme();
+  const belowLargeScreen = useMediaQuery(theme.breakpoints.down('lg'));
+
   const SecondaryAction = () => {
     if (type === 'payments') {
       return <PaymentItemAction transaction={transaction} />;
@@ -176,20 +189,49 @@ function TransactionListItem({
         </Tooltip>
       </Grid>
       <Grid size={{ xs: 2, md: 1, lg: 0.5 }}>
-        {transaction.attachments_count !== undefined &&
-          transaction.attachments_count > 0 && (
-            <Tooltip title='Attachments Count'>
+        {(type === 'payments' ||
+          type === 'receipts' ||
+          type === 'transfers' ||
+          type === 'journal_vouchers') && (
+          <Tooltip title='Attachments'>
+            <IconButton
+              size='small'
+              onClick={(event) => {
+                event.stopPropagation();
+                setAttachDialog(true);
+              }}
+            >
               <Badge badgeContent={transaction.attachments_count} color='info'>
                 <Attachment fontSize='small' />
               </Badge>
-            </Tooltip>
-          )}
+            </IconButton>
+          </Tooltip>
+        )}
       </Grid>
       <Grid size={{ xs: 1, md: 1, lg: 0.5 }}>
         <Box display={'flex'} flexDirection={'row'} justifyContent={'flex-end'}>
           <SecondaryAction />
         </Box>
       </Grid>
+
+      <Dialog
+        open={attachDialog}
+        onClose={() => setAttachDialog(false)}
+        fullWidth
+        fullScreen={belowLargeScreen}
+        maxWidth='md'
+        scroll={belowLargeScreen ? 'body' : 'paper'}
+      >
+        {attachDialog && (
+          <AttachmentForm
+            setAttachDialog={setAttachDialog}
+            attachment_sourceNo={transaction.voucherNo}
+            attachment_name={'Transaction'}
+            attachmentable_type={attachmentableTypeFor(transaction)}
+            attachmentable_id={transaction.id}
+          />
+        )}
+      </Dialog>
     </Grid>
   );
 }

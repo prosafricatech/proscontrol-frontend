@@ -60,4 +60,15 @@ export interface LeaveRequestType {
       name?: string;
     };
   }>;
+  // Attached server-side (LeaveRequestController::attachLeaveBalances) so an
+  // approver can see the requester's actual balance instead of typing "days
+  // approved" blind — remaining_days is the balance as it stands right now,
+  // before this request (still pending) consumes anything.
+  leave_balance?: {
+    has_allocation: boolean;
+    year: number;
+    allocated_days: number;
+    used_days: number;
+    remaining_days: number;
+  };
 }
