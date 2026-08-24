@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import { useSearchParams } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
+import RequisitionsWaitingForSelector from '@/components/processApproval/RequisitionsWaitingForSelector';
 import EmployeeSelector from '../employees/EmployeeSelector';
 import { EmployeesProvider } from '../employees/EmployeesProvider';
 import { Employee } from '../employees/EmployeesType';
@@ -55,6 +56,7 @@ const LoanRequests = ({
       disbursed:
         defaultDisbursed === undefined ? undefined : defaultDisbursed ? 1 : 0,
       keyword: '',
+      next_approval_role_id: null as number | null,
     },
     countKey: 'total',
     dataKey: 'data',
@@ -76,6 +78,16 @@ const LoanRequests = ({
       },
     }));
   }, []);
+
+  const handleOnWaitingForChange = React.useCallback(
+    (next_approval_role_id: number | null) => {
+      setQueryOptions((state) => ({
+        ...state,
+        queryParams: { ...state.queryParams, next_approval_role_id },
+      }));
+    },
+    []
+  );
 
   useEffect(() => {
     setQueryOptions((state) => ({
@@ -176,6 +188,12 @@ const LoanRequests = ({
                       />
                     </Grid>
                   )}
+                  <Grid size={{ xs: 12, md: 4 }}>
+                    <RequisitionsWaitingForSelector
+                      value={queryOptions.queryParams.next_approval_role_id}
+                      onChange={handleOnWaitingForChange}
+                    />
+                  </Grid>
                 </Grid>
               }
               actionTail={

@@ -28,6 +28,7 @@ interface SummaryTabProps {
   total_allowances?: number;
   total_deductions?: number;
   total_employer_contributions?: number;
+  total_employer_cost?: number;
   allowance_breakdown?: BreakdownLine[];
   deduction_breakdown?: BreakdownLine[];
   contribution_breakdown?: BreakdownLine[];
@@ -119,6 +120,7 @@ const SummaryTab = ({
   total_allowances = 0,
   total_deductions = 0,
   total_employer_contributions = 0,
+  total_employer_cost = 0,
   allowance_breakdown,
   deduction_breakdown,
   contribution_breakdown,
@@ -129,13 +131,39 @@ const SummaryTab = ({
     null
   );
 
-  const plainCards: Array<{ label: string; value: number | string }> = [
+  const firstRowCards: Array<{ label: string; value: number | string }> = [
     { label: 'Basic Salary', value: money(basic_salary) },
     { label: 'Employees', value: employees },
     { label: 'Gross Salary', value: money(gross_salary) },
-    { label: 'Net Salary', value: money(net_salary) },
-    { label: 'Paye', value: money(paye) },
   ];
+  const lastRowCards: Array<{ label: string; value: number | string }> = [
+    { label: 'PAYE', value: money(paye) },
+    { label: 'Net Salary', value: money(net_salary) },
+    // Gross salary + employer-side statutory contributions — the true cost
+    // to the employer, distinct from Gross (employee-facing pay cost only).
+    { label: 'Total Employer Cost', value: money(total_employer_cost) },
+  ];
+
+  const renderCard = ({
+    label,
+    value,
+  }: {
+    label: string;
+    value: number | string;
+  }) => (
+    <Grid size={{ xs: 12, sm: 6, md: 4 }} key={label}>
+      <Card sx={{ width: '100%', height: '100%' }}>
+        <CardContent>
+          <Typography gutterBottom sx={{ color: 'text.secondary', fontSize: 16 }}>
+            {label}
+          </Typography>
+          <Typography variant='body2' fontSize={20} fontWeight={500}>
+            {value}
+          </Typography>
+        </CardContent>
+      </Card>
+    </Grid>
+  );
 
   return (
     <Grid container columnSpacing={2} rowSpacing={2}>
@@ -171,44 +199,29 @@ const SummaryTab = ({
           </Stack>
         </Grid>
       )}
-      {plainCards.map(({ label, value }) => (
-        <Grid size={{ xs: 12, md: 6, lg: 3 }} key={label}>
-          <Card sx={{ width: '100%', height: '100%' }}>
-            <CardContent>
-              <Typography
-                gutterBottom
-                sx={{ color: 'text.secondary', fontSize: 16 }}
-              >
-                {label}
-              </Typography>
-              <Typography variant='body2' fontSize={20} fontWeight={500}>
-                {value}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-      ))}
-      <Grid size={{ xs: 12, md: 6, lg: 3 }}>
+      {firstRowCards.map(renderCard)}
+      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <ExpandableSummaryCard
           label='Total Allowances'
           total={total_allowances}
           breakdown={allowance_breakdown}
         />
       </Grid>
-      <Grid size={{ xs: 12, md: 6, lg: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <ExpandableSummaryCard
           label='Total Deductions'
           total={total_deductions}
           breakdown={deduction_breakdown}
         />
       </Grid>
-      <Grid size={{ xs: 12, md: 6, lg: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 4 }}>
         <ExpandableSummaryCard
           label='Total Employer Contributions'
           total={total_employer_contributions}
           breakdown={contribution_breakdown}
         />
       </Grid>
+      {lastRowCards.map(renderCard)}
     </Grid>
   );
 };

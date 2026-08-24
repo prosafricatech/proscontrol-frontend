@@ -43,6 +43,24 @@ export async function getMenus(locale: string) {
           icon: icon('retirements'),
         },
         {
+          uri: `/${locale}/humanResources/leave-requests`,
+          label: sidebar.menuItem.leave_requests,
+          type: 'nav-item',
+          icon: icon('leave_requests'),
+        },
+        {
+          uri: `/${locale}/humanResources/loan-requests`,
+          label: sidebar.menuItem.loan_requests,
+          type: 'nav-item',
+          icon: icon('loan_requests'),
+        },
+        {
+          uri: `/${locale}/humanResources/payroll-approvals`,
+          label: sidebar.menuItem.payroll_runs,
+          type: 'nav-item',
+          icon: icon('payrollRuns'),
+        },
+        {
           label: sidebar.menuItem.masters,
           type: 'collapsible',
           icon: icon('editAttributes'),

@@ -30,7 +30,7 @@ interface LeaveTypeFormProp {
 
 interface FormData extends Omit<LeaveType, 'id'> {
   id?: number;
-  apply_scope?: 'none' | 'all' | 'active_contracts';
+  apply_to_employees?: 'none' | 'all' | 'active_contracts';
   force_update?: boolean;
 }
 
@@ -164,7 +164,7 @@ const LeaveTypeForm = ({ setOpenDialog, leaveType }: LeaveTypeFormProp) => {
       .number()
       .required('days per year is required')
       .min(1, 'Days per year must be greater than 0'),
-    apply_scope: yup
+    apply_to_employees: yup
       .string()
       .oneOf(['none', 'all', 'active_contracts'])
       .optional(),
@@ -183,18 +183,18 @@ const LeaveTypeForm = ({ setOpenDialog, leaveType }: LeaveTypeFormProp) => {
       id: leaveType?.id,
       name: leaveType?.name || '',
       days_per_year: leaveType?.days_per_year || 1,
-      apply_scope: 'none',
+      apply_to_employees: 'none',
     },
   });
 
-  const applyScope = watch('apply_scope');
+  const applyScope = watch('apply_to_employees');
 
   useEffect(() => {
     reset({
       id: leaveType?.id,
       name: leaveType?.name || '',
       days_per_year: leaveType?.days_per_year || 1,
-      apply_scope: 'none',
+      apply_to_employees: 'none',
     });
   }, [leaveType, reset]);
 
@@ -267,7 +267,7 @@ const LeaveTypeForm = ({ setOpenDialog, leaveType }: LeaveTypeFormProp) => {
             <Grid size={{ xs: 12 }}>
               <Div sx={{ mt: 1 }}>
                 <Controller
-                  name='apply_scope'
+                  name='apply_to_employees'
                   control={control}
                   render={({ field }) => (
                     <TextField
@@ -280,7 +280,9 @@ const LeaveTypeForm = ({ setOpenDialog, leaveType }: LeaveTypeFormProp) => {
                       helperText={
                         applyScope !== 'none'
                           ? 'This will allocate leave days to all existing employees'
-                          : 'Select an option to bulk allocate leave days'
+                          : leaveType?.id
+                            ? "Changes above (e.g. Days Per Year) won't reach employees who already have this leave type unless you pick a scope here"
+                            : 'Select an option to bulk allocate leave days'
                       }
                     >
                       <MenuItem value='none'>None</MenuItem>

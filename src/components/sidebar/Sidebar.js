@@ -111,6 +111,36 @@ function Sidebar({ menus }) {
                     }
                 }
 
+                // Process Approval > Leave Requests — only for users who can actually
+                // act on a leave approval chain level, not everyone with HR read access.
+                if (!checkOrganizationPermission(PERMISSIONS.LEAVE_REQUESTS_EDIT)) {
+                    if (processApprovalMenuIndex >= 0) {
+                        updatedMenus[processApprovalMenuIndex].children = updatedMenus[processApprovalMenuIndex].children.filter(
+                            child => child.label !== dictionary.sidebar.menuItem.leave_requests
+                        );
+                    }
+                }
+
+                // Process Approval > Loan Requests — same narrower gate as above.
+                if (!checkOrganizationPermission(PERMISSIONS.LOANS_EDIT)) {
+                    if (processApprovalMenuIndex >= 0) {
+                        updatedMenus[processApprovalMenuIndex].children = updatedMenus[processApprovalMenuIndex].children.filter(
+                            child => child.label !== dictionary.sidebar.menuItem.loan_requests
+                        );
+                    }
+                }
+
+                // Process Approval > Payroll — no dedicated "approve" ability exists on
+                // the backend for payroll runs, so this reuses the same ability that
+                // gates the HR menu's own Payroll Runs entry.
+                if (!checkOrganizationPermission(PERMISSIONS.PAYROLLRUNS_CREATE)) {
+                    if (processApprovalMenuIndex >= 0) {
+                        updatedMenus[processApprovalMenuIndex].children = updatedMenus[processApprovalMenuIndex].children.filter(
+                            child => child.label !== dictionary.sidebar.menuItem.payroll_runs
+                        );
+                    }
+                }
+
                 const hasApprovalMasters = checkOrganizationPermission([
                     PERMISSIONS.APPROVAL_CHAINS_CREATE,
                     PERMISSIONS.APPROVAL_CHAINS_READ,
