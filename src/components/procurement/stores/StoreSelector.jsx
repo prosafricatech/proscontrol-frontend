@@ -77,15 +77,26 @@ function StoreSelector({
 
   storeOptions = dedupeById(storeOptions);
 
+  // Collects a store's id and, when allowSubStores is true, every descendant id
+  function collectIds(store, ids = new Set()) {
+    ids.add(store.id);
+    if (allowSubStores && Array.isArray(store.children)) {
+      store.children.forEach((child) => collectIds(child, ids));
+    }
+    return ids;
+  }
+
   let finalOptions = storeOptions;
   if (excludeStores) {
     finalOptions = storeOptions?.filter(
       (option) => !excludeStores.every((store) => store.id === option.id)
     );
   } else if (includeStores) {
-    finalOptions = storeOptions?.filter((option) =>
-      includeStores.some((store) => store.id === option.id)
+    const includeIds = includeStores.reduce(
+      (ids, store) => collectIds(store, ids),
+      new Set()
     );
+    finalOptions = storeOptions?.filter((option) => includeIds.has(option.id));
   }
   finalOptions = dedupeById(finalOptions);
 
