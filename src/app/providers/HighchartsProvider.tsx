@@ -43,14 +43,16 @@ export function HighchartsProvider({ children }: { children: React.ReactNode }) 
           accessibilityInit(Hc);
         }
 
-        // Import other modules with type assertion
-        const moduleImports = await Promise.all([
-          import('highcharts/modules/treemap') as Promise<any>,
-          import('highcharts/modules/treegraph') as Promise<any>,
-          import('highcharts/modules/exporting') as Promise<any>,
-          import('highcharts/modules/export-data') as Promise<any>,
-          import('highcharts/modules/offline-exporting') as Promise<any>,
-        ]);
+        // treegraph extends the treemap series type at import time, so treemap
+        // must finish registering before treegraph is imported. Loading them via
+        // Promise.all races the two and leaves treegraph reading `undefined.prototype`.
+        const moduleImports = [
+          await (import('highcharts/modules/treemap') as Promise<any>),
+          await (import('highcharts/modules/treegraph') as Promise<any>),
+          await (import('highcharts/modules/exporting') as Promise<any>),
+          await (import('highcharts/modules/export-data') as Promise<any>),
+          await (import('highcharts/modules/offline-exporting') as Promise<any>),
+        ];
 
         moduleImports.forEach((module) => {
           // ✅ Use type assertion for each module
