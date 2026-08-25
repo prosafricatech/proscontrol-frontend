@@ -283,6 +283,18 @@ humanResourcesServices.showLeaveType = async (id) => {
     return data;
 }
 
+humanResourcesServices.previewLeaveAllocation = async ({ leaveTypeId, scope, gender, start_date }) => {
+    const { data } = await axios.get(`/api/humanResources/leave_types/${leaveTypeId}/allocation-preview`, {
+        params: { scope, gender, start_date }
+    });
+    return data;
+}
+
+humanResourcesServices.applyLeaveAllocation = async ({ leaveTypeId, scope, gender, start_date, force_update }) => {
+    const { data } = await axios.post(`/api/humanResources/leave_types/${leaveTypeId}/apply-allocation`, { scope, gender, start_date, force_update });
+    return data;
+}
+
 humanResourcesServices.deleteLeaveType = async (id) => {
     const { data } = await axios.delete(`/api/humanResources/leave_types/${id}/delete`);
     return data;
@@ -758,6 +770,26 @@ humanResourcesServices.reverseLoanDisbursement = async (id) => {
 
 humanResourcesServices.reverseLoanApproval = async (id) => {
     const { data } = await axios.post(`/api/humanResources/loanRequests/${id}/reverseApproval`);
+    return data;
+}
+
+humanResourcesServices.initiateLoanRepayment = async ({ id, ...payload }) => {
+    const { data } = await axios.post(`/api/humanResources/loanRequests/${id}/repayments`, payload);
+    return data;
+}
+
+humanResourcesServices.receiptLoanRepayment = async ({ id, ...payload }) => {
+    const { data } = await axios.post(`/api/humanResources/loanRepayments/${id}/receipt`, payload);
+    return data;
+}
+
+humanResourcesServices.cancelLoanRepayment = async (id) => {
+    const { data } = await axios.post(`/api/humanResources/loanRepayments/${id}/cancel`);
+    return data;
+}
+
+humanResourcesServices.reverseLoanRepaymentReceipt = async (id) => {
+    const { data } = await axios.post(`/api/humanResources/loanRepayments/${id}/reverseReceipt`);
     return data;
 }
 
@@ -1435,6 +1467,11 @@ humanResourcesServices.myHrLeaveRequests = async (params = {}) => {
 
 humanResourcesServices.myHrAddLeaveRequests = async (leaveRequest) => {
     const { data } = await axios.post('/api/humanResources/myHr/leave/leaveRequests/add', leaveRequest);
+    return data;
+}
+
+humanResourcesServices.myHrShowLeaveRequest = async (id) => {
+    const { data } = await axios.get(`/api/humanResources/myHr/leave/leaveRequests/${id}`);
     return data;
 }
 

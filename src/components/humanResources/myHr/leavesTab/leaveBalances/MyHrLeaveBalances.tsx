@@ -1,15 +1,57 @@
 import { LeaveAllocationType } from '@/components/humanResources/employees/profile/leaveAllocations/LeaveAllocationType';
 import humanResourcesServices from '@/components/humanResources/humanResourcesServices';
 import JumboRqList from '@jumbo/components/JumboReactQuery/JumboRqList';
-import { Autocomplete, Card, Grid, TextField } from '@mui/material';
+import { Autocomplete, Box, Card, Grid, TextField, Typography } from '@mui/material';
 import dayjs from 'dayjs';
 import { useSearchParams } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
-import MyHrLeaveBalancesListItem from './MyHrLeaveBalancesListItem';
+import MyHrLeaveBalancesListItem, {
+  MY_HR_LEAVE_BALANCE_COLUMN_WIDTHS,
+} from './MyHrLeaveBalancesListItem';
 
 const YEAR_OPTIONS: Array<any> = [];
 let nextYear = dayjs().year() + 1;
 [1, 2, 3, 4].map(() => YEAR_OPTIONS.push(String(nextYear--)));
+
+const MyHrLeaveBalancesHeader = () => (
+  <Box sx={{ display: { xs: 'none', md: 'block' } }}>
+    <Grid
+      container
+      columnSpacing={1}
+      alignItems='center'
+      paddingLeft={2}
+      paddingRight={2}
+      py={1}
+      sx={{ bgcolor: 'action.hover' }}
+    >
+      <Grid size={MY_HR_LEAVE_BALANCE_COLUMN_WIDTHS.leaveType}>
+        <Typography variant='caption' fontWeight={600} color='text.secondary'>
+          Leave Type
+        </Typography>
+      </Grid>
+      <Grid size={MY_HR_LEAVE_BALANCE_COLUMN_WIDTHS.period}>
+        <Typography variant='caption' fontWeight={600} color='text.secondary'>
+          Period
+        </Typography>
+      </Grid>
+      <Grid size={MY_HR_LEAVE_BALANCE_COLUMN_WIDTHS.allocated}>
+        <Typography variant='caption' fontWeight={600} color='text.secondary'>
+          Allocated
+        </Typography>
+      </Grid>
+      <Grid size={MY_HR_LEAVE_BALANCE_COLUMN_WIDTHS.used}>
+        <Typography variant='caption' fontWeight={600} color='text.secondary'>
+          Used
+        </Typography>
+      </Grid>
+      <Grid size={MY_HR_LEAVE_BALANCE_COLUMN_WIDTHS.remaining}>
+        <Typography variant='caption' fontWeight={600} color='text.secondary'>
+          Remaining
+        </Typography>
+      </Grid>
+    </Grid>
+  </Box>
+);
 
 const MyHrLeaveBalances = () => {
   const searchParams = useSearchParams();
@@ -82,6 +124,7 @@ const MyHrLeaveBalances = () => {
           />
         </Grid>
       </Grid>
+      <MyHrLeaveBalancesHeader />
       <JumboRqList
         ref={listRef}
         wrapperComponent={Card}

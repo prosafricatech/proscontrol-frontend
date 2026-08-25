@@ -5,13 +5,56 @@ import { PERMISSIONS } from '@/utilities/constants/permissions';
 import JumboListToolbar from '@jumbo/components/JumboList/components/JumboListToolbar';
 import JumboRqList from '@jumbo/components/JumboReactQuery/JumboRqList';
 import JumboSearch from '@jumbo/components/JumboSearch';
-import { Card, Stack } from '@mui/material';
+import { Box, Card, Grid, Stack, Typography } from '@mui/material';
 import { useParams, useSearchParams } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
 import humanResourcesServices from '../../../humanResourcesServices';
 import LeaveAllocationActionTail from './LeaveAllocationActionTail';
 import { LeaveAllocationType } from './LeaveAllocationType';
-import LeaveAllocationsListItem from './LeaveAllocationsListItem';
+import LeaveAllocationsListItem, {
+  LEAVE_ALLOCATION_COLUMN_WIDTHS,
+} from './LeaveAllocationsListItem';
+
+const LeaveAllocationsListHeader = () => (
+  <Box sx={{ display: { xs: 'none', md: 'block' } }}>
+    <Grid
+      container
+      columnSpacing={1}
+      alignItems='center'
+      paddingLeft={2}
+      paddingRight={2}
+      py={1}
+      sx={{ bgcolor: 'action.hover' }}
+    >
+      <Grid size={LEAVE_ALLOCATION_COLUMN_WIDTHS.leaveType}>
+        <Typography variant='caption' fontWeight={600} color='text.secondary'>
+          Leave Type
+        </Typography>
+      </Grid>
+      <Grid size={LEAVE_ALLOCATION_COLUMN_WIDTHS.period}>
+        <Typography variant='caption' fontWeight={600} color='text.secondary'>
+          Period
+        </Typography>
+      </Grid>
+      <Grid size={LEAVE_ALLOCATION_COLUMN_WIDTHS.allocated}>
+        <Typography variant='caption' fontWeight={600} color='text.secondary'>
+          Allocated
+        </Typography>
+      </Grid>
+      <Grid size={LEAVE_ALLOCATION_COLUMN_WIDTHS.used}>
+        <Typography variant='caption' fontWeight={600} color='text.secondary'>
+          Used
+        </Typography>
+      </Grid>
+      <Grid size={LEAVE_ALLOCATION_COLUMN_WIDTHS.remaining}>
+        <Typography variant='caption' fontWeight={600} color='text.secondary'>
+          Remaining
+        </Typography>
+      </Grid>
+      <Grid size={LEAVE_ALLOCATION_COLUMN_WIDTHS.actions} />
+    </Grid>
+  </Box>
+);
 
 const LeaveAllocations = ({ employeeId }: { employeeId?: number }) => {
   const { checkOrganizationPermission } = useJumboAuth();
@@ -86,22 +129,25 @@ const LeaveAllocations = ({ employeeId }: { employeeId?: number }) => {
         flexDirection: 'column',
       }}
       toolbar={
-        <JumboListToolbar
-          hideItemsPerPage={true}
-          actionTail={
-            <Stack direction='row'>
-              <JumboSearch
-                onChange={handleOnChange}
-                value={queryOptions.queryParams.keyword}
-              />
-              {checkOrganizationPermission(
-                PERMISSIONS.LEAVE_REQUESTS_CREATE
-              ) && (
-                <LeaveAllocationActionTail employeeId={resolvedEmployeeId} />
-              )}
-            </Stack>
-          }
-        ></JumboListToolbar>
+        <>
+          <JumboListToolbar
+            hideItemsPerPage={true}
+            actionTail={
+              <Stack direction='row'>
+                <JumboSearch
+                  onChange={handleOnChange}
+                  value={queryOptions.queryParams.keyword}
+                />
+                {checkOrganizationPermission(
+                  PERMISSIONS.LEAVE_REQUESTS_CREATE
+                ) && (
+                  <LeaveAllocationActionTail employeeId={resolvedEmployeeId} />
+                )}
+              </Stack>
+            }
+          ></JumboListToolbar>
+          <LeaveAllocationsListHeader />
+        </>
       }
     />
   );

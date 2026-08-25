@@ -97,14 +97,6 @@ const formatBalancePeriod = (
   return startYear !== endYear ? `${startYear} – ${endYear}` : `${startYear}`;
 };
 
-const getEditedApprovalLevelId = (approval: any) => {
-  return Number(
-    approval?.approval_chain_level?.id ||
-      approval?.chain_level_id ||
-      approval?.approval_chain_level_id
-  );
-};
-
 const LeaveApprovalDialog = ({
   open,
   isEditMode,
@@ -172,7 +164,26 @@ const LeaveApprovalDialog = ({
     },
   });
 
-  const isSubmitting = isAdding;
+  const { mutate: editApproval, isPending: isEditing } = useMutation({
+    mutationFn: ({ id, ...payload }: any) =>
+      humanResourcesServices.updateLeaveRequestApproval(id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['showLeaveRequest', leaveRequest.id],
+      });
+      queryClient.invalidateQueries({ queryKey: ['leaveRequests'] });
+      enqueueSnackbar('Leave approval updated', { variant: 'success' });
+      onClose();
+    },
+    onError: (error: any) => {
+      enqueueSnackbar(
+        error?.response?.data?.message || 'Something went wrong',
+        { variant: 'error' }
+      );
+    },
+  });
+
+  const isSubmitting = isAdding || isEditing;
 
   const handleDecision = (status: LeaveApprovalDecision) => {
     if (status === 'rejected' && !remarks.trim()) {
@@ -191,9 +202,23 @@ const LeaveApprovalDialog = ({
     setRemarksError('');
     setDaysError('');
 
-    const chainLevelId = isEditMode
-      ? getEditedApprovalLevelId(approval)
-      : Number(pendingLevel?.id);
+    if (isEditMode) {
+      if (!approval?.id) {
+        enqueueSnackbar('Approval not found', { variant: 'error' });
+        return;
+      }
+
+      editApproval({
+        id: approval.id,
+        status,
+        days_approved: status === 'approved' ? Number(daysApproved) : undefined,
+        remarks,
+        approval_date: approvalDate || undefined,
+      });
+      return;
+    }
+
+    const chainLevelId = Number(pendingLevel?.id);
 
     if (!chainLevelId) {
       enqueueSnackbar('Pending approval level not found', { variant: 'error' });

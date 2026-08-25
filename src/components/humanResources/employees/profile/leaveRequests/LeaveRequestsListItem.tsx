@@ -1,7 +1,10 @@
 'use client';
 
+import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import { readableDate } from '@/app/helpers/input-sanitization-helpers';
+import PDFContent from '@/components/pdf/PDFContent';
 import AddIcon from '@mui/icons-material/Add';
+import PrintOutlined from '@mui/icons-material/PrintOutlined';
 import RemoveIcon from '@mui/icons-material/Remove';
 import {
   Accordion,
@@ -9,7 +12,10 @@ import {
   AccordionSummary,
   Alert,
   Chip,
+  Dialog,
+  DialogContent,
   Grid,
+  IconButton,
   LinearProgress,
   Tab,
   Tabs,
@@ -23,6 +29,7 @@ import humanResourcesServices from '../../../humanResourcesServices';
 import LeaveApprovalItemAction from './LeaveApprovalItemAction';
 import LeaveApprovalsActionTail from './LeaveApprovalsActionTail';
 import LeaveRequestItemAction from './LeaveRequestItemAction';
+import LeaveRequestPDF from './LeaveRequestPDF';
 import { LeaveRequestType } from './LeaveRequestType';
 
 const LeaveRequestsListItem = ({
@@ -32,6 +39,9 @@ const LeaveRequestsListItem = ({
 }) => {
   const [expanded, setExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
+  const [openPrint, setOpenPrint] = useState(false);
+  const { authOrganization, authUser } = useJumboAuth() as any;
+  const organization = authOrganization?.organization;
 
   const { data: leaveDetails, isLoading } = useQuery({
     queryKey: ['showLeaveRequest', leaveRequest.id],
@@ -169,8 +179,30 @@ const LeaveRequestsListItem = ({
       </AccordionSummary>
 
       <AccordionDetails sx={{ backgroundColor: 'background.paper', mb: 3 }}>
+        <Dialog open={openPrint} onClose={() => setOpenPrint(false)} maxWidth='md' fullWidth>
+          <DialogContent sx={{ height: '80vh', p: 0 }}>
+            {openPrint && (
+              <PDFContent
+                document={
+                  <LeaveRequestPDF
+                    data={details}
+                    organization={organization}
+                    userName={authUser?.user?.name || 'ProsERP'}
+                  />
+                }
+                fileName={`Leave Application - ${employeeName.trim()}`}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
+
         <Grid container spacing={1}>
           <Grid size={{ xs: 12 }} textAlign='end'>
+            <Tooltip title='Print Leave Application Form'>
+              <IconButton size='small' onClick={() => setOpenPrint(true)}>
+                <PrintOutlined color='primary' />
+              </IconButton>
+            </Tooltip>
             <LeaveRequestItemAction
               leaveRequest={leaveRequest}
               approvalsCount={approvals.length}

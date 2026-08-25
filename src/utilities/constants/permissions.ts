@@ -174,6 +174,7 @@ export const PERMISSIONS = {
   LOANS_EDIT: 'Loans:Edit',
   LOANS_DELETE: 'Loans:Delete',
   APPROVED_LOANS_DISBURSE: 'ApprovedLoans:Disburse',
+  APPROVED_LOANS_RECEIPT: 'ApprovedLoans:Receipt',
   APPROVED_PAYROLL_POST_JOURNAL: 'ApprovedPayroll:PostJournal',
   APPROVED_PAYROLL_PAY: 'ApprovedPayroll:Pay',
   LEAVE_ALLOCATIONS_READ: 'LeaveAllocations:Read',

@@ -136,7 +136,7 @@ export default function LeaveBalancesReportDocument({
 
           {totals && (
             <View style={pdfStyles.tableRow}>
-              <Text style={{ ...pdfStyles.tableHeader, backgroundColor: mainColor, color: contrastText, flex: 4.7 }}>
+              <Text style={{ ...pdfStyles.tableHeader, backgroundColor: mainColor, color: contrastText, flex: 6.2 }}>
                 Total ({totals.count})
               </Text>
               <Text style={{ ...pdfStyles.tableHeader, backgroundColor: mainColor, color: contrastText, flex: 1, textAlign: 'right' }}>

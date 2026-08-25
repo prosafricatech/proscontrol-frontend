@@ -2,7 +2,7 @@ export interface LeaveType {
   id: number;
   name: string;
   days_per_year: number;
-  cycle_years?: number;
+  cycle_months?: number;
   carry_forward_months?: number | null;
   created_by: number;
   created_at?: string;

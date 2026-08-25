@@ -67,6 +67,22 @@ export interface LoanRequestPayment {
   reference: string;
 }
 
+export interface LoanRepayment {
+  id: number;
+  loan_request_id: number;
+  amount: number;
+  narration: string | null;
+  status: 'initiated' | 'receipted' | 'cancelled';
+  requested_by: number;
+  requested_at: string | null;
+  receipt_id: number | null;
+  debit_ledger_id: number | null;
+  receipted_by: number | null;
+  receipted_at: string | null;
+  requestedBy?: { id: number; name: string } | null;
+  receiptedBy?: { id: number; name: string } | null;
+}
+
 export interface LoanRequestType {
   id: number;
   employee_id: number;
@@ -111,4 +127,13 @@ export interface LoanRequestType {
   payment?: LoanRequestPayment | null;
   approval_chain?: LoanRequestApprovalChain | null;
   approvals?: LoanRequestApproval[];
+  // Backend-computed — amount_approved minus everything recovered so far
+  // (payroll deductions + receipted manual repayments). Appended on
+  // index()/show(), not stored.
+  outstanding_balance?: number;
+  // Count of not-yet-receipted LoanRepayment rows — appended on index() so
+  // the list can show the "Receipt" action without a per-row statement fetch.
+  initiated_repayments_count?: number;
+  // Only the initiated (not-yet-receipted) ones, eager-loaded on show().
+  repayments?: LoanRepayment[];
 }
