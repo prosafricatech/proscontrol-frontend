@@ -66,9 +66,12 @@ export interface LeaveRequestType {
   // before this request (still pending) consumes anything.
   leave_balance?: {
     has_allocation: boolean;
-    year: number;
+    start_date: string | null;
+    end_date: string | null;
     allocated_days: number;
     used_days: number;
+    carried_forward_days: number;
+    carry_forward_expires_at: string | null;
     remaining_days: number;
   };
 }

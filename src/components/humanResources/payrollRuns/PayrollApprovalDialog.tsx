@@ -276,7 +276,7 @@ const PayrollApprovalDialog = ({
 
       let periodLabel = payrollRun.cost_center?.name || 'Company-wide Run';
 
-      if (payrollRun?.payroll_period) {
+      if (payrollRun?.period) {
         const monthNames = [
           'January',
           'February',
@@ -291,12 +291,12 @@ const PayrollApprovalDialog = ({
           'November',
           'December',
         ];
-        const monthIndex = payrollRun.payroll_period.month;
+        const monthIndex = payrollRun.period.month;
         const monthName =
           monthIndex && monthIndex >= 1 && monthIndex <= 12
             ? monthNames[monthIndex - 1]
             : '';
-        const year = payrollRun.payroll_period.year || '';
+        const year = payrollRun.period.year || '';
         periodLabel = `${monthName} ${year} - ${periodLabel}`;
       }
 

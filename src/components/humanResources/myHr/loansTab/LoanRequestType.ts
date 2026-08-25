@@ -38,6 +38,7 @@ export interface MyHrLoanRequestType {
   disbursed_at: string | null;
   disbursed_by: { id: number; name: string } | null;
   disbursement_reference: string | null;
+  payment?: { id: number; voucherNo?: string; narration?: string } | null;
   created_by: number;
   created_at: string;
   updated_at: string;

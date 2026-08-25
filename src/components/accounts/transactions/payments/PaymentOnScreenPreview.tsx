@@ -1,6 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
+  Dialog,
+  DialogContent,
   Grid,
+  IconButton,
+  Link,
+  Tooltip,
   Typography,
   Table,
   TableBody,
@@ -10,18 +15,25 @@ import {
   TableRow,
   Paper,
   useTheme,
+  useMediaQuery,
   Box,
 } from '@mui/material';
+import { HighlightOff } from '@mui/icons-material';
+import { useJumboTheme } from '@jumbo/components/JumboTheme/hooks';
+import { useQuery } from '@tanstack/react-query';
 import { readableDate } from '@/app/helpers/input-sanitization-helpers';
 import { AuthObject } from '@/types/auth-types';
 import { CostCenter } from '@/components/masters/costCenters/CostCenterType';
 import { Currency } from '@/components/masters/Currencies/CurrencyType';
+import purchaseServices from '@/components/procurement/purchases/purchase-services';
+import PurchaseOrderOnScreenPreview from '@/components/procurement/purchases/PurchaseOrderOnScreenPreview';
 
 interface TransactionItem {
   debitLedgerName: string;
   description: string;
   amount: number;
   relatable_type?: 'purchase' | 'bill';
+  relatable_id?: number;
   relatableNo?: string;
 }
 
@@ -45,10 +57,40 @@ interface PaymentOnScreenPreviewProps {
   authObject: AuthObject;
 }
 
-const PaymentOnScreenPreview: React.FC<PaymentOnScreenPreviewProps> = ({ 
-  transaction, 
-  authObject 
+const LinkedPurchaseDialog: React.FC<{
+  orderId: number;
+  setOpen: (open: boolean) => void;
+}> = ({ orderId, setOpen }) => {
+  const { data: order, isFetching } = useQuery({
+    queryKey: ['purchaseOrder', { id: orderId }],
+    queryFn: () => purchaseServices.orderDetails(orderId),
+  });
+
+  if (isFetching || !order) {
+    return null;
+  }
+
+  return (
+    <DialogContent>
+      <Box textAlign='right' mb={1}>
+        <Tooltip title='Close'>
+          <IconButton size='small' onClick={() => setOpen(false)}>
+            <HighlightOff color='primary' />
+          </IconButton>
+        </Tooltip>
+      </Box>
+      <PurchaseOrderOnScreenPreview order={order} />
+    </DialogContent>
+  );
+};
+
+const PaymentOnScreenPreview: React.FC<PaymentOnScreenPreviewProps> = ({
+  transaction,
+  authObject
 }) => {
+  const [linkedOrderId, setLinkedOrderId] = useState<number | null>(null);
+  const { theme: jumboTheme } = useJumboTheme();
+  const belowLargeScreen = useMediaQuery(jumboTheme.breakpoints.down('lg'));
   const theme = useTheme();
   const currencyCode = transaction.currency.code;
   const { authOrganization: { organization } } = authObject;
@@ -187,9 +229,23 @@ const PaymentOnScreenPreview: React.FC<PaymentOnScreenPreviewProps> = ({
                 <TableCell>
                   {item.description}
                   {item.relatableNo && (
-                    <Typography variant="caption" color="text.secondary" display="block">
-                      {item.relatable_type === 'bill' ? 'Bill' : 'P.O'}: {item.relatableNo}
-                    </Typography>
+                    item.relatable_type !== 'bill' && item.relatable_id ? (
+                      <Typography variant="caption" color="text.secondary" display="block">
+                        P.O:{' '}
+                        <Link
+                          component="button"
+                          type="button"
+                          variant="caption"
+                          onClick={() => setLinkedOrderId(item.relatable_id!)}
+                        >
+                          {item.relatableNo}
+                        </Link>
+                      </Typography>
+                    ) : (
+                      <Typography variant="caption" color="text.secondary" display="block">
+                        {item.relatable_type === 'bill' ? 'Bill' : 'P.O'}: {item.relatableNo}
+                      </Typography>
+                    )
                   )}
                 </TableCell>
                 <TableCell
@@ -245,6 +301,22 @@ const PaymentOnScreenPreview: React.FC<PaymentOnScreenPreviewProps> = ({
           </Grid>
         </Grid>
       </Box>
+
+      <Dialog
+        open={!!linkedOrderId}
+        onClose={() => setLinkedOrderId(null)}
+        fullWidth
+        fullScreen={belowLargeScreen}
+        maxWidth="lg"
+        scroll={belowLargeScreen ? 'body' : 'paper'}
+      >
+        {linkedOrderId && (
+          <LinkedPurchaseDialog
+            orderId={linkedOrderId}
+            setOpen={(open) => !open && setLinkedOrderId(null)}
+          />
+        )}
+      </Dialog>
     </Box>
   );
 };

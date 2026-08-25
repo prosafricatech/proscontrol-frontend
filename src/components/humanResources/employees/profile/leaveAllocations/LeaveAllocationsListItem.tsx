@@ -9,6 +9,17 @@ const LeaveAllocationsListItem = ({
 }: {
   leaveAllocation: LeaveAllocationType;
 }) => {
+  const startYear = leaveAllocation.start_date
+    ? new Date(leaveAllocation.start_date).getFullYear()
+    : undefined;
+  const endYear = leaveAllocation.end_date
+    ? new Date(leaveAllocation.end_date).getFullYear()
+    : startYear;
+  const period =
+    startYear && endYear && startYear !== endYear
+      ? `${startYear} – ${endYear}`
+      : startYear;
+
   return (
     <>
       <Divider />
@@ -37,8 +48,14 @@ const LeaveAllocationsListItem = ({
         </Grid>
 
         <Grid size={{ xs: 6, md: 1.5 }}>
-          <Tooltip title='Year'>
-            <Typography>{leaveAllocation.year}</Typography>
+          <Tooltip
+            title={
+              leaveAllocation.start_date && leaveAllocation.end_date
+                ? `${leaveAllocation.start_date} – ${leaveAllocation.end_date}`
+                : 'Period'
+            }
+          >
+            <Typography>{period}</Typography>
           </Tooltip>
         </Grid>
 
@@ -55,7 +72,17 @@ const LeaveAllocationsListItem = ({
         </Grid>
 
         <Grid size={{ xs: 6, md: 3.0 }}>
-          <Tooltip title='Remaining Days'>
+          <Tooltip
+            title={
+              leaveAllocation.carried_forward_days
+                ? `Includes ${leaveAllocation.carried_forward_days} carried-forward day(s)${
+                    leaveAllocation.carry_forward_expires_at
+                      ? `, usable until ${leaveAllocation.carry_forward_expires_at}`
+                      : ''
+                  }`
+                : 'Remaining Days'
+            }
+          >
             <Typography>
               {leaveAllocation.remaining_days ?? leaveAllocation.allocated_days}
             </Typography>

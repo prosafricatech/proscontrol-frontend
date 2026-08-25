@@ -21,7 +21,10 @@ export interface PayrollRunType {
   employee_count?: number;
   net_salary?: number;
   requires_approval?: boolean;
-  payroll_period?: {
+  // The API eager-loads PayrollRun::period() and serializes it under this
+  // exact key — not payroll_period, despite the FK column being
+  // payroll_period_id.
+  period?: {
     id: number;
     name?: string;
     month?: number;

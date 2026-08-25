@@ -1464,6 +1464,11 @@ humanResourcesServices.myHrUpdateLoanRequest = async ({ id, ...payload }) => {
     const { data } = await axios.put(`/api/humanResources/myHr/loanRequests/${id}`, payload);
     return data;
 }
+// --- repayment history + forward projection for one of the caller's own loans ---
+humanResourcesServices.myHrLoanStatement = async (id) => {
+    const { data } = await axios.get(`/api/humanResources/myHr/loanRequests/${id}/statement`);
+    return data;
+}
 
 // ============================================
 // EXPORT

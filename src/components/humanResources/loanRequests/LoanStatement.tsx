@@ -20,6 +20,10 @@ import humanResourcesServices from '../humanResourcesServices';
 
 interface LoanStatementProps {
   loanId: number;
+  // Defaults to the HR-side endpoint; My HR passes its own self-service
+  // equivalent so this same view can be reused without duplicating the
+  // table/summary rendering.
+  service?: (id: number) => Promise<any>;
 }
 
 const money = (value?: number | null) =>
@@ -60,10 +64,12 @@ interface StatementRow {
  * assumes the deduction keeps running unchanged and doesn't require the
  * future PayrollPeriod rows to exist yet (see LoanReportService::statement()).
  */
-const LoanStatement = ({ loanId }: LoanStatementProps) => {
+const LoanStatement = ({ loanId, service }: LoanStatementProps) => {
+  const fetchStatement = service ?? humanResourcesServices.getLoanStatement;
+
   const { data, isLoading } = useQuery({
-    queryKey: ['loanStatement', loanId],
-    queryFn: () => humanResourcesServices.getLoanStatement(loanId),
+    queryKey: ['loanStatement', loanId, service ? 'self' : 'hr'],
+    queryFn: () => fetchStatement(loanId),
   });
 
   if (isLoading) {

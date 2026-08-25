@@ -181,14 +181,14 @@ const PayrollRunItemAction = ({
       // Get period label
       let periodLabel = payrollRun.cost_center?.name || 'Company-wide Run';
 
-      if (payrollRun?.payroll_period) {
-        const monthIndex = payrollRun.payroll_period.month;
+      if (payrollRun?.period) {
+        const monthIndex = payrollRun.period.month;
         // Ensure month is within valid range (1-12)
         const monthName =
           monthIndex && monthIndex >= 1 && monthIndex <= 12
             ? MONTH_NAMES[monthIndex - 1]
             : '';
-        const year = payrollRun.payroll_period.year || '';
+        const year = payrollRun.period.year || '';
         periodLabel = `${monthName} ${year} - ${periodLabel}`;
       }
 
@@ -652,16 +652,16 @@ const PayrollRunItemAction = ({
             }}
             periodLabel={salarySheetData.periodLabel}
             selectedPayrollPeriod={
-              payrollRun.payroll_period
+              payrollRun.period
                 ? {
-                    id: payrollRun.payroll_period.id,
-                    year: payrollRun.payroll_period.year || 0,
-                    month: payrollRun.payroll_period.month || 0,
+                    id: payrollRun.period.id,
+                    year: payrollRun.period.year || 0,
+                    month: payrollRun.period.month || 0,
                     monthName:
-                      payrollRun.payroll_period.month &&
-                      payrollRun.payroll_period.month >= 1 &&
-                      payrollRun.payroll_period.month <= 12
-                        ? MONTH_NAMES[payrollRun.payroll_period.month - 1]
+                      payrollRun.period.month &&
+                      payrollRun.period.month >= 1 &&
+                      payrollRun.period.month <= 12
+                        ? MONTH_NAMES[payrollRun.period.month - 1]
                         : '',
                     status: '',
                     remarks: '',

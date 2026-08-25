@@ -42,6 +42,7 @@ interface ApiResponse {
   };
   would_update?: number;
   would_create?: number;
+  would_skip?: number;
 }
 
 const LeaveTypeForm = ({ setOpenDialog, leaveType }: LeaveTypeFormProp) => {
@@ -53,11 +54,13 @@ const LeaveTypeForm = ({ setOpenDialog, leaveType }: LeaveTypeFormProp) => {
     data: FormData | null;
     wouldUpdate: number;
     wouldCreate: number;
+    wouldSkip: number;
   }>({
     open: false,
     data: null,
     wouldUpdate: 0,
     wouldCreate: 0,
+    wouldSkip: 0,
   });
 
   const {
@@ -111,6 +114,7 @@ const LeaveTypeForm = ({ setOpenDialog, leaveType }: LeaveTypeFormProp) => {
           : null,
         wouldUpdate: responseData.would_update || 0,
         wouldCreate: responseData.would_create || 0,
+        wouldSkip: responseData.would_skip || 0,
       });
       return;
     }
@@ -142,6 +146,7 @@ const LeaveTypeForm = ({ setOpenDialog, leaveType }: LeaveTypeFormProp) => {
       data: null,
       wouldUpdate: 0,
       wouldCreate: 0,
+      wouldSkip: 0,
     });
   };
 
@@ -151,6 +156,7 @@ const LeaveTypeForm = ({ setOpenDialog, leaveType }: LeaveTypeFormProp) => {
       data: null,
       wouldUpdate: 0,
       wouldCreate: 0,
+      wouldSkip: 0,
     });
   };
 
@@ -164,6 +170,17 @@ const LeaveTypeForm = ({ setOpenDialog, leaveType }: LeaveTypeFormProp) => {
       .number()
       .required('days per year is required')
       .min(1, 'Days per year must be greater than 0'),
+    cycle_years: yup
+      .number()
+      .min(1, 'Cycle must be at least 1 year')
+      .max(20, 'Cycle cannot exceed 20 years')
+      .optional(),
+    carry_forward_months: yup
+      .number()
+      .min(0, 'Carry forward cannot be negative')
+      .max(60, 'Carry forward cannot exceed 60 months')
+      .nullable()
+      .optional(),
     apply_to_employees: yup
       .string()
       .oneOf(['none', 'all', 'active_contracts'])
@@ -183,6 +200,8 @@ const LeaveTypeForm = ({ setOpenDialog, leaveType }: LeaveTypeFormProp) => {
       id: leaveType?.id,
       name: leaveType?.name || '',
       days_per_year: leaveType?.days_per_year || 1,
+      cycle_years: leaveType?.cycle_years || 1,
+      carry_forward_months: leaveType?.carry_forward_months ?? undefined,
       apply_to_employees: 'none',
     },
   });
@@ -194,6 +213,8 @@ const LeaveTypeForm = ({ setOpenDialog, leaveType }: LeaveTypeFormProp) => {
       id: leaveType?.id,
       name: leaveType?.name || '',
       days_per_year: leaveType?.days_per_year || 1,
+      cycle_years: leaveType?.cycle_years || 1,
+      carry_forward_months: leaveType?.carry_forward_months ?? undefined,
       apply_to_employees: 'none',
     });
   }, [leaveType, reset]);
@@ -259,6 +280,38 @@ const LeaveTypeForm = ({ setOpenDialog, leaveType }: LeaveTypeFormProp) => {
                       ?.days_per_year
                   }
                   {...register('days_per_year')}
+                />
+              </Div>
+            </Grid>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Div sx={{ mt: 1 }}>
+                <TextField
+                  label='Cycle (Years)'
+                  placeholder='Cycle (Years)'
+                  size='small'
+                  fullWidth
+                  error={!!errors?.cycle_years}
+                  helperText={
+                    errors.cycle_years?.message ||
+                    'Leave at 1 for a normal annual leave type — set to 3 for a leave type usable once every 3 years (e.g. Maternity). Changing this later reshapes every existing allocation for this type.'
+                  }
+                  {...register('cycle_years')}
+                />
+              </Div>
+            </Grid>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Div sx={{ mt: 1 }}>
+                <TextField
+                  label='Carry Forward (Months)'
+                  placeholder='Carry Forward (Months)'
+                  size='small'
+                  fullWidth
+                  error={!!errors?.carry_forward_months}
+                  helperText={
+                    errors.carry_forward_months?.message ||
+                    'Optional — how many months unused balance from one cycle can still be used into the next. Leave blank to disable carry forward.'
+                  }
+                  {...register('carry_forward_months')}
                 />
               </Div>
             </Grid>
@@ -363,6 +416,23 @@ const LeaveTypeForm = ({ setOpenDialog, leaveType }: LeaveTypeFormProp) => {
                 )}
               </Typography>
             </Grid>
+            {confirmDialog.wouldSkip > 0 && (
+              <Grid size={12}>
+                <Typography variant='body2'>
+                  <strong>Will Skip (already mid-cycle):</strong>{' '}
+                  {confirmDialog.wouldSkip} employees
+                  <Typography
+                    variant='caption'
+                    display='block'
+                    color='text.secondary'
+                  >
+                    (Employees already partway through a multi-year cycle are
+                    left untouched — edit their allocation individually if
+                    you need to change it)
+                  </Typography>
+                </Typography>
+              </Grid>
+            )}
           </Grid>
           <Typography variant='body2' color='warning.main' sx={{ mt: 2 }}>
             This action cannot be undone. Continue?

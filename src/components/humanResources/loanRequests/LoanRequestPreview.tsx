@@ -68,10 +68,12 @@ export interface LoanRequestPreviewData {
     }[];
   } | null;
   approvals?: {
+    id?: number;
     chain_level_id?: number | null;
     approval_chain_level_id?: number | null;
     status?: string;
     status_label?: string;
+    is_final?: boolean;
     amount_approved?: number | null;
     installments_approved?: number | null;
     recovery_mode?: 'installments' | 'fixed_amount';
@@ -204,12 +206,25 @@ const LoanRequestPreview = ({ loanRequest, title }: LoanRequestPreviewProps) => 
   const levels = [...(loanRequest.approval_chain?.levels || [])].sort(
     (a, b) => Number(a.position_index || 0) - Number(b.position_index || 0)
   );
-  const approvals = loanRequest.approvals || [];
-
-  const findApprovalForLevel = (levelId: number) =>
-    approvals.find(
-      (a) => Number(a.chain_level_id || a.approval_chain_level_id) === levelId
-    );
+  // Sorted by when each decision was actually made, not matched against a
+  // specific chain level id — a level can be edited (replaced rather than
+  // updated in place) after a decision was recorded against it, which would
+  // silently orphan that decision from an id-based lookup. Each approval
+  // already carries its own reviewer/date/status, so no lookup is needed.
+  const approvals = [...(loanRequest.approvals || [])].sort(
+    (a, b) =>
+      new Date(a.approval_date || 0).getTime() -
+      new Date(b.approval_date || 0).getTime()
+  );
+  const isFullyDecided =
+    approvals.some((a) => a.is_final) ||
+    ['approved', 'rejected', 'cancelled'].includes(loanRequest.status);
+  // Only meaningful for a request still awaiting a decision — which current,
+  // active level comes after however many decisions have already landed.
+  const nextLevel =
+    !isFullyDecided && levels.length > approvals.length
+      ? levels[approvals.length]
+      : undefined;
 
   return (
     <Box>
@@ -246,7 +261,7 @@ const LoanRequestPreview = ({ loanRequest, title }: LoanRequestPreviewProps) => 
             <CompareField
               label={
                 loanRequest.recovery_mode === 'fixed_amount'
-                  ? 'Recovery'
+                  ? 'Recovery Amount'
                   : 'Installments'
               }
               requested={
@@ -255,11 +270,13 @@ const LoanRequestPreview = ({ loanRequest, title }: LoanRequestPreviewProps) => 
                   : `${loanRequest.installments} months`
               }
               approved={
-                loanRequest.installments_approved != null
-                  ? loanRequest.recovery_mode === 'fixed_amount'
-                    ? `${loanRequest.installments_approved} periods`
-                    : `${loanRequest.installments_approved} months`
-                  : undefined
+                loanRequest.recovery_mode === 'fixed_amount'
+                  ? loanRequest.installment_amount != null
+                    ? `${formatCurrency(loanRequest.installment_amount)}/period`
+                    : undefined
+                  : loanRequest.installments_approved != null
+                    ? `${loanRequest.installments_approved} months`
+                    : undefined
               }
             />
           </Grid>
@@ -267,7 +284,9 @@ const LoanRequestPreview = ({ loanRequest, title }: LoanRequestPreviewProps) => 
             <Typography variant='body2' color='text.secondary' mt={2}>
               Deducted per period:{' '}
               <strong>{formatCurrency(loanRequest.installment_amount)}</strong>
-              {loanRequest.recovery_mode === 'fixed_amount' && ' (flat rate)'}
+              {loanRequest.recovery_mode === 'fixed_amount' &&
+                loanRequest.installments_approved != null &&
+                ` (flat rate, ~${loanRequest.installments_approved} periods to clear)`}
             </Typography>
           )}
         </CardContent>
@@ -277,7 +296,7 @@ const LoanRequestPreview = ({ loanRequest, title }: LoanRequestPreviewProps) => 
         Approval Stages
       </Typography>
 
-      {levels.length === 0 ? (
+      {approvals.length === 0 && !nextLevel ? (
         <Alert severity='info' variant='outlined'>
           {loanRequest.reviewed_at ? (
             <>
@@ -292,15 +311,20 @@ const LoanRequestPreview = ({ loanRequest, title }: LoanRequestPreviewProps) => 
         </Alert>
       ) : (
         <Stack spacing={0}>
-          {levels.map((level, index) => {
-            const approval = findApprovalForLevel(level.id);
+          {approvals.map((approval, index) => {
             const decision = getDecision(approval);
-            const stageLabel =
-              level.label || level.role?.name || `Level ${level.position_index}`;
-            const isLast = index === levels.length - 1;
+            const actionLabel =
+              decision === 'approved'
+                ? 'Approved'
+                : decision === 'rejected'
+                  ? 'Rejected'
+                  : decision === 'on hold'
+                    ? 'Put on hold'
+                    : 'Decision recorded';
+            const isLast = !nextLevel && index === approvals.length - 1;
 
             return (
-              <Stack key={level.id} direction='row' spacing={1.5}>
+              <Stack key={approval.id ?? index} direction='row' spacing={1.5}>
                 <Stack alignItems='center' sx={{ pt: 0.25 }}>
                   <DecisionIcon decision={decision} />
                   {!isLast && (
@@ -322,55 +346,73 @@ const LoanRequestPreview = ({ loanRequest, title }: LoanRequestPreviewProps) => 
                     alignItems='center'
                     flexWrap='wrap'
                   >
-                    <Typography variant='subtitle2'>{stageLabel}</Typography>
+                    <Typography variant='subtitle2'>
+                      {actionLabel} by {approval.creator?.name || 'Unknown reviewer'}
+                    </Typography>
                     <Chip
                       size='small'
-                      label={approval?.status || 'Pending'}
+                      label={approval.status || 'Pending'}
                       color={DECISION_COLOR[decision] || 'default'}
                       sx={{ textTransform: 'capitalize' }}
                     />
                   </Stack>
 
-                  {approval ? (
-                    <>
-                      <Typography variant='body2' color='text.secondary'>
-                        {approval.creator?.name || 'Unknown reviewer'}
-                        {approval.approval_date
-                          ? ` · ${readableDate(approval.approval_date, false)}`
-                          : ''}
-                      </Typography>
-                      {(approval.amount_approved != null ||
-                        approval.installments_approved != null) && (
-                        <Typography variant='body2' mt={0.5}>
-                          Approved{' '}
-                          {approval.amount_approved != null &&
-                            formatCurrency(approval.amount_approved)}
-                          {approval.recovery_mode === 'fixed_amount'
-                            ? approval.installment_amount_approved != null &&
-                              ` at ${formatCurrency(approval.installment_amount_approved)}/period`
-                            : approval.installments_approved != null &&
-                              ` over ${approval.installments_approved} months`}
-                        </Typography>
-                      )}
-                      {approval.remarks && (
-                        <Typography
-                          variant='body2'
-                          color='text.secondary'
-                          mt={0.5}
-                        >
-                          &ldquo;{approval.remarks}&rdquo;
-                        </Typography>
-                      )}
-                    </>
-                  ) : (
-                    <Typography variant='body2' color='text.secondary'>
-                      Not reached yet
+                  <Typography variant='body2' color='text.secondary'>
+                    {approval.approval_date
+                      ? readableDate(approval.approval_date, false)
+                      : ''}
+                  </Typography>
+                  {(approval.amount_approved != null ||
+                    approval.installments_approved != null) && (
+                    <Typography variant='body2' mt={0.5}>
+                      Approved{' '}
+                      {approval.amount_approved != null &&
+                        formatCurrency(approval.amount_approved)}
+                      {approval.recovery_mode === 'fixed_amount'
+                        ? approval.installment_amount_approved != null &&
+                          ` at ${formatCurrency(approval.installment_amount_approved)}/period`
+                        : approval.installments_approved != null &&
+                          ` over ${approval.installments_approved} months`}
+                    </Typography>
+                  )}
+                  {approval.remarks && (
+                    <Typography
+                      variant='body2'
+                      color='text.secondary'
+                      mt={0.5}
+                    >
+                      &ldquo;{approval.remarks}&rdquo;
                     </Typography>
                   )}
                 </Box>
               </Stack>
             );
           })}
+
+          {nextLevel && (
+            <Stack direction='row' spacing={1.5}>
+              <Stack alignItems='center' sx={{ pt: 0.25 }}>
+                <DecisionIcon decision='unknown' />
+              </Stack>
+              <Box sx={{ flex: 1 }}>
+                <Stack direction='row' spacing={1} alignItems='center'>
+                  <Typography variant='subtitle2'>
+                    Awaiting{' '}
+                    {nextLevel.label || nextLevel.role?.name || 'next reviewer'}
+                  </Typography>
+                  <Chip
+                    size='small'
+                    label='Pending'
+                    color='default'
+                    sx={{ textTransform: 'capitalize' }}
+                  />
+                </Stack>
+                <Typography variant='body2' color='text.secondary'>
+                  Not reached yet
+                </Typography>
+              </Box>
+            </Stack>
+          )}
         </Stack>
       )}
 
