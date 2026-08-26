@@ -247,12 +247,15 @@ const RequisitionsItemAction: React.FC<RequisitionsItemActionProps> = ({
 
   // A requisition returned to the requester for correction is the one
   // exception to "can't edit once approval activity exists" — editing and
-  // resubmitting is exactly what a return-to-requester asks for. Deletion
-  // stays off-limits either way; only a still-untouched draft can be deleted.
-  const canEdit =
-    (requisition.approvals.length === 0 ||
-      requisition.is_returned_to_requester) &&
-    dateAllowed;
+  // resubmitting is exactly what a return-to-requester asks for. It's also
+  // exempt from the backdate guard: the requester is fixing an already-dated
+  // requisition, not choosing to backdate a new one, so an old
+  // requisition_date shouldn't lock them out of a correction the approval
+  // chain itself asked for. Deletion stays off-limits either way; only a
+  // still-untouched draft can be deleted.
+  const canEdit = requisition.approvals.length === 0
+    ? dateAllowed
+    : requisition.is_returned_to_requester;
   const canDelete = requisition.approvals.length === 0 && dateAllowed;
 
   return (

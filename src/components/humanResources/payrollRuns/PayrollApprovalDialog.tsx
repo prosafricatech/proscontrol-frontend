@@ -31,7 +31,7 @@ import SummaryTab from './SummaryTab';
 
 export type ApprovalDecision = 'approved' | 'rejected' | 'on hold';
 
-const DEFAULT_APPROVAL_DATE = () => new Date().toISOString().slice(0, 10);
+const DEFAULT_APPROVAL_DATE = () => new Date().toISOString();
 
 interface PayrollApprovalDialogProps {
   open: boolean;
@@ -222,7 +222,7 @@ const PayrollApprovalDialog = ({
     setRemarks(approval?.remarks || '');
     setApprovalDate(
       approval?.approval_date
-        ? String(approval.approval_date).slice(0, 10)
+        ? String(approval.approval_date)
         : DEFAULT_APPROVAL_DATE()
     );
     setRemarksError('');
