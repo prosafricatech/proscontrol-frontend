@@ -1,12 +1,38 @@
+import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import { LeaveRequestType } from '@/components/humanResources/employees/profile/leaveRequests/LeaveRequestType';
-import { Chip, Divider, Grid, Tooltip, Typography } from '@mui/material';
+import LeaveRequestPDF from '@/components/humanResources/employees/profile/leaveRequests/LeaveRequestPDF';
+import humanResourcesServices from '@/components/humanResources/humanResourcesServices';
+import PDFContent from '@/components/pdf/PDFContent';
+import PrintOutlined from '@mui/icons-material/PrintOutlined';
+import {
+  Chip,
+  Dialog,
+  DialogContent,
+  Divider,
+  Grid,
+  IconButton,
+  Tooltip,
+  Typography,
+} from '@mui/material';
+import { useQuery } from '@tanstack/react-query';
 import dayjs from 'dayjs';
+import { useState } from 'react';
 
 const MyHrLeaveRequestsListItem = ({
   leaveRequest,
 }: {
   leaveRequest: LeaveRequestType;
 }) => {
+  const [openPrint, setOpenPrint] = useState(false);
+  const { authOrganization, authUser } = useJumboAuth() as any;
+  const organization = authOrganization?.organization;
+
+  const { data: details } = useQuery({
+    queryKey: ['myHrShowLeaveRequest', leaveRequest.id],
+    queryFn: () => humanResourcesServices.myHrShowLeaveRequest(leaveRequest.id),
+    enabled: openPrint,
+  });
+
   const statusColor: any =
     leaveRequest.status === 'approved'
       ? 'success'
@@ -77,7 +103,7 @@ const MyHrLeaveRequestsListItem = ({
           </Tooltip>
         </Grid>
 
-        <Grid size={{ xs: 12, md: 3 }}>
+        <Grid size={{ xs: 10, md: 2.5 }}>
           <Chip
             label={formattedStatus}
             size='small'
@@ -86,7 +112,33 @@ const MyHrLeaveRequestsListItem = ({
             sx={{ textTransform: 'capitalize' }}
           />
         </Grid>
+
+        <Grid size={{ xs: 2, md: 0.5 }} textAlign='end'>
+          <Tooltip title='Print Leave Application Form'>
+            <IconButton size='small' onClick={() => setOpenPrint(true)}>
+              <PrintOutlined color='primary' fontSize='small' />
+            </IconButton>
+          </Tooltip>
+        </Grid>
       </Grid>
+
+      <Dialog open={openPrint} onClose={() => setOpenPrint(false)} maxWidth='md' fullWidth>
+        <DialogContent sx={{ height: '80vh', p: 0 }}>
+          {openPrint && details && (
+            <PDFContent
+              document={
+                <LeaveRequestPDF
+                  data={details}
+                  organization={organization}
+                  userName={authUser?.user?.name || 'ProsERP'}
+                  employeeName={authUser?.user?.name}
+                />
+              }
+              fileName={`Leave Application - ${authUser?.user?.name || 'Employee'}`}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

@@ -323,10 +323,15 @@ const PayrollPeriodAdvancesTab = ({
       payrollPeriodId,
       format
     );
+    // Some formats (e.g. CRDB) download as plain delimited text, not Excel —
+    // hardcoding .xlsx here named the file wrong and Excel refused to open
+    // it. blob.type reflects the actual Content-Type the backend sent, so
+    // the extension always matches what's really inside.
+    const extension = blob.type === 'text/plain' ? 'txt' : 'xlsx';
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', `Advance Bank File - ${format}.xlsx`);
+    link.setAttribute('download', `Advance Bank File - ${format}.${extension}`);
     document.body.appendChild(link);
     link.click();
     link.remove();

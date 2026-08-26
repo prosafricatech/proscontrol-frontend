@@ -190,7 +190,7 @@ const PayPayablesDialog = ({
             </Alert>
           ) : (
             <TableContainer sx={{ overflowX: 'auto' }}>
-            <Table size='small'>
+            <Table size='small' sx={{ minWidth: 560 }}>
               <TableHead>
                 <TableRow>
                   <TableCell padding='checkbox' />
@@ -218,8 +218,10 @@ const PayPayablesDialog = ({
                       />
                     </TableCell>
                     <TableCell>
-                      <Typography variant='body2'>{row.label}</Typography>
-                      <Typography variant='caption' color='text.secondary'>
+                      <Typography variant='body2' noWrap>
+                        {row.label}
+                      </Typography>
+                      <Typography variant='caption' color='text.secondary' noWrap component='div'>
                         {row.payable_type === 'deduction'
                           ? 'Deduction'
                           : 'Employer Contribution'}
@@ -234,6 +236,7 @@ const PayPayablesDialog = ({
                     <TableCell align='right'>
                       <TextField
                         size='small'
+                        sx={{ minWidth: 110 }}
                         value={
                           amounts[rowKey(row)]
                             ? Number(amounts[rowKey(row)]).toLocaleString()

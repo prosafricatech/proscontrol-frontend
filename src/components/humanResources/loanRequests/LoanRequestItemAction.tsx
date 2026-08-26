@@ -12,7 +12,9 @@ import {
   EditOutlined,
   HighlightOffOutlined,
   PaidOutlined,
+  ReceiptLongOutlined,
   ReplayOutlined,
+  RequestQuoteOutlined,
   UndoOutlined,
 } from '@mui/icons-material';
 import { faMoneyBill1 } from '@fortawesome/free-regular-svg-icons';
@@ -27,6 +29,8 @@ import LoanDirectDecisionForm, {
 } from './LoanDirectDecisionForm';
 import LoanDisburseForm from './LoanDisburseForm';
 import LoanMarkDisbursedForm from './LoanMarkDisbursedForm';
+import LoanReceiptForm from './LoanReceiptForm';
+import LoanRepaymentInitiateForm from './LoanRepaymentInitiateForm';
 import LoanRequestsForm from './LoanRequestsForm';
 import { LoanRequestType } from './LoanRequestType';
 
@@ -60,6 +64,8 @@ const LoanRequestItemAction = ({
   const [openDisburseDialog, setOpenDisburseDialog] = useState(false);
   const [openMarkDisbursedDialog, setOpenMarkDisbursedDialog] = useState(false);
   const [openEditDialog, setOpenEditDialog] = useState(false);
+  const [openRepaymentInitiateDialog, setOpenRepaymentInitiateDialog] = useState(false);
+  const [openReceiptDialog, setOpenReceiptDialog] = useState(false);
 
   const isDirectFlow = !loanRequest.approval_chain_id;
   const canDirectDecide =
@@ -98,6 +104,26 @@ const LoanRequestItemAction = ({
     checkOrganizationPermission(PERMISSIONS.APPROVED_LOANS_DISBURSE);
 
   const canMarkDisbursed = isApprovedNotDisbursed && !orgHasAccountsAndFinance;
+
+  // HR initiates a repayment for any loan Accounts actually disbursed (a
+  // real receivable ledger balance exists to repay against) with something
+  // left to repay. Not an approval request — just a fact-of-record; Accounts
+  // turns it into a real posting separately (see below).
+  const canInitiateRepayment =
+    loanRequest.status === 'approved' &&
+    !!loanRequest.payment_id &&
+    (loanRequest.outstanding_balance ?? 0) > 0 &&
+    hasLoanEditPermission;
+
+  const initiatedRepaymentsCount =
+    loanRequest.initiated_repayments_count ??
+    (loanRequest.repayments || []).filter((r) => r.status === 'initiated').length;
+
+  const canReceiptRepayment =
+    initiatedRepaymentsCount > 0 &&
+    orgHasAccountsAndFinance &&
+    checkOrganizationPermission(PERMISSIONS.ACCOUNTS_TRANSACTIONS_CREATE) &&
+    checkOrganizationPermission(PERMISSIONS.APPROVED_LOANS_RECEIPT);
 
   // Puts the request back to in_review for a corrected re-decision. Only the
   // person who approved it may reverse it (backend-enforced too). Blocked once
@@ -275,6 +301,20 @@ const LoanRequestItemAction = ({
         onClose={() => setOpenMarkDisbursedDialog(false)}
       />
 
+      <LoanRepaymentInitiateForm
+        open={openRepaymentInitiateDialog}
+        loanRequest={loanRequest}
+        belowLargeScreen={belowLargeScreen}
+        onClose={() => setOpenRepaymentInitiateDialog(false)}
+      />
+
+      <LoanReceiptForm
+        open={openReceiptDialog}
+        loanRequest={loanRequest}
+        belowLargeScreen={belowLargeScreen}
+        onClose={() => setOpenReceiptDialog(false)}
+      />
+
       <Dialog
         open={openEditDialog}
         fullWidth
@@ -326,6 +366,25 @@ const LoanRequestItemAction = ({
             onClick={() => setOpenMarkDisbursedDialog(true)}
           >
             <PaidOutlined color='success' />
+          </IconButton>
+        </Tooltip>
+      )}
+
+      {canInitiateRepayment && (
+        <Tooltip title='Initiate Repayment'>
+          <IconButton
+            size='small'
+            onClick={() => setOpenRepaymentInitiateDialog(true)}
+          >
+            <RequestQuoteOutlined color='primary' />
+          </IconButton>
+        </Tooltip>
+      )}
+
+      {canReceiptRepayment && (
+        <Tooltip title='Receipt Repayment'>
+          <IconButton size='small' onClick={() => setOpenReceiptDialog(true)}>
+            <ReceiptLongOutlined color='success' />
           </IconButton>
         </Tooltip>
       )}

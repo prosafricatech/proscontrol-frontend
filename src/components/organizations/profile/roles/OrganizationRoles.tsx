@@ -151,7 +151,7 @@ const PERMISSION_MODULES: PermissionModuleConfig[] = [
   {
     key: 'human_resources',
     displayName: MODULES.HUMAN_RESOURCES,
-    prefixes: ['Employees', 'Payroll', 'PayrollRuns','LeaveAllocations', 'LeaveRequests', 'LoanRequests','Loans'],
+    prefixes: ['Employees', 'Payroll', 'PayrollRuns','LeaveAllocations', 'LeaveRequests', 'LoanRequests', 'Loans', 'ApprovedLoans', 'ApprovedPayroll'],
   },
   {
     key: 'sms',

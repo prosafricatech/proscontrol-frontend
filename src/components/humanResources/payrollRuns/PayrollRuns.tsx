@@ -7,12 +7,9 @@ import JumboListToolbar from '@jumbo/components/JumboList/components/JumboListTo
 import JumboRqList from '@jumbo/components/JumboReactQuery/JumboRqList';
 import JumboSearch from '@jumbo/components/JumboSearch';
 import {
-  Alert,
   Autocomplete,
-  Box,
   Card,
   Grid,
-  Stack,
   TextField,
   Typography,
 } from '@mui/material';
@@ -27,6 +24,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import RequisitionsWaitingForSelector from '@/components/processApproval/RequisitionsWaitingForSelector';
 import { EmployeesProvider } from '../employees/EmployeesProvider';
 import humanResourcesServices from '../humanResourcesServices';
 import { PayrollPeriodType } from '../payrollPeriods/PayrollPeriodType';
@@ -36,6 +34,7 @@ import { PayrollRunType } from './PayrollRunType';
 
 interface PayrollRunsProps {
   defaultStatus?: string;
+  title?: string;
 }
 
 // ============================================
@@ -96,7 +95,7 @@ export const usePeriod = () => {
 // MAIN COMPONENT
 // ============================================
 
-const PayrollRuns = ({ defaultStatus }: PayrollRunsProps) => {
+const PayrollRuns = ({ defaultStatus, title }: PayrollRunsProps) => {
   const params = useParams<{ keyword?: string }>();
   const searchParams = useSearchParams();
   const listRef = useRef<any>(null);
@@ -144,6 +143,7 @@ const PayrollRuns = ({ defaultStatus }: PayrollRunsProps) => {
     queryParams: {
       keyword: params.keyword || '',
       payroll_period_id: '',
+      next_approval_role_id: null as number | null,
     },
     countKey: 'total',
     dataKey: 'data',
@@ -220,6 +220,16 @@ const PayrollRuns = ({ defaultStatus }: PayrollRunsProps) => {
     }));
   }, []);
 
+  const handleOnWaitingForChange = useCallback(
+    (next_approval_role_id: number | null) => {
+      setQueryOptions((state) => ({
+        ...state,
+        queryParams: { ...state.queryParams, next_approval_role_id },
+      }));
+    },
+    []
+  );
+
   const handlePeriodChange = useCallback(
     (newValue: PayrollPeriodType | null) => {
       setSelectedPayrollPeriod(newValue);
@@ -234,8 +244,6 @@ const PayrollRuns = ({ defaultStatus }: PayrollRunsProps) => {
     []
   );
 
-  const showList = selectedPayrollPeriod || defaultStatus;
-
   if (!mounted) return null;
 
   return (
@@ -248,82 +256,80 @@ const PayrollRuns = ({ defaultStatus }: PayrollRunsProps) => {
             isLoading={isPayrollPeriodsFetching}
           >
             <Typography variant={'h4'} mb={2}>
-              {defaultStatus ? 'Approved Payroll Runs' : 'Payroll Runs'}
+              {title ?? (defaultStatus ? 'Approved Payroll Runs' : 'Payroll Runs')}
             </Typography>
 
-            <Grid container spacing={2} mb={2} mt={2} justifyContent='center'>
-              <Grid size={{ xs: 12, md: 4 }}>
-                <Autocomplete
-                  size='small'
-                  loading={isPayrollPeriodsFetching}
-                  options={periodWithMonthNames}
-                  value={selectedPayrollPeriod}
-                  isOptionEqualToValue={(option, value) =>
-                    option?.id === value?.id
-                  }
-                  getOptionLabel={(option) =>
-                    `${option.year} - ${option.monthName || option.month}${
-                      option.status ? ` (${option.status})` : ''
-                    }`
-                  }
-                  onChange={(_, newValue) => {
-                    handlePeriodChange(newValue);
-                  }}
-                  renderInput={(inputParams) => (
-                    <TextField
-                      {...inputParams}
-                      label='Payroll Period'
-                      fullWidth
-                    />
-                  )}
-                />
-              </Grid>
-            </Grid>
-
-            {showList ? (
-              <JumboRqList
-                ref={listRef}
-                wrapperComponent={Card}
-                service={humanResourcesServices.getPayrollRunsList}
-                primaryKey='id'
-                queryOptions={queryOptions}
-                itemsPerPage={20}
-                itemsPerPageOptions={[10, 20, 30, 50]}
-                renderItem={renderPayrollRuns}
-                componentElement='div'
-                wrapperSx={{
-                  flex: 1,
-                  display: 'flex',
-                  flexDirection: 'column',
-                }}
-                toolbar={
-                  <JumboListToolbar
-                    hideItemsPerPage={true}
-                    actionTail={
-                      <Stack direction='row'>
+            <JumboRqList
+              ref={listRef}
+              wrapperComponent={Card}
+              service={humanResourcesServices.getPayrollRunsList}
+              primaryKey='id'
+              queryOptions={queryOptions}
+              itemsPerPage={20}
+              itemsPerPageOptions={[10, 20, 30, 50]}
+              renderItem={renderPayrollRuns}
+              componentElement='div'
+              wrapperSx={{
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+              }}
+              toolbar={
+                <JumboListToolbar
+                  hideItemsPerPage={true}
+                  action={
+                    <Grid container spacing={1} alignItems='center'>
+                      <Grid size={{ xs: 12, md: 3 }}>
+                        <Autocomplete
+                          size='small'
+                          loading={isPayrollPeriodsFetching}
+                          options={periodWithMonthNames}
+                          value={selectedPayrollPeriod}
+                          isOptionEqualToValue={(option, value) =>
+                            option?.id === value?.id
+                          }
+                          getOptionLabel={(option) =>
+                            `${option.year} - ${option.monthName || option.month}${
+                              option.status ? ` (${option.status})` : ''
+                            }`
+                          }
+                          onChange={(_, newValue) => {
+                            handlePeriodChange(newValue);
+                          }}
+                          renderInput={(inputParams) => (
+                            <TextField
+                              {...inputParams}
+                              label='Payroll Period'
+                              fullWidth
+                            />
+                          )}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, md: 3 }}>
+                        <RequisitionsWaitingForSelector
+                          value={queryOptions.queryParams.next_approval_role_id}
+                          onChange={handleOnWaitingForChange}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, md: 3 }}>
                         <JumboSearch
                           onChange={handleOnChange}
                           value={queryOptions.queryParams.keyword}
                         />
+                      </Grid>
+                      <Grid
+                        size={{ xs: 12, md: 3 }}
+                        sx={{ display: 'flex', justifyContent: { md: 'end' } }}
+                      >
                         <PayrollRunActionTail
                           payrollPeriod={selectedPayrollPeriod}
                         />
-                      </Stack>
-                    }
-                  />
-                }
-              />
-            ) : (
-              <Box width='100%'>
-                <Alert
-                  variant='outlined'
-                  severity='info'
-                  sx={{ width: '100%' }}
-                >
-                  Please select a Payroll Period
-                </Alert>
-              </Box>
-            )}
+                      </Grid>
+                    </Grid>
+                  }
+                />
+              }
+            />
           </PeriodProvider>
         </EmployeesProvider>
       </LedgerGroupProvider>

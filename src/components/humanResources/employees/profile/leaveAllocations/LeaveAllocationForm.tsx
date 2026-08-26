@@ -13,7 +13,9 @@ import {
   LinearProgress,
   TextField,
 } from '@mui/material';
+import { DatePicker } from '@mui/x-date-pickers';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import dayjs from 'dayjs';
 import { useSnackbar } from 'notistack';
 import { useEffect, useMemo } from 'react';
 import { Controller, useForm } from 'react-hook-form';
@@ -131,12 +133,7 @@ const LeaveAllocationForm = ({
   const validationSchema = yup.object({
     id: yup.number().optional(),
     leave_type_id: yup.number().required('Leave type is required'),
-    year: yup
-      .number()
-      .typeError('Year must be a number')
-      .required('Year is required')
-      .min(2000)
-      .max(2100),
+    start_date: yup.string().required('Start date is required'),
     allocated_days: yup
       .number()
       .typeError('Allocated days must be a number')
@@ -157,7 +154,8 @@ const LeaveAllocationForm = ({
       id: leaveAllocation?.id,
       employee_id: leaveAllocation?.employee_id,
       leave_type_id: leaveAllocation?.leave_type_id,
-      year: leaveAllocation?.year ?? new Date().getFullYear(),
+      start_date:
+        leaveAllocation?.start_date ?? dayjs().format('YYYY-MM-DD'),
       allocated_days: leaveAllocation?.allocated_days ?? 1,
     },
   });
@@ -167,7 +165,8 @@ const LeaveAllocationForm = ({
       id: leaveAllocation?.id,
       employee_id: leaveAllocation?.employee_id,
       leave_type_id: leaveAllocation?.leave_type_id,
-      year: leaveAllocation?.year ?? new Date().getFullYear(),
+      start_date:
+        leaveAllocation?.start_date ?? dayjs().format('YYYY-MM-DD'),
       allocated_days: leaveAllocation?.allocated_days ?? 1,
     });
   }, [leaveAllocation, reset]);
@@ -253,19 +252,40 @@ const LeaveAllocationForm = ({
 
             <Grid size={{ xs: 12, md: 6 }}>
               <Div sx={{ mt: 1, mb: 1 }}>
-                <TextField
-                  label='Year'
-                  size='small'
-                  fullWidth
-                  error={
-                    !!errors?.year ||
-                    !!getValidationMessage(validationErrors, 'year')
-                  }
-                  helperText={
-                    errors.year?.message ||
-                    getValidationMessage(validationErrors, 'year')
-                  }
-                  {...register('year')}
+                <Controller
+                  name='start_date'
+                  control={control}
+                  render={({ field, fieldState }) => (
+                    <DatePicker
+                      label='Start Date'
+                      disabled={!!leaveAllocation?.id}
+                      value={field.value ? dayjs(field.value) : null}
+                      onChange={(val) =>
+                        field.onChange(val?.format('YYYY-MM-DD') || '')
+                      }
+                      slotProps={{
+                        textField: {
+                          size: 'small',
+                          fullWidth: true,
+                          error:
+                            !!fieldState.error ||
+                            !!getValidationMessage(
+                              validationErrors,
+                              'start_date'
+                            ),
+                          helperText:
+                            fieldState.error?.message ||
+                            getValidationMessage(
+                              validationErrors,
+                              'start_date'
+                            ) ||
+                            (leaveAllocation?.id
+                              ? 'Cannot be changed once created'
+                              : "The cycle's start — its end is computed from the leave type's cycle length"),
+                        },
+                      }}
+                    />
+                  )}
                 />
               </Div>
             </Grid>

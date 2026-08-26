@@ -165,6 +165,12 @@ const PayrollRunsListItem = ({
     () => contributionBreakdown.reduce((sum, c) => sum + c.amount, 0),
     [contributionBreakdown]
   );
+  // Gross salary + employer-side contributions — the full cost to the
+  // employer, not just what employees are paid.
+  const totalEmployerCost = useMemo(
+    () => (previewTotals?.gross_salary || 0) + totalEmployerContributions,
+    [previewTotals?.gross_salary, totalEmployerContributions]
+  );
 
   // Fetch run details
   const { data: runDetailsData, isLoading: isLoadingDetails } = useQuery({
@@ -544,6 +550,7 @@ const PayrollRunsListItem = ({
                   total_allowances={previewTotals?.total_allowances}
                   total_deductions={previewTotals?.total_deductions}
                   total_employer_contributions={totalEmployerContributions}
+                  total_employer_cost={totalEmployerCost}
                   allowance_breakdown={allowanceBreakdown}
                   deduction_breakdown={deductionBreakdown}
                   contribution_breakdown={contributionBreakdown}

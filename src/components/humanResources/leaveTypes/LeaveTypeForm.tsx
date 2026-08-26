@@ -4,6 +4,7 @@ import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Div } from '@jumbo/shared';
 import { LoadingButton } from '@mui/lab';
+import { InfoOutlined } from '@mui/icons-material';
 import {
   Button,
   Dialog,
@@ -12,16 +13,31 @@ import {
   DialogTitle,
   Grid,
   MenuItem,
+  Stack,
   TextField,
+  Tooltip,
   Typography,
 } from '@mui/material';
+import { DatePicker } from '@mui/x-date-pickers';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import dayjs from 'dayjs';
 import { useSnackbar } from 'notistack';
 import { useEffect, useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import humanResourcesServices from '../humanResourcesServices';
 import { LeaveType } from './LeaveTypesType';
+
+const FieldLabel = ({ label, hint }: { label: string; hint: string }) => (
+  <Stack direction='row' spacing={0.5} alignItems='center' sx={{ mb: 0.5 }}>
+    <Typography variant='body2' color='text.secondary'>
+      {label}
+    </Typography>
+    <Tooltip title={hint}>
+      <InfoOutlined sx={{ fontSize: 16, color: 'text.disabled' }} />
+    </Tooltip>
+  </Stack>
+);
 
 interface LeaveTypeFormProp {
   setOpenDialog: (open: boolean) => void;
@@ -30,7 +46,9 @@ interface LeaveTypeFormProp {
 
 interface FormData extends Omit<LeaveType, 'id'> {
   id?: number;
-  apply_scope?: 'none' | 'all' | 'active_contracts';
+  apply_to_employees?: 'none' | 'all' | 'active_contracts';
+  apply_to_gender?: '' | 'male' | 'female';
+  apply_start_date?: string;
   force_update?: boolean;
 }
 
@@ -42,6 +60,7 @@ interface ApiResponse {
   };
   would_update?: number;
   would_create?: number;
+  would_skip?: number;
 }
 
 const LeaveTypeForm = ({ setOpenDialog, leaveType }: LeaveTypeFormProp) => {
@@ -53,11 +72,13 @@ const LeaveTypeForm = ({ setOpenDialog, leaveType }: LeaveTypeFormProp) => {
     data: FormData | null;
     wouldUpdate: number;
     wouldCreate: number;
+    wouldSkip: number;
   }>({
     open: false,
     data: null,
     wouldUpdate: 0,
     wouldCreate: 0,
+    wouldSkip: 0,
   });
 
   const {
@@ -111,6 +132,7 @@ const LeaveTypeForm = ({ setOpenDialog, leaveType }: LeaveTypeFormProp) => {
           : null,
         wouldUpdate: responseData.would_update || 0,
         wouldCreate: responseData.would_create || 0,
+        wouldSkip: responseData.would_skip || 0,
       });
       return;
     }
@@ -142,6 +164,7 @@ const LeaveTypeForm = ({ setOpenDialog, leaveType }: LeaveTypeFormProp) => {
       data: null,
       wouldUpdate: 0,
       wouldCreate: 0,
+      wouldSkip: 0,
     });
   };
 
@@ -151,6 +174,7 @@ const LeaveTypeForm = ({ setOpenDialog, leaveType }: LeaveTypeFormProp) => {
       data: null,
       wouldUpdate: 0,
       wouldCreate: 0,
+      wouldSkip: 0,
     });
   };
 
@@ -164,10 +188,28 @@ const LeaveTypeForm = ({ setOpenDialog, leaveType }: LeaveTypeFormProp) => {
       .number()
       .required('days per year is required')
       .min(1, 'Days per year must be greater than 0'),
-    apply_scope: yup
+    cycle_months: yup
+      .number()
+      .transform((value, originalValue) => (originalValue === '' ? undefined : value))
+      .min(1, 'Cycle must be at least 1 month')
+      .max(240, 'Cycle cannot exceed 240 months')
+      .optional(),
+    carry_forward_months: yup
+      .number()
+      .transform((value, originalValue) => (originalValue === '' ? undefined : value))
+      .min(0, 'Carry forward cannot be negative')
+      .max(60, 'Carry forward cannot exceed 60 months')
+      .nullable()
+      .optional(),
+    apply_to_employees: yup
       .string()
       .oneOf(['none', 'all', 'active_contracts'])
       .optional(),
+    apply_to_gender: yup
+      .string()
+      .oneOf(['', 'male', 'female'])
+      .optional(),
+    apply_start_date: yup.string().optional(),
   });
 
   const {
@@ -183,18 +225,26 @@ const LeaveTypeForm = ({ setOpenDialog, leaveType }: LeaveTypeFormProp) => {
       id: leaveType?.id,
       name: leaveType?.name || '',
       days_per_year: leaveType?.days_per_year || 1,
-      apply_scope: 'none',
+      cycle_months: leaveType?.cycle_months || 12,
+      carry_forward_months: leaveType?.carry_forward_months ?? undefined,
+      apply_to_employees: 'none',
+      apply_to_gender: '',
+      apply_start_date: '',
     },
   });
 
-  const applyScope = watch('apply_scope');
+  const applyScope = watch('apply_to_employees');
 
   useEffect(() => {
     reset({
       id: leaveType?.id,
       name: leaveType?.name || '',
       days_per_year: leaveType?.days_per_year || 1,
-      apply_scope: 'none',
+      cycle_months: leaveType?.cycle_months || 12,
+      carry_forward_months: leaveType?.carry_forward_months ?? undefined,
+      apply_to_employees: 'none',
+      apply_to_gender: '',
+      apply_start_date: '',
     });
   }, [leaveType, reset]);
 
@@ -203,7 +253,11 @@ const LeaveTypeForm = ({ setOpenDialog, leaveType }: LeaveTypeFormProp) => {
   }, [leaveType, updateLeaveType, addLeaveType]);
 
   const onSubmit = (data: FormData) => {
-    saveMutation(data);
+    saveMutation({
+      ...data,
+      apply_to_gender: data.apply_to_gender || undefined,
+      apply_start_date: data.apply_start_date || undefined,
+    });
   };
 
   return (
@@ -262,26 +316,62 @@ const LeaveTypeForm = ({ setOpenDialog, leaveType }: LeaveTypeFormProp) => {
                 />
               </Div>
             </Grid>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Div sx={{ mt: 1 }}>
+                <FieldLabel
+                  label='Cycle (Months)'
+                  hint='Leave at 12 for a normal annual leave type — set to 36 for a leave type usable once every 3 years (e.g. Maternity). Changing this later reshapes every existing allocation for this type.'
+                />
+                <TextField
+                  placeholder='Cycle (Months)'
+                  size='small'
+                  fullWidth
+                  error={!!errors?.cycle_months}
+                  helperText={errors.cycle_months?.message}
+                  {...register('cycle_months')}
+                />
+              </Div>
+            </Grid>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Div sx={{ mt: 1 }}>
+                <FieldLabel
+                  label='Carry Forward (Months)'
+                  hint='Optional — how many months unused balance from one cycle can still be used into the next. Leave blank to disable carry forward.'
+                />
+                <TextField
+                  placeholder='Carry Forward (Months)'
+                  size='small'
+                  fullWidth
+                  error={!!errors?.carry_forward_months}
+                  helperText={errors.carry_forward_months?.message}
+                  {...register('carry_forward_months')}
+                />
+              </Div>
+            </Grid>
 
             {/* Apply To Employees Dropdown */}
             <Grid size={{ xs: 12 }}>
               <Div sx={{ mt: 1 }}>
+                <FieldLabel
+                  label='Apply To Employees'
+                  hint={
+                    applyScope !== 'none'
+                      ? 'This will allocate leave days to all existing employees'
+                      : leaveType?.id
+                        ? "Changes above (e.g. Days Per Year) won't reach employees who already have this leave type unless you pick a scope here"
+                        : 'Select an option to bulk allocate leave days'
+                  }
+                />
                 <Controller
-                  name='apply_scope'
+                  name='apply_to_employees'
                   control={control}
                   render={({ field }) => (
                     <TextField
                       select
-                      label='Apply To Employees'
                       size='small'
                       fullWidth
                       value={field.value || 'none'}
                       onChange={field.onChange}
-                      helperText={
-                        applyScope !== 'none'
-                          ? 'This will allocate leave days to all existing employees'
-                          : 'Select an option to bulk allocate leave days'
-                      }
                     >
                       <MenuItem value='none'>None</MenuItem>
                       <MenuItem value='all'>All Employees</MenuItem>
@@ -293,6 +383,61 @@ const LeaveTypeForm = ({ setOpenDialog, leaveType }: LeaveTypeFormProp) => {
                 />
               </Div>
             </Grid>
+
+            {applyScope !== 'none' && (
+              <Grid size={{ xs: 12 }}>
+                <Div sx={{ mt: 1 }}>
+                  <FieldLabel
+                    label='Gender'
+                    hint='Optional — narrow the scope above to only male or female employees (e.g. Maternity)'
+                  />
+                  <Controller
+                    name='apply_to_gender'
+                    control={control}
+                    render={({ field }) => (
+                      <TextField
+                        select
+                        size='small'
+                        fullWidth
+                        value={field.value || ''}
+                        onChange={field.onChange}
+                      >
+                        <MenuItem value=''>Any</MenuItem>
+                        <MenuItem value='female'>Female</MenuItem>
+                        <MenuItem value='male'>Male</MenuItem>
+                      </TextField>
+                    )}
+                  />
+                </Div>
+              </Grid>
+            )}
+
+            {applyScope !== 'none' && (
+              <Grid size={{ xs: 12 }}>
+                <Div sx={{ mt: 1 }}>
+                  <FieldLabel
+                    label='Start Date'
+                    hint='Optional — overrides the automatic date (Jan 1 for annual types, today for longer cycles) for any newly-created allocations.'
+                  />
+                  <Controller
+                    name='apply_start_date'
+                    control={control}
+                    render={({ field }) => (
+                      <DatePicker
+                        value={field.value ? dayjs(field.value) : null}
+                        onChange={(val) =>
+                          field.onChange(val ? val.format('YYYY-MM-DD') : '')
+                        }
+                        slotProps={{
+                          textField: { size: 'small', fullWidth: true },
+                          field: { clearable: true },
+                        }}
+                      />
+                    )}
+                  />
+                </Div>
+              </Grid>
+            )}
           </Grid>
           <DialogActions>
             <Button size='small' onClick={() => setOpenDialog(false)}>
@@ -361,6 +506,23 @@ const LeaveTypeForm = ({ setOpenDialog, leaveType }: LeaveTypeFormProp) => {
                 )}
               </Typography>
             </Grid>
+            {confirmDialog.wouldSkip > 0 && (
+              <Grid size={12}>
+                <Typography variant='body2'>
+                  <strong>Will Skip (already mid-cycle):</strong>{' '}
+                  {confirmDialog.wouldSkip} employees
+                  <Typography
+                    variant='caption'
+                    display='block'
+                    color='text.secondary'
+                  >
+                    (Employees already partway through a multi-year cycle are
+                    left untouched — edit their allocation individually if
+                    you need to change it)
+                  </Typography>
+                </Typography>
+              </Grid>
+            )}
           </Grid>
           <Typography variant='body2' color='warning.main' sx={{ mt: 2 }}>
             This action cannot be undone. Continue?

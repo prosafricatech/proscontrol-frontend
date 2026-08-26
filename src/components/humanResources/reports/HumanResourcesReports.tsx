@@ -2,13 +2,14 @@
 
 import JumboCardQuick from '@jumbo/components/JumboCardQuick/JumboCardQuick';
 import { useJumboTheme } from '@jumbo/components/JumboTheme/hooks';
-import { AssessmentOutlined, BeachAccessOutlined, CompareArrowsOutlined, RequestQuoteOutlined } from '@mui/icons-material';
+import { AssessmentOutlined, BeachAccessOutlined, CompareArrowsOutlined, EventRepeatOutlined, RequestQuoteOutlined } from '@mui/icons-material';
 import { Button, Dialog, DialogActions, Grid, Typography, useMediaQuery } from '@mui/material';
 import { useSearchParams } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 import PayrollComparisonDashboard from '../payrollPeriods/PayrollComparison/PayrollComparisonDashboard';
 import PayrollSalaryComponentsDashboard from '../payrollPeriods/PayrollSalaryComponents/PayrollSalaryComponentsDashboard';
 import LeaveBalancesReport from './leaveBalances/LeaveBalancesReport';
+import LeaveRenewalsReport from './leaveRenewals/LeaveRenewalsReport';
 import StaffLoanReport from './staffLoans/StaffLoanReport';
 
 type ReportCardItem = {
@@ -36,6 +37,12 @@ const reportCards: ReportCardItem[] = [
     title: 'Leave Balances',
     icon: <BeachAccessOutlined sx={{ fontSize: '40px' }} />,
     component: <LeaveBalancesReport />,
+  },
+  {
+    key: 'leave-renewals',
+    title: 'Leave Renewals',
+    icon: <EventRepeatOutlined sx={{ fontSize: '40px' }} />,
+    component: <LeaveRenewalsReport />,
   },
   {
     key: 'staff-loans',

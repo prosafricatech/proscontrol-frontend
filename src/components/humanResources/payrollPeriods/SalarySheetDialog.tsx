@@ -121,7 +121,21 @@ const SalarySheetDialog = ({
 
   const organization = authObject?.authOrganization?.organization;
 
-  const selectedPeriod = `${selectedPayrollPeriod?.year} - ${selectedPayrollPeriod?.monthName}`;
+  // monthName isn't a backend field — some callers compute and attach it
+  // themselves, but not all (e.g. an initial URL-driven period selection),
+  // so it's derived here from `month` directly rather than trusted as-is.
+  const MONTH_NAMES = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December',
+  ];
+  const periodMonth = selectedPayrollPeriod?.month;
+  const monthName =
+    periodMonth && periodMonth >= 1 && periodMonth <= 12
+      ? MONTH_NAMES[periodMonth - 1]
+      : selectedPayrollPeriod?.monthName || '';
+  const selectedPeriod = selectedPayrollPeriod?.year
+    ? `${selectedPayrollPeriod.year} - ${monthName}`
+    : '';
 
   const employeeDeductions = rows.flatMap(
     (itm) =>

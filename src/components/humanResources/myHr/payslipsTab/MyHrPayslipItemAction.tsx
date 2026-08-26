@@ -13,6 +13,12 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import humanResourcesServices from '../../humanResourcesServices';
 import { PayslipViewDialog } from '../../payrollRuns/PayrollRunDialogs';
+import {
+  calculateGrossSalary,
+  calculateNetSalary,
+  calculateTotalAllowances,
+  calculateTotalDeductions,
+} from '../../payrollRuns/payrollUtils';
 
 interface MyHrPayslipItemActionProps {
   payslipId: number;
@@ -23,17 +29,18 @@ function mapPayslipForDialog(raw: any, profile?: any) {
 
   const allowances = raw.allowances || [];
   const deductions = raw.deductions || [];
+  const basicSalary = raw.basic_salary || 0;
+  const paye = raw.paye || 0;
 
-  const totalAllowances = allowances.reduce(
-    (sum: number, a: any) => sum + (a.amount || 0),
-    0
-  );
-  const totalDeductions = deductions.reduce(
-    (sum: number, d: any) => sum + (d.amount || 0),
-    0
-  );
-  const grossSalary = (raw.basic_salary || 0) + totalAllowances;
-  const netSalary = grossSalary - (raw.paye || 0) - totalDeductions;
+  // Same calculations the HR-side payslip dialog uses (payrollUtils.ts) —
+  // PAYE is also persisted as its own PayslipDeduction row (deduction_type_id
+  // null) alongside the dedicated `paye` field, so calculateTotalDeductions'
+  // exclusion of that row matters here too: summing every deduction plus
+  // subtracting `paye` separately would double-subtract it.
+  const totalAllowances = calculateTotalAllowances(allowances);
+  const totalDeductions = calculateTotalDeductions(deductions);
+  const grossSalary = calculateGrossSalary(basicSalary, allowances);
+  const netSalary = calculateNetSalary(basicSalary, allowances, deductions, paye);
 
   return {
     ...raw,

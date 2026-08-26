@@ -11,6 +11,7 @@ import {
   DialogContent,
   DialogTitle,
   Stack,
+  TextField,
 } from '@mui/material';
 import { DateTimePicker } from '@mui/x-date-pickers';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -35,6 +36,7 @@ const LoanDisburseForm = ({
 }: LoanDisburseFormProps) => {
   const [creditLedgerId, setCreditLedgerId] = useState(0);
   const [disbursedAt, setDisbursedAt] = useState(dayjs().toISOString());
+  const [reference, setReference] = useState('');
   const { enqueueSnackbar } = useSnackbar();
   const queryClient = useQueryClient();
 
@@ -42,6 +44,7 @@ const LoanDisburseForm = ({
     if (!open) return;
     setCreditLedgerId(0);
     setDisbursedAt(dayjs().toISOString());
+    setReference('');
   }, [open]);
 
   const { mutate: disburse, isPending } = useMutation({
@@ -68,6 +71,7 @@ const LoanDisburseForm = ({
       id: loanRequest.id,
       credit_ledger_id: creditLedgerId,
       disbursed_at: disbursedAt || undefined,
+      reference: reference || undefined,
     });
   };
 
@@ -104,6 +108,14 @@ const LoanDisburseForm = ({
             slotProps={{
               textField: { size: 'small', fullWidth: true },
             }}
+          />
+          <TextField
+            label='Reference (optional)'
+            placeholder='e.g. Cheque / transfer number'
+            size='small'
+            fullWidth
+            value={reference}
+            onChange={(e) => setReference(e.target.value)}
           />
         </Stack>
       </DialogContent>

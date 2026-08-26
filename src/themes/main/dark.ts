@@ -233,6 +233,21 @@ export const mainTheme: ThemeOptions = {
           border: '1px solid #2EB5C9',
           color: '#2EB5C9',
         },
+        outlinedSuccess: {
+          border: '1px solid #3BD2A2',
+          color: '#3BD2A2',
+          '& .MuiAlert-icon': { color: '#3BD2A2' },
+        },
+        outlinedWarning: {
+          border: '1px solid #FFC84C',
+          color: '#FFC84C',
+          '& .MuiAlert-icon': { color: '#FFC84C' },
+        },
+        outlinedError: {
+          border: '1px solid #E73145',
+          color: '#E73145',
+          '& .MuiAlert-icon': { color: '#E73145' },
+        },
       },
     },
     MuiCardContent: {

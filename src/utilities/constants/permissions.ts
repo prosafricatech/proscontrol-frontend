@@ -174,6 +174,7 @@ export const PERMISSIONS = {
   LOANS_EDIT: 'Loans:Edit',
   LOANS_DELETE: 'Loans:Delete',
   APPROVED_LOANS_DISBURSE: 'ApprovedLoans:Disburse',
+  APPROVED_LOANS_RECEIPT: 'ApprovedLoans:Receipt',
   APPROVED_PAYROLL_POST_JOURNAL: 'ApprovedPayroll:PostJournal',
   APPROVED_PAYROLL_PAY: 'ApprovedPayroll:Pay',
   LEAVE_ALLOCATIONS_READ: 'LeaveAllocations:Read',
@@ -217,8 +218,7 @@ export const PERMISSIONS = {
   PROJECT_SUBCONTRACTS_CREATE: 'ProjectSubcontracts:Create',
   PROJECT_SUBCONTRACTS_EDIT: 'ProjectSubcontracts:Edit',
   PROJECT_SUBCONTRACTS_DELETE: 'ProjectSubcontracts:Delete',
-  PROJECT_SUBCONTRACT_CERTIFICATES_APPROVE:
-    'ProjectSubcontractCertificates:Approve',
+  PROJECT_SUBCONTRACT_CERTIFICATES_APPROVE: 'ProjectSubcontractCertificates:Approve',
 
   PROJECTS_MANAGE_TEAM: 'Projects:ManageTeam',
 

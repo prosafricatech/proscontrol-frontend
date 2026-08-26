@@ -155,6 +155,21 @@ const PayEmployeesDialog = ({
       enqueueSnackbar(getErrorMessage(error), { variant: 'error' }),
   });
 
+  const allSelected =
+    payableRows.length > 0 &&
+    payableRows.every((row) => selected[row.payslip_id]);
+  const someSelected = payableRows.some((row) => selected[row.payslip_id]);
+
+  const handleToggleSelectAll = (checked: boolean) => {
+    setSelected((state) => {
+      const next = { ...state };
+      payableRows.forEach((row) => {
+        next[row.payslip_id] = checked;
+      });
+      return next;
+    });
+  };
+
   const partialTotal = payableRows
     .filter((row) => selected[row.payslip_id])
     .reduce((sum, row) => sum + Number(amounts[row.payslip_id] || 0), 0);
@@ -228,11 +243,34 @@ const PayEmployeesDialog = ({
             </Alert>
           ) : (
             <>
+              <Stack direction='row' spacing={1} justifyContent='flex-end'>
+                <Button
+                  size='small'
+                  onClick={() => handleToggleSelectAll(true)}
+                  disabled={allSelected}
+                >
+                  Select All
+                </Button>
+                <Button
+                  size='small'
+                  onClick={() => handleToggleSelectAll(false)}
+                  disabled={!someSelected}
+                >
+                  Select None
+                </Button>
+              </Stack>
               <TableContainer sx={{ overflowX: 'auto' }}>
-              <Table size='small'>
+              <Table size='small' sx={{ minWidth: 480 }}>
                 <TableHead>
                   <TableRow>
-                    <TableCell padding='checkbox' />
+                    <TableCell padding='checkbox'>
+                      <Checkbox
+                        size='small'
+                        checked={allSelected}
+                        indeterminate={someSelected && !allSelected}
+                        onChange={(e) => handleToggleSelectAll(e.target.checked)}
+                      />
+                    </TableCell>
                     <TableCell>Employee</TableCell>
                     <TableCell align='right'>Remaining</TableCell>
                     <TableCell align='right' width={140}>
@@ -256,8 +294,10 @@ const PayEmployeesDialog = ({
                         />
                       </TableCell>
                       <TableCell>
-                        <Typography variant='body2'>{row.name}</Typography>
-                        <Typography variant='caption' color='text.secondary'>
+                        <Typography variant='body2' noWrap>
+                          {row.name}
+                        </Typography>
+                        <Typography variant='caption' color='text.secondary' noWrap component='div'>
                           {row.employee_number}
                           {row.paid_amount > 0 && (
                             <Chip
@@ -276,6 +316,7 @@ const PayEmployeesDialog = ({
                       <TableCell align='right'>
                         <TextField
                           size='small'
+                          sx={{ minWidth: 110 }}
                           value={
                             amounts[row.payslip_id]
                               ? Number(amounts[row.payslip_id]).toLocaleString()

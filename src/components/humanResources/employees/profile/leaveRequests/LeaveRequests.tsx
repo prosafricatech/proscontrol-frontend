@@ -9,6 +9,7 @@ import JumboSearch from '@jumbo/components/JumboSearch';
 import { Card, Stack } from '@mui/material';
 import { useParams, useSearchParams } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
+import RequisitionsWaitingForSelector from '@/components/processApproval/RequisitionsWaitingForSelector';
 import humanResourcesServices from '../../../humanResourcesServices';
 import { EmployeesProvider } from '../../EmployeesProvider';
 import LeaveRequestActionTail from './LeaveRequestActionTail';
@@ -35,6 +36,7 @@ const LeaveRequests = ({ employeeId }: { employeeId?: number }) => {
     queryParams: {
       employee_id: resolvedEmployeeId,
       keyword: '',
+      next_approval_role_id: null as number | null,
     },
     countKey: 'total',
     dataKey: 'data',
@@ -56,6 +58,16 @@ const LeaveRequests = ({ employeeId }: { employeeId?: number }) => {
       },
     }));
   }, []);
+
+  const handleOnWaitingForChange = React.useCallback(
+    (next_approval_role_id: number | null) => {
+      setQueryOptions((state) => ({
+        ...state,
+        queryParams: { ...state.queryParams, next_approval_role_id },
+      }));
+    },
+    []
+  );
 
   useEffect(() => {
     setQueryOptions((state) => ({
@@ -92,7 +104,11 @@ const LeaveRequests = ({ employeeId }: { employeeId?: number }) => {
           <JumboListToolbar
             hideItemsPerPage={true}
             actionTail={
-              <Stack direction='row'>
+              <Stack direction='row' spacing={1} alignItems='center'>
+                <RequisitionsWaitingForSelector
+                  value={queryOptions.queryParams.next_approval_role_id}
+                  onChange={handleOnWaitingForChange}
+                />
                 <JumboSearch
                   onChange={handleOnChange}
                   value={queryOptions.queryParams.keyword}

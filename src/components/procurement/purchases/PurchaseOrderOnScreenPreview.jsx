@@ -1,8 +1,11 @@
 import { readableDate } from '@/app/helpers/input-sanitization-helpers';
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
+import AttachmentsAccordionGroup from '@/components/filesShelf/attachments/AttachmentsAccordionGroup';
 import { PERMISSIONS } from '@/utilities/constants/permissions';
+import { AttachmentOutlined } from '@mui/icons-material';
 import {
   Box,
+  Chip,
   Divider,
   Grid,
   Paper,
@@ -12,13 +15,17 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  Tooltip,
   Typography,
   useTheme,
 } from '@mui/material';
-import React from 'react';
+import React, { useRef } from 'react';
 
 function PurchaseOrderOnScreenPreview({ order }) {
   const theme = useTheme();
+  const attachmentsRef = useRef(null);
+  const totalAttachmentsCount =
+    (order.attachments_count || 0) + (order.requisition_attachments_count || 0);
   const currencyCode = order.currency?.code || order.currency?.name || 'N/A';
   const {
     checkOrganizationPermission,
@@ -88,6 +95,24 @@ function PurchaseOrderOnScreenPreview({ order }) {
             <Typography variant='h6' fontWeight='bold' gutterBottom>
               {order.orderNo}
             </Typography>
+            {totalAttachmentsCount > 0 && (
+              <Tooltip title='Jump to attachments'>
+                <Chip
+                  size='small'
+                  variant='outlined'
+                  color='info'
+                  onClick={() =>
+                    attachmentsRef.current?.scrollIntoView({
+                      behavior: 'smooth',
+                      block: 'start',
+                    })
+                  }
+                  icon={<AttachmentOutlined fontSize='small' />}
+                  label={`Attachments (${totalAttachmentsCount})`}
+                  sx={{ mt: 1 }}
+                />
+              </Tooltip>
+            )}
           </Box>
         </Grid>
       </Grid>
@@ -701,6 +726,41 @@ function PurchaseOrderOnScreenPreview({ order }) {
           </TableContainer>
         </Box>
       )}
+
+      {/* Attachments */}
+      <Box ref={attachmentsRef} sx={{ mb: 3, mt: 3, scrollMarginTop: 16 }}>
+        <Typography
+          variant='h6'
+          sx={{
+            color: headerColor,
+            textAlign: 'center',
+            mb: 2,
+          }}
+        >
+          ATTACHMENTS
+        </Typography>
+
+        <AttachmentsAccordionGroup
+          tabs={[
+            {
+              label: 'Purchase Order',
+              attachmentable_type: 'purchase_order',
+              attachmentable_id: order.id,
+            },
+            ...(order.requisition_id
+              ? [
+                  {
+                    label: 'Requisition',
+                    attachmentable_type: 'requisition',
+                    attachmentable_id: order.requisition_id,
+                    readOnly: true,
+                  },
+                ]
+              : []),
+          ]}
+          defaultExpandedIndex={totalAttachmentsCount > 0 ? 0 : -1}
+        />
+      </Box>
     </>
   );
 }

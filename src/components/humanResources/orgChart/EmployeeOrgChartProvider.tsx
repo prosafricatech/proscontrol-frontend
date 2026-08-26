@@ -11,6 +11,7 @@ export interface OrgChartNode {
   manager_id: number | null;
   department_id: number | null;
   department?: { id: number; name: string } | null;
+  active_contract?: { designation?: { id: number; title: string } | null } | null;
   children?: OrgChartNode[];
 }
 

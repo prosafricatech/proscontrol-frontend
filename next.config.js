@@ -44,6 +44,17 @@ const nextConfig = {
     root: __dirname,
   },
 
+  // ✅ Transpile Highcharts packages
+  transpilePackages: [
+    'highcharts',
+    'highcharts-react-official',
+    'highcharts/modules/exporting',
+    'highcharts/modules/export-data',
+    'highcharts/modules/offline-exporting',
+    'highcharts/modules/treegraph',
+    'highcharts/modules/treemap'
+  ],
+
   env: {
     REACT_APP_IMAGES_PATH: '/assets/images',
   },
