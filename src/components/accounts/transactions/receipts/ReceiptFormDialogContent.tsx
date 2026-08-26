@@ -286,6 +286,18 @@ function ReceiptFormDialogContent({
     setValue('items', items);
   }, [items, setValue]);
 
+  // Consume the quick-added ledger once LedgerSelect has applied it via
+  // onChange. Without this, addedLedger stays truthy forever, and
+  // LedgerSelect's own internal effect (keyed on the inline onChange prop,
+  // which gets a new reference on every re-render) keeps re-firing onChange
+  // indefinitely -> infinite render loop -> page freeze. Resetting to null
+  // here breaks the cycle.
+  useEffect(() => {
+    if (addedLedger) {
+      setAddedLedger(null);
+    }
+  }, [addedLedger]);
+
   // Update items when receipt changes (for edit mode)
   useEffect(() => {
     if (receipt?.items) {

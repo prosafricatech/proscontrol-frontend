@@ -105,7 +105,9 @@ const TransactionItemForm: React.FC<TransactionItemFormProps> = ({
   const [openLedgerQuickAdd, setOpenLedgerQuickAdd] = useState(false);
   const [ledgerType, setLedgerType] = useState<'debit' | 'credit'>('credit');
   const [addedLedger, setAddedLedger] = useState<Ledger | null>(null);
-  const [selectedLedgerCurrencyId, setSelectedLedgerCurrencyId] = useState<number | undefined>(item?.item_form_ledger_currency_id);
+  const [selectedLedgerCurrencyId, setSelectedLedgerCurrencyId] = useState<
+    number | undefined
+  >(item?.item_form_ledger_currency_id);
 
   const validationSchema = yup.object().shape({
     debit_ledger_id: yup.number().when('$isPaymentOrTransfer', {
@@ -153,10 +155,7 @@ const TransactionItemForm: React.FC<TransactionItemFormProps> = ({
         'Amount should not exceed unapproved amount of selected relatable',
         function (value) {
           const relatable = this.parent?.relatable as
-            | PurchaseOrderOption
-            | BillOption
-            | null
-            | undefined;
+            PurchaseOrderOption | BillOption | null | undefined;
 
           if (!relatable?.id || value == null) {
             return true;
@@ -261,7 +260,11 @@ const TransactionItemForm: React.FC<TransactionItemFormProps> = ({
   // Validate ledger currency matches selected currency
   useEffect(() => {
     // Only validate if we have a selected currency and a ledger currency
-    if (currencyErrorField && selectedCurrencyId && selectedLedgerCurrencyId !== undefined) {
+    if (
+      currencyErrorField &&
+      selectedCurrencyId &&
+      selectedLedgerCurrencyId !== undefined
+    ) {
       if (selectedCurrencyId !== selectedLedgerCurrencyId) {
         setError(currencyErrorField, {
           type: 'manual',
@@ -271,7 +274,13 @@ const TransactionItemForm: React.FC<TransactionItemFormProps> = ({
         clearErrors(currencyErrorField);
       }
     }
-  }, [selectedCurrencyId, selectedLedgerCurrencyId, currencyErrorField, setError, clearErrors]);
+  }, [
+    selectedCurrencyId,
+    selectedLedgerCurrencyId,
+    currencyErrorField,
+    setError,
+    clearErrors,
+  ]);
 
   useEffect(() => {
     setIsDirty(Object.keys(dirtyFields).length > 0);
@@ -279,14 +288,35 @@ const TransactionItemForm: React.FC<TransactionItemFormProps> = ({
 
   useEffect(() => {
     if (addedLedger?.id) {
-      setValue('debit_ledger', addedLedger);
-      setValue('debit_ledger_id', addedLedger.id);
+      // ledgerType-aware: this component shows either a Debit field
+      // (isPayment/isTransfer) or a Credit field (isReceipt), never both, and
+      // ledgerType already tracks which one the quick-add was opened from.
+      // Writing to the wrong field was a pre-existing bug (e.g. quick-adding
+      // a Credit ledger on a Receipt also silently set debit_ledger_id).
+      if (ledgerType === 'debit') {
+        setValue('debit_ledger', addedLedger);
+        setValue('debit_ledger_id', addedLedger.id);
+      } else if (ledgerType === 'credit') {
+        setValue('credit_ledger', addedLedger);
+        setValue('credit_ledger_id', addedLedger.id);
+      }
+      // Consume the quick-added ledger once it's been applied. Without this,
+      // addedLedger stays truthy forever, and LedgerSelect's own effect
+      // (keyed on the inline onChange prop, which gets a new reference on
+      // every re-render) keeps re-firing onChange indefinitely -> infinite
+      // render loop -> page freeze. Resetting to null here breaks the cycle.
+      setAddedLedger(null);
     }
-  }, [addedLedger, setValue]);
+  }, [addedLedger, ledgerType, setValue]);
 
   const updateItems = async (formData: FormValues) => {
     // Check currency validation before submitting
-    if (currencyErrorField && selectedCurrencyId && selectedLedgerCurrencyId !== undefined && selectedCurrencyId !== selectedLedgerCurrencyId) {
+    if (
+      currencyErrorField &&
+      selectedCurrencyId &&
+      selectedLedgerCurrencyId !== undefined &&
+      selectedCurrencyId !== selectedLedgerCurrencyId
+    ) {
       setError(currencyErrorField, {
         type: 'manual',
         message: 'Ledger currency must match the selected currency.',
@@ -306,7 +336,9 @@ const TransactionItemForm: React.FC<TransactionItemFormProps> = ({
       relatable_id: relatable?.id ?? null,
       relatable: relatable ?? null,
       relatableNo:
-        (relatable as any)?.orderNo || (relatable as any)?.invoiceNo || undefined,
+        (relatable as any)?.orderNo ||
+        (relatable as any)?.invoiceNo ||
+        undefined,
     };
 
     if (index > -1) {
@@ -520,7 +552,8 @@ const TransactionItemForm: React.FC<TransactionItemFormProps> = ({
                   <BillPicker
                     value={watch('relatable') as BillOption | null}
                     stakeholder={
-                      (watch('debit_ledger') as Ledger | undefined)?.stakeholders?.[0] ?? null
+                      (watch('debit_ledger') as Ledger | undefined)
+                        ?.stakeholders?.[0] ?? null
                     }
                     currencyId={selectedCurrencyId ?? null}
                     onChange={(newValue) => {

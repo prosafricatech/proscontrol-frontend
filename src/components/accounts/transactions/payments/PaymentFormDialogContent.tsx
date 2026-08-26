@@ -148,7 +148,10 @@ const PaymentFormDialogContent: React.FC<PaymentFormDialogContentProps> = ({
     // underneath already-added items and their relatable links. Leaving
     // currency_id unchanged surfaces the mismatch via TransactionItemForm's
     // own ledger-vs-payment-currency check instead.
-    if (items.length > 0 && Number(currencyId) !== Number(watch('currency_id'))) {
+    if (
+      items.length > 0 &&
+      Number(currencyId) !== Number(watch('currency_id'))
+    ) {
       return;
     }
 
@@ -289,10 +292,19 @@ const PaymentFormDialogContent: React.FC<PaymentFormDialogContentProps> = ({
 
   useEffect(() => {
     setValue('items', items);
+  }, [items, setValue]);
+
+  useEffect(() => {
     if (addedLedger?.id) {
       setValue('credit_ledger_id', addedLedger.id);
+      // Consume the quick-added ledger once it's been applied. Without this,
+      // addedLedger stays truthy forever, and LedgerSelect's own effect
+      // (keyed on the inline onChange prop, which gets a new reference on
+      // every re-render) keeps re-firing onChange indefinitely -> infinite
+      // render loop -> page freeze. Resetting to null here breaks the cycle.
+      setAddedLedger(null);
     }
-  }, [items, setValue, addedLedger]);
+  }, [addedLedger, setValue]);
 
   const totalAmount = items.reduce(
     (totalAmount, item) => totalAmount + item.amount,
