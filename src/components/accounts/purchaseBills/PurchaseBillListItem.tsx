@@ -1,12 +1,21 @@
 'use client';
 
 import { readableDate } from '@/app/helpers/input-sanitization-helpers';
-import { Grid, ListItemText, Tooltip, Typography } from '@mui/material';
+import { Chip, Grid, ListItemText, Stack, Tooltip, Typography } from '@mui/material';
 import PurchaseBillItemAction from './PurchaseBillItemAction';
 import { PurchaseBill } from './PurchaseBillType';
 
 function PurchaseBillListItem({ purchaseBill }: { purchaseBill: PurchaseBill }) {
   const sourceNo = purchaseBill.source?.orderNo || purchaseBill.source?.grnNo || '';
+
+  const paidAmount = purchaseBill.paid_amount ?? 0;
+  const netAmount = purchaseBill.net_amount ?? 0;
+  const paymentStatus =
+    netAmount > 0 && paidAmount >= netAmount
+      ? 'paid'
+      : paidAmount > 0
+        ? 'partial'
+        : 'unpaid';
 
   return (
     <Grid
@@ -37,11 +46,28 @@ function PurchaseBillListItem({ purchaseBill }: { purchaseBill: PurchaseBill }) 
       <Grid size={{ xs: 6, md: 2, lg: 1.5 }}>
         <ListItemText
           primary={
-            <Tooltip title='Bill No.'>
-              <Typography variant='h5' fontSize={14} lineHeight={1.25} mb={0} noWrap component='span'>
-                {purchaseBill.invoiceNo}
-              </Typography>
-            </Tooltip>
+            <Stack direction='row' spacing={0.5} alignItems='center'>
+              <Tooltip title='Bill No.'>
+                <Typography variant='h5' fontSize={14} lineHeight={1.25} mb={0} noWrap component='span'>
+                  {purchaseBill.invoiceNo}
+                </Typography>
+              </Tooltip>
+              {paymentStatus === 'paid' && (
+                <Tooltip title='Fully paid to the supplier'>
+                  <Chip size='small' variant='outlined' color='success' label='Paid' />
+                </Tooltip>
+              )}
+              {paymentStatus === 'partial' && (
+                <Tooltip title={`Partially paid: ${paidAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })} of ${netAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}>
+                  <Chip size='small' variant='outlined' color='warning' label='Partially Paid' />
+                </Tooltip>
+              )}
+              {paymentStatus === 'unpaid' && (
+                <Tooltip title='Not yet paid to the supplier'>
+                  <Chip size='small' variant='outlined' label='Unpaid' />
+                </Tooltip>
+              )}
+            </Stack>
           }
           secondary={
             sourceNo ? (

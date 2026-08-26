@@ -641,6 +641,16 @@ humanResourcesServices.deleteLeaveAllocation = async (id) => {
     return data;
 }
 
+humanResourcesServices.bulkDeleteLeaveAllocations = async (ids) => {
+    const { data } = await axios.delete('/api/humanResources/leaveAllocations/bulk', { data: { ids } });
+    return data;
+}
+
+humanResourcesServices.bulkUpdateLeaveAllocationsStartDate = async ({ ids, start_date }) => {
+    const { data } = await axios.put('/api/humanResources/leaveAllocations/bulk/start-date', { ids, start_date });
+    return data;
+}
+
 // ============================================
 // LEAVE REQUESTS
 // ============================================
