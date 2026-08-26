@@ -6,6 +6,7 @@ import {
   Alert,
   Box,
   Button,
+  Checkbox,
   Chip,
   DialogActions,
   DialogContent,
@@ -15,6 +16,7 @@ import {
   IconButton,
   LinearProgress,
   MenuItem,
+  Stack,
   Table,
   TableBody,
   TableCell,
@@ -40,6 +42,8 @@ type RenewalRow = {
   employee_name: string;
   department: string | null;
   action: 'create' | 'update' | 'skip';
+  prior_allocation_id: number | null;
+  prior_start_date: string | null;
   prior_end_date: string | null;
   prior_allocated_days: number | null;
   prior_used_days: number | null;
@@ -76,6 +80,9 @@ function LeaveRenewalsReportContent({ onClose }: { onClose?: () => void }) {
   const [appliedGender, setAppliedGender] = useState<'' | 'male' | 'female'>('');
   const [appliedStartDate, setAppliedStartDate] = useState<string>('');
   const [confirmApply, setConfirmApply] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
+  const [confirmBulkRealign, setConfirmBulkRealign] = useState(false);
 
   const { data: leaveTypes } = useQuery<LeaveTypeOption[]>({
     queryKey: ['all-leave-types-for-report'],
@@ -118,8 +125,43 @@ function LeaveRenewalsReportContent({ onClose }: { onClose?: () => void }) {
     },
   });
 
+  const { mutate: bulkDelete, isPending: isBulkDeleting } = useMutation({
+    mutationFn: humanResourcesServices.bulkDeleteLeaveAllocations,
+    onSuccess: (result) => {
+      enqueueSnackbar(result?.message || 'Allocations deleted', { variant: 'success' });
+      setSelectedIds([]);
+      setConfirmBulkDelete(false);
+      refetch();
+    },
+    onError: (mutationError: any) => {
+      enqueueSnackbar(
+        mutationError?.response?.data?.message || 'Unable to delete allocations',
+        { variant: 'error' }
+      );
+      setConfirmBulkDelete(false);
+    },
+  });
+
+  const { mutate: bulkRealign, isPending: isBulkRealigning } = useMutation({
+    mutationFn: humanResourcesServices.bulkUpdateLeaveAllocationsStartDate,
+    onSuccess: (result) => {
+      enqueueSnackbar(result?.message || 'Start date updated', { variant: 'success' });
+      setSelectedIds([]);
+      setConfirmBulkRealign(false);
+      refetch();
+    },
+    onError: (mutationError: any) => {
+      enqueueSnackbar(
+        mutationError?.response?.data?.message || 'Unable to update start date',
+        { variant: 'error' }
+      );
+      setConfirmBulkRealign(false);
+    },
+  });
+
   const handlePreview = () => {
     if (!selectedLeaveTypeId) return;
+    setSelectedIds([]);
     setAppliedLeaveTypeId(selectedLeaveTypeId);
     setAppliedScope(scope);
     setAppliedGender(gender);
@@ -139,6 +181,20 @@ function LeaveRenewalsReportContent({ onClose }: { onClose?: () => void }) {
 
   const rows = data?.rows || [];
   const needsRenewalCount = data?.would_create ?? 0;
+  const selectableRows = rows.filter((row) => row.prior_allocation_id);
+  const allSelectableSelected =
+    selectableRows.length > 0 && selectedIds.length === selectableRows.length;
+  const someSelected = selectedIds.length > 0 && !allSelectableSelected;
+
+  const toggleSelectAll = () => {
+    setSelectedIds(allSelectableSelected ? [] : selectableRows.map((row) => row.prior_allocation_id as number));
+  };
+
+  const toggleSelectOne = (id: number) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((existing) => existing !== id) : [...prev, id]
+    );
+  };
 
   return (
     <>
@@ -282,26 +338,79 @@ function LeaveRenewalsReportContent({ onClose }: { onClose?: () => void }) {
                 <Table size='small'>
                   <TableHead>
                     <TableRow>
+                      <TableCell padding='checkbox'>
+                        <Checkbox
+                          size='small'
+                          indeterminate={someSelected}
+                          checked={allSelectableSelected}
+                          disabled={selectableRows.length === 0}
+                          onChange={toggleSelectAll}
+                        />
+                      </TableCell>
                       <TableCell>Employee No.</TableCell>
                       <TableCell>Name</TableCell>
                       <TableCell>Department</TableCell>
                       <TableCell>Status</TableCell>
+                      <TableCell>Current Start Date</TableCell>
                       <TableCell>Prior Cycle End</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
                     {rows.map((row) => (
-                      <TableRow key={row.employee_id}>
+                      <TableRow key={row.employee_id} hover>
+                        <TableCell padding='checkbox'>
+                          <Checkbox
+                            size='small'
+                            checked={!!row.prior_allocation_id && selectedIds.includes(row.prior_allocation_id)}
+                            disabled={!row.prior_allocation_id}
+                            onChange={() =>
+                              row.prior_allocation_id && toggleSelectOne(row.prior_allocation_id)
+                            }
+                          />
+                        </TableCell>
                         <TableCell>{row.employee_number}</TableCell>
                         <TableCell>{row.employee_name}</TableCell>
                         <TableCell>{row.department || '-'}</TableCell>
                         <TableCell>{statusChip(row.action)}</TableCell>
+                        <TableCell>{row.prior_start_date || '-'}</TableCell>
                         <TableCell>{row.prior_end_date || 'Never allocated'}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
               </TableContainer>
+            )}
+
+            {selectedIds.length > 0 && (
+              <Alert
+                severity='warning'
+                variant='outlined'
+                sx={{ mb: 2 }}
+                action={
+                  <Stack direction='row' spacing={1}>
+                    <Button
+                      size='small'
+                      color='warning'
+                      variant='outlined'
+                      disabled={!startDate}
+                      onClick={() => setConfirmBulkRealign(true)}
+                    >
+                      Set Start Date
+                    </Button>
+                    <Button
+                      size='small'
+                      color='error'
+                      variant='outlined'
+                      onClick={() => setConfirmBulkDelete(true)}
+                    >
+                      Delete
+                    </Button>
+                  </Stack>
+                }
+              >
+                {selectedIds.length} allocation(s) selected
+                {!startDate && ' — pick a Start Date above to enable "Set Start Date"'}
+              </Alert>
             )}
 
             <LoadingButton
@@ -349,6 +458,67 @@ function LeaveRenewalsReportContent({ onClose }: { onClose?: () => void }) {
           <Button onClick={() => handleApply(true)} variant='contained' color='warning'>
             Continue
           </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={confirmBulkDelete} onClose={() => setConfirmBulkDelete(false)} maxWidth='sm' fullWidth>
+        <DialogTitle>
+          <Typography variant='h6' fontWeight={600}>
+            Delete {selectedIds.length} Allocation(s)?
+          </Typography>
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
+            Any allocation already touched by a leave request (used days &gt; 0) will be
+            skipped instead of deleted, and reported back.
+          </Typography>
+          <Typography variant='body2' color='error.main'>
+            This action cannot be undone. Continue?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmBulkDelete(false)} variant='outlined'>
+            Cancel
+          </Button>
+          <LoadingButton
+            loading={isBulkDeleting}
+            onClick={() => bulkDelete(selectedIds)}
+            variant='contained'
+            color='error'
+          >
+            Delete
+          </LoadingButton>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={confirmBulkRealign} onClose={() => setConfirmBulkRealign(false)} maxWidth='sm' fullWidth>
+        <DialogTitle>
+          <Typography variant='h6' fontWeight={600}>
+            Set Start Date on {selectedIds.length} Allocation(s)?
+          </Typography>
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
+            Moves the start date (and cycle end date) of the selected allocations to{' '}
+            <strong>{startDate}</strong>. Any allocation already touched by a leave request
+            (used days &gt; 0) will be skipped instead, and reported back.
+          </Typography>
+          <Typography variant='body2' color='warning.main'>
+            This action cannot be undone. Continue?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmBulkRealign(false)} variant='outlined'>
+            Cancel
+          </Button>
+          <LoadingButton
+            loading={isBulkRealigning}
+            onClick={() => bulkRealign({ ids: selectedIds, start_date: startDate })}
+            variant='contained'
+            color='warning'
+          >
+            Continue
+          </LoadingButton>
         </DialogActions>
       </Dialog>
     </>

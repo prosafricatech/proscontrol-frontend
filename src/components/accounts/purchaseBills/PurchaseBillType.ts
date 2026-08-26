@@ -11,6 +11,18 @@ export interface PurchaseBillStakeholder {
   name: string;
 }
 
+export interface PurchaseBillItem {
+  product?: { id: number; name?: string; item_name?: string };
+  quantity?: number;
+  rate?: number;
+  amount: number;
+}
+
+export interface PurchaseBillAttachment {
+  source: 'Purchase Order' | 'Requisition';
+  attachment: { id: number; name: string; full_path?: string };
+}
+
 export interface PurchaseBill {
   id: number;
   invoiceNo: string;
@@ -22,6 +34,13 @@ export interface PurchaseBill {
   vat_amount?: number;
   adjustment_amount?: number;
   net_amount: number;
+  approved_payment_amount?: number;
+  unapproved_amount?: number;
+  total_amount?: number;
+  paid_amount?: number;
+  unpaid_amount?: number;
   stakeholder?: PurchaseBillStakeholder;
   source?: PurchaseBillSource;
+  items?: PurchaseBillItem[];
+  attachments?: PurchaseBillAttachment[];
 }

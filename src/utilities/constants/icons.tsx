@@ -69,6 +69,7 @@ export const ICONS = {
   approvedSubcontractCertificates: TaskAltOutlined,
   approvedProjectPaymentClaims: VerifiedOutlined,
   transactions: ReceiptOutlined,
+  bankReconciliation: AccountBalanceOutlined,
   supplierBills: ReceiptLongOutlined,
   budgets: EnergySavingsLeafOutlined,
   purchases: ShoppingCartOutlined,

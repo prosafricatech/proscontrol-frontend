@@ -579,6 +579,21 @@ function Sidebar({ menus }) {
                     }
                 }
 
+                // Accounts > Bank Reconciliation
+                if (!checkOrganizationPermission([
+                    PERMISSIONS.BANK_RECONCILIATION_READ,
+                    PERMISSIONS.BANK_RECONCILIATION_CREATE,
+                    PERMISSIONS.BANK_RECONCILIATION_EDIT,
+                    PERMISSIONS.BANK_RECONCILIATION_DELETE,
+                ])) {
+                    const accountsMenuIndex = updatedMenus.findIndex(menu => menu.label === dictionary.sidebar.menu.accounts_and_finance);
+                    if (accountsMenuIndex >= 0) {
+                        updatedMenus[accountsMenuIndex].children = updatedMenus[accountsMenuIndex].children.filter(
+                            child => child.label !== dictionary.sidebar.menuItem.bankReconciliation
+                        );
+                    }
+                }
+
                 //Accounts > Supplier Bills
                 if (
                     !authOrganization?.organization?.settings?.defer_grn_billing ||

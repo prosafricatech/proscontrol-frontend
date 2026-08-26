@@ -29,7 +29,7 @@ import { PayrollRunActions } from './PayrollRunActions';
 import { PayslipViewDialog, SimulationDialog } from './PayrollRunDialogs';
 import { ApprovalsTab, PayslipsTab, TabPanel } from './PayrollRunTabs';
 import { PayrollRunType } from './PayrollRunType';
-import { processPayslips, statusColor } from './payrollUtils';
+import { formatPayslipPeriod, processPayslips, statusColor } from './payrollUtils';
 import SummaryTab from './SummaryTab';
 
 const getErrorMessage = (error: any) => {
@@ -232,6 +232,7 @@ const PayrollRunsListItem = ({
     `${payrollRun.employee?.first_name || ''} ${payrollRun.employee?.last_name || ''}`.trim();
   const runLabel =
     employeeName || payrollRun.cost_center?.name || 'Company-wide run';
+  const periodLabel = formatPayslipPeriod({ run: { period: payrollRun.period } });
 
   // Mutations
   const { mutate: submitPayrollRun, isPending: isSubmitting } = useMutation({
@@ -463,6 +464,14 @@ const PayrollRunsListItem = ({
                 </Typography>
               )}
             </Typography>
+            {periodLabel !== '-' && (
+              <Chip
+                label={periodLabel}
+                size='small'
+                variant='outlined'
+                sx={{ flexShrink: 0 }}
+              />
+            )}
             <Chip
               label={payrollRun.status_label || payrollRun.status || 'draft'}
               color={statusColor(payrollRun.status || '')}

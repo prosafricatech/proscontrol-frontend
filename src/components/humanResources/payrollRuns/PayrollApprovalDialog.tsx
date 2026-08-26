@@ -130,6 +130,7 @@ const calculateSummaryFromPayslips = (payslips: any[] = []) => {
     total_allowances: 0,
     total_deductions: 0,
     total_employer_contributions: 0,
+    total_employer_cost: 0,
     allowance_breakdown: [] as Array<{ label: string; amount: number }>,
     // PAYE is a deduction line too, but it already has its own dedicated
     // summary card — excluded here so it isn't double-counted in the total.
@@ -186,6 +187,10 @@ const calculateSummaryFromPayslips = (payslips: any[] = []) => {
     payslips,
     'employer_contributions'
   );
+  // Gross salary + employer-side contributions — the full cost to the
+  // employer, not just what employees are paid.
+  totals.total_employer_cost =
+    totals.gross_salary + totals.total_employer_contributions;
   return totals;
 };
 
@@ -397,6 +402,7 @@ const PayrollApprovalDialog = ({
                   total_employer_contributions={
                     summary.total_employer_contributions
                   }
+                  total_employer_cost={summary.total_employer_cost}
                   allowance_breakdown={summary.allowance_breakdown}
                   deduction_breakdown={summary.deduction_breakdown}
                   contribution_breakdown={summary.contribution_breakdown}

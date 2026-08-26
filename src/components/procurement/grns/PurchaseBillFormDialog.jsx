@@ -10,6 +10,7 @@ import {
 } from '@mui/icons-material';
 import { LoadingButton } from '@mui/lab';
 import {
+  Autocomplete,
   Box,
   Button,
   DialogActions,
@@ -64,6 +65,23 @@ const validationSchema = yup.object({
         .typeError('Amount is required'),
     })
   ),
+  items: yup.array().of(
+    yup.object({
+      amount: yup
+        .number()
+        .required('Amount is required')
+        .positive('Amount must be greater than 0')
+        .typeError('Amount is required')
+        .test(
+          'max-remaining',
+          'Amount exceeds the remaining balance for this item',
+          function (value) {
+            const remaining = Number(this.parent?.remaining_amount ?? 0);
+            return value == null || value <= remaining;
+          }
+        ),
+    })
+  ),
 });
 
 const SectionHeader = ({ icon, title, hint }) => (
@@ -93,7 +111,6 @@ const PurchaseBillFormDialog = ({ grn, order, setOpenDialog }) => {
 
   const source = grn || order;
   const documentNo = grn ? grn.grnNo : order.orderNo;
-  const baseAmount = source?.unbilled_amount || 0;
   const orgVatPercentage = authOrganization?.organization?.settings?.vat_percentage || 0;
 
   const {
@@ -101,6 +118,7 @@ const PurchaseBillFormDialog = ({ grn, order, setOpenDialog }) => {
     handleSubmit,
     control,
     setValue,
+    getValues,
     formState: { errors },
   } = useForm({
     resolver: yupResolver(validationSchema),
@@ -125,20 +143,22 @@ const PurchaseBillFormDialog = ({ grn, order, setOpenDialog }) => {
     name: 'items',
   });
 
-  // Non-inventory items post a placeholder debit=7/credit=7 journal at
-  // order time — the real expense ledger is decided here, at billing.
-  // Only relevant for direct-order bills (grn is null); GRN-based bills
-  // cover Inventory items, whose ledger (10) is fixed and not overridable.
+  // Nothing is posted for a non-inventory item at order time anymore — its
+  // expense/ledger classification and how much of it to bill are both
+  // decided right here, at billing. Only relevant for direct-order bills
+  // (grn is null); GRN-based bills cover Inventory items, whose ledger (10)
+  // is fixed and posted at receipt, unrelated to this itemized flow.
   const { data: orderDetails } = useQuery({
     queryKey: ['purchaseBillOrderItems', order?.id],
     queryFn: () => purchaseServices.getEditComplements(order.id),
     enabled: !!order,
   });
 
+  // Items with nothing left to bill (already fully billed) are excluded.
   const nonInventoryItems = useMemo(
     () =>
       (orderDetails?.purchase_order_items || []).filter(
-        (item) => item.product?.type !== 'Inventory'
+        (item) => item.product?.type !== 'Inventory' && Number(item.remaining_amount) > 0
       ),
     [orderDetails]
   );
@@ -149,7 +169,8 @@ const PurchaseBillFormDialog = ({ grn, order, setOpenDialog }) => {
         nonInventoryItems.map((item) => ({
           purchase_order_item_id: item.id,
           product_name: item.product?.item_name || item.product?.name,
-          amount: item.quantity * item.rate,
+          remaining_amount: Number(item.remaining_amount),
+          amount: Number(item.remaining_amount),
           debit_ledger_id: null,
         }))
       );
@@ -163,6 +184,14 @@ const PurchaseBillFormDialog = ({ grn, order, setOpenDialog }) => {
   // reliable API for a reactively-recomputed value like netPayable.
   const vatPercentage = Number(useWatch({ control, name: 'vat_percentage' })) || 0;
   const adjustments = useWatch({ control, name: 'adjustments' });
+  const items = useWatch({ control, name: 'items' });
+
+  // GRN bills still bill the GRN's whole unbilled_amount in one lump; a
+  // direct-order bill's amount is the sum of whatever's entered per item
+  // above, which can be less than each item's full remaining balance.
+  const baseAmount = grn
+    ? source?.unbilled_amount || 0
+    : (items || []).reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
 
   const netPayable = useMemo(() => {
     const vatAmount = (baseAmount * vatPercentage) / 100;
@@ -201,6 +230,39 @@ const PurchaseBillFormDialog = ({ grn, order, setOpenDialog }) => {
     },
   });
 
+  // Recalculates an adjustment's Amount from its Percentage field whenever
+  // either the percentage itself changes, or its "Applies To" selection
+  // changes (add/remove an item shifts the % base between the whole bill
+  // and the selected items' subtotal). Pass whichever one just changed;
+  // the other is read from current form state.
+  const recalcAdjustmentAmount = (index, changedPercentage, changedItemIds) => {
+    const rawPercentage =
+      changedPercentage !== undefined
+        ? changedPercentage
+        : getValues(`adjustments.${index}.percentage`);
+    if (rawPercentage === '' || rawPercentage == null) return;
+
+    const pct = Number(rawPercentage);
+    if (Number.isNaN(pct)) return;
+
+    const selectedItemIds =
+      changedItemIds !== undefined
+        ? changedItemIds
+        : getValues(`adjustments.${index}.purchase_order_item_ids`) || [];
+
+    const pctBase =
+      selectedItemIds.length > 0
+        ? billItemFields
+            .filter((item) => selectedItemIds.includes(item.purchase_order_item_id))
+            .reduce((sum, item) => sum + Number(item.amount || 0), 0)
+        : baseAmount;
+
+    setValue(`adjustments.${index}.amount`, Math.round(((pctBase * pct) / 100) * 100) / 100, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+  };
+
   const onSubmit = (formData) => {
     createBill({
       ...formData,
@@ -210,12 +272,15 @@ const PurchaseBillFormDialog = ({ grn, order, setOpenDialog }) => {
         type: adj.type,
         description: adj.description,
         amount: adj.amount,
+        purchase_order_item_ids:
+          adj.purchase_order_item_ids?.length > 0 ? adj.purchase_order_item_ids : undefined,
       })),
       items: (formData.items || [])
-        .filter((item) => item.debit_ledger_id)
+        .filter((item) => Number(item.amount) > 0)
         .map((item) => ({
           purchase_order_item_id: item.purchase_order_item_id,
-          debit_ledger_id: item.debit_ledger_id,
+          amount: item.amount,
+          debit_ledger_id: item.debit_ledger_id || undefined,
         })),
     });
   };
@@ -292,7 +357,9 @@ const PurchaseBillFormDialog = ({ grn, order, setOpenDialog }) => {
 
           <Divider />
 
-          {/* Amount Summary */}
+          {/* Amount Summary — for a GRN bill this is the fixed goods value;
+              for a direct-order bill it's the live sum of whatever's
+              entered in Items to Bill below. */}
           <Box
             sx={{
               bgcolor: 'action.hover',
@@ -305,7 +372,7 @@ const PurchaseBillFormDialog = ({ grn, order, setOpenDialog }) => {
               <Grid size={{ xs: 12, sm: 7 }}>
                 <Stack direction='row' spacing={0.5} alignItems='center'>
                   <Typography variant='body2' color='text.secondary'>
-                    Goods/Services Amount
+                    {grn ? 'Goods/Services Amount' : 'Items Total'}
                   </Typography>
                   <Tooltip title='Moves out of Unbilled Goods'>
                     <InfoOutlined sx={{ fontSize: 16, color: 'text.disabled' }} />
@@ -332,15 +399,15 @@ const PurchaseBillFormDialog = ({ grn, order, setOpenDialog }) => {
             </Grid>
           </Box>
 
-          {/* Item Ledgers */}
+          {/* Items to Bill — direct-order bills only */}
           {billItemFields.length > 0 && (
             <>
               <Divider />
               <Stack spacing={1.5}>
                 <SectionHeader
                   icon={<AccountBalanceWalletOutlined fontSize='small' color='action' />}
-                  title='Item Ledgers (optional)'
-                  hint="Defaults to each item's category expense ledger if left blank"
+                  title='Items to Bill'
+                  hint="Amount defaults to each item's full remaining balance — reduce it to bill only part of an item. Debit ledger defaults to the item's category expense ledger if left blank."
                 />
                 <Stack spacing={1}>
                   {billItemFields.map((field, index) => (
@@ -354,17 +421,40 @@ const PurchaseBillFormDialog = ({ grn, order, setOpenDialog }) => {
                       }}
                     >
                       <Grid container columnSpacing={2} rowSpacing={1} alignItems='center'>
-                        <Grid size={{ xs: 12, sm: 5 }}>
+                        <Grid size={{ xs: 12, sm: 4 }}>
                           <Typography variant='body2' noWrap title={field.product_name}>
                             {field.product_name}
                           </Typography>
                           <Typography variant='caption' color='text.secondary'>
-                            {Number(field.amount).toLocaleString(undefined, {
+                            Remaining:{' '}
+                            {Number(field.remaining_amount).toLocaleString(undefined, {
                               minimumFractionDigits: 2,
                             })}
                           </Typography>
                         </Grid>
-                        <Grid size={{ xs: 12, sm: 7 }}>
+                        <Grid size={{ xs: 12, sm: 4 }}>
+                          <Controller
+                            name={`items.${index}.amount`}
+                            control={control}
+                            render={({ field: amountField }) => (
+                              <TextField
+                                fullWidth
+                                size='small'
+                                label='Amount to Bill'
+                                value={amountField.value ?? ''}
+                                error={!!errors.items?.[index]?.amount}
+                                helperText={errors.items?.[index]?.amount?.message}
+                                InputProps={{ inputComponent: CommaSeparatedField }}
+                                onChange={(e) =>
+                                  amountField.onChange(
+                                    e.target.value ? sanitizedNumber(e.target.value) : ''
+                                  )
+                                }
+                              />
+                            )}
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 4 }}>
                           <Controller
                             name={`items.${index}.debit_ledger_id`}
                             control={control}
@@ -441,30 +531,63 @@ const PurchaseBillFormDialog = ({ grn, order, setOpenDialog }) => {
                       />
                     </Grid>
                     <Grid size={{ xs: 6, sm: 3 }}>
-                      <TextField
-                        fullWidth
-                        type='number'
-                        size='small'
-                        label='%'
-                        slotProps={{
-                          input: {
-                            endAdornment: (
-                              <InputAdornment position='end'>%</InputAdornment>
-                            ),
-                          },
-                        }}
-                        onChange={(e) => {
-                          const pct = Number(e.target.value);
-                          if (e.target.value === '' || Number.isNaN(pct)) return;
-                          setValue(
-                            `adjustments.${index}.amount`,
-                            Math.round(((baseAmount * pct) / 100) * 100) / 100,
-                            { shouldDirty: true, shouldValidate: true }
-                          );
-                        }}
+                      <Controller
+                        name={`adjustments.${index}.percentage`}
+                        control={control}
+                        render={({ field: pctField }) => (
+                          <TextField
+                            fullWidth
+                            type='number'
+                            size='small'
+                            label='%'
+                            value={pctField.value ?? ''}
+                            slotProps={{
+                              input: {
+                                endAdornment: (
+                                  <InputAdornment position='end'>%</InputAdornment>
+                                ),
+                              },
+                            }}
+                            onChange={(e) => {
+                              pctField.onChange(e.target.value);
+                              recalcAdjustmentAmount(index, e.target.value);
+                            }}
+                          />
+                        )}
                       />
                     </Grid>
-                    <Grid size={{ xs: 12, sm: 6 }}>
+                    {billItemFields.length > 0 && (
+                      <Grid size={12}>
+                        <Controller
+                          name={`adjustments.${index}.purchase_order_item_ids`}
+                          control={control}
+                          defaultValue={[]}
+                          render={({ field: itemsField }) => (
+                            <Autocomplete
+                              multiple
+                              size='small'
+                              options={billItemFields.map((item) => item.purchase_order_item_id)}
+                              value={itemsField.value || []}
+                              getOptionLabel={(itemId) =>
+                                billItemFields.find((item) => item.purchase_order_item_id === itemId)
+                                  ?.product_name || ''
+                              }
+                              onChange={(e, newValue) => {
+                                itemsField.onChange(newValue);
+                                recalcAdjustmentAmount(index, undefined, newValue);
+                              }}
+                              renderInput={(params) => (
+                                <TextField
+                                  {...params}
+                                  label='Applies To (optional — whole bill if blank)'
+                                />
+                              )}
+                            />
+                          )}
+                        />
+                      </Grid>
+                    )}
+                    <Grid size={{ xs: 12, sm: 7 }}>
                       <TextField
                         fullWidth
                         size='small'
@@ -474,7 +597,7 @@ const PurchaseBillFormDialog = ({ grn, order, setOpenDialog }) => {
                         {...register(`adjustments.${index}.description`)}
                       />
                     </Grid>
-                    <Grid size={{ xs: 10, sm: 5.5 }}>
+                    <Grid size={{ xs: 10, sm: 4 }}>
                       <Controller
                         name={`adjustments.${index}.amount`}
                         control={control}
@@ -499,7 +622,7 @@ const PurchaseBillFormDialog = ({ grn, order, setOpenDialog }) => {
                       />
                     </Grid>
                     <Grid
-                      size={{ xs: 2, sm: 0.5 }}
+                      size={{ xs: 2, sm: 1 }}
                       sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                     >
                       <Tooltip title='Remove Adjustment'>
@@ -521,6 +644,8 @@ const PurchaseBillFormDialog = ({ grn, order, setOpenDialog }) => {
                       complement_ledger_id: null,
                       amount: '',
                       description: '',
+                      percentage: '',
+                      purchase_order_item_ids: [],
                     })
                   }
                 >

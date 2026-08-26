@@ -261,6 +261,12 @@ export async function getMenus(locale: string) {
           icon: icon('transactions'),
         },
         {
+          uri: `/${locale}/accounts/bank-reconciliation`,
+          label: sidebar.menuItem.bankReconciliation,
+          type: 'nav-item',
+          icon: icon('bankReconciliation'),
+        },
+        {
           uri: `/${locale}/accounts/supplierBills`,
           label: sidebar.menuItem.supplierBills,
           type: 'nav-item',

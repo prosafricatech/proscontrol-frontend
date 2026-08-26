@@ -68,6 +68,111 @@ function PurchaseBillPDF({ bill, organization }) {
           )}
         </View>
 
+        {!!bill.items?.length && (
+          <View style={{ ...pdfStyles.table, minHeight: 40, marginTop: 10 }}>
+            <View style={styles.tableRow}>
+              <Text
+                style={{
+                  ...styles.tableCell,
+                  ...styles.tableHeader,
+                  backgroundColor: mainColor,
+                  color: contrastText,
+                  flex: 5,
+                }}
+              >
+                Item
+              </Text>
+              {bill.items.some((item) => item.quantity != null) && (
+                <>
+                  <Text
+                    style={{
+                      ...styles.tableCell,
+                      ...styles.tableHeader,
+                      backgroundColor: mainColor,
+                      color: contrastText,
+                      flex: 2,
+                      textAlign: 'right',
+                    }}
+                  >
+                    Qty
+                  </Text>
+                  <Text
+                    style={{
+                      ...styles.tableCell,
+                      ...styles.tableHeader,
+                      backgroundColor: mainColor,
+                      color: contrastText,
+                      flex: 2,
+                      textAlign: 'right',
+                    }}
+                  >
+                    Rate
+                  </Text>
+                </>
+              )}
+              <Text
+                style={{
+                  ...styles.tableCell,
+                  ...styles.tableHeader,
+                  backgroundColor: mainColor,
+                  color: contrastText,
+                  flex: 2,
+                  textAlign: 'right',
+                }}
+              >
+                Amount
+              </Text>
+            </View>
+            {bill.items.map((item, index) => (
+              <View key={index} style={styles.tableRow}>
+                <Text
+                  style={{
+                    ...styles.tableCell,
+                    backgroundColor: index % 2 === 0 ? '#FFFFFF' : lightColor,
+                    flex: 5,
+                  }}
+                >
+                  {item.product?.name || item.product?.item_name}
+                </Text>
+                {bill.items.some((i) => i.quantity != null) && (
+                  <>
+                    <Text
+                      style={{
+                        ...styles.tableCell,
+                        backgroundColor: index % 2 === 0 ? '#FFFFFF' : lightColor,
+                        flex: 2,
+                        textAlign: 'right',
+                      }}
+                    >
+                      {item.quantity ?? ''}
+                    </Text>
+                    <Text
+                      style={{
+                        ...styles.tableCell,
+                        backgroundColor: index % 2 === 0 ? '#FFFFFF' : lightColor,
+                        flex: 2,
+                        textAlign: 'right',
+                      }}
+                    >
+                      {item.rate != null ? money(item.rate) : ''}
+                    </Text>
+                  </>
+                )}
+                <Text
+                  style={{
+                    ...styles.tableCell,
+                    backgroundColor: index % 2 === 0 ? '#FFFFFF' : lightColor,
+                    flex: 2,
+                    textAlign: 'right',
+                  }}
+                >
+                  {money(item.amount)}
+                </Text>
+              </View>
+            ))}
+          </View>
+        )}
+
         {!!bill.adjustments?.length && (
           <View style={{ ...pdfStyles.table, minHeight: 40, marginTop: 10 }}>
             <View style={styles.tableRow}>

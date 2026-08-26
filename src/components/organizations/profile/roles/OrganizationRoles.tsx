@@ -86,6 +86,7 @@ const PERMISSION_MODULES: PermissionModuleConfig[] = [
       'Accounts',
       'AccountsMasters',
       'AccountsTransactions',
+      'BankReconciliation',
       'CostCenters',
       'FundTransfers',
       'JournalVouchers',
