@@ -30,17 +30,14 @@ function mapPayslipForDialog(raw: any, profile?: any) {
   const allowances = raw.allowances || [];
   const deductions = raw.deductions || [];
   const basicSalary = raw.basic_salary || 0;
-  const paye = raw.paye || 0;
 
-  // Same calculations the HR-side payslip dialog uses (payrollUtils.ts) —
-  // PAYE is also persisted as its own PayslipDeduction row (deduction_type_id
-  // null) alongside the dedicated `paye` field, so calculateTotalDeductions'
-  // exclusion of that row matters here too: summing every deduction plus
-  // subtracting `paye` separately would double-subtract it.
+  // Same shared calculations the HR-side payslip dialog uses (payrollUtils.ts)
+  // — kept identical on purpose so this screen can never drift from what HR
+  // sees for the same payslip.
   const totalAllowances = calculateTotalAllowances(allowances);
   const totalDeductions = calculateTotalDeductions(deductions);
   const grossSalary = calculateGrossSalary(basicSalary, allowances);
-  const netSalary = calculateNetSalary(basicSalary, allowances, deductions, paye);
+  const netSalary = calculateNetSalary(basicSalary, allowances, deductions);
 
   return {
     ...raw,

@@ -57,6 +57,7 @@ interface FormData extends Omit<Employee, 'id'> {
   id?: number;
   basic_salary?: number | null;
   contract_start_date?: string | null;
+  contract_type?: string | null;
   reason?: string | null;
 }
 
@@ -86,6 +87,12 @@ const EMPLOYMENT_OPTIONS: OptionType[] = [
 const RESIDENCE_STATUS_OPTIONS: OptionType[] = [
   { label: 'Resident', value: 'resident' },
   { label: 'Non-Resident', value: 'non_resident' },
+];
+const CONTRACT_TYPE_OPTIONS: OptionType[] = [
+  { label: 'Permanent', value: 'permanent' },
+  { label: 'Fixed Term', value: 'fixed_term' },
+  { label: 'Probation', value: 'probation' },
+  { label: 'Specific Task', value: 'specific_task' },
 ];
 
 const EmployeeForm = ({
@@ -276,6 +283,7 @@ const EmployeeForm = ({
       .min(0, 'Basic salary must be >= 0')
       .typeError('Basic salary must be a number'),
     contract_start_date: yup.string().nullable(),
+    contract_type: yup.string().nullable(),
     reason: yup.string().nullable().optional(),
     user_id: yup.number().nullable(),
   });
@@ -316,6 +324,7 @@ const EmployeeForm = ({
       designation_id: undefined,
       basic_salary: null,
       contract_start_date: null,
+      contract_type: CONTRACT_TYPE_OPTIONS[0].value,
       reason: '',
       user_id: null,
     },
@@ -342,6 +351,7 @@ const EmployeeForm = ({
     const contractBasicSalary = (employee as any)?.active_contract
       ?.basic_salary;
     const contractStart = (employee as any)?.active_contract?.start_date;
+    const contractType = (employee as any)?.active_contract?.contract_type;
 
     setEmployeeGender(resolvedGender);
     setSelectedEmploymentType(resolvedEmployment);
@@ -374,6 +384,7 @@ const EmployeeForm = ({
       designation_id: designation?.id || undefined,
       basic_salary: contractBasicSalary ?? employee.basic_salary ?? null,
       contract_start_date: normalizedContractStartDate || contractStart || null,
+      contract_type: contractType || CONTRACT_TYPE_OPTIONS[0].value,
       reason: '',
       user_id: employee.user_id ?? null,
     });
@@ -386,6 +397,15 @@ const EmployeeForm = ({
     if (!watchDesignationId || !designationsData.length) return null;
     return designationsData.find((d) => d.id === watchDesignationId) || null;
   }, [watchDesignationId, designationsData]);
+
+  // Same reasoning as selectedDesignation above — reactive rather than a
+  // one-time default, so it still resolves once ungroupedLedgerOptions
+  // finishes loading even if that happens after this dialog has mounted.
+  const watchPayableLedgerId = watch('payable_ledger_id');
+  const selectedLedger = useMemo(() => {
+    if (!watchPayableLedgerId || !ungroupedLedgerOptions.length) return null;
+    return ungroupedLedgerOptions.find((l) => l.id === watchPayableLedgerId) || null;
+  }, [watchPayableLedgerId, ungroupedLedgerOptions]);
 
   const onSubmit = (data: FormData) => {
     employee?.id ? updateEmployee(data) : addEmployee(data);
@@ -830,6 +850,25 @@ const EmployeeForm = ({
               />
             </Grid>
 
+            <Grid size={{ xs: 12, md: 4 }}>
+              <TextField
+                select
+                label='Contract Type'
+                size='small'
+                fullWidth
+                {...register('contract_type')}
+                defaultValue={CONTRACT_TYPE_OPTIONS[0].value}
+                error={!!errors.contract_type}
+                helperText={errors.contract_type?.message}
+              >
+                {CONTRACT_TYPE_OPTIONS.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+
             {/* Accounting Settings — no ledger to pick from without Accounts & Finance */}
             {organizationHasSubscribed(MODULES.ACCOUNTS_AND_FINANCE) &&
               checkOrganizationPermission(
@@ -863,11 +902,7 @@ const EmployeeForm = ({
                   <Grid size={{ xs: 12, md: 6 }}>
                     <LedgerSelect
                       frontError={errors.payable_ledger_id}
-                      defaultValue={
-                        ungroupedLedgerOptions.find(
-                          (l) => l.id === employee?.payable_ledger_id
-                        ) || null
-                      }
+                      value={selectedLedger}
                       allowedGroups={['Accounts Payable']}
                       onChange={(val) => {
                         if (!Array.isArray(val)) {

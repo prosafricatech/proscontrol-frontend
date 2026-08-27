@@ -49,16 +49,16 @@ export const calculateTotalAllowances = (allowances: any[]) => {
   return allowances.reduce((sum, item) => sum + (item.amount || 0), 0);
 };
 
+// PAYE is stored as its own PayslipDeduction row too (deduction_type_id
+// null, category 'tax'), on top of the dedicated `paye` field on the
+// payslip — deliberately included here (unlike the deduction_breakdown
+// list elsewhere, which excludes it since it already gets its own
+// dedicated summary line) so "Total Deductions" is the true total and
+// Gross − Total Deductions = Net Salary holds everywhere it's shown
+// (Payslip view, Salary Sheet, Payroll Approval dialog).
 export const calculateTotalDeductions = (deductions: any[]) => {
   if (!deductions || !Array.isArray(deductions)) return 0;
-  // PAYE is stored as its own PayslipDeduction row too (deduction_type_id
-  // null, so it can carry a label/amount like any other line), on top of the
-  // dedicated `paye` field on the payslip — excluded here the same way the
-  // backend's Payslip::net_salary accessor excludes it, otherwise it gets
-  // subtracted twice: once here, once via the explicit `paye` param below.
-  return deductions
-    .filter((item) => item.deduction_type_id != null)
-    .reduce((sum, item) => sum + (item.amount || 0), 0);
+  return deductions.reduce((sum, item) => sum + (item.amount || 0), 0);
 };
 
 export const calculateGrossSalary = (
@@ -68,15 +68,17 @@ export const calculateGrossSalary = (
   return (basicSalary || 0) + calculateTotalAllowances(allowances);
 };
 
+/** paye isn't a separate subtraction — it's already inside deductions
+ * (see calculateTotalDeductions above), so subtracting it again here would
+ * double-count it. */
 export const calculateNetSalary = (
   basicSalary: number,
   allowances: any[],
-  deductions: any[],
-  paye: number
+  deductions: any[]
 ) => {
   const gross = calculateGrossSalary(basicSalary, allowances);
   const totalDeductions = calculateTotalDeductions(deductions);
-  return gross - totalDeductions - (paye || 0);
+  return gross - totalDeductions;
 };
 
 export const statusColor = (
@@ -108,17 +110,11 @@ export const processPayslips = (payslips: any[]) => {
     const allowances = payslip.allowances || [];
     const deductions = payslip.deductions || [];
     const basicSalary = payslip.basic_salary || 0;
-    const paye = payslip.paye || 0;
 
     const totalAllowances = calculateTotalAllowances(allowances);
     const totalDeductions = calculateTotalDeductions(deductions);
     const grossSalary = calculateGrossSalary(basicSalary, allowances);
-    const netSalary = calculateNetSalary(
-      basicSalary,
-      allowances,
-      deductions,
-      paye
-    );
+    const netSalary = calculateNetSalary(basicSalary, allowances, deductions);
 
     return {
       ...payslip,

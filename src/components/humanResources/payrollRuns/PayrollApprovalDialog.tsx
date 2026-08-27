@@ -169,12 +169,16 @@ const calculateSummaryFromPayslips = (payslips: any[] = []) => {
     );
 
     const grossSalary = basicSalary + allowancesSum;
-    const netSalary = grossSalary - paye - deductionsSum;
+    // PAYE is already one of the rows summed into deductionsSum (it's
+    // persisted as its own PayslipDeduction row, category 'tax', on top of
+    // the dedicated `paye` field) — subtracting/adding `paye` again on top
+    // of deductionsSum double-counts it. Matches Payslip::net_salary exactly.
+    const netSalary = grossSalary - deductionsSum;
 
     totals.basic_salary += basicSalary;
     totals.paye += paye;
     totals.total_allowances += allowancesSum;
-    totals.total_deductions += deductionsSum + paye;
+    totals.total_deductions += deductionsSum;
     totals.total_employer_contributions += contributionsSum;
     totals.gross_salary += grossSalary;
     totals.net_salary += netSalary;

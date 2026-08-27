@@ -33,4 +33,9 @@ smsServices.bulkSend = async (payload) => {
   return data;
 };
 
+smsServices.searchEmployees = async (params = {}) => {
+  const { data } = await axios.get('/api/humanResources/employees', { params });
+  return data;
+};
+
 export default smsServices;

@@ -10,7 +10,9 @@ import {
   Alert,
   Autocomplete,
   Card,
+  Checkbox,
   Chip,
+  FormControlLabel,
   Grid,
   List,
   ListItem,
@@ -22,16 +24,18 @@ import {
 import { LoadingButton } from '@mui/lab';
 import { Div } from '@jumbo/shared';
 import smsServices from './sms-services';
+import stakeholderServices from '@/components/masters/stakeholders/stakeholder-services';
 import stakeholderGroupServices from '@/components/masters/stakeholderGroups/stakeholderGroup-services';
 import StakeholderSelectProvider from '@/components/masters/stakeholders/StakeholderSelectProvider';
 import StakeholderSelector from '@/components/masters/stakeholders/StakeholderSelector';
 import { Stakeholder } from '@/components/masters/stakeholders/StakeholderType';
+import SmsEmployeeFilterPicker from './SmsEmployeeFilterPicker';
 import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import { PERMISSIONS } from '@/utilities/constants/permissions';
 import UnauthorizedAccess from '@/shared/Information/UnauthorizedAccess';
 
-const PLACEHOLDERS = ['name', 'phone', 'email'];
+const PLACEHOLDERS = ['name', 'phone', 'email', 'gender'];
 
 interface StakeholderGroup {
   id: number;
@@ -66,11 +70,22 @@ const SmsBulkSendForm = () => {
   const { checkOrganizationPermission } = useJumboAuth();
   const [selectedGroups, setSelectedGroups] = React.useState<StakeholderGroup[]>([]);
   const [selectedStakeholders, setSelectedStakeholders] = React.useState<Stakeholder[]>([]);
+  const [allStakeholders, setAllStakeholders] = React.useState(false);
+  const [employeeSelection, setEmployeeSelection] = React.useState<{ employeeIds: number[]; allEmployees: boolean }>({
+    employeeIds: [],
+    allEmployees: false,
+  });
   const [lastResult, setLastResult] = React.useState<BulkSendResponse | null>(null);
 
   const { data: groups = [] } = useQuery<StakeholderGroup[]>({
     queryKey: ['stakeholder-groups-options'],
     queryFn: stakeholderGroupServices.getSelectOptions,
+  });
+
+  const { data: allStakeholdersCountData, isFetching: isStakeholderCountFetching } = useQuery({
+    queryKey: ['sms-stakeholder-total-count'],
+    queryFn: () => stakeholderServices.getList({ type: 'all', keyword: '', page: 1, limit: 1 }),
+    enabled: allStakeholders,
   });
 
   const validationSchema = yup.object({
@@ -99,6 +114,8 @@ const SmsBulkSendForm = () => {
       reset();
       setSelectedGroups([]);
       setSelectedStakeholders([]);
+      setAllStakeholders(false);
+      setEmployeeSelection({ employeeIds: [], allEmployees: false });
       queryClient.invalidateQueries({ queryKey: ['sms-balance'] });
       queryClient.invalidateQueries({ queryKey: ['sms-messages'] });
       queryClient.invalidateQueries({ queryKey: ['sms-transactions'] });
@@ -111,14 +128,24 @@ const SmsBulkSendForm = () => {
   const onSubmit = handleSubmit((data) => {
     const rawRecipients = parseRawRecipients(data.rawRecipients);
 
-    if (selectedGroups.length === 0 && selectedStakeholders.length === 0 && rawRecipients.length === 0) {
-      enqueueSnackbar('Select at least one group, stakeholder, or recipient', { variant: 'error' });
+    if (
+      selectedGroups.length === 0 &&
+      selectedStakeholders.length === 0 &&
+      !allStakeholders &&
+      employeeSelection.employeeIds.length === 0 &&
+      !employeeSelection.allEmployees &&
+      rawRecipients.length === 0
+    ) {
+      enqueueSnackbar('Select at least one group, stakeholder, employee, or recipient', { variant: 'error' });
       return;
     }
 
     mutate({
       group_ids: selectedGroups.map((g) => g.id),
       stakeholder_ids: selectedStakeholders.map((s) => s.id),
+      all_stakeholders: allStakeholders,
+      employee_ids: employeeSelection.employeeIds,
+      all_employees: employeeSelection.allEmployees,
       recipients: rawRecipients,
       body: data.body,
     });
@@ -150,10 +177,28 @@ const SmsBulkSendForm = () => {
               <StakeholderSelector
                 multiple
                 label='Individual Stakeholders'
+                disabled={allStakeholders}
                 onChange={(value) => setSelectedStakeholders((value as Stakeholder[]) || [])}
               />
             </StakeholderSelectProvider>
           </Div>
+          <FormControlLabel
+            control={<Checkbox checked={allStakeholders} onChange={(e) => setAllStakeholders(e.target.checked)} />}
+            label='Send to all stakeholders'
+          />
+          {allStakeholders && (
+            <Alert severity='warning' sx={{ mt: 1 }}>
+              {isStakeholderCountFetching
+                ? 'Checking total stakeholder count...'
+                : `This will message every stakeholder with a valid phone number out of ${allStakeholdersCountData?.total ?? '?'} total stakeholders.`}
+            </Alert>
+          )}
+        </Grid>
+        <Grid size={12}>
+          <Typography variant='subtitle2' color='text.secondary' mb={1}>
+            Employees (filter by gender, department, or cost center, then pick who to message)
+          </Typography>
+          <SmsEmployeeFilterPicker onChange={setEmployeeSelection} />
         </Grid>
         <Grid size={12}>
           <Div sx={{ mt: 1, mb: 1 }}>
