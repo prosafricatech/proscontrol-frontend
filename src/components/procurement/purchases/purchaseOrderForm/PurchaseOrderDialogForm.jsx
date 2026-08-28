@@ -272,26 +272,6 @@ function PurchaseOrderDialogForm({ toggleOpen, order = null }) {
     selectedStakeholderLedger?.currency?.id ||
     null;
 
-  const baseCurrencyId = React.useMemo(() => {
-    const baseByFlag = currencies.find(
-      (currency) => Number(currency?.is_base) === 1
-    );
-    if (baseByFlag?.id) return baseByFlag.id;
-
-    const baseCode = authOrganization?.organization?.base_currency?.code;
-    if (baseCode) {
-      const baseByCode = currencies.find(
-        (currency) =>
-          currency?.code === baseCode ||
-          currency?.currency_code === baseCode ||
-          currency?.abbreviation === baseCode
-      );
-      if (baseByCode?.id) return baseByCode.id;
-    }
-
-    return null;
-  }, [currencies, authOrganization]);
-
   const isSupplierCurrencyLocked = !!lockedSupplierCurrencyId;
 
   useEffect(() => {
@@ -344,30 +324,31 @@ function PurchaseOrderDialogForm({ toggleOpen, order = null }) {
       return;
     }
 
-    const targetCurrencyId = lockedSupplierCurrencyId || baseCurrencyId;
-    if (!targetCurrencyId) {
+    // If the selected ledger doesn't carry currency info, we don't actually
+    // know the supplier's currency — leave the current currency_id alone
+    // (e.g. the order's original currency when editing) instead of forcing
+    // it to the base currency.
+    if (!lockedSupplierCurrencyId) {
       return;
     }
 
     const currentCurrencyId = getValues('currency_id');
-    if (currentCurrencyId !== targetCurrencyId) {
-      setValue('currency_id', targetCurrencyId, {
+    if (currentCurrencyId !== lockedSupplierCurrencyId) {
+      setValue('currency_id', lockedSupplierCurrencyId, {
         shouldValidate: true,
         shouldDirty: true,
       });
     }
 
-    setValue('exchange_rate', getExchangeRateByCurrencyId(targetCurrencyId), {
-      shouldValidate: true,
-      shouldDirty: true,
-    });
-  }, [
-    lockedSupplierCurrencyId,
-    baseCurrencyId,
-    stakeholder_id,
-    stakeholderPayableLedgers,
-    currencies,
-  ]);
+    setValue(
+      'exchange_rate',
+      getExchangeRateByCurrencyId(lockedSupplierCurrencyId),
+      {
+        shouldValidate: true,
+        shouldDirty: true,
+      }
+    );
+  }, [lockedSupplierCurrencyId, stakeholder_id, stakeholderPayableLedgers, currencies]);
 
   const addPurchaseOrder = useMutation({
     mutationFn: purchaseServices.add,
