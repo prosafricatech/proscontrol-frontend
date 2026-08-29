@@ -1,7 +1,6 @@
 'use client';
 
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
-import { PERMISSIONS } from '@/utilities/constants/permissions';
 import { useJumboTheme } from '@jumbo/components/JumboTheme/hooks';
 import { FactCheckOutlined } from '@mui/icons-material';
 import { ButtonGroup, IconButton, Tooltip, useMediaQuery } from '@mui/material';
@@ -19,7 +18,7 @@ const LeaveApprovalsActionTail = ({
   leaveRequest,
 }: LeaveApprovalsActionTailProps) => {
   const [openDialog, setOpenDialog] = useState(false);
-  const { hasOrganizationRole, checkOrganizationPermission } = useJumboAuth();
+  const { hasOrganizationRole } = useJumboAuth();
   const { theme } = useJumboTheme();
   const belowLargeScreen = useMediaQuery(theme.breakpoints.down('lg'));
 
@@ -27,15 +26,14 @@ const LeaveApprovalsActionTail = ({
   const pendingRoleName = pendingLevel?.role?.name || '';
   const normalizedStatus = (leaveRequest.status || '').toLowerCase();
 
-  const canEditRequest = checkOrganizationPermission(
-    PERMISSIONS.LEAVE_REQUESTS_EDIT
-  );
-
+  // Approving a chain level is authorized purely by holding that level's role
+  // (matches the backend — leave-request-approvals no longer requires
+  // LeaveRequests:Edit; that ability is reserved for editing/direct-deciding
+  // a request outside the chain, not for acting on one through it).
   const canApprove =
     !!pendingLevel &&
     (!pendingRoleName || hasOrganizationRole(pendingRoleName)) &&
-    !['approved', 'rejected', 'cancelled'].includes(normalizedStatus) &&
-    canEditRequest;
+    !['approved', 'rejected', 'cancelled'].includes(normalizedStatus);
 
   return (
     <>

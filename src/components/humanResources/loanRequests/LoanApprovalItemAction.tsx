@@ -1,5 +1,6 @@
 'use client';
 
+import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import { useJumboTheme } from '@jumbo/components/JumboTheme/hooks';
 import { FactCheckOutlined } from '@mui/icons-material';
 import { IconButton, Tooltip, useMediaQuery } from '@mui/material';
@@ -25,14 +26,24 @@ const LoanApprovalItemAction = ({
   const [openDialog, setOpenDialog] = useState(false);
   const { theme } = useJumboTheme();
   const belowLargeScreen = useMediaQuery(theme.breakpoints.down('lg'));
+  const { hasOrganizationRole } = useJumboAuth();
 
   const latestApproval = approvals[approvals.length - 1];
   const latestApprovalDecision = getLoanApprovalDecision(latestApproval);
   const pendingLevel = getNextPendingLoanLevel(loanRequest);
+  const pendingRoleName = (pendingLevel as any)?.role?.name || '';
   const isLatestApproval = latestApproval?.id === approval?.id;
 
+  // Same role check as LoanApprovalsActionTail (the first-approval entry
+  // point) — without it, this button showed for anyone viewing the
+  // approvals history, not just the person whose role the next level
+  // actually belongs to (e.g. a Technical Manager who already approved
+  // still saw an Approve button while the request sat with General Manager).
   const canNextApprove =
-    isLatestApproval && latestApprovalDecision === 'approved' && !!pendingLevel;
+    isLatestApproval &&
+    latestApprovalDecision === 'approved' &&
+    !!pendingLevel &&
+    (!pendingRoleName || hasOrganizationRole(pendingRoleName));
 
   return (
     <>

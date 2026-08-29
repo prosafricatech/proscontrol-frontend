@@ -111,31 +111,17 @@ function Sidebar({ menus }) {
                     }
                 }
 
-                // Process Approval > Leave Requests — same pattern as Requisitions
-                // above: any of Create/Edit/Delete shows the link (not just Edit), and
-                // WHICH requests show up once opened is decided by
-                // LeaveRequestController::index() (creator, no-chain, or their role
-                // sits on the chain) rather than this gate.
-                if (!checkOrganizationPermission([
-                    PERMISSIONS.LEAVE_REQUESTS_CREATE, PERMISSIONS.LEAVE_REQUESTS_EDIT, PERMISSIONS.LEAVE_REQUESTS_DELETE
-                ])) {
-                    if (processApprovalMenuIndex >= 0) {
-                        updatedMenus[processApprovalMenuIndex].children = updatedMenus[processApprovalMenuIndex].children.filter(
-                            child => child.label !== dictionary.sidebar.menuItem.leave_requests
-                        );
-                    }
-                }
-
-                // Process Approval > Loan Requests — same reasoning as above.
-                if (!checkOrganizationPermission([
-                    PERMISSIONS.LOANS_CREATE, PERMISSIONS.LOANS_EDIT, PERMISSIONS.LOANS_DELETE
-                ])) {
-                    if (processApprovalMenuIndex >= 0) {
-                        updatedMenus[processApprovalMenuIndex].children = updatedMenus[processApprovalMenuIndex].children.filter(
-                            child => child.label !== dictionary.sidebar.menuItem.loan_requests
-                        );
-                    }
-                }
+                // Process Approval > Leave Requests / Loan Requests — no permission gate
+                // at all (beyond the Process Approval subscription check already applied
+                // above): approving here is meant to work purely off holding a role that
+                // sits on the request's approval chain, with no LeaveRequests/Loans grant
+                // required (see LeaveRequestApprovalController::store()'s/
+                // LoanRequestApprovalController::store()'s dropped ability middleware) —
+                // gating the link itself behind one of those same abilities would put HR
+                // right back where a Technical-Manager-style chain-only approver never
+                // sees the link at all. WHICH requests show up once opened is entirely
+                // LeaveRequestController::index()'s/LoanRequestController::index()'s job
+                // (creator, no-chain, or their role sits on the chain).
 
                 // Process Approval > Payroll — no dedicated "approve" ability exists on
                 // the backend for payroll runs, so this reuses the same ability that

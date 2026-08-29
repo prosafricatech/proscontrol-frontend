@@ -1,7 +1,6 @@
 'use client';
 
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
-import { PERMISSIONS } from '@/utilities/constants/permissions';
 import { useJumboTheme } from '@jumbo/components/JumboTheme/hooks';
 import { FactCheckOutlined } from '@mui/icons-material';
 import { ButtonGroup, IconButton, Tooltip, useMediaQuery } from '@mui/material';
@@ -17,7 +16,6 @@ interface LoanApprovalsActionTailProps {
 const LoanApprovalsActionTail = ({
   loanRequest,
 }: LoanApprovalsActionTailProps) => {
-  const { checkOrganizationPermission } = useJumboAuth();
   const [openDialog, setOpenDialog] = useState(false);
   const { hasOrganizationRole } = useJumboAuth();
   const { theme } = useJumboTheme();
@@ -27,10 +25,10 @@ const LoanApprovalsActionTail = ({
   const pendingRoleName = pendingLevel?.role?.name || '';
   const normalizedStatus = (loanRequest.status || '').toLowerCase();
 
-  const hasLoanEditPermission = checkOrganizationPermission(
-    PERMISSIONS.LOANS_EDIT
-  );
-
+  // Approving a chain level is authorized purely by holding that level's role
+  // (matches the backend — loan-request-approvals no longer requires
+  // Loans:Edit; that ability is reserved for editing/direct-deciding a
+  // request outside the chain, not for acting on one through it).
   const canApprove =
     !!pendingLevel &&
     (!pendingRoleName || hasOrganizationRole(pendingRoleName)) &&
@@ -47,20 +45,18 @@ const LoanApprovalsActionTail = ({
         onClose={() => setOpenDialog(false)}
       />
 
-      {hasLoanEditPermission && (
-        <ButtonGroup
-          variant='outlined'
-          size='small'
-          disableElevation
-          sx={{ '& .MuiButton-root': { px: 1 } }}
-        >
-          <Tooltip title='Approve Loan Request'>
-            <IconButton onClick={() => setOpenDialog(true)}>
-              <FactCheckOutlined />
-            </IconButton>
-          </Tooltip>
-        </ButtonGroup>
-      )}
+      <ButtonGroup
+        variant='outlined'
+        size='small'
+        disableElevation
+        sx={{ '& .MuiButton-root': { px: 1 } }}
+      >
+        <Tooltip title='Approve Loan Request'>
+          <IconButton onClick={() => setOpenDialog(true)}>
+            <FactCheckOutlined />
+          </IconButton>
+        </Tooltip>
+      </ButtonGroup>
     </>
   );
 };
