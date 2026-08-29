@@ -1,6 +1,7 @@
 import { readableDate } from '@/app/helpers/input-sanitization-helpers';
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import { getLoanApprovalDecision } from '@/components/humanResources/loanRequests/loanApprovalUtils';
+import LoanRequestPDF from '@/components/humanResources/loanRequests/LoanRequestPDF';
 import LoanRequestPreview from '@/components/humanResources/loanRequests/LoanRequestPreview';
 import LoanStatement from '@/components/humanResources/loanRequests/LoanStatement';
 import LoanStatementPDF from '@/components/humanResources/loanRequests/LoanStatementPDF';
@@ -11,6 +12,7 @@ import {
   EditOutlined,
   PaidOutlined,
   PreviewOutlined,
+  PrintOutlined,
   ReceiptLongOutlined,
 } from '@mui/icons-material';
 import AddIcon from '@mui/icons-material/Add';
@@ -111,6 +113,7 @@ const MyHrLoanRequestsListItem = ({
   const [openPreview, setOpenPreview] = useState(false);
   const [openStatement, setOpenStatement] = useState(false);
   const [showStatementOnScreen, setShowStatementOnScreen] = useState(true);
+  const [openPrint, setOpenPrint] = useState(false);
 
   const { data: statementData } = useQuery({
     queryKey: ['myHrLoanStatement', loanRequest.id],
@@ -318,8 +321,31 @@ const MyHrLoanRequestsListItem = ({
           </DialogActions>
         </Dialog>
 
+        <Dialog open={openPrint} onClose={() => setOpenPrint(false)} maxWidth='md' fullWidth>
+          <DialogContent sx={{ height: '80vh', p: 0 }}>
+            {openPrint && (
+              <PDFContent
+                document={
+                  <LoanRequestPDF
+                    data={loanRequest as any}
+                    organization={organization}
+                    userName={authUser?.user?.name || 'ProsERP'}
+                    employeeName={authUser?.user?.name}
+                  />
+                }
+                fileName={`Loan Application - ${authUser?.user?.name || 'Employee'}`}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
+
         <Grid container spacing={1}>
           <Grid size={{ xs: 12 }} textAlign='end'>
+            <Tooltip title='Print Loan Application Form'>
+              <IconButton size='small' onClick={() => setOpenPrint(true)}>
+                <PrintOutlined color='primary' />
+              </IconButton>
+            </Tooltip>
             <Tooltip title='Preview'>
               <IconButton size='small' onClick={() => setOpenPreview(true)}>
                 <PreviewOutlined color='primary' />

@@ -6,7 +6,7 @@ import organizationServices from '@/components/organizations/organizationService
 import PDFContent from '@/components/pdf/PDFContent';
 import { FileExportGrid } from '@/components/sharedComponents/FileExportGrid';
 import { PERMISSIONS } from '@/utilities/constants/permissions';
-import { PreviewOutlined, ReceiptLongOutlined, Verified } from '@mui/icons-material';
+import { PreviewOutlined, PrintOutlined, ReceiptLongOutlined, Verified } from '@mui/icons-material';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import {
@@ -40,6 +40,7 @@ import LoanApprovalItemAction from './LoanApprovalItemAction';
 import LoanApprovalsActionTail from './LoanApprovalsActionTail';
 import { getLoanApprovalDecision } from './loanApprovalUtils';
 import LoanRequestItemAction from './LoanRequestItemAction';
+import LoanRequestPDF from './LoanRequestPDF';
 import LoanRequestPreview from './LoanRequestPreview';
 import LoanStatement from './LoanStatement';
 import LoanStatementPDF from './LoanStatementPDF';
@@ -119,6 +120,7 @@ const LoanRequestsListItem = ({
   const [openPreview, setOpenPreview] = useState(false);
   const [openStatement, setOpenStatement] = useState(false);
   const [showStatementOnScreen, setShowStatementOnScreen] = useState(true);
+  const [openPrint, setOpenPrint] = useState(false);
 
   const { data: statementData } = useQuery({
     queryKey: ['loanStatement', loanRequest.id],
@@ -336,8 +338,30 @@ const LoanRequestsListItem = ({
             </DialogActions>
           </Dialog>
 
+          <Dialog open={openPrint} onClose={() => setOpenPrint(false)} maxWidth='md' fullWidth>
+            <DialogContent sx={{ height: '80vh', p: 0 }}>
+              {openPrint && (
+                <PDFContent
+                  document={
+                    <LoanRequestPDF
+                      data={details}
+                      organization={organization}
+                      userName={authUser?.user?.name || 'ProsERP'}
+                    />
+                  }
+                  fileName={`Loan Application - ${employeeName.trim()}`}
+                />
+              )}
+            </DialogContent>
+          </Dialog>
+
           <Grid container spacing={1}>
             <Grid size={{ xs: 12 }} textAlign='end'>
+              <Tooltip title='Print Loan Application Form'>
+                <IconButton size='small' onClick={() => setOpenPrint(true)}>
+                  <PrintOutlined color='primary' />
+                </IconButton>
+              </Tooltip>
               <Tooltip title='Preview'>
                 <IconButton size='small' onClick={() => setOpenPreview(true)}>
                   <PreviewOutlined color='primary' />

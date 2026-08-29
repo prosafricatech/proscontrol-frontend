@@ -71,6 +71,7 @@ export interface LoanRequestPreviewData {
     id?: number;
     chain_level_id?: number | null;
     approval_chain_level_id?: number | null;
+    approval_chain_level?: { label?: string | null; role?: { name?: string } | null } | null;
     status?: string;
     status_label?: string;
     is_final?: boolean;
@@ -313,9 +314,14 @@ const LoanRequestPreview = ({ loanRequest, title }: LoanRequestPreviewProps) => 
         <Stack spacing={0}>
           {approvals.map((approval, index) => {
             const decision = getDecision(approval);
+            // For an approved decision, use the chain level's own label (e.g.
+            // "Checked", "Verified") rather than always saying "Approved" —
+            // same reasoning as the "Waiting for {role}" pending line above:
+            // the level's own name for what it does, not a generic word.
+            // Rejections/holds aren't level-specific actions, so those stay fixed.
             const actionLabel =
               decision === 'approved'
-                ? 'Approved'
+                ? approval.approval_chain_level?.label || 'Approved'
                 : decision === 'rejected'
                   ? 'Rejected'
                   : decision === 'on hold'
@@ -397,8 +403,8 @@ const LoanRequestPreview = ({ loanRequest, title }: LoanRequestPreviewProps) => 
               <Box sx={{ flex: 1 }}>
                 <Stack direction='row' spacing={1} alignItems='center'>
                   <Typography variant='subtitle2'>
-                    Awaiting{' '}
-                    {nextLevel.label || nextLevel.role?.name || 'next reviewer'}
+                    Waiting for{' '}
+                    {nextLevel.role?.name || 'next reviewer'}
                   </Typography>
                   <Chip
                     size='small'
