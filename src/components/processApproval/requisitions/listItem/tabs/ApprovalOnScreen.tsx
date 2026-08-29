@@ -157,6 +157,13 @@ function ApprovalOnScreen({
     approval.requisition?.process_type?.toLowerCase() === 'purchase';
   const isImprest =
     approval.requisition?.process_type?.toLowerCase() === 'imprest';
+  const imprestLedger =
+    approval.imprest_ledger ||
+    requisition?.imprest_ledger ||
+    approval.requisition?.imprest_ledger;
+  // Historical — what the balance was when this approval was made, not the
+  // live figure (that's what the "Approve" action form shows instead).
+  const imprestLedgerBalance = approval.imprest_ledger_balance_at_approval;
   const additionalCosts = isPurchase
     ? (((approval as any).additional_costs ||
         (approval.requisition as any)?.additional_costs ||
@@ -271,6 +278,26 @@ function ApprovalOnScreen({
                 </Typography>
               </Box>
             </Grid>
+            {isImprest && imprestLedger && (
+              <Grid size={{ xs: 12, md: 4 }}>
+                <Box>
+                  <Typography variant='subtitle2' color='text.secondary'>
+                    Imprest Ledger
+                  </Typography>
+                  <Typography variant='body1'>{imprestLedger.name}</Typography>
+                  {imprestLedgerBalance && (
+                    <Typography variant='caption' color='text.secondary'>
+                      Current Balance:{' '}
+                      {imprestLedgerBalance.amount?.toLocaleString('en-US', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}{' '}
+                      {imprestLedgerBalance.side}
+                    </Typography>
+                  )}
+                </Box>
+              </Grid>
+            )}
             {requisition?.cost_center.name && (
               <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                 <Box>

@@ -895,6 +895,33 @@ const getInitialLedgerItems = (): RequisitionItem[] => {
               </Typography>
             </Div>
           </Grid>
+          {isImprestType && requisition?.imprest_ledger && (
+            <Grid size={{ xs: 12, md: 3 }} sx={{ mt: 1, mb: 1 }}>
+              <Div
+                sx={{
+                  p: 1.25,
+                  border: 1,
+                  borderColor: 'divider',
+                  borderRadius: 1,
+                }}
+              >
+                <Typography variant='caption' color='text.secondary'>
+                  Imprest Ledger ({requisition.imprest_ledger.name})
+                </Typography>
+                <Typography variant='body2'>
+                  {requisition.imprest_ledger_balance
+                    ? `Balance: ${requisition.imprest_ledger_balance.amount.toLocaleString(
+                        'en-US',
+                        {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        }
+                      )} ${requisition.imprest_ledger_balance.side}`
+                    : '-'}
+                </Typography>
+              </Div>
+            </Grid>
+          )}
           <Grid size={{ xs: 12, md: 3 }}>
             <Div sx={{ mt: 0.5 }}>
               <DateTimePicker

@@ -111,9 +111,14 @@ function Sidebar({ menus }) {
                     }
                 }
 
-                // Process Approval > Leave Requests — only for users who can actually
-                // act on a leave approval chain level, not everyone with HR read access.
-                if (!checkOrganizationPermission(PERMISSIONS.LEAVE_REQUESTS_EDIT)) {
+                // Process Approval > Leave Requests — same pattern as Requisitions
+                // above: any of Create/Edit/Delete shows the link (not just Edit), and
+                // WHICH requests show up once opened is decided by
+                // LeaveRequestController::index() (creator, no-chain, or their role
+                // sits on the chain) rather than this gate.
+                if (!checkOrganizationPermission([
+                    PERMISSIONS.LEAVE_REQUESTS_CREATE, PERMISSIONS.LEAVE_REQUESTS_EDIT, PERMISSIONS.LEAVE_REQUESTS_DELETE
+                ])) {
                     if (processApprovalMenuIndex >= 0) {
                         updatedMenus[processApprovalMenuIndex].children = updatedMenus[processApprovalMenuIndex].children.filter(
                             child => child.label !== dictionary.sidebar.menuItem.leave_requests
@@ -121,8 +126,10 @@ function Sidebar({ menus }) {
                     }
                 }
 
-                // Process Approval > Loan Requests — same narrower gate as above.
-                if (!checkOrganizationPermission(PERMISSIONS.LOANS_EDIT)) {
+                // Process Approval > Loan Requests — same reasoning as above.
+                if (!checkOrganizationPermission([
+                    PERMISSIONS.LOANS_CREATE, PERMISSIONS.LOANS_EDIT, PERMISSIONS.LOANS_DELETE
+                ])) {
                     if (processApprovalMenuIndex >= 0) {
                         updatedMenus[processApprovalMenuIndex].children = updatedMenus[processApprovalMenuIndex].children.filter(
                             child => child.label !== dictionary.sidebar.menuItem.loan_requests

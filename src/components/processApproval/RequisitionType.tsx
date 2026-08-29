@@ -53,6 +53,10 @@ export interface Approval {
   status_label: string;
   vat_amount: number;
   narration?: string;
+  imprest_ledger?: Ledger;
+  imprest_ledger_balance?: { amount: number; side: string };
+  // Balance as of this approval's approval_date — for read-only previews.
+  imprest_ledger_balance_at_approval?: { amount: number; side: string };
 }
 
 export interface ApprovalChain {
@@ -180,6 +184,7 @@ export interface BaseRequisition {
   leave_items?: LeaveRequisitionItem[];
   imprest_ledger_id?: number;
   imprest_ledger?: Ledger;
+  imprest_ledger_balance?: { amount: number; side: string };
 }
 
 export interface PurchaseRequisition extends BaseRequisition {

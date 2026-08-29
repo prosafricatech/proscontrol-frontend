@@ -22,6 +22,7 @@ import {
   Tabs,
   TextField,
   Tooltip,
+  Typography,
 } from '@mui/material';
 import { DatePicker, DateTimePicker } from '@mui/x-date-pickers';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -96,6 +97,11 @@ interface Requisition {
   };
 }
 
+type LedgerBalance = {
+  amount: number;
+  side: string;
+};
+
 type ImprestLedgerOption = {
   id: number;
   type?: string;
@@ -104,6 +110,7 @@ type ImprestLedgerOption = {
   ledger?: {
     id?: number;
     name?: string;
+    balance?: LedgerBalance;
   };
 };
 
@@ -319,6 +326,24 @@ function RequisitionsForm({
     () => extractList(myLedgersResponse) as ImprestLedgerOption[],
     [myLedgersResponse]
   );
+
+  const formatLedgerBalance = (balance?: LedgerBalance) => {
+    if (!balance) return '';
+    return `${balance.amount.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })} ${balance.side}`;
+  };
+
+  const selectedImprestLedgerBalanceLabel = React.useMemo(() => {
+    const selected = imprestLedgerOptions.find((option) => {
+      const optionId = option.ledger_id || option.ledger?.id || option.id;
+      return Number(optionId) === Number(watch('imprest_ledger_id'));
+    });
+    return selected?.ledger?.balance
+      ? `Current Balance: ${formatLedgerBalance(selected.ledger.balance)}`
+      : '';
+  }, [imprestLedgerOptions, watch('imprest_ledger_id')]);
   
   const notAllowedImprestLedgers = React.useMemo(
     () => {
@@ -661,6 +686,26 @@ function RequisitionsForm({
                           option.name ||
                           'Unknown Imprest Ledger'
                         }
+                        renderOption={(props, option) => (
+                          <li {...props} key={option.ledger?.id || option.id}>
+                            <Div sx={{ width: '100%' }}>
+                              <Typography variant='body2'>
+                                {option.ledger?.name ||
+                                  option.name ||
+                                  'Unknown Imprest Ledger'}
+                              </Typography>
+                              {option.ledger?.balance && (
+                                <Typography
+                                  variant='caption'
+                                  color='text.secondary'
+                                >
+                                  Balance:{' '}
+                                  {formatLedgerBalance(option.ledger.balance)}
+                                </Typography>
+                              )}
+                            </Div>
+                          </li>
+                        )}
                         value={
                           imprestLedgerOptions.find((option) => {
                             const optionId =
@@ -681,8 +726,9 @@ function RequisitionsForm({
                             fullWidth
                             error={!!(errors as any).imprest_ledger_id}
                             helperText={
-                              (errors as any).imprest_ledger_id
-                                ?.message as string
+                              ((errors as any).imprest_ledger_id
+                                ?.message as string) ||
+                              selectedImprestLedgerBalanceLabel
                             }
                           />
                         )}

@@ -74,6 +74,7 @@ type RetirementItem = {
 type ImprestLedgerOption = {
   id: number;
   name: string;
+  balance?: { amount: number; side: string };
 };
 
 type ImprestRetirementFormProps = {
@@ -200,6 +201,7 @@ function ImprestRetirementForm({
       .map((entry: any) => ({
         id: Number(entry?.ledger_id || entry?.ledger?.id),
         name: entry?.ledger?.name || `Ledger #${entry?.ledger_id}`,
+        balance: entry?.ledger?.balance,
       }))
       .filter((entry: any) => Number.isFinite(entry.id));
   }, [myLedgersResponse]);
@@ -775,12 +777,44 @@ function ImprestRetirementForm({
                 onChange={(_e, newValue) => {
                   setLedgerId(newValue?.id || null);
                 }}
+                renderOption={(props, option) => (
+                  <li {...props} key={option.id}>
+                    <Div sx={{ width: '100%' }}>
+                      <Typography variant='body2'>{option.name}</Typography>
+                      {option.balance && (
+                        <Typography variant='caption' color='text.secondary'>
+                          Balance:{' '}
+                          {option.balance.amount.toLocaleString('en-US', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}{' '}
+                          {option.balance.side}
+                        </Typography>
+                      )}
+                    </Div>
+                  </li>
+                )}
                 renderInput={(params) => (
                   <TextField
                     {...params}
                     size='small'
                     label='Imprest Ledger'
                     fullWidth
+                    helperText={
+                      myImprestLedgers.find((option) => option.id === ledgerId)
+                        ?.balance
+                        ? `Current Balance: ${myImprestLedgers
+                            .find((option) => option.id === ledgerId)
+                            ?.balance?.amount.toLocaleString('en-US', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })} ${
+                            myImprestLedgers.find(
+                              (option) => option.id === ledgerId
+                            )?.balance?.side
+                          }`
+                        : undefined
+                    }
                   />
                 )}
               />
