@@ -129,6 +129,7 @@ const ApprovedPaymentForm: React.FC<ApprovedPaymentFormProps> = ({
     null;
 
   const resolvedImprestCreditLedgerName = imprestLedger?.name || '';
+  const imprestLedgerBalance = resolvedApprovedDetails?.imprest_ledger_balance;
   const isEditMode = !!payment;
 
   const buildItemDescription = useCallback(
@@ -631,6 +632,36 @@ const ApprovedPaymentForm: React.FC<ApprovedPaymentFormProps> = ({
               </Div>
             </Grid>
           </Grid>
+
+          {isImprestPayment && imprestLedger && (
+            <Grid container sx={{ mb: 1 }}>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <Div
+                  sx={{
+                    p: 1.25,
+                    border: 1,
+                    borderColor: 'divider',
+                    borderRadius: 1,
+                  }}
+                >
+                  <Typography variant='caption' color='text.secondary'>
+                    Imprest Ledger ({resolvedImprestCreditLedgerName})
+                  </Typography>
+                  <Typography variant='body2'>
+                    {imprestLedgerBalance
+                      ? `Balance: ${imprestLedgerBalance.amount.toLocaleString(
+                          'en-US',
+                          {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          }
+                        )} ${imprestLedgerBalance.side}`
+                      : '-'}
+                  </Typography>
+                </Div>
+              </Grid>
+            </Grid>
+          )}
 
           {errors?.items?.message && items.length < 1 && (
             <Alert severity='error'>{errors.items.message}</Alert>
