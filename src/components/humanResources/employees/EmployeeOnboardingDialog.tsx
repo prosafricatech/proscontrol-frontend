@@ -82,6 +82,7 @@ const EmployeeOnboardingDialog = ({
     []
   );
   const [autoCreateLedger, setAutoCreateLedger] = useState(false);
+  const [updateExisting, setUpdateExisting] = useState(false);
 
   const [file, setFile] = useState<File | null>(null);
   const [importResult, setImportResult] = useState<any | null>(null);
@@ -111,19 +112,21 @@ const EmployeeOnboardingDialog = ({
       setImportResult(response);
       queryClient.invalidateQueries({ queryKey: ['employees'] });
 
+      const processed = (response.imported || 0) + (response.updated || 0);
+
       if (response.errors && response.errors.length > 0) {
         enqueueSnackbar(
           `${response.message}. ${response.errors.length} error(s) found. Check the details below.`,
           { variant: 'warning' }
         );
-      } else if (response.imported > 0 && response.skipped === 0) {
+      } else if (processed > 0 && response.skipped === 0) {
         enqueueSnackbar(response.message || 'Employees imported successfully', {
           variant: 'success',
         });
         setOpenDialog(false);
-      } else if (response.imported > 0 && response.skipped > 0) {
+      } else if (processed > 0 && response.skipped > 0) {
         enqueueSnackbar(
-          `${response.message}. ${response.imported} imported, ${response.skipped} skipped.`,
+          `${response.message}. ${processed} processed, ${response.skipped} skipped.`,
           { variant: 'warning' }
         );
       } else {
@@ -143,6 +146,7 @@ const EmployeeOnboardingDialog = ({
     const payload = {
       employees_excel: data,
       create_payable_ledgers: !autoCreateLedger ? 0 : 1,
+      update_existing: !updateExisting ? 0 : 1,
       deductions: deductionSettings,
       contributions: contributionSettings,
       leave_allocations: allocationsSettings,
@@ -445,6 +449,18 @@ const EmployeeOnboardingDialog = ({
                 label='Auto create payable ledger'
               />
             }
+            {/* update-existing switch */}
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={updateExisting}
+                  onChange={() => {
+                    setUpdateExisting((prev) => !prev);
+                  }}
+                />
+              }
+              label='Update existing employees (fill in missing fields only, e.g. re-uploading with bank details added)'
+            />
             {/* optional data */}
             <Tabs
               value={settingTab}
@@ -660,6 +676,24 @@ const EmployeeOnboardingDialog = ({
                           {importResult.imported ?? 0}
                         </Typography>
                       </Box>
+                      {(importResult.updated ?? 0) > 0 && (
+                        <Box>
+                          <Typography
+                            variant='caption'
+                            color='text.secondary'
+                            display='block'
+                          >
+                            Updated
+                          </Typography>
+                          <Typography
+                            variant='h6'
+                            color='info.main'
+                            fontWeight={700}
+                          >
+                            {importResult.updated}
+                          </Typography>
+                        </Box>
+                      )}
                       <Box>
                         <Typography
                           variant='caption'
@@ -706,6 +740,7 @@ const EmployeeOnboardingDialog = ({
                           fontWeight={700}
                         >
                           {(importResult.imported ?? 0) +
+                            (importResult.updated ?? 0) +
                             (importResult.skipped ?? 0)}
                         </Typography>
                       </Box>
@@ -905,7 +940,7 @@ const EmployeeOnboardingDialog = ({
 
                   {/* Success Message for Fully Successful Import */}
                   {(!importResult.errors || importResult.errors.length === 0) &&
-                    importResult.imported > 0 && (
+                    (importResult.imported > 0 || importResult.updated > 0) && (
                       <Alert
                         severity='success'
                         sx={{
@@ -916,8 +951,15 @@ const EmployeeOnboardingDialog = ({
                         }}
                       >
                         <Typography variant='body2'>
-                          ✅ All {importResult.imported} employee
-                          {importResult.imported > 1 ? 's' : ''} were imported
+                          ✅{' '}
+                          {[
+                            importResult.imported > 0 &&
+                              `${importResult.imported} employee${importResult.imported > 1 ? 's' : ''} imported`,
+                            importResult.updated > 0 &&
+                              `${importResult.updated} employee${importResult.updated > 1 ? 's' : ''} updated`,
+                          ]
+                            .filter(Boolean)
+                            .join(', ')}{' '}
                           successfully!
                         </Typography>
                       </Alert>
