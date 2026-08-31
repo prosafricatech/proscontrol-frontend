@@ -340,6 +340,7 @@ const ProductFormDialogContent = ({
                       { name: 'Inventory' },
                       { name: 'Non-Inventory' },
                       { name: 'Service' },
+                      { name: 'Asset' },
                     ]}
                     defaultValue={product?.id && { name: product.type }}
                     disabled={!!product?.id}

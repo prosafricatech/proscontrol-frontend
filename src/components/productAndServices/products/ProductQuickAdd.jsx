@@ -182,9 +182,9 @@ function ProductQuickAdd({ setOpen, setAddedProduct }) {
               {
                 name: 'Service',
               },
-              // {
-              //     name: 'Individually-Tracked'
-              // }
+              {
+                name: 'Asset',
+              },
             ]}
             renderInput={(params) => (
               <TextField

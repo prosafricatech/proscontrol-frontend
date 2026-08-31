@@ -1,0 +1,310 @@
+{
+  "glMappings": {
+    "list": {
+      "labels": {
+        "listHeader": "Asset GL Mappings",
+        "category": "Category",
+        "assetLedger": "Asset Ledger",
+        "accumulatedDepreciationLedger": "Accumulated Depreciation Ledger",
+        "depreciationExpenseLedger": "Depreciation Expense Ledger",
+        "disposalGainLossLedger": "Disposal Gain/Loss Ledger",
+        "actions": "Actions",
+        "newCreateLabel": "New GL Mapping"
+      },
+      "actionsTitle": { "labels": { "edit": "Edit", "delete": "Delete" } },
+      "dialog": {
+        "showDialog": {
+          "title": "Confirm Delete?",
+          "content": "If you say yes, this mapping will be deleted provided no assets are registered under this category"
+        }
+      }
+    },
+    "form": {
+      "title": "New Asset GL Mapping",
+      "editTitle": "Edit Asset GL Mapping",
+      "sections": {
+        "defaults": "Defaults for new assets in this category (optional)"
+      },
+      "labels": {
+        "category": "Product Category",
+        "assetLedger": "Asset Ledger",
+        "accumulatedDepreciationLedger": "Accumulated Depreciation Ledger",
+        "depreciationExpenseLedger": "Depreciation Expense Ledger",
+        "disposalGainLossLedger": "Disposal Gain/Loss Ledger",
+        "defaultUsefulLifeMonths": "Default Useful Life (Months)",
+        "defaultDepreciationMethod": "Default Depreciation Method",
+        "defaultDepreciationRate": "Default Depreciation Rate (% per year)"
+      },
+      "help": {
+        "defaultUsefulLifeMonths": "Used to pre-fill Straight Line registrations",
+        "defaultDepreciationRate": "Used to pre-fill Reducing Balance registrations"
+      },
+      "buttons": { "save": "Save", "cancel": "Cancel" },
+      "messages": {
+        "createSuccess": "Asset GL mapping was created successfully",
+        "updateSuccess": "Asset GL mapping was updated successfully",
+        "deleteSuccess": "Asset GL mapping was deleted successfully"
+      },
+      "errors": {
+        "validation": {
+          "productCategoryId": { "required": "Category is required" },
+          "assetLedgerId": { "required": "Asset ledger is required" },
+          "accumulatedDepreciationLedgerId": { "required": "Accumulated depreciation ledger is required" },
+          "depreciationExpenseLedgerId": { "required": "Depreciation expense ledger is required" },
+          "disposalGainLossLedgerId": { "required": "Disposal gain/loss ledger is required" }
+        }
+      }
+    }
+  },
+  "register": {
+    "list": {
+      "labels": {
+        "listHeader": "Asset Register",
+        "code": "Asset No.",
+        "asset": "Asset",
+        "category": "Category",
+        "store": "Store",
+        "custodian": "Custodian",
+        "status": "Status",
+        "netBookValue": "Net Book Value",
+        "actions": "Actions",
+        "newCreateLabel": "Register Asset",
+        "importLabel": "Import Opening Balances",
+        "searchPlaceholder": "Search assets...",
+        "allCategories": "All Categories",
+        "allStores": "All Stores",
+        "allStatuses": "All Statuses"
+      },
+      "status": {
+        "draft": "Draft",
+        "active": "Active",
+        "under_maintenance": "Under Maintenance",
+        "disposed": "Disposed"
+      },
+      "actionsTitle": {
+        "labels": {
+          "edit": "Edit",
+          "activate": "Activate",
+          "dispose": "Dispose",
+          "delete": "Delete"
+        }
+      },
+      "dialog": {
+        "showDialog": {
+          "title": "Confirm Delete?",
+          "content": "If you say yes, this asset will be deleted provided it has no depreciation or disposal history"
+        }
+      }
+    },
+    "form": {
+      "title": "Register Asset",
+      "editTitle": "Edit Asset",
+      "activateTitle": "Activate Asset",
+      "sections": {
+        "product": "What was acquired",
+        "cost": "Cost",
+        "depreciation": "Depreciation",
+        "location": "Location"
+      },
+      "labels": {
+        "product": "Asset Product",
+        "identification": "Identification / Serial No",
+        "remarks": "Remarks",
+        "acquisitionDate": "Acquisition Date",
+        "acquisitionCost": "Acquisition Cost",
+        "salvageValue": "Salvage Value",
+        "depreciationMethod": "Depreciation Method",
+        "usefulLifeMonths": "Useful Life (Months)",
+        "depreciationRate": "Depreciation Rate (% per year)",
+        "depreciationStartDate": "Depreciation Start Date",
+        "accumulatedDepreciationBf": "Accumulated Depreciation To Date",
+        "store": "Store",
+        "custodian": "Custodian",
+        "status": "Status",
+        "postJournal": "Post a capitalization journal",
+        "creditLedger": "Credit Ledger"
+      },
+      "methods": {
+        "straight_line": "Straight Line",
+        "reducing_balance": "Reducing Balance",
+        "none": "None"
+      },
+      "help": {
+        "postJournal": "Debits the category's asset ledger for the acquisition cost. Leave off if the cost already sits in your ledgers.",
+        "financialsLocked": "Depreciation has already been charged for this asset — cost and depreciation terms can no longer be edited."
+      },
+      "buttons": { "save": "Save", "cancel": "Cancel", "activate": "Activate" },
+      "messages": {
+        "createSuccess": "Asset was registered successfully",
+        "updateSuccess": "Asset was updated successfully",
+        "activateSuccess": "Asset was activated successfully",
+        "deleteSuccess": "Asset was deleted successfully"
+      },
+      "errors": {
+        "validation": {
+          "product": { "required": "Select the asset product" },
+          "identification": { "required": "Identification / serial number is required" },
+          "acquisitionDate": { "required": "Acquisition date is required" },
+          "acquisitionCost": { "required": "Acquisition cost is required", "positive": "Acquisition cost must be greater than 0" },
+          "depreciationMethod": { "required": "Depreciation method is required" },
+          "usefulLifeMonths": { "required": "Useful life is required for straight line depreciation" },
+          "depreciationRate": { "required": "Depreciation rate is required for reducing balance depreciation" },
+          "depreciationStartDate": { "required": "Depreciation start date is required" },
+          "creditLedger": { "required": "Choose the ledger to credit" }
+        }
+      }
+    },
+    "profile": {
+      "tabs": { "overview": "Overview", "schedule": "Depreciation Schedule", "disposal": "Disposal" },
+      "labels": {
+        "acquisitionCost": "Acquisition Cost",
+        "accumulatedDepreciation": "Accumulated Depreciation",
+        "netBookValue": "Net Book Value",
+        "period": "Period",
+        "charge": "Charge",
+        "accumulatedAfter": "Accumulated After",
+        "nbvAfter": "NBV After"
+      }
+    },
+    "import": {
+      "title": "Import Opening Balances",
+      "description": "Import fixed assets from an Excel opening-balance template. No journals are posted — figures are assumed to already sit in your ledgers.",
+      "downloadTemplate": "Download Template",
+      "downloading": "Downloading...",
+      "uploadInstructions": "Upload the filled template. Rows with an existing serial number under the same product are skipped, so re-uploading a corrected file is safe.",
+      "selectFile": "Select Excel File",
+      "removeFile": "Remove File",
+      "uploadAndImport": "Upload & Import",
+      "importing": "Uploading...",
+      "importAnother": "Import Another File",
+      "summary": "Import Summary",
+      "imported": "Imported",
+      "skipped": "Skipped",
+      "errors": "Errors",
+      "rowErrorsHeader": "Skipped Rows"
+    }
+  },
+  "disposal": {
+    "form": {
+      "title": "Dispose Asset",
+      "labels": {
+        "disposalDate": "Disposal Date",
+        "disposalMethod": "Disposal Method",
+        "proceeds": "Proceeds",
+        "proceedsLedger": "Proceeds Ledger",
+        "remarks": "Remarks",
+        "netBookValue": "Net Book Value at Disposal",
+        "gainLoss": "Gain / (Loss)"
+      },
+      "methods": { "sold": "Sold", "scrapped": "Scrapped", "written_off": "Written Off" },
+      "buttons": { "save": "Dispose", "cancel": "Cancel", "undo": "Undo Disposal" },
+      "messages": {
+        "success": "Asset was disposed of successfully",
+        "undoSuccess": "Disposal has been reversed successfully"
+      },
+      "errors": {
+        "validation": {
+          "disposalDate": { "required": "Disposal date is required" },
+          "disposalMethod": { "required": "Disposal method is required" },
+          "proceeds": { "required": "Enter the sale proceeds (0 if none)" },
+          "proceedsLedger": { "required": "Choose the bank or receivable ledger for the proceeds" }
+        }
+      }
+    },
+    "dialog": {
+      "showDialog": {
+        "title": "Confirm Undo Disposal?",
+        "content": "If you say yes, this disposal will be reversed, its journals removed, and the asset put back in service"
+      }
+    }
+  },
+  "depreciationRuns": {
+    "list": {
+      "labels": {
+        "listHeader": "Depreciation Runs",
+        "period": "Period",
+        "assetsCount": "Assets",
+        "totalDepreciation": "Total Depreciation",
+        "status": "Status",
+        "postedBy": "Posted By",
+        "actions": "Actions",
+        "newRunLabel": "New Depreciation Run",
+        "year": "Year",
+        "allYears": "All Years"
+      },
+      "status": { "draft": "Draft", "posted": "Posted" },
+      "actionsTitle": { "labels": { "view": "View", "rollback": "Roll Back" } },
+      "dialog": {
+        "showDialog": {
+          "title": "Confirm Rollback?",
+          "content": "If you say yes, every entry and journal in this run will be removed and the assets will revert to their previous depreciation figures. Only the latest run can be rolled back."
+        }
+      }
+    },
+    "form": {
+      "title": "New Depreciation Run",
+      "steps": { "period": "Choose Period", "preview": "Review", "posted": "Posted" },
+      "labels": {
+        "period": "Period",
+        "narration": "Narration"
+      },
+      "preview": {
+        "heading": "Review before posting",
+        "noLines": "No depreciation to charge for this period.",
+        "assetsCount": "assets",
+        "categoryHeader": "By Category",
+        "journalPreview": "This will post one journal per category:",
+        "missingMappings": "These categories have assets to depreciate but no GL mapping. Set them up under Masters → GL Mappings first:"
+      },
+      "buttons": {
+        "preview": "Preview",
+        "post": "Post Run",
+        "back": "Back",
+        "cancel": "Cancel",
+        "close": "Close"
+      },
+      "messages": {
+        "postSuccess": "Depreciation run was posted successfully",
+        "rollbackSuccess": "Depreciation run has been rolled back successfully"
+      },
+      "errors": {
+        "validation": { "period": { "required": "Choose a period to run" } }
+      }
+    },
+    "view": {
+      "title": "Depreciation Run",
+      "labels": {
+        "asset": "Asset",
+        "category": "Category",
+        "charge": "Charge",
+        "accumulatedAfter": "Accumulated After",
+        "nbvAfter": "NBV After",
+        "journal": "Journal"
+      }
+    }
+  },
+  "reports": {
+    "schedule": {
+      "title": "Fixed Asset Schedule",
+      "labels": {
+        "from": "From",
+        "to": "To",
+        "category": "Category",
+        "assetsCount": "Assets",
+        "costBf": "Cost B/F",
+        "additions": "Additions",
+        "disposalsCost": "Disposals",
+        "costCf": "Cost C/F",
+        "depBf": "Depreciation B/F",
+        "depCharge": "Charge",
+        "depReleased": "Released on Disposal",
+        "depCf": "Depreciation C/F",
+        "nbvCf": "Net Book Value",
+        "total": "TOTAL",
+        "showDetails": "Show asset-level detail"
+      },
+      "buttons": { "run": "Run Report", "downloadExcel": "Download Excel" },
+      "downloading": "Downloading..."
+    }
+  }
+}

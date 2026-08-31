@@ -237,7 +237,10 @@ const LeaveRequestsListItem = ({
                 </Grid>
               ) : (
                 <>
-                  {approvals.length === 0 && details?.approval_chain_id && (
+                  {/* Not gated on approvals.length === 0 — see the identical
+                      note in LoanRequestsListItem.tsx: this prompt has to show
+                      for every pending approver, not just the very first one. */}
+                  {details?.approval_chain_id && (
                     <Grid size={{ xs: 12 }} textAlign='end'>
                       <LeaveApprovalsActionTail leaveRequest={details} />
                     </Grid>

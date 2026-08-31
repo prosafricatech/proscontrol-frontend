@@ -344,6 +344,7 @@ function SaleItemForm({
                         frontError={errors.product}
                         defaultValue={item && item.product}
                         excludeFuelProducts={true}
+                        allowedCategoryIds={outlet.product_category_ids}
                         onChange={async(newValue) => {
                             clearErrors('quantity');
                             if(newValue) {

@@ -255,4 +255,12 @@ export const PERMISSIONS = {
   STAKEHOLDER_GROUPS_CREATE: 'StakeholderGroups:Create',
   STAKEHOLDER_GROUPS_EDIT: 'StakeholderGroups:Edit',
   STAKEHOLDER_GROUPS_DELETE: 'StakeholderGroups:Delete',
+  // Fixed Assets
+  ASSETS_READ: 'Assets:Read',
+  ASSETS_CREATE: 'Assets:Create',
+  ASSETS_EDIT: 'Assets:Edit',
+  ASSETS_DELETE: 'Assets:Delete',
+  ASSETS_SETUP: 'Assets:Setup',
+  ASSETS_DEPRECIATE: 'Assets:Depreciate',
+  ASSETS_DISPOSE: 'Assets:Dispose',
 };

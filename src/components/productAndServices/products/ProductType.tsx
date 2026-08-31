@@ -11,6 +11,7 @@ export interface Product {
   measurement_unit_id: number;
   unit_symbol?: string;
   product_id?: number;
+  product_category_id?: number;
   category?: {
     income_ledger_id?: number;
   };

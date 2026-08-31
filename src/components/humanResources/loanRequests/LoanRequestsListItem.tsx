@@ -555,7 +555,16 @@ const LoanRequestsListItem = ({
                   width='100%'
                   marginTop={1}
                 >
-                  {approvals.length === 0 && details?.approval_chain_id && (
+                  {/* Not gated on approvals.length === 0 — LoanApprovalsActionTail
+                      derives the pending level from the full chain state itself,
+                      so it's the right "your turn to approve" prompt whether this
+                      is the first approval or a later one (e.g. General Manager
+                      after Technical Manager already approved). Gating it to only
+                      the very first approval hid it for every later approver,
+                      leaving only the small per-row action next to the previous
+                      approver's history entry as the sole way to approve — easy
+                      to miss. */}
+                  {details?.approval_chain_id && (
                     <Grid size={{ xs: 12 }} textAlign='end'>
                       <LoanApprovalsActionTail loanRequest={details} />
                     </Grid>

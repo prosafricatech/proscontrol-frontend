@@ -1,0 +1,310 @@
+{
+  "glMappings": {
+    "list": {
+      "labels": {
+        "listHeader": "Uunganishaji wa Mali na Daftari",
+        "category": "Kategoria",
+        "assetLedger": "Daftari la Mali",
+        "accumulatedDepreciationLedger": "Daftari la Uchakavu Uliokusanywa",
+        "depreciationExpenseLedger": "Daftari la Gharama ya Uchakavu",
+        "disposalGainLossLedger": "Daftari la Faida/Hasara ya Uuzaji",
+        "actions": "Vitendo",
+        "newCreateLabel": "Uunganishaji Mpya"
+      },
+      "actionsTitle": { "labels": { "edit": "Hariri", "delete": "Futa" } },
+      "dialog": {
+        "showDialog": {
+          "title": "Thibitisha Kufuta?",
+          "content": "Ukisema ndiyo, uunganishaji huu utafutwa iwapo hakuna mali zilizosajiliwa chini ya kategoria hii"
+        }
+      }
+    },
+    "form": {
+      "title": "Uunganishaji Mpya wa Mali na Daftari",
+      "editTitle": "Hariri Uunganishaji wa Mali na Daftari",
+      "sections": {
+        "defaults": "Chaguo-msingi kwa mali mpya katika kategoria hii (si lazima)"
+      },
+      "labels": {
+        "category": "Kategoria ya Bidhaa",
+        "assetLedger": "Daftari la Mali",
+        "accumulatedDepreciationLedger": "Daftari la Uchakavu Uliokusanywa",
+        "depreciationExpenseLedger": "Daftari la Gharama ya Uchakavu",
+        "disposalGainLossLedger": "Daftari la Faida/Hasara ya Uuzaji",
+        "defaultUsefulLifeMonths": "Muda wa Matumizi wa Kawaida (Miezi)",
+        "defaultDepreciationMethod": "Mbinu ya Kawaida ya Uchakavu",
+        "defaultDepreciationRate": "Kiwango cha Kawaida cha Uchakavu (% kwa mwaka)"
+      },
+      "help": {
+        "defaultUsefulLifeMonths": "Hutumika kujaza mapema usajili wa Mstari Ulionyooka",
+        "defaultDepreciationRate": "Hutumika kujaza mapema usajili wa Salio Linalopungua"
+      },
+      "buttons": { "save": "Hifadhi", "cancel": "Ghairi" },
+      "messages": {
+        "createSuccess": "Uunganishaji wa mali na daftari umeongezwa kikamilifu",
+        "updateSuccess": "Uunganishaji wa mali na daftari umesasishwa kikamilifu",
+        "deleteSuccess": "Uunganishaji wa mali na daftari umefutwa kikamilifu"
+      },
+      "errors": {
+        "validation": {
+          "productCategoryId": { "required": "Kategoria inahitajika" },
+          "assetLedgerId": { "required": "Daftari la mali linahitajika" },
+          "accumulatedDepreciationLedgerId": { "required": "Daftari la uchakavu uliokusanywa linahitajika" },
+          "depreciationExpenseLedgerId": { "required": "Daftari la gharama ya uchakavu linahitajika" },
+          "disposalGainLossLedgerId": { "required": "Daftari la faida/hasara ya uuzaji linahitajika" }
+        }
+      }
+    }
+  },
+  "register": {
+    "list": {
+      "labels": {
+        "listHeader": "Daftari la Mali",
+        "code": "Namba ya Mali",
+        "asset": "Mali",
+        "category": "Kategoria",
+        "store": "Ghala",
+        "custodian": "Mwangalizi",
+        "status": "Hali",
+        "netBookValue": "Thamani Halisi ya Kitabu",
+        "actions": "Vitendo",
+        "newCreateLabel": "Sajili Mali",
+        "importLabel": "Leta Salio la Ufunguzi",
+        "searchPlaceholder": "Tafuta mali...",
+        "allCategories": "Kategoria Zote",
+        "allStores": "Maghala Yote",
+        "allStatuses": "Hali Zote"
+      },
+      "status": {
+        "draft": "Rasimu",
+        "active": "Inatumika",
+        "under_maintenance": "Inahudumiwa",
+        "disposed": "Imeuzwa/Kuondolewa"
+      },
+      "actionsTitle": {
+        "labels": {
+          "edit": "Hariri",
+          "activate": "Amilisha",
+          "dispose": "Ondoa/Uza",
+          "delete": "Futa"
+        }
+      },
+      "dialog": {
+        "showDialog": {
+          "title": "Thibitisha Kufuta?",
+          "content": "Ukisema ndiyo, mali hii itafutwa iwapo haina historia ya uchakavu au uuzaji"
+        }
+      }
+    },
+    "form": {
+      "title": "Sajili Mali",
+      "editTitle": "Hariri Mali",
+      "activateTitle": "Amilisha Mali",
+      "sections": {
+        "product": "Kilichonunuliwa",
+        "cost": "Gharama",
+        "depreciation": "Uchakavu",
+        "location": "Mahali"
+      },
+      "labels": {
+        "product": "Bidhaa ya Mali",
+        "identification": "Kitambulisho / Namba ya Serial",
+        "remarks": "Maelezo",
+        "acquisitionDate": "Tarehe ya Ununuzi",
+        "acquisitionCost": "Gharama ya Ununuzi",
+        "salvageValue": "Thamani ya Mabaki",
+        "depreciationMethod": "Mbinu ya Uchakavu",
+        "usefulLifeMonths": "Muda wa Matumizi (Miezi)",
+        "depreciationRate": "Kiwango cha Uchakavu (% kwa mwaka)",
+        "depreciationStartDate": "Tarehe ya Kuanza Uchakavu",
+        "accumulatedDepreciationBf": "Uchakavu Uliokusanywa Hadi Sasa",
+        "store": "Ghala",
+        "custodian": "Mwangalizi",
+        "status": "Hali",
+        "postJournal": "Weka jarida la ubadilishaji mtaji",
+        "creditLedger": "Daftari la Kukopeshwa"
+      },
+      "methods": {
+        "straight_line": "Mstari Ulionyooka",
+        "reducing_balance": "Salio Linalopungua",
+        "none": "Hakuna"
+      },
+      "help": {
+        "postJournal": "Inaandika deni kwenye daftari la mali la kategoria kwa gharama ya ununuzi. Acha bila kuchagua iwapo gharama tayari ipo kwenye madaftari yako.",
+        "financialsLocked": "Uchakavu tayari umetozwa kwa mali hii — gharama na masharti ya uchakavu hayawezi kuhaririwa tena."
+      },
+      "buttons": { "save": "Hifadhi", "cancel": "Ghairi", "activate": "Amilisha" },
+      "messages": {
+        "createSuccess": "Mali imesajiliwa kikamilifu",
+        "updateSuccess": "Mali imesasishwa kikamilifu",
+        "activateSuccess": "Mali imeamilishwa kikamilifu",
+        "deleteSuccess": "Mali imefutwa kikamilifu"
+      },
+      "errors": {
+        "validation": {
+          "product": { "required": "Chagua bidhaa ya mali" },
+          "identification": { "required": "Kitambulisho / namba ya serial inahitajika" },
+          "acquisitionDate": { "required": "Tarehe ya ununuzi inahitajika" },
+          "acquisitionCost": { "required": "Gharama ya ununuzi inahitajika", "positive": "Gharama ya ununuzi lazima iwe zaidi ya 0" },
+          "depreciationMethod": { "required": "Mbinu ya uchakavu inahitajika" },
+          "usefulLifeMonths": { "required": "Muda wa matumizi unahitajika kwa uchakavu wa mstari ulionyooka" },
+          "depreciationRate": { "required": "Kiwango cha uchakavu kinahitajika kwa uchakavu wa salio linalopungua" },
+          "depreciationStartDate": { "required": "Tarehe ya kuanza uchakavu inahitajika" },
+          "creditLedger": { "required": "Chagua daftari la kukopeshwa" }
+        }
+      }
+    },
+    "profile": {
+      "tabs": { "overview": "Muhtasari", "schedule": "Ratiba ya Uchakavu", "disposal": "Uuzaji/Uondoaji" },
+      "labels": {
+        "acquisitionCost": "Gharama ya Ununuzi",
+        "accumulatedDepreciation": "Uchakavu Uliokusanywa",
+        "netBookValue": "Thamani Halisi ya Kitabu",
+        "period": "Kipindi",
+        "charge": "Tozo",
+        "accumulatedAfter": "Ilokusanywa Baada",
+        "nbvAfter": "NBV Baada"
+      }
+    },
+    "import": {
+      "title": "Leta Salio la Ufunguzi",
+      "description": "Leta mali za kudumu kutoka kwenye kigezo cha Excel cha salio la ufunguzi. Hakuna jarida litakalowekwa — takwimu zinadhaniwa tayari zipo kwenye madaftari yako.",
+      "downloadTemplate": "Pakua Kigezo",
+      "downloading": "Inapakua...",
+      "uploadInstructions": "Pakia kigezo kilichojazwa. Safu zenye namba ya serial iliyopo tayari chini ya bidhaa hiyo hiyo zitarukwa, hivyo kupakia tena faili lililorekebishwa ni salama.",
+      "selectFile": "Chagua Faili la Excel",
+      "removeFile": "Ondoa Faili",
+      "uploadAndImport": "Pakia na Leta",
+      "importing": "Inapakia...",
+      "importAnother": "Leta Faili Jingine",
+      "summary": "Muhtasari wa Uletaji",
+      "imported": "Zilizoletwa",
+      "skipped": "Zilizorukwa",
+      "errors": "Makosa",
+      "rowErrorsHeader": "Safu Zilizorukwa"
+    }
+  },
+  "disposal": {
+    "form": {
+      "title": "Ondoa/Uza Mali",
+      "labels": {
+        "disposalDate": "Tarehe ya Uuzaji/Uondoaji",
+        "disposalMethod": "Mbinu ya Uuzaji/Uondoaji",
+        "proceeds": "Mapato",
+        "proceedsLedger": "Daftari la Mapato",
+        "remarks": "Maelezo",
+        "netBookValue": "Thamani Halisi ya Kitabu Wakati wa Uuzaji",
+        "gainLoss": "Faida / (Hasara)"
+      },
+      "methods": { "sold": "Imeuzwa", "scrapped": "Imetupwa", "written_off": "Imefutwa Kabisa" },
+      "buttons": { "save": "Ondoa", "cancel": "Ghairi", "undo": "Tengua Uuzaji" },
+      "messages": {
+        "success": "Mali imeuzwa/kuondolewa kikamilifu",
+        "undoSuccess": "Uuzaji/uondoaji umetenguliwa kikamilifu"
+      },
+      "errors": {
+        "validation": {
+          "disposalDate": { "required": "Tarehe ya uuzaji/uondoaji inahitajika" },
+          "disposalMethod": { "required": "Mbinu ya uuzaji/uondoaji inahitajika" },
+          "proceeds": { "required": "Weka mapato ya uuzaji (0 ikiwa hakuna)" },
+          "proceedsLedger": { "required": "Chagua daftari la benki au madeni ya mapato" }
+        }
+      }
+    },
+    "dialog": {
+      "showDialog": {
+        "title": "Thibitisha Kutengua Uuzaji?",
+        "content": "Ukisema ndiyo, uuzaji huu utatenguliwa, majarida yake yataondolewa, na mali itarudishwa kutumika"
+      }
+    }
+  },
+  "depreciationRuns": {
+    "list": {
+      "labels": {
+        "listHeader": "Uendeshaji wa Uchakavu",
+        "period": "Kipindi",
+        "assetsCount": "Mali",
+        "totalDepreciation": "Jumla ya Uchakavu",
+        "status": "Hali",
+        "postedBy": "Iliwekwa na",
+        "actions": "Vitendo",
+        "newRunLabel": "Uendeshaji Mpya wa Uchakavu",
+        "year": "Mwaka",
+        "allYears": "Miaka Yote"
+      },
+      "status": { "draft": "Rasimu", "posted": "Imewekwa" },
+      "actionsTitle": { "labels": { "view": "Ona", "rollback": "Rudisha Nyuma" } },
+      "dialog": {
+        "showDialog": {
+          "title": "Thibitisha Kurudisha Nyuma?",
+          "content": "Ukisema ndiyo, kila kiingilio na jarida katika uendeshaji huu vitaondolewa na mali zitarudi kwenye takwimu zao za awali za uchakavu. Ni uendeshaji wa mwisho tu unaoweza kurudishwa nyuma."
+        }
+      }
+    },
+    "form": {
+      "title": "Uendeshaji Mpya wa Uchakavu",
+      "steps": { "period": "Chagua Kipindi", "preview": "Kagua", "posted": "Imewekwa" },
+      "labels": {
+        "period": "Kipindi",
+        "narration": "Maelezo"
+      },
+      "preview": {
+        "heading": "Kagua kabla ya kuweka",
+        "noLines": "Hakuna uchakavu wa kutoza kwa kipindi hiki.",
+        "assetsCount": "mali",
+        "categoryHeader": "Kwa Kategoria",
+        "journalPreview": "Hii itaweka jarida moja kwa kila kategoria:",
+        "missingMappings": "Kategoria hizi zina mali za kuchakaa lakini hazina uunganishaji wa daftari. Ziweke chini ya Wakuu → Uunganishaji wa Daftari kwanza:"
+      },
+      "buttons": {
+        "preview": "Kagua",
+        "post": "Weka Uendeshaji",
+        "back": "Rudi",
+        "cancel": "Ghairi",
+        "close": "Funga"
+      },
+      "messages": {
+        "postSuccess": "Uendeshaji wa uchakavu umewekwa kikamilifu",
+        "rollbackSuccess": "Uendeshaji wa uchakavu umerudishwa nyuma kikamilifu"
+      },
+      "errors": {
+        "validation": { "period": { "required": "Chagua kipindi cha kuendesha" } }
+      }
+    },
+    "view": {
+      "title": "Uendeshaji wa Uchakavu",
+      "labels": {
+        "asset": "Mali",
+        "category": "Kategoria",
+        "charge": "Tozo",
+        "accumulatedAfter": "Ilokusanywa Baada",
+        "nbvAfter": "NBV Baada",
+        "journal": "Jarida"
+      }
+    }
+  },
+  "reports": {
+    "schedule": {
+      "title": "Ratiba ya Mali za Kudumu",
+      "labels": {
+        "from": "Kutoka",
+        "to": "Hadi",
+        "category": "Kategoria",
+        "assetsCount": "Mali",
+        "costBf": "Gharama Iliyobeba",
+        "additions": "Nyongeza",
+        "disposalsCost": "Uuzaji/Uondoaji",
+        "costCf": "Gharama Inayobebwa",
+        "depBf": "Uchakavu Uliobeba",
+        "depCharge": "Tozo",
+        "depReleased": "Iliyoachiliwa kwa Uuzaji",
+        "depCf": "Uchakavu Unaobebwa",
+        "nbvCf": "Thamani Halisi ya Kitabu",
+        "total": "JUMLA",
+        "showDetails": "Onyesha maelezo ya kila mali"
+      },
+      "buttons": { "run": "Endesha Ripoti", "downloadExcel": "Pakua Excel" },
+      "downloading": "Inapakua..."
+    }
+  }
+}

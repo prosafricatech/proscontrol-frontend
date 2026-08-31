@@ -29,6 +29,7 @@ export interface Outlet {
   cost_center: CostCenter;
   counters: Counter[];
   stores: Store[];
+  product_category_ids?: number[];
 }
 
 interface CounterContextType {

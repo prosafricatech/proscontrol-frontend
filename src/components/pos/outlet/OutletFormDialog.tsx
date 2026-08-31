@@ -3,6 +3,7 @@ import LedgerSelect from '@/components/accounts/ledgers/forms/LedgerSelect';
 import { Ledger } from '@/components/accounts/ledgers/LedgerType';
 import ProjectSelector from '@/components/projectManagement/projects/ProjectSelector';
 import StoreSelector from '@/components/procurement/stores/StoreSelector';
+import ProductCategoriesSelector from '@/components/productAndServices/productCategories/ProductCategoriesSelector';
 import UsersSelector from '@/components/sharedComponents/UsersSelector';
 import { User } from '@/types/auth-types';
 import { getErrorMessage } from '@/utilities/helpers/errorHandler';
@@ -55,6 +56,7 @@ interface FormData {
     ledgers?: Ledger[];
   }[];
   project_id?: number | null;
+  product_categories?: { name: string; id: number }[];
 }
 
 const OUTLET_TYPES = [
@@ -95,6 +97,15 @@ const validationSchema = yup.object({
     )
     .min(1, 'At least one store is required')
     .required('At least one store is required'),
+  product_categories: yup
+    .array()
+    .of(
+      yup.object({
+        name: yup.string().required(),
+        id: yup.number().required(),
+      })
+    )
+    .optional(),
   counters: yup
     .array()
     .of(
@@ -146,6 +157,7 @@ const OutletFormDialog: React.FC<OutletFormProps> = ({
         : [{ name: '', ledger_ids: [] }],
       users: outlet?.users || [],
       stores: outlet?.stores || [],
+      product_categories: outlet?.product_categories || [],
       project_id: outlet?.project?.id ?? null,
     },
     resolver: yupResolver(validationSchema) as any,
@@ -369,6 +381,24 @@ const OutletFormDialog: React.FC<OutletFormProps> = ({
                   defaultValue={outlet ? outlet.stores : []}
                   onChange={field.onChange}
                   frontError={errors.stores as any}
+                />
+              )}
+            />
+          </Grid>
+          <Grid size={12} sx={{ mt: 1, mb: 1 }}>
+            <Typography variant='body2' color='text.secondary' mb={0.5}>
+              Restrict this outlet to selling only products from selected
+              categories. Leave empty to allow all products.
+            </Typography>
+            <Controller
+              name='product_categories'
+              control={control}
+              render={({ field }) => (
+                <ProductCategoriesSelector
+                  multiple
+                  defaultValue={outlet ? outlet.product_categories : []}
+                  onChange={field.onChange}
+                  frontError={errors.product_categories as any}
                 />
               )}
             />

@@ -314,6 +314,42 @@ export async function getMenus(locale: string) {
       ],
     },
     {
+      label: sidebar.menu.fixedAssets,
+      type: 'section',
+      children: [
+        {
+          uri: `/${locale}/assets`,
+          label: sidebar.menuItem.assetRegister,
+          type: 'nav-item',
+          icon: icon('assetRegister'),
+        },
+        {
+          uri: `/${locale}/assets/depreciation-runs`,
+          label: sidebar.menuItem.depreciationRuns,
+          type: 'nav-item',
+          icon: icon('depreciationRuns'),
+        },
+        {
+          uri: `/${locale}/assets/reports`,
+          label: sidebar.menuItem.assetReports,
+          type: 'nav-item',
+          icon: icon('reports'),
+        },
+        {
+          label: sidebar.menuItem.masters,
+          type: 'collapsible',
+          icon: icon('currencies'),
+          children: [
+            {
+              uri: `/${locale}/assets/gl-mappings`,
+              label: sidebar.menuItem.assetGlMappings,
+              type: 'nav-item',
+            },
+          ],
+        },
+      ],
+    },
+    {
       label: sidebar.menu.procurementAndSupply,
       type: 'section',
       children: [

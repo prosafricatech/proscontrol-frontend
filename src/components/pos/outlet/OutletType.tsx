@@ -21,6 +21,11 @@ export interface Project {
   projectNo?: string;
 }
 
+export interface ProductCategory {
+  id: number;
+  name: string;
+}
+
 export interface Outlet {
   id?: number | string;
   name: string;
@@ -31,6 +36,7 @@ export interface Outlet {
   counters: Counter[];
   project_id?: number | null;
   project?: Project | null;
+  product_categories?: ProductCategory[];
 }
 
 export interface AddOutletResponse {

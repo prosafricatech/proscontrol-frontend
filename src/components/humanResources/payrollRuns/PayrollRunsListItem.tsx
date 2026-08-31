@@ -392,7 +392,10 @@ const PayrollRunsListItem = ({
   };
 
   const handleViewPayslip = (payslip: any) => {
-    setSelectedPayslip(payslip);
+    // Individual payslips returned under a run's payslips[] don't carry their
+    // own period back-reference — only the parent payrollRun does — so
+    // formatPayslipPeriod() had nothing to read and always fell back to '-'.
+    setSelectedPayslip({ ...payslip, run: { ...payslip.run, period: payrollRun.period } });
     setOpenPayslipDialog(true);
   };
 

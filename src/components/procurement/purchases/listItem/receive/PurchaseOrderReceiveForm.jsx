@@ -83,7 +83,8 @@ function PurchaseOrderReceiveForm({ toggleOpen, order, grn }) {
     () =>
       purchase_order_items?.filter(
         (item) =>
-          item.product.type === 'Inventory' && item.unreceived_quantity > 0
+          ['Inventory', 'Asset'].includes(item.product.type) &&
+          item.unreceived_quantity > 0
       ) || [],
     [order]
   );
@@ -255,7 +256,7 @@ function PurchaseOrderReceiveForm({ toggleOpen, order, grn }) {
             purchase_order_items
               ?.filter(
                 (item) =>
-                  item.product.type === 'Inventory' &&
+                  ['Inventory', 'Asset'].includes(item.product.type) &&
                   item.unreceived_quantity > 0
               )
               .map((item) => {
@@ -264,6 +265,7 @@ function PurchaseOrderReceiveForm({ toggleOpen, order, grn }) {
                   quantity: item.grn_quantity,
                   purchase_order_item_id: item.id,
                   rate: item.rate,
+                  identifications: item.identifications || [],
                 };
               }) || [],
           additional_costs: grn.additional_costs || [],
@@ -277,7 +279,7 @@ function PurchaseOrderReceiveForm({ toggleOpen, order, grn }) {
           items: purchase_order_items
             ?.filter(
               (item) =>
-                item.product.type === 'Inventory' &&
+                ['Inventory', 'Asset'].includes(item.product.type) &&
                 item.unreceived_quantity > 0
             )
             .map((item) => ({
@@ -285,6 +287,7 @@ function PurchaseOrderReceiveForm({ toggleOpen, order, grn }) {
               quantity: item.unreceived_quantity,
               purchase_order_item_id: item.id,
               rate: item.rate,
+              identifications: [],
             })),
           additional_costs: order?.additional_costs || [],
         },

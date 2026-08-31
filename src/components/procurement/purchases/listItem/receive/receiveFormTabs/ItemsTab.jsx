@@ -94,6 +94,8 @@ function ItemsTab({
                     label='Receive'
                     fullWidth
                     size='small'
+                    type={item.product.type === 'Asset' ? 'number' : 'text'}
+                    inputProps={item.product.type === 'Asset' ? { step: 1, min: 0 } : undefined}
                     error={
                       !!errors?.items &&
                       !!errors.items[index] &&
@@ -126,6 +128,32 @@ function ItemsTab({
                         <DeleteIcon fontSize='small' />
                       </IconButton>
                     </Tooltip>
+                  </Div>
+                </Grid>
+              )}
+              {item.product.type === 'Asset' && (
+                <Grid size={{ xs: 12, md: 11.5, offset: { md: 0.5 } }}>
+                  <Div sx={{ mt: 0.5, mb: 1.7 }}>
+                    <Typography variant='caption' color='text.secondary' display='block' mb={0.5}>
+                      Identification / Serial No. for each unit (optional — an asset number is assigned automatically when left blank)
+                    </Typography>
+                    <Grid container spacing={1}>
+                      {Array.from({ length: Math.max(0, Math.floor(watch(`items.${index}.quantity`) || 0)) }).map((_, unit) => (
+                        <Grid key={unit} size={{ xs: 6, md: 3 }}>
+                          <TextField
+                            label={`Unit ${unit + 1}`}
+                            fullWidth
+                            size='small'
+                            value={watch(`items.${index}.identifications.${unit}`) || ''}
+                            onChange={(e) => {
+                              setValue(`items.${index}.identifications.${unit}`, e.target.value, {
+                                shouldDirty: true,
+                              });
+                            }}
+                          />
+                        </Grid>
+                      ))}
+                    </Grid>
                   </Div>
                 </Grid>
               )}

@@ -8,4 +8,5 @@ export const MODULES = {
   FUEL_STATION: 'Fuel Station',
   PROCESS_APPROVAL: 'Process Approval',
   SMS: 'SMS',
+  ASSET_REGISTER: 'Asset Register',
 };

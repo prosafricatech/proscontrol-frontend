@@ -657,6 +657,71 @@ function Sidebar({ menus }) {
                 }
             }
 
+            if (organizationHasSubscribed(MODULES.ASSET_REGISTER)) {
+
+                //Fixed Assets
+                if (checkOrganizationPermission(
+                    [
+                        PERMISSIONS.ASSETS_READ,
+                        PERMISSIONS.ASSETS_CREATE,
+                        PERMISSIONS.ASSETS_EDIT,
+                        PERMISSIONS.ASSETS_DELETE,
+                        PERMISSIONS.ASSETS_SETUP,
+                        PERMISSIONS.ASSETS_DEPRECIATE,
+                        PERMISSIONS.ASSETS_DISPOSE,
+                    ])) {
+                    updatedMenus = [...updatedMenus, ...menus.filter(menu => menu.label === dictionary.sidebar.menu.fixedAssets)];
+                }
+
+                // Fixed Assets > Asset Register
+                if (!checkOrganizationPermission([
+                    PERMISSIONS.ASSETS_READ,
+                    PERMISSIONS.ASSETS_CREATE,
+                    PERMISSIONS.ASSETS_EDIT,
+                    PERMISSIONS.ASSETS_DELETE,
+                ])) {
+                    const fixedAssetsMenuIndex = updatedMenus.findIndex(menu => menu.label === dictionary.sidebar.menu.fixedAssets);
+                    if (fixedAssetsMenuIndex >= 0) {
+                        updatedMenus[fixedAssetsMenuIndex].children = updatedMenus[fixedAssetsMenuIndex].children.filter(
+                            child => child.label !== dictionary.sidebar.menuItem.assetRegister
+                        );
+                    }
+                }
+
+                // Fixed Assets > Depreciation Runs
+                if (!checkOrganizationPermission([
+                    PERMISSIONS.ASSETS_READ,
+                    PERMISSIONS.ASSETS_DEPRECIATE,
+                ])) {
+                    const fixedAssetsMenuIndex = updatedMenus.findIndex(menu => menu.label === dictionary.sidebar.menu.fixedAssets);
+                    if (fixedAssetsMenuIndex >= 0) {
+                        updatedMenus[fixedAssetsMenuIndex].children = updatedMenus[fixedAssetsMenuIndex].children.filter(
+                            child => child.label !== dictionary.sidebar.menuItem.depreciationRuns
+                        );
+                    }
+                }
+
+                // Fixed Assets > Reports
+                if (!checkOrganizationPermission(PERMISSIONS.ASSETS_READ)) {
+                    const fixedAssetsMenuIndex = updatedMenus.findIndex(menu => menu.label === dictionary.sidebar.menu.fixedAssets);
+                    if (fixedAssetsMenuIndex >= 0) {
+                        updatedMenus[fixedAssetsMenuIndex].children = updatedMenus[fixedAssetsMenuIndex].children.filter(
+                            child => child.label !== dictionary.sidebar.menuItem.assetReports
+                        );
+                    }
+                }
+
+                // Fixed Assets > Masters (GL Mappings)
+                if (!checkOrganizationPermission(PERMISSIONS.ASSETS_SETUP)) {
+                    const fixedAssetsMenuIndex = updatedMenus.findIndex(menu => menu.label === dictionary.sidebar.menu.fixedAssets);
+                    if (fixedAssetsMenuIndex >= 0) {
+                        updatedMenus[fixedAssetsMenuIndex].children = updatedMenus[fixedAssetsMenuIndex].children.filter(
+                            child => child.label !== dictionary.sidebar.menuItem.masters
+                        );
+                    }
+                }
+            }
+
             if (organizationHasSubscribed(MODULES.PROCUREMENT_AND_SUPPLY)) {
                 //Procurement & Supply
                 if (checkOrganizationPermission(

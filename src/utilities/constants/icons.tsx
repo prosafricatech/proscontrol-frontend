@@ -51,6 +51,8 @@ import {
   UploadFileOutlined,
   VerifiedOutlined,
   ViewAgendaOutlined,
+  WarehouseOutlined,
+  TrendingDownOutlined,
 } from '@mui/icons-material';
 
 export const ICONS = {
@@ -112,6 +114,8 @@ export const ICONS = {
   myHr: AccessibilityNewOutlined,
   employee_contracts: ContactPage,
   businessCenter: BusinessCenterOutlined,
+  assetRegister: WarehouseOutlined,
+  depreciationRuns: TrendingDownOutlined,
 } as const;
 
 export type IconName = keyof typeof ICONS;

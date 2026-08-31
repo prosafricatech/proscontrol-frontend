@@ -18,7 +18,11 @@ function QuickAdd({items = [],setItems}) {
     });
 
     const addItem = async(itemData) => {
-        const product = productOptions.find(product => product.sku === itemData.sku);
+        const allowedCategoryIds = outlet.product_category_ids;
+        const eligibleProducts = allowedCategoryIds && allowedCategoryIds.length > 0
+            ? productOptions.filter(product => allowedCategoryIds.includes(product.product_category_id))
+            : productOptions;
+        const product = eligibleProducts.find(product => product.sku === itemData.sku);
         if(!product){
             setError('quick_add',{
                 type: 'productNotFound',
