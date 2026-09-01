@@ -17,14 +17,27 @@ import { useSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import * as yup from 'yup';
+import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
+import { MODULES } from '@/utilities/constants/modules';
 import productCategoryServices from '../productCategories/productCategoryServices';
 import productServices from './productServices';
 import { useProductApp } from './ProductsProvider';
+
+const PRODUCT_TYPES = [
+  { name: 'Inventory' },
+  { name: 'Non-Inventory' },
+  { name: 'Service' },
+  { name: 'Asset' },
+];
 
 function ProductQuickAdd({ setOpen, setAddedProduct }) {
   //Screen handling constants
   const { theme } = useJumboTheme();
   const belowLargeScreen = useMediaQuery(theme.breakpoints.down('lg'));
+  const { organizationHasSubscribed } = useJumboAuth();
+  const productTypeOptions = organizationHasSubscribed(MODULES.ASSET_REGISTER)
+    ? PRODUCT_TYPES
+    : PRODUCT_TYPES.filter((type) => type.name !== 'Asset');
   const {
     item_names,
     brands,
@@ -172,20 +185,7 @@ function ProductQuickAdd({ setOpen, setAddedProduct }) {
             size='small'
             getOptionLabel={(option) => option.name}
             isOptionEqualToValue={(option, value) => option.name === value.name}
-            options={[
-              {
-                name: 'Inventory',
-              },
-              {
-                name: 'Non-Inventory',
-              },
-              {
-                name: 'Service',
-              },
-              {
-                name: 'Asset',
-              },
-            ]}
+            options={productTypeOptions}
             renderInput={(params) => (
               <TextField
                 {...params}

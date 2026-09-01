@@ -22,6 +22,11 @@ const AuthUserPopover = dynamic(
   { ssr: false }
 );
 
+const NotificationBell = dynamic(
+  () => import('../notifications/notificationBell/NotificationBell').then((mod) => mod.NotificationBell),
+  { ssr: false }
+);
+
 function Header({ dictionary }: { dictionary: any }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -150,6 +155,7 @@ function Header({ dictionary }: { dictionary: any }) {
         >
           {/* <SearchGlobal sx={{ maxWidth: 320, minWidth: 200 }} /> */}
           <ThemeModeOption />
+          <NotificationBell />
           <AuthUserPopover dictionary={dictionary} />
         </Stack>
       </React.Fragment>
@@ -206,6 +212,7 @@ function Header({ dictionary }: { dictionary: any }) {
           </Stack>
           <Stack direction={'row'} alignItems={'center'} gap={1}>
             <ThemeModeOption />
+            <NotificationBell />
             <AuthUserPopover dictionary={dictionary} />
           </Stack>
         </Stack>

@@ -54,6 +54,11 @@ function SaleItemForm({
     const [priceFieldKey, setPriceFieldKey] = useState(0)
     const [vatPriceFieldKey, setVatPriceFieldKey] = useState(0)
 
+    const [isAmountFieldChange, setIsAmountFieldChange] = useState(false);
+    const [amountValue, setAmountValue] = useState(0);
+    const [amountFieldKey, setAmountFieldKey] = useState(0);
+    const [quantityFieldKey, setQuantityFieldKey] = useState(0);
+
     const baseSchema = {
         product: yup.object().required("Product is required").typeError('Product is required'),
         rate: yup.number().required("Price is required").positive("Price must be positive").typeError('Price is required'),
@@ -285,6 +290,8 @@ function SaleItemForm({
 
                 setPriceFieldKey(key => key + 1)
                 setVatPriceFieldKey(key => key + 1)
+                setIsAmountFieldChange(false);
+                setAmountFieldKey(key => key + 1)
             }
     
             if (!isRetrieving && watch(`available_balance`) && watch(`quantity`) > 0) {
@@ -320,6 +327,8 @@ function SaleItemForm({
             setCanChangePrice(!watch('rate') || !notAllowedToChangePrice);
             setPriceFieldKey(key => key + 1)
             setVatPriceFieldKey(key => key + 1)
+            setIsAmountFieldChange(false);
+            setAmountFieldKey(key => key + 1)
         }
     }
     
@@ -357,6 +366,8 @@ function SaleItemForm({
                                 await setValue('measurement_unit_id', newValue.primary_unit?.id);
                                 await setValue('unit_symbol', newValue.primary_unit?.unit_symbol);
                                 await setValue(`product_id`,newValue.id);
+                                setIsAmountFieldChange(false);
+                                setAmountFieldKey(key => key + 1);
 
                                 retrieveLastPrice(newValue,newValue.primary_unit?.id);
                                 await retrieveBalances(store_id, newValue, newValue.primary_unit?.id);
@@ -413,9 +424,12 @@ function SaleItemForm({
                         label="Quantity"
                         fullWidth
                         size='small'
+                        key={quantityFieldKey}
                         error={!!errors?.quantity}
                         helperText={errors?.quantity?.message}
                         onChange={(e)=> {
+                            setIsAmountFieldChange(false);
+                            setAmountFieldKey(key => key + 1);
                             setValue(`quantity`,e.target.value ? sanitizedNumber(e.target.value ) : 0,{
                                 shouldValidate: true,
                                 shouldDirty: true
@@ -460,7 +474,7 @@ function SaleItemForm({
                                 </div>
                             ),
                         }}
-                        defaultValue={item ? item?.quantity : null}
+                        defaultValue={quantityFieldKey > 0 ? (Math.round((watch('quantity') || 0) * 100000) / 100000) : (item ? item?.quantity : null)}
                     />
                 </Grid>
                 <Grid size={{xs: 12, md: 6, lg: !!checkedForInstantSale && isInventory ? 2.5 : (!vat_factor ? 3 : 2)}}>
@@ -481,11 +495,13 @@ function SaleItemForm({
                                 onChange={(e) => {
                                     setIsVatfieldChange(false);
                                     setPriceInclusiveVAT(0);
+                                    setIsAmountFieldChange(false);
                                     setValue(`rate`,e.target.value ? sanitizedNumber(e.target.value ) : 0, {
                                         shouldValidate: true,
                                         shouldDirty: true
                                     });
                                     setVatPriceFieldKey(key => key + 1)
+                                    setAmountFieldKey(key => key + 1)
                                 }}
                             />
                     }
@@ -511,11 +527,13 @@ function SaleItemForm({
                             onChange={(e) => {
                                 setIsVatfieldChange(e.target.value && true);
                                 setPriceInclusiveVAT(e.target.value ? sanitizedNumber(e.target.value) : 0);
+                                setIsAmountFieldChange(false);
                                 setValue(`rate`,e.target.value ? sanitizedNumber(e.target.value )/(1+(product?.vat_exempted !== 1 ? vat_factor : 0)): 0,{
                                     shouldValidate: true,
                                     shouldDirty: true
                                 });
                                 setPriceFieldKey(key => key + 1)
+                                setAmountFieldKey(key => key + 1)
                             }}
                         />
                     </Grid>
@@ -525,10 +543,32 @@ function SaleItemForm({
                         label="Amount"
                         fullWidth
                         size='small'
-                        value={amount()}
+                        key={amountFieldKey}
+                        error={!!errors?.quantity}
+                        helperText={errors?.quantity?.message}
                         InputProps={{
                             inputComponent: CommaSeparatedField,
-                            readOnly: true
+                            readOnly: !watch('rate')
+                        }}
+                        defaultValue={isAmountFieldChange ?
+                            (Math.round(amountValue * 100000) / 100000) :
+                            (Math.round(amount() * 100000) / 100000)
+                        }
+                        onChange={(e) => {
+                            const newAmount = e.target.value ? sanitizedNumber(e.target.value) : 0;
+                            setIsAmountFieldChange(true);
+                            setAmountValue(newAmount);
+
+                            const rate = parseFloat(watch('rate')) || 0;
+                            const vatMultiplier = 1 + (product?.vat_exempted !== 1 ? vat_factor : 0);
+                            const effectiveRate = rate * vatMultiplier;
+                            const newQuantity = effectiveRate > 0 ? newAmount / effectiveRate : 0;
+
+                            setValue(`quantity`, Math.round(newQuantity * 100000) / 100000, {
+                                shouldValidate: true,
+                                shouldDirty: true
+                            });
+                            setQuantityFieldKey(key => key + 1);
                         }}
                     />
                 </Grid>

@@ -3,6 +3,7 @@ import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import MeasurementUnitForm from '@/components/masters/measurementUnits/MeasurementUnitForm';
 import CommaSeparatedField from '@/shared/Inputs/CommaSeparatedField';
 import { getErrorMessage } from '@/utilities/helpers/errorHandler';
+import { MODULES } from '@/utilities/constants/modules';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useJumboTheme } from '@jumbo/components/JumboTheme/hooks';
 import { Div } from '@jumbo/shared';
@@ -51,8 +52,9 @@ const ProductFormDialogContent = ({
       storeOptions,
     } = useProductApp();
     const { enqueueSnackbar } = useSnackbar();
-    const { authOrganization } = useJumboAuth();
+    const { authOrganization, organizationHasSubscribed } = useJumboAuth();
     const { costCenters } = authOrganization;
+    const assetRegisterSubscribed = organizationHasSubscribed(MODULES.ASSET_REGISTER);
     const queryClient = useQueryClient();
     const [isInventory, setIsInventory] = useState(false);
     const [isVatExempt, setIsVatExempt] = useState(
@@ -340,7 +342,7 @@ const ProductFormDialogContent = ({
                       { name: 'Inventory' },
                       { name: 'Non-Inventory' },
                       { name: 'Service' },
-                      { name: 'Asset' },
+                      ...(assetRegisterSubscribed ? [{ name: 'Asset' }] : []),
                     ]}
                     defaultValue={product?.id && { name: product.type }}
                     disabled={!!product?.id}
