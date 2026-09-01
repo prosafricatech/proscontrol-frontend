@@ -91,4 +91,9 @@ bankReconciliationServices.completeStatement = async (statementId) => {
     return data;
 };
 
+bankReconciliationServices.deleteStatement = async (statementId) => {
+    const { data } = await axios.delete(`/api/accounts/bankReconciliation/statements/${statementId}`);
+    return data;
+};
+
 export default bankReconciliationServices;

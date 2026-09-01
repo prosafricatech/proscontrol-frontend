@@ -14,10 +14,11 @@ import {
   Typography,
   useMediaQuery,
 } from '@mui/material';
-import { CheckCircleOutlined, UploadOutlined } from '@mui/icons-material';
+import { CheckCircleOutlined, DeleteOutlined, UploadOutlined } from '@mui/icons-material';
 import { LoadingButton } from '@mui/lab';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSnackbar } from 'notistack';
+import { useJumboDialog } from '@jumbo/components/JumboDialog/hooks/useJumboDialog';
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import { PERMISSIONS } from '@/utilities/constants/permissions';
 import { useJumboTheme } from '@jumbo/components/JumboTheme/hooks';
@@ -38,6 +39,7 @@ const formatAmount = (amount: number) =>
 export default function BankReconciliationWorkspace({ bankAccountId }: Props) {
   const { enqueueSnackbar } = useSnackbar();
   const queryClient = useQueryClient();
+  const { showDialog, hideDialog } = useJumboDialog();
   const { checkOrganizationPermission } = useJumboAuth();
   const { theme } = useJumboTheme();
   const belowLargeScreen = useMediaQuery(theme.breakpoints.down('lg'));
@@ -59,6 +61,28 @@ export default function BankReconciliationWorkspace({ bankAccountId }: Props) {
     },
     onError: (err: any) => enqueueSnackbar(err?.response?.data?.message || 'Failed to complete reconciliation', { variant: 'error' }),
   });
+
+  const deleteStatementMutation = useMutation({
+    mutationFn: () => bankReconciliationServices.deleteStatement(data.statement.id),
+    onSuccess: (result) => {
+      enqueueSnackbar(result.message || 'Statement deleted', { variant: 'success' });
+      hideDialog();
+      queryClient.invalidateQueries({ queryKey: ['bank-reconciliation-workspace', bankAccountId] });
+      queryClient.invalidateQueries({ queryKey: ['bank-accounts-list'] });
+    },
+    onError: (err: any) => enqueueSnackbar(err?.response?.data?.message || 'Failed to delete statement', { variant: 'error' }),
+  });
+
+  const confirmDeleteStatement = () => {
+    showDialog({
+      title: 'Delete this statement?',
+      content:
+        'This permanently deletes the imported statement, every one of its lines, and all matches made against it — freeing up any book entries they were linked to. This cannot be undone. Start this reconciliation over from scratch?',
+      variant: 'confirm',
+      onYes: () => deleteStatementMutation.mutate(),
+      onNo: () => hideDialog(),
+    });
+  };
 
   if (isLoading) {
     return <Typography>Loading…</Typography>;
@@ -100,11 +124,24 @@ export default function BankReconciliationWorkspace({ bankAccountId }: Props) {
             {' '}<Chip size='small' label={statement.status} color={isCompleted ? 'success' : 'default'} sx={{ ml: 1 }} />
           </Typography>
         </Box>
-        {!isCompleted && checkOrganizationPermission(PERMISSIONS.BANK_RECONCILIATION_CREATE) && (
-          <Button variant='outlined' startIcon={<UploadOutlined />} onClick={() => setImportDialogOpen(true)}>
-            Import New Statement
-          </Button>
-        )}
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          {!isCompleted && checkOrganizationPermission(PERMISSIONS.BANK_RECONCILIATION_CREATE) && (
+            <Button variant='outlined' startIcon={<UploadOutlined />} onClick={() => setImportDialogOpen(true)}>
+              Import New Statement
+            </Button>
+          )}
+          {checkOrganizationPermission(PERMISSIONS.BANK_RECONCILIATION_DELETE) && (
+            <LoadingButton
+              variant='outlined'
+              color='error'
+              startIcon={<DeleteOutlined />}
+              loading={deleteStatementMutation.isPending}
+              onClick={confirmDeleteStatement}
+            >
+              Delete Statement
+            </LoadingButton>
+          )}
+        </Box>
       </Box>
 
       <DifferenceSummary closingBalance={statement.closing_balance} bookBalance={book_balance} difference={difference} />
