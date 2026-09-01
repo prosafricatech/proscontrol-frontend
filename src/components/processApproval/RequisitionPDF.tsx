@@ -132,7 +132,7 @@ function RequisitionPDF({
           </View>
         </View>
 
-        <View style={{ ...pdfStyles.table, minHeight: 230, marginBottom: 50 }}>
+        <View style={{ ...pdfStyles.table, minHeight: 230 }}>
           <View style={pdfStyles.tableRow}>
             <Text
               style={{
@@ -337,7 +337,7 @@ function RequisitionPDF({
           ))}
         </View>
 
-        <View style={{ ...pdfStyles.tableRow, marginBottom: 4 }}>
+        <View style={{ ...pdfStyles.tableRow, marginBottom: 4, paddingTop: 50 }}>
           <Text style={{ textAlign: 'center', flex: 4.5 }}></Text>
           <Text
             style={{
