@@ -287,6 +287,19 @@ const ProductSalesReportDialog: React.FC = () => {
                         </Grid>
                         <Grid size={6}>
                           <Typography variant='caption' color='text.secondary'>
+                            Qty Undispatched
+                          </Typography>
+                        </Grid>
+                        <Grid size={6} textAlign='right'>
+                          <Typography variant='body2'>
+                            {formatQuantity(
+                              row.quantity_ordered - row.quantity_dispatched,
+                              row.unit_symbol
+                            )}
+                          </Typography>
+                        </Grid>
+                        <Grid size={6}>
+                          <Typography variant='caption' color='text.secondary'>
                             Amount Ordered
                           </Typography>
                         </Grid>
@@ -347,6 +360,23 @@ const ProductSalesReportDialog: React.FC = () => {
                       </Grid>
                       <Grid size={6}>
                         <Typography variant='caption' color='text.secondary'>
+                          Qty Undispatched
+                        </Typography>
+                      </Grid>
+                      <Grid size={6} textAlign='right'>
+                        <Typography variant='body2'>
+                          <strong>
+                            {(
+                              totals.quantity_ordered -
+                              totals.quantity_dispatched
+                            ).toLocaleString('en-US', {
+                              maximumFractionDigits: 2,
+                            })}
+                          </strong>
+                        </Typography>
+                      </Grid>
+                      <Grid size={6}>
+                        <Typography variant='caption' color='text.secondary'>
                           Amount Ordered
                         </Typography>
                       </Grid>
@@ -380,6 +410,7 @@ const ProductSalesReportDialog: React.FC = () => {
                           <TableCell>Product</TableCell>
                           <TableCell align='right'>Qty Ordered</TableCell>
                           <TableCell align='right'>Qty Dispatched</TableCell>
+                          <TableCell align='right'>Qty Undispatched</TableCell>
                           <TableCell align='right'>Amount Ordered</TableCell>
                           <TableCell align='right'>Payment Received</TableCell>
                         </TableRow>
@@ -397,6 +428,12 @@ const ProductSalesReportDialog: React.FC = () => {
                             <TableCell align='right'>
                               {formatQuantity(
                                 row.quantity_dispatched,
+                                row.unit_symbol
+                              )}
+                            </TableCell>
+                            <TableCell align='right'>
+                              {formatQuantity(
+                                row.quantity_ordered - row.quantity_dispatched,
                                 row.unit_symbol
                               )}
                             </TableCell>
@@ -428,6 +465,16 @@ const ProductSalesReportDialog: React.FC = () => {
                                 'en-US',
                                 { maximumFractionDigits: 2 }
                               )}
+                            </strong>
+                          </TableCell>
+                          <TableCell align='right'>
+                            <strong>
+                              {(
+                                totals.quantity_ordered -
+                                totals.quantity_dispatched
+                              ).toLocaleString('en-US', {
+                                maximumFractionDigits: 2,
+                              })}
                             </strong>
                           </TableCell>
                           <TableCell align='right'>
