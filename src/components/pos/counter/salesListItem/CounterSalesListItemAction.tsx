@@ -369,10 +369,10 @@ const CounterSalesListItemAction: React.FC<CounterSalesListItemActionProps> = ({
           ))}
       </Dialog>
 
-      {!!sale.is_instant_sale &&
-        !sale.is_invoiced &&
+      {!sale.is_invoiced &&
         checkOrganizationPermission(PERMISSIONS.SALES_CREATE) &&
-        sale.status === 'Complete' && (
+        ((!!sale.is_instant_sale && sale.status === 'Complete') ||
+          (sale.status === 'Ordered' && sale.is_fully_paid)) && (
           <Tooltip title={`Receipt ${sale.saleNo}`}>
             <IconButton onClick={() => setOpenReceiptDialog(true)}>
               <ReceiptLongOutlined />
