@@ -91,6 +91,13 @@ posServices.productSales = async (params) => {
     return data;
 };
 
+posServices.productSalesReport = async (params) => {
+    const { data } = await axios.get(`/api/pos/counter/productSalesReport`, {
+        params
+    });
+    return data;
+};
+
 posServices.exportProductSalesExcel = async (exportedData) => {
     const res = await axios.post(`/api/exports/excel/topProducts/`, exportedData, {
         responseType: 'blob',
