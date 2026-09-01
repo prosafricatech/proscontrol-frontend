@@ -474,7 +474,7 @@ function SaleItemForm({
                                 </div>
                             ),
                         }}
-                        defaultValue={quantityFieldKey > 0 ? (Math.round((watch('quantity') || 0) * 100000) / 100000) : (item ? item?.quantity : null)}
+                        defaultValue={quantityFieldKey > 0 ? (Math.round((watch('quantity') || 0) * 100000000) / 100000000) : (item ? item?.quantity : null)}
                     />
                 </Grid>
                 <Grid size={{xs: 12, md: 6, lg: !!checkedForInstantSale && isInventory ? 2.5 : (!vat_factor ? 3 : 2)}}>
@@ -564,7 +564,7 @@ function SaleItemForm({
                             const effectiveRate = rate * vatMultiplier;
                             const newQuantity = effectiveRate > 0 ? newAmount / effectiveRate : 0;
 
-                            setValue(`quantity`, Math.round(newQuantity * 100000) / 100000, {
+                            setValue(`quantity`, Math.round(newQuantity * 100000000) / 100000000, {
                                 shouldValidate: true,
                                 shouldDirty: true
                             });
