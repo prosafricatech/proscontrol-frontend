@@ -1,8 +1,10 @@
 'use client';
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
+import { useJumboTheme } from '@jumbo/components/JumboTheme/hooks';
 import { AssessmentOutlined, CheckBox, CheckBoxOutlineBlank } from '@mui/icons-material';
 import {
   Autocomplete,
+  Box,
   Button,
   Checkbox,
   Chip,
@@ -23,6 +25,7 @@ import {
   TextField,
   Tooltip,
   Typography,
+  useMediaQuery,
 } from '@mui/material';
 import { DateTimePicker } from '@mui/x-date-pickers';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -68,6 +71,8 @@ const ProductSalesReportDialog: React.FC = () => {
   const [rows, setRows] = useState<ProductSalesReportRow[] | null>(null);
   const { enqueueSnackbar } = useSnackbar();
   const { authUser, authOrganization } = useJumboAuth();
+  const { theme } = useJumboTheme();
+  const belowSmScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const baseCurrencyCode =
     (authOrganization as any)?.organization?.base_currency?.code || '';
 
@@ -143,6 +148,7 @@ const ProductSalesReportDialog: React.FC = () => {
         open={open}
         onClose={() => setOpen(false)}
         fullWidth
+        fullScreen={belowSmScreen}
         maxWidth='md'
         scroll='paper'
       >
@@ -216,6 +222,7 @@ const ProductSalesReportDialog: React.FC = () => {
             </Grid>
             <Grid size={{ xs: 12 }} textAlign='right'>
               <Button
+                fullWidth={belowSmScreen}
                 variant='contained'
                 size='small'
                 disabled={!from || !to || generateReport.isPending}
@@ -239,69 +246,206 @@ const ProductSalesReportDialog: React.FC = () => {
                 No sales found for this period.
               </Typography>
             ) : (
-              <TableContainer component={Paper} variant='outlined'>
-                <Table size='small'>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Product</TableCell>
-                      <TableCell align='right'>Qty Ordered</TableCell>
-                      <TableCell align='right'>Qty Dispatched</TableCell>
-                      <TableCell align='right'>Amount Ordered</TableCell>
-                      <TableCell align='right'>Payment Received</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {rows.map((row) => (
-                      <TableRow key={row.product_id}>
-                        <TableCell>{row.product_name}</TableCell>
-                        <TableCell align='right'>
-                          {formatQuantity(row.quantity_ordered, row.unit_symbol)}
-                        </TableCell>
-                        <TableCell align='right'>
-                          {formatQuantity(
-                            row.quantity_dispatched,
-                            row.unit_symbol
-                          )}
-                        </TableCell>
-                        <TableCell align='right'>
-                          {formatAmount(row.amount_ordered)}
-                        </TableCell>
-                        <TableCell align='right'>
-                          {formatAmount(row.payment_received)}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell>
-                        <strong>Total</strong>
-                      </TableCell>
-                      <TableCell align='right'>
-                        <strong>
-                          {totals.quantity_ordered.toLocaleString('en-US', {
-                            maximumFractionDigits: 2,
-                          })}
-                        </strong>
-                      </TableCell>
-                      <TableCell align='right'>
-                        <strong>
-                          {totals.quantity_dispatched.toLocaleString(
-                            'en-US',
-                            { maximumFractionDigits: 2 }
-                          )}
-                        </strong>
-                      </TableCell>
-                      <TableCell align='right'>
-                        <strong>{formatAmount(totals.amount_ordered)}</strong>
-                      </TableCell>
-                      <TableCell align='right'>
-                        <strong>{formatAmount(totals.payment_received)}</strong>
-                      </TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </TableContainer>
+              <>
+                {/* Card layout for small screens */}
+                <Box sx={{ display: { xs: 'block', sm: 'none' } }}>
+                  {rows.map((row) => (
+                    <Paper
+                      key={row.product_id}
+                      variant='outlined'
+                      sx={{ p: 1.5, mb: 1 }}
+                    >
+                      <Typography variant='subtitle2' gutterBottom>
+                        {row.product_name}
+                      </Typography>
+                      <Grid container rowSpacing={0.5}>
+                        <Grid size={6}>
+                          <Typography variant='caption' color='text.secondary'>
+                            Qty Ordered
+                          </Typography>
+                        </Grid>
+                        <Grid size={6} textAlign='right'>
+                          <Typography variant='body2'>
+                            {formatQuantity(
+                              row.quantity_ordered,
+                              row.unit_symbol
+                            )}
+                          </Typography>
+                        </Grid>
+                        <Grid size={6}>
+                          <Typography variant='caption' color='text.secondary'>
+                            Qty Dispatched
+                          </Typography>
+                        </Grid>
+                        <Grid size={6} textAlign='right'>
+                          <Typography variant='body2'>
+                            {formatQuantity(
+                              row.quantity_dispatched,
+                              row.unit_symbol
+                            )}
+                          </Typography>
+                        </Grid>
+                        <Grid size={6}>
+                          <Typography variant='caption' color='text.secondary'>
+                            Amount Ordered
+                          </Typography>
+                        </Grid>
+                        <Grid size={6} textAlign='right'>
+                          <Typography variant='body2'>
+                            {formatAmount(row.amount_ordered)}
+                          </Typography>
+                        </Grid>
+                        <Grid size={6}>
+                          <Typography variant='caption' color='text.secondary'>
+                            Payment Received
+                          </Typography>
+                        </Grid>
+                        <Grid size={6} textAlign='right'>
+                          <Typography variant='body2'>
+                            {formatAmount(row.payment_received)}
+                          </Typography>
+                        </Grid>
+                      </Grid>
+                    </Paper>
+                  ))}
+                  <Paper
+                    variant='outlined'
+                    sx={{ p: 1.5, bgcolor: 'action.hover' }}
+                  >
+                    <Typography variant='subtitle2' gutterBottom>
+                      Total
+                    </Typography>
+                    <Grid container rowSpacing={0.5}>
+                      <Grid size={6}>
+                        <Typography variant='caption' color='text.secondary'>
+                          Qty Ordered
+                        </Typography>
+                      </Grid>
+                      <Grid size={6} textAlign='right'>
+                        <Typography variant='body2'>
+                          <strong>
+                            {totals.quantity_ordered.toLocaleString('en-US', {
+                              maximumFractionDigits: 2,
+                            })}
+                          </strong>
+                        </Typography>
+                      </Grid>
+                      <Grid size={6}>
+                        <Typography variant='caption' color='text.secondary'>
+                          Qty Dispatched
+                        </Typography>
+                      </Grid>
+                      <Grid size={6} textAlign='right'>
+                        <Typography variant='body2'>
+                          <strong>
+                            {totals.quantity_dispatched.toLocaleString(
+                              'en-US',
+                              { maximumFractionDigits: 2 }
+                            )}
+                          </strong>
+                        </Typography>
+                      </Grid>
+                      <Grid size={6}>
+                        <Typography variant='caption' color='text.secondary'>
+                          Amount Ordered
+                        </Typography>
+                      </Grid>
+                      <Grid size={6} textAlign='right'>
+                        <Typography variant='body2'>
+                          <strong>{formatAmount(totals.amount_ordered)}</strong>
+                        </Typography>
+                      </Grid>
+                      <Grid size={6}>
+                        <Typography variant='caption' color='text.secondary'>
+                          Payment Received
+                        </Typography>
+                      </Grid>
+                      <Grid size={6} textAlign='right'>
+                        <Typography variant='body2'>
+                          <strong>
+                            {formatAmount(totals.payment_received)}
+                          </strong>
+                        </Typography>
+                      </Grid>
+                    </Grid>
+                  </Paper>
+                </Box>
+
+                {/* Table layout for sm and up */}
+                <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
+                  <TableContainer component={Paper} variant='outlined'>
+                    <Table size='small'>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Product</TableCell>
+                          <TableCell align='right'>Qty Ordered</TableCell>
+                          <TableCell align='right'>Qty Dispatched</TableCell>
+                          <TableCell align='right'>Amount Ordered</TableCell>
+                          <TableCell align='right'>Payment Received</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {rows.map((row) => (
+                          <TableRow key={row.product_id}>
+                            <TableCell>{row.product_name}</TableCell>
+                            <TableCell align='right'>
+                              {formatQuantity(
+                                row.quantity_ordered,
+                                row.unit_symbol
+                              )}
+                            </TableCell>
+                            <TableCell align='right'>
+                              {formatQuantity(
+                                row.quantity_dispatched,
+                                row.unit_symbol
+                              )}
+                            </TableCell>
+                            <TableCell align='right'>
+                              {formatAmount(row.amount_ordered)}
+                            </TableCell>
+                            <TableCell align='right'>
+                              {formatAmount(row.payment_received)}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                      <TableBody>
+                        <TableRow>
+                          <TableCell>
+                            <strong>Total</strong>
+                          </TableCell>
+                          <TableCell align='right'>
+                            <strong>
+                              {totals.quantity_ordered.toLocaleString(
+                                'en-US',
+                                { maximumFractionDigits: 2 }
+                              )}
+                            </strong>
+                          </TableCell>
+                          <TableCell align='right'>
+                            <strong>
+                              {totals.quantity_dispatched.toLocaleString(
+                                'en-US',
+                                { maximumFractionDigits: 2 }
+                              )}
+                            </strong>
+                          </TableCell>
+                          <TableCell align='right'>
+                            <strong>
+                              {formatAmount(totals.amount_ordered)}
+                            </strong>
+                          </TableCell>
+                          <TableCell align='right'>
+                            <strong>
+                              {formatAmount(totals.payment_received)}
+                            </strong>
+                          </TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </Box>
+              </>
             ))}
         </DialogContent>
         <DialogActions>
