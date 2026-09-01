@@ -120,6 +120,7 @@
         "accumulatedDepreciationBf": "Accumulated Depreciation To Date",
         "store": "Store",
         "custodian": "Custodian",
+        "costCenter": "Cost Center",
         "status": "Status",
         "postJournal": "Post a capitalization journal",
         "creditLedger": "Credit Ledger"
@@ -276,6 +277,7 @@
       "labels": {
         "asset": "Asset",
         "category": "Category",
+        "costCenter": "Cost Center",
         "charge": "Charge",
         "accumulatedAfter": "Accumulated After",
         "nbvAfter": "NBV After",

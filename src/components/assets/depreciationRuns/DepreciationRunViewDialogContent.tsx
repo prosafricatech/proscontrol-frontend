@@ -50,6 +50,7 @@ const DepreciationRunViewDialogContent: React.FC<DepreciationRunViewDialogConten
             <TableRow>
               <TableCell>{dictionary.depreciationRuns.view.labels.asset}</TableCell>
               <TableCell>{dictionary.depreciationRuns.view.labels.category}</TableCell>
+              <TableCell>{dictionary.depreciationRuns.view.labels.costCenter}</TableCell>
               <TableCell align="right">{dictionary.depreciationRuns.view.labels.charge}</TableCell>
               <TableCell align="right">{dictionary.depreciationRuns.view.labels.accumulatedAfter}</TableCell>
               <TableCell align="right">{dictionary.depreciationRuns.view.labels.nbvAfter}</TableCell>
@@ -62,6 +63,7 @@ const DepreciationRunViewDialogContent: React.FC<DepreciationRunViewDialogConten
                   {entry.asset_detail?.code} — {entry.asset_detail?.product_item?.product?.name}
                 </TableCell>
                 <TableCell>{entry.asset_detail?.product_item?.product?.category?.name}</TableCell>
+                <TableCell>{entry.asset_detail?.cost_center?.name ?? '-'}</TableCell>
                 <TableCell align="right">{fmt(entry.depreciation_amount)}</TableCell>
                 <TableCell align="right">{fmt(entry.accumulated_depreciation_after)}</TableCell>
                 <TableCell align="right">{fmt(entry.net_book_value_after)}</TableCell>
@@ -75,6 +77,7 @@ const DepreciationRunViewDialogContent: React.FC<DepreciationRunViewDialogConten
         {run.journals?.map((journal: any) => (
           <Typography key={journal.id} variant="body2">
             DR {journal.debit_ledger?.name} / CR {journal.credit_ledger?.name} — {fmt(journal.amount)}
+            {journal.cost_centers?.length > 0 ? ` (${journal.cost_centers.map((cc: any) => cc.name).join(', ')})` : ''}
           </Typography>
         ))}
       </DialogContent>

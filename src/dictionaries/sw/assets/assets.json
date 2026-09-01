@@ -120,6 +120,7 @@
         "accumulatedDepreciationBf": "Uchakavu Uliokusanywa Hadi Sasa",
         "store": "Ghala",
         "custodian": "Mwangalizi",
+        "costCenter": "Kituo cha Gharama",
         "status": "Hali",
         "postJournal": "Weka jarida la ubadilishaji mtaji",
         "creditLedger": "Daftari la Kukopeshwa"
@@ -276,6 +277,7 @@
       "labels": {
         "asset": "Mali",
         "category": "Kategoria",
+        "costCenter": "Kituo cha Gharama",
         "charge": "Tozo",
         "accumulatedAfter": "Ilokusanywa Baada",
         "nbvAfter": "NBV Baada",

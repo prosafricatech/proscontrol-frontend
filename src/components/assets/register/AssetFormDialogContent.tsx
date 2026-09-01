@@ -27,6 +27,7 @@ import ProductSelect from '@/components/productAndServices/products/ProductSelec
 import { useProductsSelect } from '@/components/productAndServices/products/ProductsSelectProvider';
 import StoreSelector from '@/components/procurement/stores/StoreSelector';
 import EmployeeSelector from '@/components/humanResources/employees/EmployeeSelector';
+import CostCenterSelector from '@/components/masters/costCenters/CostCenterSelector';
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import { MODULES } from '@/utilities/constants/modules';
 import CommaSeparatedField from '@/shared/Inputs/CommaSeparatedField';
@@ -51,8 +52,9 @@ const AssetFormDialogContent: React.FC<AssetFormDialogContentProps> = ({
   const dictionary = useDictionary();
   const { productOptions } = useProductsSelect();
   const assetProducts = productOptions.filter((p: any) => p.type === 'Asset');
-  const { organizationHasSubscribed } = useJumboAuth();
+  const { organizationHasSubscribed, authOrganization } = useJumboAuth();
   const hrSubscribed = organizationHasSubscribed(MODULES.HUMAN_RESOURCES);
+  const multiCostCenters = authOrganization?.costCenters?.length > 1;
 
   const hasDepreciationHistory = mode === 'edit' && Boolean(asset?.latest_depreciation_entry || asset?.depreciation_entries?.length);
   const financialsLocked = mode === 'edit' && hasDepreciationHistory;
@@ -122,6 +124,7 @@ const AssetFormDialogContent: React.FC<AssetFormDialogContentProps> = ({
     accumulated_depreciation_bf: yup.number().nullable().transform((v, o) => (o === '' ? 0 : v)),
     current_store_id: yup.number().nullable(),
     current_custodian_id: yup.number().nullable(),
+    cost_center_id: yup.number().nullable(),
     remarks: yup.string().nullable(),
     credit_ledger_id: yup.number().nullable()
       .when('$postJournal', {
@@ -157,6 +160,7 @@ const AssetFormDialogContent: React.FC<AssetFormDialogContentProps> = ({
       accumulated_depreciation_bf: asset?.accumulated_depreciation_bf ?? 0,
       current_store_id: asset?.current_store_id ?? null,
       current_custodian_id: asset?.current_custodian_id ?? null,
+      cost_center_id: asset?.cost_center_id ?? null,
       status: asset?.status && asset.status !== 'draft' ? asset.status : 'active',
       credit_ledger_id: null,
     },
@@ -382,7 +386,7 @@ const AssetFormDialogContent: React.FC<AssetFormDialogContentProps> = ({
               </TextField>
             </Grid>
           )}
-          <Grid size={{ xs: 12, md: hrSubscribed ? 6 : 12 }}>
+          <Grid size={{ xs: 12, md: (hrSubscribed || multiCostCenters) ? 6 : 12 }}>
             <StoreSelector
               label={dictionary.register.form.labels.store}
               defaultValue={asset?.current_store ?? null}
@@ -395,6 +399,16 @@ const AssetFormDialogContent: React.FC<AssetFormDialogContentProps> = ({
                 label={dictionary.register.form.labels.custodian}
                 defaultValue={asset?.current_custodian ?? null}
                 onChange={(newValue: any) => setValue('current_custodian_id', Array.isArray(newValue) ? null : (newValue?.id ?? null))}
+              />
+            </Grid>
+          )}
+          {multiCostCenters && (
+            <Grid size={{ xs: 12, md: 6 }}>
+              <CostCenterSelector
+                label={dictionary.register.form.labels.costCenter}
+                multiple={false}
+                defaultValue={asset?.cost_center ?? null}
+                onChange={(newValue: any) => setValue('cost_center_id', newValue && !Array.isArray(newValue) ? newValue.id : null)}
               />
             </Grid>
           )}

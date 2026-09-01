@@ -115,14 +115,16 @@ const NewDepreciationRunDialogContent: React.FC<NewDepreciationRunDialogContentP
                     <TableHead>
                       <TableRow>
                         <TableCell>{dictionary.depreciationRuns.view.labels.category}</TableCell>
+                        <TableCell>{dictionary.depreciationRuns.view.labels.costCenter}</TableCell>
                         <TableCell align="right">{dictionary.depreciationRuns.form.preview.assetsCount}</TableCell>
                         <TableCell align="right">{dictionary.depreciationRuns.view.labels.charge}</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
                       {preview.categories.map((category: any) => (
-                        <TableRow key={category.product_category_id}>
+                        <TableRow key={`${category.product_category_id}-${category.cost_center_id ?? 'none'}`}>
                           <TableCell>{category.category_name}</TableCell>
+                          <TableCell>{category.cost_center_name ?? '-'}</TableCell>
                           <TableCell align="right">{category.assets_count}</TableCell>
                           <TableCell align="right">{fmt(category.depreciation_amount)}</TableCell>
                         </TableRow>
@@ -135,8 +137,9 @@ const NewDepreciationRunDialogContent: React.FC<NewDepreciationRunDialogContentP
                     {dictionary.depreciationRuns.form.preview.journalPreview}
                   </Typography>
                   {preview.categories.map((category: any) => (
-                    <Typography key={category.product_category_id} variant="body2" sx={{ pl: 1 }}>
+                    <Typography key={`${category.product_category_id}-${category.cost_center_id ?? 'none'}`} variant="body2" sx={{ pl: 1 }}>
                       DR {category.depreciation_expense_ledger?.name} / CR {category.accumulated_depreciation_ledger?.name} — {fmt(category.depreciation_amount)}
+                      {category.cost_center_name ? ` (${category.cost_center_name})` : ''}
                     </Typography>
                   ))}
                 </>
