@@ -252,31 +252,40 @@ const LeaveRequestForm = ({
       <DialogContent>
         <form autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
           <Grid container rowSpacing={{ xs: 1, md: 2 }} spacing={1}>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Div sx={{ mt: 1, mb: 1 }}>
-                <EmployeeSelector
-                  frontError={errors.employee_id}
-                  value={selectedEmployee || undefined}
-                  onChange={(newValue: Employee | Employee[] | null) => {
-                    if (newValue && !Array.isArray(newValue)) {
-                      setselectedEmployee(newValue);
-                      setValue('employee_id', newValue.id, {
-                        shouldValidate: true,
-                        shouldDirty: true,
-                      });
-                    } else {
-                      setselectedEmployee(null);
-                      setValue('employee_id', 0, {
-                        shouldValidate: true,
-                        shouldDirty: true,
-                      });
-                    }
-                  }}
-                />
-              </Div>
-            </Grid>
+            {/* Already inside this employee's own profile — employeeId is
+                fixed by context (see the useEffect below that force-sets
+                employee_id from it), so asking the user to pick an employee
+                here would be both redundant and a way to accidentally file
+                the request against someone else. Only shown when the form
+                is opened from a context that doesn't already know the
+                employee (e.g. Process Approval's leave requests list). */}
+            {!employeeId && (
+              <Grid size={{ xs: 12, md: 6 }}>
+                <Div sx={{ mt: 1, mb: 1 }}>
+                  <EmployeeSelector
+                    frontError={errors.employee_id}
+                    value={selectedEmployee || undefined}
+                    onChange={(newValue: Employee | Employee[] | null) => {
+                      if (newValue && !Array.isArray(newValue)) {
+                        setselectedEmployee(newValue);
+                        setValue('employee_id', newValue.id, {
+                          shouldValidate: true,
+                          shouldDirty: true,
+                        });
+                      } else {
+                        setselectedEmployee(null);
+                        setValue('employee_id', 0, {
+                          shouldValidate: true,
+                          shouldDirty: true,
+                        });
+                      }
+                    }}
+                  />
+                </Div>
+              </Grid>
+            )}
 
-            <Grid size={{ xs: 12, md: 6 }}>
+            <Grid size={{ xs: 12, md: employeeId ? 12 : 6 }}>
               <Div sx={{ mt: 1, mb: 1 }}>
                 {fetchingLeaveTypes ? (
                   <LinearProgress />

@@ -412,6 +412,12 @@ export async function getMenus(locale: string) {
       type: 'section',
       children: [
         {
+          uri: `/${locale}/humanResources/dashboard`,
+          label: sidebar.menuItem.hrDashboard,
+          type: 'nav-item',
+          icon: icon('dashboard'),
+        },
+        {
           uri: `/${locale}/humanResources/employees`,
           label: sidebar.menuItem.employees,
           type: 'nav-item',

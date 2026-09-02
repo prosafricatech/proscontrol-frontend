@@ -75,7 +75,7 @@ const ExpandableSummaryCard = ({
       expanded={expanded}
       onChange={(_e, isExpanded) => setExpanded(isExpanded)}
       variant='outlined'
-      sx={{ width: '100%', '&:before': { display: 'none' } }}
+      sx={{ width: '100%', height: '100%', '&:before': { display: 'none' } }}
     >
       <AccordionSummary expandIcon={<ExpandMore />}>
         <Stack sx={{ width: '100%' }}>
@@ -87,6 +87,11 @@ const ExpandableSummaryCard = ({
           </Typography>
         </Stack>
       </AccordionSummary>
+      {/* height: '100%' on the Card/Accordion above only makes each tile
+          match the tallest sibling in its own Grid row (the browser's
+          default flex-stretch) — not a fixed height, so a short row (the
+          plain value cards) stays short and only a row that actually needs
+          more room (a long breakdown) grows. */}
       <AccordionDetails sx={{ pt: 0 }}>
         <Stack spacing={0.5} divider={<Stack sx={{ borderTop: 1, borderColor: 'divider' }} />}>
           {breakdown!.map((line, idx) => (

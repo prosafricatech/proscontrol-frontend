@@ -98,6 +98,13 @@ posServices.productSalesReport = async (params) => {
     return data;
 };
 
+posServices.exportProductSalesReportExcel = async (exportedData) => {
+    const res = await axios.post(`/api/exports/excel/productSalesReport`, exportedData, {
+        responseType: 'blob',
+    });
+    return res.data;
+};
+
 posServices.exportProductSalesExcel = async (exportedData) => {
     const res = await axios.post(`/api/exports/excel/topProducts/`, exportedData, {
         responseType: 'blob',

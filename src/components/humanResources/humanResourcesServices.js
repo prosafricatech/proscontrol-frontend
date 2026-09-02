@@ -3,6 +3,14 @@ import axios from '@/lib/services/config';
 const humanResourcesServices = {};
 
 // ============================================
+// DASHBOARD
+// ============================================
+humanResourcesServices.getHrDashboard = async () => {
+    const { data } = await axios.get("/api/humanResources/hr-dashboard");
+    return data;
+}
+
+// ============================================
 // EMPLOYEES
 // ============================================
 humanResourcesServices.getEmployeesList = async (params) => {

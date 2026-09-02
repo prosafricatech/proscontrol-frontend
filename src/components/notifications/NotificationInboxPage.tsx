@@ -1,13 +1,18 @@
 'use client';
 
+import { useJumboDialog } from '@jumbo/components/JumboDialog/hooks/useJumboDialog';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import {
   Box,
   Button,
   Card,
+  Chip,
   CircularProgress,
   Divider,
+  IconButton,
   List,
   ListItemButton,
+  ListItemSecondaryAction,
   ListItemText,
   Pagination,
   Stack,
@@ -27,6 +32,7 @@ function NotificationInboxPage() {
   const params = useParams();
   const lang = (params?.lang as string) || 'en-US';
   const queryClient = useQueryClient();
+  const { showDialog, hideDialog } = useJumboDialog();
 
   const [page, setPage] = React.useState(1);
   const limit = 20;
@@ -55,6 +61,29 @@ function NotificationInboxPage() {
     onSuccess: invalidate,
   });
 
+  const deleteOneMutation = useMutation({
+    mutationFn: (id: string) => notificationServices.deleteOne(id),
+    onSuccess: invalidate,
+  });
+
+  const deleteAllMutation = useMutation({
+    mutationFn: notificationServices.deleteAll,
+    onSuccess: invalidate,
+  });
+
+  const handleClearAll = () => {
+    showDialog({
+      variant: 'confirm',
+      title: 'Clear all notifications?',
+      content: 'This deletes every notification in your inbox. This cannot be undone.',
+      onYes: () => {
+        hideDialog();
+        deleteAllMutation.mutate();
+      },
+      onNo: hideDialog,
+    });
+  };
+
   const handleItemClick = (item: NotificationItem) => {
     if (!item.read_at) {
       markReadMutation.mutate(item.id);
@@ -68,9 +97,14 @@ function NotificationInboxPage() {
     <Card sx={{ p: 0 }}>
       <Stack direction='row' alignItems='center' justifyContent='space-between' sx={{ p: 2 }}>
         <Typography variant='h5'>Notifications</Typography>
-        <Button size='small' onClick={() => markAllReadMutation.mutate()}>
-          Mark all read
-        </Button>
+        <Stack direction='row' spacing={1}>
+          <Button size='small' onClick={() => markAllReadMutation.mutate()}>
+            Mark all read
+          </Button>
+          <Button size='small' color='error' onClick={handleClearAll}>
+            Clear all
+          </Button>
+        </Stack>
       </Stack>
       <Divider />
 
@@ -89,7 +123,7 @@ function NotificationInboxPage() {
               key={item.id}
               onClick={() => handleItemClick(item)}
               divider
-              sx={{ bgcolor: item.read_at ? 'transparent' : 'action.hover' }}
+              sx={{ bgcolor: item.read_at ? 'transparent' : 'action.hover', pr: 6 }}
             >
               <ListItemText
                 primary={item.data.title}
@@ -98,12 +132,37 @@ function NotificationInboxPage() {
                     <Typography variant='body2' color='text.secondary' component='span'>
                       {item.data.body}
                     </Typography>
+                    {!!item.data.meta?.length && (
+                      <Stack direction='row' flexWrap='wrap' gap={0.5} component='span' sx={{ mt: 0.25 }}>
+                        {item.data.meta.map((m, idx) => (
+                          <Chip
+                            key={idx}
+                            size='small'
+                            variant='outlined'
+                            label={`${m.label}: ${m.value}`}
+                            sx={{ height: 22, fontSize: '0.75rem', '& .MuiChip-label': { px: 0.75 } }}
+                          />
+                        ))}
+                      </Stack>
+                    )}
                     <Typography variant='caption' color='text.disabled' component='span'>
                       {timeAgo(item.created_at)}
                     </Typography>
                   </Stack>
                 }
               />
+              <ListItemSecondaryAction>
+                <IconButton
+                  size='small'
+                  aria-label='delete notification'
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteOneMutation.mutate(item.id);
+                  }}
+                >
+                  <DeleteOutlineIcon fontSize='small' />
+                </IconButton>
+              </ListItemSecondaryAction>
             </ListItemButton>
           ))}
         </List>

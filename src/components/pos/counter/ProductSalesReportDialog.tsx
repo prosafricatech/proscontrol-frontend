@@ -1,5 +1,9 @@
 'use client';
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
+import { useCurrencySelect } from '@/components/masters/Currencies/CurrencySelectProvider';
+import PDFContent from '@/components/pdf/PDFContent';
+import { FileExportGrid } from '@/components/sharedComponents/FileExportGrid';
+import { Organization } from '@/types/auth-types';
 import { useJumboTheme } from '@jumbo/components/JumboTheme/hooks';
 import { AssessmentOutlined, CheckBox, CheckBoxOutlineBlank } from '@mui/icons-material';
 import {
@@ -33,6 +37,7 @@ import dayjs, { Dayjs } from 'dayjs';
 import { useSnackbar } from 'notistack';
 import React, { useMemo, useState } from 'react';
 import posServices from '../pos-services';
+import ProductSalesReportPDF from './ProductSalesReportPDF';
 
 interface ProductSalesReportRow {
   product_id: number;
@@ -41,6 +46,15 @@ interface ProductSalesReportRow {
   quantity_ordered: number;
   quantity_dispatched: number;
   amount_ordered: number;
+  amount_dispatched: number;
+  payment_received: number;
+}
+
+interface ReportTotals {
+  quantity_ordered: number;
+  quantity_dispatched: number;
+  amount_ordered: number;
+  amount_dispatched: number;
   payment_received: number;
 }
 
@@ -49,6 +63,14 @@ interface CounterOption {
   name: string;
   outletName: string;
 }
+
+const EMPTY_TOTALS: ReportTotals = {
+  quantity_ordered: 0,
+  quantity_dispatched: 0,
+  amount_ordered: 0,
+  amount_dispatched: 0,
+  payment_received: 0,
+};
 
 const formatQuantity = (value: number, unitSymbol?: string | null) =>
   `${value.toLocaleString('en-US', { maximumFractionDigits: 2 })}${
@@ -63,18 +85,23 @@ const formatAmount = (value: number) =>
 
 const ProductSalesReportDialog: React.FC = () => {
   const [open, setOpen] = useState(false);
-  const [from, setFrom] = useState<Dayjs | null>(dayjs().startOf('month'));
-  const [to, setTo] = useState<Dayjs | null>(dayjs());
+  const [from, setFrom] = useState<Dayjs | null>(dayjs().startOf('day'));
+  const [to, setTo] = useState<Dayjs | null>(dayjs().endOf('day'));
   const [selectedCounters, setSelectedCounters] = useState<CounterOption[]>(
     []
   );
   const [rows, setRows] = useState<ProductSalesReportRow[] | null>(null);
+  const [totals, setTotals] = useState<ReportTotals | null>(null);
+  const [isExportingExcel, setIsExportingExcel] = useState(false);
+  const [showPdfPreview, setShowPdfPreview] = useState(false);
   const { enqueueSnackbar } = useSnackbar();
   const { authUser, authOrganization } = useJumboAuth();
   const { theme } = useJumboTheme();
   const belowSmScreen = useMediaQuery(theme.breakpoints.down('sm'));
+  const organization = (authOrganization as any)?.organization as Organization;
+  const { currencies } = useCurrencySelect();
   const baseCurrencyCode =
-    (authOrganization as any)?.organization?.base_currency?.code || '';
+    currencies?.find((currency) => !!currency.is_base)?.code || '';
 
   const { data: rawOutlets = [] } = useQuery({
     queryKey: ['userSalesOutlets', authUser?.user?.id],
@@ -99,6 +126,7 @@ const ProductSalesReportDialog: React.FC = () => {
     mutationFn: posServices.productSalesReport,
     onSuccess: (data) => {
       setRows(data?.data || []);
+      setTotals(data?.totals || EMPTY_TOTALS);
     },
     onError: (error: any) => {
       error?.response?.data?.message &&
@@ -109,6 +137,8 @@ const ProductSalesReportDialog: React.FC = () => {
   const handleOpen = () => {
     setOpen(true);
     setRows(null);
+    setTotals(null);
+    setShowPdfPreview(false);
   };
 
   const handleGenerate = () => {
@@ -122,20 +152,35 @@ const ProductSalesReportDialog: React.FC = () => {
     });
   };
 
-  const totals = (rows || []).reduce(
-    (acc, row) => ({
-      quantity_ordered: acc.quantity_ordered + row.quantity_ordered,
-      quantity_dispatched: acc.quantity_dispatched + row.quantity_dispatched,
-      amount_ordered: acc.amount_ordered + row.amount_ordered,
-      payment_received: acc.payment_received + row.payment_received,
-    }),
-    {
-      quantity_ordered: 0,
-      quantity_dispatched: 0,
-      amount_ordered: 0,
-      payment_received: 0,
+  const displayTotals = totals || EMPTY_TOTALS;
+
+  const handleExportExcel = async (): Promise<void> => {
+    if (!rows || !totals) return;
+    setIsExportingExcel(true);
+    try {
+      const blob = await posServices.exportProductSalesReportExcel({
+        organization,
+        rows,
+        totals,
+        from: from?.toISOString(),
+        to: to?.toISOString(),
+        baseCurrencyCode,
+        printedBy: authUser?.user?.name,
+      });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'product-sales-report.xlsx';
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error: any) {
+      enqueueSnackbar('Could not export the Excel file', {
+        variant: 'error',
+      });
+    } finally {
+      setIsExportingExcel(false);
     }
-  );
+  };
 
   return (
     <>
@@ -149,7 +194,7 @@ const ProductSalesReportDialog: React.FC = () => {
         onClose={() => setOpen(false)}
         fullWidth
         fullScreen={belowSmScreen}
-        maxWidth='md'
+        maxWidth='xl'
         scroll='paper'
       >
         <DialogTitle>
@@ -245,6 +290,21 @@ const ProductSalesReportDialog: React.FC = () => {
               >
                 No sales found for this period.
               </Typography>
+            ) : showPdfPreview ? (
+              <PDFContent
+                fileName='Product Sales Report'
+                document={
+                  <ProductSalesReportPDF
+                    organization={organization}
+                    rows={rows}
+                    totals={displayTotals}
+                    from={from?.toISOString() || ''}
+                    to={to?.toISOString() || ''}
+                    baseCurrencyCode={baseCurrencyCode}
+                    printedBy={authUser?.user?.name}
+                  />
+                }
+              />
             ) : (
               <>
                 {/* Card layout for small screens */}
@@ -310,6 +370,28 @@ const ProductSalesReportDialog: React.FC = () => {
                         </Grid>
                         <Grid size={6}>
                           <Typography variant='caption' color='text.secondary'>
+                            Amount Dispatched
+                          </Typography>
+                        </Grid>
+                        <Grid size={6} textAlign='right'>
+                          <Typography variant='body2'>
+                            {formatAmount(row.amount_dispatched)}
+                          </Typography>
+                        </Grid>
+                        <Grid size={6}>
+                          <Typography variant='caption' color='text.secondary'>
+                            Amount Undispatched
+                          </Typography>
+                        </Grid>
+                        <Grid size={6} textAlign='right'>
+                          <Typography variant='body2'>
+                            {formatAmount(
+                              row.amount_ordered - row.amount_dispatched
+                            )}
+                          </Typography>
+                        </Grid>
+                        <Grid size={6}>
+                          <Typography variant='caption' color='text.secondary'>
                             Payment Received
                           </Typography>
                         </Grid>
@@ -337,7 +419,7 @@ const ProductSalesReportDialog: React.FC = () => {
                       <Grid size={6} textAlign='right'>
                         <Typography variant='body2'>
                           <strong>
-                            {totals.quantity_ordered.toLocaleString('en-US', {
+                            {displayTotals.quantity_ordered.toLocaleString('en-US', {
                               maximumFractionDigits: 2,
                             })}
                           </strong>
@@ -351,7 +433,7 @@ const ProductSalesReportDialog: React.FC = () => {
                       <Grid size={6} textAlign='right'>
                         <Typography variant='body2'>
                           <strong>
-                            {totals.quantity_dispatched.toLocaleString(
+                            {displayTotals.quantity_dispatched.toLocaleString(
                               'en-US',
                               { maximumFractionDigits: 2 }
                             )}
@@ -367,8 +449,8 @@ const ProductSalesReportDialog: React.FC = () => {
                         <Typography variant='body2'>
                           <strong>
                             {(
-                              totals.quantity_ordered -
-                              totals.quantity_dispatched
+                              displayTotals.quantity_ordered -
+                              displayTotals.quantity_dispatched
                             ).toLocaleString('en-US', {
                               maximumFractionDigits: 2,
                             })}
@@ -382,7 +464,34 @@ const ProductSalesReportDialog: React.FC = () => {
                       </Grid>
                       <Grid size={6} textAlign='right'>
                         <Typography variant='body2'>
-                          <strong>{formatAmount(totals.amount_ordered)}</strong>
+                          <strong>{formatAmount(displayTotals.amount_ordered)}</strong>
+                        </Typography>
+                      </Grid>
+                      <Grid size={6}>
+                        <Typography variant='caption' color='text.secondary'>
+                          Amount Dispatched
+                        </Typography>
+                      </Grid>
+                      <Grid size={6} textAlign='right'>
+                        <Typography variant='body2'>
+                          <strong>
+                            {formatAmount(displayTotals.amount_dispatched)}
+                          </strong>
+                        </Typography>
+                      </Grid>
+                      <Grid size={6}>
+                        <Typography variant='caption' color='text.secondary'>
+                          Amount Undispatched
+                        </Typography>
+                      </Grid>
+                      <Grid size={6} textAlign='right'>
+                        <Typography variant='body2'>
+                          <strong>
+                            {formatAmount(
+                              displayTotals.amount_ordered -
+                                displayTotals.amount_dispatched
+                            )}
+                          </strong>
                         </Typography>
                       </Grid>
                       <Grid size={6}>
@@ -393,7 +502,7 @@ const ProductSalesReportDialog: React.FC = () => {
                       <Grid size={6} textAlign='right'>
                         <Typography variant='body2'>
                           <strong>
-                            {formatAmount(totals.payment_received)}
+                            {formatAmount(displayTotals.payment_received)}
                           </strong>
                         </Typography>
                       </Grid>
@@ -412,6 +521,8 @@ const ProductSalesReportDialog: React.FC = () => {
                           <TableCell align='right'>Qty Dispatched</TableCell>
                           <TableCell align='right'>Qty Undispatched</TableCell>
                           <TableCell align='right'>Amount Ordered</TableCell>
+                          <TableCell align='right'>Amount Dispatched</TableCell>
+                          <TableCell align='right'>Amount Undispatched</TableCell>
                           <TableCell align='right'>Payment Received</TableCell>
                         </TableRow>
                       </TableHead>
@@ -441,6 +552,14 @@ const ProductSalesReportDialog: React.FC = () => {
                               {formatAmount(row.amount_ordered)}
                             </TableCell>
                             <TableCell align='right'>
+                              {formatAmount(row.amount_dispatched)}
+                            </TableCell>
+                            <TableCell align='right'>
+                              {formatAmount(
+                                row.amount_ordered - row.amount_dispatched
+                              )}
+                            </TableCell>
+                            <TableCell align='right'>
                               {formatAmount(row.payment_received)}
                             </TableCell>
                           </TableRow>
@@ -453,7 +572,7 @@ const ProductSalesReportDialog: React.FC = () => {
                           </TableCell>
                           <TableCell align='right'>
                             <strong>
-                              {totals.quantity_ordered.toLocaleString(
+                              {displayTotals.quantity_ordered.toLocaleString(
                                 'en-US',
                                 { maximumFractionDigits: 2 }
                               )}
@@ -461,7 +580,7 @@ const ProductSalesReportDialog: React.FC = () => {
                           </TableCell>
                           <TableCell align='right'>
                             <strong>
-                              {totals.quantity_dispatched.toLocaleString(
+                              {displayTotals.quantity_dispatched.toLocaleString(
                                 'en-US',
                                 { maximumFractionDigits: 2 }
                               )}
@@ -470,8 +589,8 @@ const ProductSalesReportDialog: React.FC = () => {
                           <TableCell align='right'>
                             <strong>
                               {(
-                                totals.quantity_ordered -
-                                totals.quantity_dispatched
+                                displayTotals.quantity_ordered -
+                                displayTotals.quantity_dispatched
                               ).toLocaleString('en-US', {
                                 maximumFractionDigits: 2,
                               })}
@@ -479,12 +598,25 @@ const ProductSalesReportDialog: React.FC = () => {
                           </TableCell>
                           <TableCell align='right'>
                             <strong>
-                              {formatAmount(totals.amount_ordered)}
+                              {formatAmount(displayTotals.amount_ordered)}
                             </strong>
                           </TableCell>
                           <TableCell align='right'>
                             <strong>
-                              {formatAmount(totals.payment_received)}
+                              {formatAmount(displayTotals.amount_dispatched)}
+                            </strong>
+                          </TableCell>
+                          <TableCell align='right'>
+                            <strong>
+                              {formatAmount(
+                                displayTotals.amount_ordered -
+                                  displayTotals.amount_dispatched
+                              )}
+                            </strong>
+                          </TableCell>
+                          <TableCell align='right'>
+                            <strong>
+                              {formatAmount(displayTotals.payment_received)}
                             </strong>
                           </TableCell>
                         </TableRow>
@@ -496,6 +628,15 @@ const ProductSalesReportDialog: React.FC = () => {
             ))}
         </DialogContent>
         <DialogActions>
+          {rows && rows.length > 0 && (
+            <FileExportGrid
+              exportExcel
+              handlExcelExport={handleExportExcel}
+              exportingExcel={isExportingExcel}
+              exportPdf
+              handlePdf={() => setShowPdfPreview((prev) => !prev)}
+            />
+          )}
           <Button size='small' onClick={() => setOpen(false)}>
             Close
           </Button>
