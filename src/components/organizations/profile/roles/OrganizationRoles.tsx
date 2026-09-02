@@ -96,6 +96,13 @@ const PERMISSION_MODULES: PermissionModuleConfig[] = [
     ],
   },
   {
+    key: 'asset_register',
+    displayName: MODULES.ASSET_REGISTER,
+    prefixes: [
+      'Assets'
+    ],
+  },
+  {
     key: 'process_approval',
     displayName: MODULES.PROCESS_APPROVAL,
     prefixes: [
