@@ -46,6 +46,27 @@ fuelStationServices.exportFuelVouchersToExcel = async (exportedData) => {
     return res.data;
 }
 
+fuelStationServices.stockSalesSummaryReport = async (params) => {
+    const { data } = await axios.get(`/api/fuelStations/stations/stockSalesSummaryReport`, {
+        params,
+        paramsSerializer: (params) => {
+            const searchParams = new URLSearchParams();
+
+            Object.keys(params).forEach(key => {
+                const value = params[key];
+                if (Array.isArray(value)) {
+                    value.forEach(item => searchParams.append(`${key}[]`, item));
+                } else if (value !== null && value !== undefined && value !== '') {
+                    searchParams.append(key, value);
+                }
+            });
+
+            return searchParams.toString();
+        }
+    })
+    return data;
+}
+
 fuelStationServices.getUserStations = async ({ queryKey }) => {
     const { userId } = queryKey[1];
     const { data } = await axios.get(`/api/fuelStations/stations/${userId}/userStations`);
