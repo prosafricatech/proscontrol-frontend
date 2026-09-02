@@ -373,7 +373,10 @@ const CounterSalesListItemAction: React.FC<CounterSalesListItemActionProps> = ({
         (!!sale.vfd_receipt ||
           (!sale.is_invoiced &&
             ((!!sale.is_instant_sale && sale.status === 'Complete') ||
-              ((sale.status === 'Ordered' || sale.status === 'Partially Fulfilled') &&
+              ((sale.status === 'Ordered' ||
+                sale.status === 'Partially Fulfilled' ||
+                sale.status === 'Fulfilled' ||
+                sale.status === 'Over Fulfilled') &&
                 sale.is_fully_paid)))) && (
           <Tooltip title={`Receipt ${sale.saleNo}`}>
             <IconButton onClick={() => setOpenReceiptDialog(true)}>
