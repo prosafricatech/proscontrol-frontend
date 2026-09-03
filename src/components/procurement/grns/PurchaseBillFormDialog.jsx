@@ -201,6 +201,33 @@ const PurchaseBillFormDialog = ({ grn, order, setOpenDialog }) => {
     }
   }, [nonInventoryItems]);
 
+  // Additional costs (freight, PVOC, transportation, etc.) — billable
+  // directly against the order only while it has no GRN yet; once a GRN
+  // exists, a matching cost is billed through the GRN instead, so it's
+  // excluded here to avoid offering something the backend will reject.
+  const billableAdditionalCosts = useMemo(
+    () =>
+      orderDetails?.has_grn
+        ? []
+        : (orderDetails?.additional_costs || []).filter(
+            (cost) => Number(cost.remaining_amount) > 0
+          ),
+    [orderDetails]
+  );
+
+  useEffect(() => {
+    if (billableAdditionalCosts.length > 0) {
+      replaceBillAdditionalCosts(
+        billableAdditionalCosts.map((cost) => ({
+          purchase_order_additional_cost_id: cost.id,
+          ledger_name: cost.ledger?.name,
+          remaining_amount: Number(cost.remaining_amount),
+          amount: Number(cost.remaining_amount),
+        }))
+      );
+    }
+  }, [billableAdditionalCosts]);
+
   // Amount is entered via CommaSeparatedField's onValueChange -> Controller's
   // onChange, which updates form state correctly, but plain watch() calls in
   // the render body don't reliably re-render on nested field-array changes
@@ -209,13 +236,16 @@ const PurchaseBillFormDialog = ({ grn, order, setOpenDialog }) => {
   const vatPercentage = Number(useWatch({ control, name: 'vat_percentage' })) || 0;
   const adjustments = useWatch({ control, name: 'adjustments' });
   const items = useWatch({ control, name: 'items' });
+  const additionalCosts = useWatch({ control, name: 'additional_costs' });
 
   // GRN bills still bill the GRN's whole unbilled_amount in one lump; a
-  // direct-order bill's amount is the sum of whatever's entered per item
-  // above, which can be less than each item's full remaining balance.
+  // direct-order bill's amount is the sum of whatever's entered per item/
+  // additional cost above, which can be less than each one's full
+  // remaining balance.
   const baseAmount = grn
     ? source?.unbilled_amount || 0
-    : (items || []).reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+    : (items || []).reduce((sum, item) => sum + (Number(item.amount) || 0), 0) +
+      (additionalCosts || []).reduce((sum, cost) => sum + (Number(cost.amount) || 0), 0);
 
   const netPayable = useMemo(() => {
     const vatAmount = (baseAmount * vatPercentage) / 100;
@@ -305,6 +335,12 @@ const PurchaseBillFormDialog = ({ grn, order, setOpenDialog }) => {
           purchase_order_item_id: item.purchase_order_item_id,
           amount: item.amount,
           debit_ledger_id: item.debit_ledger_id || undefined,
+        })),
+      additional_costs: (formData.additional_costs || [])
+        .filter((cost) => Number(cost.amount) > 0)
+        .map((cost) => ({
+          purchase_order_additional_cost_id: cost.purchase_order_additional_cost_id,
+          amount: cost.amount,
         })),
     });
   };
@@ -487,6 +523,70 @@ const PurchaseBillFormDialog = ({ grn, order, setOpenDialog }) => {
                                 label='Debit Ledger'
                                 allowedGroups={['Direct Expenses', 'Indirect Expenses']}
                                 onChange={(ledger) => ledgerField.onChange(ledger?.id ?? null)}
+                              />
+                            )}
+                          />
+                        </Grid>
+                      </Grid>
+                    </Box>
+                  ))}
+                </Stack>
+              </Stack>
+            </>
+          )}
+
+          {/* Additional Costs to Bill — direct-order bills only, and only
+              while the order has no GRN yet (see billableAdditionalCosts) */}
+          {billAdditionalCostFields.length > 0 && (
+            <>
+              <Divider />
+              <Stack spacing={1.5}>
+                <SectionHeader
+                  icon={<LocalShippingOutlined fontSize='small' color='action' />}
+                  title='Additional Costs to Bill'
+                  hint="Freight, PVOC, transportation, etc. entered on the order. Amount defaults to the full remaining balance — reduce it to bill only part of it now."
+                />
+                <Stack spacing={1}>
+                  {billAdditionalCostFields.map((field, index) => (
+                    <Box
+                      key={field.id}
+                      sx={{
+                        border: 1,
+                        borderColor: 'divider',
+                        borderRadius: 1,
+                        p: 1.5,
+                      }}
+                    >
+                      <Grid container columnSpacing={2} rowSpacing={1} alignItems='center'>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <Typography variant='body2' noWrap title={field.ledger_name}>
+                            {field.ledger_name}
+                          </Typography>
+                          <Typography variant='caption' color='text.secondary'>
+                            Remaining:{' '}
+                            {Number(field.remaining_amount).toLocaleString(undefined, {
+                              minimumFractionDigits: 2,
+                            })}
+                          </Typography>
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <Controller
+                            name={`additional_costs.${index}.amount`}
+                            control={control}
+                            render={({ field: amountField }) => (
+                              <TextField
+                                fullWidth
+                                size='small'
+                                label='Amount to Bill'
+                                value={amountField.value ?? ''}
+                                error={!!errors.additional_costs?.[index]?.amount}
+                                helperText={errors.additional_costs?.[index]?.amount?.message}
+                                InputProps={{ inputComponent: CommaSeparatedField }}
+                                onChange={(e) =>
+                                  amountField.onChange(
+                                    e.target.value ? sanitizedNumber(e.target.value) : ''
+                                  )
+                                }
                               />
                             )}
                           />
