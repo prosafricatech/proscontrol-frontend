@@ -84,15 +84,19 @@ export default function BankReconciliationWorkspace({ bankAccountId }: Props) {
     });
   };
 
-  if (isLoading) {
-    return <Typography>Loading…</Typography>;
-  }
-
   const bankAccount = data?.bank_account;
 
   let mainContent: React.ReactNode;
 
-  if (isError) {
+  if (isLoading) {
+    // Rendered inline (not as an early `return`) so the import dialog below
+    // stays mounted through this state too — a refetch triggered right after
+    // a successful first-ever import (the query was previously in an error
+    // state, so there's no cached data to show while it reloads) briefly
+    // passes through here, and an early return would unmount the dialog
+    // showing "Import Complete" along with it, losing that screen.
+    mainContent = <Typography>Loading…</Typography>;
+  } else if (isError) {
     mainContent = (
       <Box>
         <Alert severity='info' sx={{ mb: 2 }}>
