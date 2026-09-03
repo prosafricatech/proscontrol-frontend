@@ -64,6 +64,12 @@ interface CounterOption {
   outletName: string;
 }
 
+interface CollectionDistributionRow {
+  id: number;
+  name: string;
+  amount: number;
+}
+
 const EMPTY_TOTALS: ReportTotals = {
   quantity_ordered: 0,
   quantity_dispatched: 0,
@@ -92,6 +98,9 @@ const ProductSalesReportDialog: React.FC = () => {
   );
   const [rows, setRows] = useState<ProductSalesReportRow[] | null>(null);
   const [totals, setTotals] = useState<ReportTotals | null>(null);
+  const [collectionDistribution, setCollectionDistribution] = useState<
+    CollectionDistributionRow[] | null
+  >(null);
   const [isExportingExcel, setIsExportingExcel] = useState(false);
   const [showPdfPreview, setShowPdfPreview] = useState(false);
   const { enqueueSnackbar } = useSnackbar();
@@ -127,6 +136,7 @@ const ProductSalesReportDialog: React.FC = () => {
     onSuccess: (data) => {
       setRows(data?.data || []);
       setTotals(data?.totals || EMPTY_TOTALS);
+      setCollectionDistribution(data?.collection_distribution || []);
     },
     onError: (error: any) => {
       error?.response?.data?.message &&
@@ -138,6 +148,7 @@ const ProductSalesReportDialog: React.FC = () => {
     setOpen(true);
     setRows(null);
     setTotals(null);
+    setCollectionDistribution(null);
     setShowPdfPreview(false);
   };
 
@@ -162,6 +173,7 @@ const ProductSalesReportDialog: React.FC = () => {
         organization,
         rows,
         totals,
+        collectionDistribution: collectionDistribution || [],
         from: from?.toISOString(),
         to: to?.toISOString(),
         baseCurrencyCode,
@@ -298,6 +310,7 @@ const ProductSalesReportDialog: React.FC = () => {
                     organization={organization}
                     rows={rows}
                     totals={displayTotals}
+                    collectionDistribution={collectionDistribution || []}
                     from={from?.toISOString() || ''}
                     to={to?.toISOString() || ''}
                     baseCurrencyCode={baseCurrencyCode}
@@ -624,6 +637,51 @@ const ProductSalesReportDialog: React.FC = () => {
                     </Table>
                   </TableContainer>
                 </Box>
+
+                {!!collectionDistribution?.length && (
+                  <TableContainer
+                    component={Paper}
+                    variant='outlined'
+                    sx={{ mt: 2, maxWidth: { sm: 360 } }}
+                  >
+                    <Table size='small'>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell colSpan={2}>
+                            <Typography variant='subtitle2'>
+                              Collection Distribution
+                            </Typography>
+                          </TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {collectionDistribution.map((cd) => (
+                          <TableRow key={cd.id}>
+                            <TableCell>{cd.name}</TableCell>
+                            <TableCell align='right'>
+                              {formatAmount(cd.amount)}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                        <TableRow>
+                          <TableCell>
+                            <strong>Total</strong>
+                          </TableCell>
+                          <TableCell align='right'>
+                            <strong>
+                              {formatAmount(
+                                collectionDistribution.reduce(
+                                  (sum, cd) => sum + (cd.amount || 0),
+                                  0
+                                )
+                              )}
+                            </strong>
+                          </TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                )}
               </>
             ))}
         </DialogContent>

@@ -25,10 +25,17 @@ interface ReportTotals {
   payment_received: number;
 }
 
+interface CollectionDistributionRow {
+  id: number;
+  name: string;
+  amount: number;
+}
+
 interface ProductSalesReportPDFProps {
   organization: Organization;
   rows: ProductSalesReportRow[];
   totals: ReportTotals;
+  collectionDistribution?: CollectionDistributionRow[];
   from: string;
   to: string;
   baseCurrencyCode: string;
@@ -50,6 +57,7 @@ function ProductSalesReportPDF({
   organization,
   rows,
   totals,
+  collectionDistribution = [],
   from,
   to,
   baseCurrencyCode,
@@ -171,6 +179,41 @@ function ProductSalesReportPDF({
             </Text>
           </View>
         </View>
+
+        {!!collectionDistribution.length && (
+          <View style={{ ...pdfStyles.table, marginTop: 15, width: 260 }}>
+            <View style={pdfStyles.tableRow}>
+              <Text style={{ ...pdfStyles.tableHeader, backgroundColor: mainColor, color: contrastText, flex: 1.5 }}>
+                Collection Distribution
+              </Text>
+              <Text style={{ ...pdfStyles.tableHeader, backgroundColor: mainColor, color: contrastText, flex: 1, textAlign: 'right' }}>
+                {' '}
+              </Text>
+            </View>
+            {collectionDistribution.map((cd, index) => (
+              <View
+                key={cd.id}
+                style={{
+                  ...pdfStyles.tableRow,
+                  backgroundColor: index % 2 === 0 ? '#FFFFFF' : '#f0f0f0',
+                }}
+              >
+                <Text style={{ ...pdfStyles.tableCell, flex: 1.5 }}>{cd.name}</Text>
+                <Text style={{ ...pdfStyles.tableCell, flex: 1, textAlign: 'right' }}>
+                  {formatAmount(cd.amount)}
+                </Text>
+              </View>
+            ))}
+            <View style={{ ...pdfStyles.tableRow, backgroundColor: '#d5d5d5' }}>
+              <Text style={{ ...pdfStyles.tableHeader, flex: 1.5 }}>Total</Text>
+              <Text style={{ ...pdfStyles.tableHeader, flex: 1, textAlign: 'right' }}>
+                {formatAmount(
+                  collectionDistribution.reduce((sum, cd) => sum + (cd.amount || 0), 0)
+                )}
+              </Text>
+            </View>
+          </View>
+        )}
 
         <PageFooter />
       </Page>

@@ -4,8 +4,16 @@ import { createWorkbook } from '../workBook';
 
 export async function exportProductSalesReportExcel(exportedData: any) {
   try {
-    const { organization, rows, totals, from, to, baseCurrencyCode, printedBy } =
-      exportedData;
+    const {
+      organization,
+      rows,
+      totals,
+      collectionDistribution,
+      from,
+      to,
+      baseCurrencyCode,
+      printedBy,
+    } = exportedData;
 
     const wb = createWorkbook();
     const ws = wb.addWorksheet('Product Sales Report');
@@ -104,6 +112,47 @@ export async function exportProductSalesReportExcel(exportedData: any) {
         cell.numFmt = '#,##0.00';
       }
     });
+
+    if ((collectionDistribution || []).length) {
+      ws.addRow([]);
+      const cdHeaderRow = ws.addRow(['Collection Distribution', 'Amount']);
+      cdHeaderRow.eachCell((cell, colNumber) => {
+        applyCellStyle(cell, CELL_STYLES.tableHeader);
+        if (colNumber > 1) {
+          cell.alignment = { horizontal: 'right', vertical: 'middle' };
+        }
+      });
+
+      (collectionDistribution || []).forEach((cd: any) => {
+        const cdRow = ws.addRow([cd.name, cd.amount]);
+        cdRow.eachCell((cell, colNumber) => {
+          applyCellStyle(
+            cell,
+            colNumber === 1 ? CELL_STYLES.dataRowText : CELL_STYLES.dataRowNumeric
+          );
+          if (colNumber > 1) {
+            cell.numFmt = '#,##0.00';
+          }
+        });
+      });
+
+      const cdTotalRow = ws.addRow([
+        'Total',
+        (collectionDistribution || []).reduce(
+          (sum: number, cd: any) => sum + (cd.amount || 0),
+          0
+        ),
+      ]);
+      cdTotalRow.eachCell((cell, colNumber) => {
+        applyCellStyle(
+          cell,
+          colNumber === 1 ? CELL_STYLES.totalRowText : CELL_STYLES.totalRowNumeric
+        );
+        if (colNumber > 1) {
+          cell.numFmt = '#,##0.00';
+        }
+      });
+    }
 
     return await wb.xlsx.writeBuffer();
   } catch (e: any) {
