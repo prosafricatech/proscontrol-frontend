@@ -5,6 +5,7 @@ import {
   AddOutlined,
   DeleteOutline,
   InfoOutlined,
+  LocalShippingOutlined,
   ReceiptLongOutlined,
   RuleOutlined,
 } from '@mui/icons-material';
@@ -82,6 +83,23 @@ const validationSchema = yup.object({
         ),
     })
   ),
+  additional_costs: yup.array().of(
+    yup.object({
+      amount: yup
+        .number()
+        .required('Amount is required')
+        .positive('Amount must be greater than 0')
+        .typeError('Amount is required')
+        .test(
+          'max-remaining',
+          'Amount exceeds the remaining balance for this cost',
+          function (value) {
+            const remaining = Number(this.parent?.remaining_amount ?? 0);
+            return value == null || value <= remaining;
+          }
+        ),
+    })
+  ),
 });
 
 const SectionHeader = ({ icon, title, hint }) => (
@@ -130,6 +148,7 @@ const PurchaseBillFormDialog = ({ grn, order, setOpenDialog }) => {
       vat_percentage: orgVatPercentage || '',
       adjustments: [],
       items: [],
+      additional_costs: [],
     },
   });
 
@@ -141,6 +160,11 @@ const PurchaseBillFormDialog = ({ grn, order, setOpenDialog }) => {
   const { fields: billItemFields, replace: replaceBillItems } = useFieldArray({
     control,
     name: 'items',
+  });
+
+  const { fields: billAdditionalCostFields, replace: replaceBillAdditionalCosts } = useFieldArray({
+    control,
+    name: 'additional_costs',
   });
 
   // Nothing is posted for a non-inventory item at order time anymore — its

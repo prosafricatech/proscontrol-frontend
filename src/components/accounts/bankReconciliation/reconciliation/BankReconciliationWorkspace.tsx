@@ -110,8 +110,9 @@ export default function BankReconciliationWorkspace({ bankAccountId }: Props) {
     );
   }
 
-  const { statement, matched_lines, unmatched_lines, ignored_lines, unmatched_journals, book_balance, difference } = data;
-  const isBalanced = Math.abs(difference) <= 0.01;
+  const { statement, matched_lines, unmatched_lines, ignored_lines, unmatched_journals, book_balance, difference, amount_tolerance } = data;
+  const tolerance = amount_tolerance ?? 0.01;
+  const isBalanced = Math.abs(difference) <= tolerance;
   const isCompleted = statement.status === 'completed';
 
   return (
@@ -183,6 +184,7 @@ export default function BankReconciliationWorkspace({ bankAccountId }: Props) {
                 allUnmatchedJournals={unmatched_journals}
                 existingMatches={item.existing_matches}
                 remainingAmount={item.remaining_amount}
+                tolerance={tolerance}
               />
             ))}
           </Box>
@@ -201,6 +203,7 @@ export default function BankReconciliationWorkspace({ bankAccountId }: Props) {
                 allUnmatchedLines={unmatched_lines}
                 existingMatches={journal.existing_matches}
                 remainingAmount={journal.remaining_amount}
+                tolerance={tolerance}
               />
             ))}
           </Box>

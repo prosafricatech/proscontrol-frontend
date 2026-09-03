@@ -198,7 +198,7 @@ const HrDashboard = () => {
         <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
           <StatTile
             icon={<GroupsOutlined />}
-            label='Total Employees'
+            label='Active Employees'
             value={headcount.total_employees}
             sub={
               headcount.new_hires_this_month > 0

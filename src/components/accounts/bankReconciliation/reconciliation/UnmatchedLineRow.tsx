@@ -39,6 +39,7 @@ interface Props {
   allUnmatchedJournals: Journal[];
   existingMatches: ExistingMatch[];
   remainingAmount: number;
+  tolerance?: number;
 }
 
 const formatAmount = (amount: number) =>
@@ -51,6 +52,7 @@ export default function UnmatchedLineRow({
   allUnmatchedJournals,
   existingMatches,
   remainingAmount,
+  tolerance = 0.01,
 }: Props) {
   const { enqueueSnackbar } = useSnackbar();
   const queryClient = useQueryClient();
@@ -63,7 +65,7 @@ export default function UnmatchedLineRow({
   };
 
   const selectedTotal = selectedJournals.reduce((sum, journal) => sum + Math.abs(journal.comparable_amount), 0);
-  const isBalanced = Math.abs(selectedTotal - remainingAmount) <= 0.01;
+  const isBalanced = Math.abs(selectedTotal - remainingAmount) <= tolerance;
 
   const matchMutation = useMutation({
     mutationFn: () => bankReconciliationServices.matchLine(line.id, selectedJournals.map((j) => j.id)),
