@@ -7,6 +7,7 @@ import { LoadingButton } from '@mui/lab';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSnackbar } from 'notistack';
 import bankReconciliationServices from '../bank-reconciliation-services';
+import { descriptionIncludesVoucher } from './journal-display';
 
 interface StatementLine {
   id: number;
@@ -31,6 +32,8 @@ interface Journal {
   journal_date: string;
   description: string;
   comparable_amount: number;
+  voucher_no?: string | null;
+  counterparty?: string | null;
   credit_ledger?: { name: string };
   debit_ledger?: { name: string };
 }
@@ -90,8 +93,12 @@ export default function UnmatchedJournalRow({
       <Grid size={{ xs: 12, md: 3 }}>
         <Typography variant='body2' color='text.secondary'>
           {new Date(journal.journal_date).toLocaleDateString()}
+          {!descriptionIncludesVoucher(journal) && journal.voucher_no && ` — ${journal.voucher_no}`}
         </Typography>
         <Typography variant='body2'>{journal.description}</Typography>
+        {journal.counterparty && (
+          <Typography variant='caption' color='text.secondary'>{journal.counterparty}</Typography>
+        )}
       </Grid>
       <Grid size={{ xs: 12, md: 2 }}>
         <Typography variant='body1' fontWeight={600}>

@@ -7,6 +7,7 @@ import { LoadingButton } from '@mui/lab';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSnackbar } from 'notistack';
 import bankReconciliationServices from '../bank-reconciliation-services';
+import { journalDisplayParts } from './journal-display';
 
 interface Journal {
   id: number;
@@ -14,6 +15,8 @@ interface Journal {
   description: string;
   amount: number;
   comparable_amount: number;
+  voucher_no?: string | null;
+  counterparty?: string | null;
   credit_ledger?: { name: string };
   debit_ledger?: { name: string };
 }
@@ -44,6 +47,11 @@ interface Props {
 
 const formatAmount = (amount: number) =>
   amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+const journalLabel = (journal: Journal) => {
+  const parts = journalDisplayParts(journal);
+  return `${new Date(journal.journal_date).toLocaleDateString()} — ${parts.join(' — ')} — ${formatAmount(journal.comparable_amount)}`;
+};
 
 export default function UnmatchedLineRow({
   bankAccountId,
@@ -123,7 +131,7 @@ export default function UnmatchedLineRow({
               <Chip
                 key={match.id}
                 size='small'
-                label={`${match.journal.description} — ${formatAmount(match.matched_amount)}`}
+                label={`${journalDisplayParts(match.journal).join(' — ')} — ${formatAmount(match.matched_amount)}`}
                 onDelete={() => removeMatchMutation.mutate(match.id)}
                 deleteIcon={<LinkOffOutlined fontSize='small' />}
               />
@@ -135,19 +143,42 @@ export default function UnmatchedLineRow({
           size='small'
           options={allUnmatchedJournals}
           value={selectedJournals}
-          getOptionLabel={(option: Journal) =>
-            `${new Date(option.journal_date).toLocaleDateString()} — ${option.description} — ${formatAmount(option.comparable_amount)}`
-          }
+          getOptionLabel={journalLabel}
           isOptionEqualToValue={(option, value) => option.id === value.id}
           onChange={(e, newValue) => setSelectedJournals(newValue)}
           renderInput={(params) => (
             <TextField {...params} label='Match to book entries' placeholder='Search journals…' />
           )}
         />
+        {suggestions.length > 0 && (
+          <Box sx={{ mt: 0.5 }}>
+            <Typography variant='caption' color='text.secondary' display='block' sx={{ mb: 0.5 }}>
+              Suggestions (click to select, amount matches but not auto-confirmed):
+            </Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+              {suggestions.map((suggestion) => {
+                const isSelected = selectedJournals.some((j) => j.id === suggestion.id);
+                return (
+                  <Chip
+                    key={suggestion.id}
+                    size='small'
+                    clickable
+                    color={isSelected ? 'primary' : 'default'}
+                    variant={isSelected ? 'filled' : 'outlined'}
+                    icon={isSelected ? <CheckCircleOutlined fontSize='small' /> : undefined}
+                    label={journalLabel(suggestion)}
+                    onClick={() =>
+                      setSelectedJournals((prev) =>
+                        isSelected ? prev.filter((j) => j.id !== suggestion.id) : [...prev, suggestion]
+                      )
+                    }
+                  />
+                );
+              })}
+            </Box>
+          </Box>
+        )}
         <Box sx={{ mt: 0.5, display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-          {suggestions.length > 0 && (
-            <Chip size='small' color='info' label={`${suggestions.length} suggestion(s) found`} />
-          )}
           {selectedJournals.length > 0 && (
             <Typography variant='caption' color={isBalanced ? 'success.main' : 'warning.main'}>
               Selected: {formatAmount(selectedTotal)} / Remaining: {formatAmount(remainingAmount)}
