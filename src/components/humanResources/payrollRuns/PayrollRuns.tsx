@@ -311,15 +311,19 @@ const PayrollRuns = ({ defaultStatus, title }: PayrollRunsProps) => {
                           onChange={handleOnWaitingForChange}
                         />
                       </Grid>
-                      <Grid size={{ xs: 12, md: 3 }}>
+                      <Grid size={{ xs: 9, md: 3 }}>
                         <JumboSearch
                           onChange={handleOnChange}
                           value={queryOptions.queryParams.keyword}
                         />
                       </Grid>
+                      {/* Paired with Search on the same row (rather than its
+                          own full-width row) so on mobile the + button sits
+                          right next to it instead of stranded alone below,
+                          left-aligned, with a stretch of empty space beside it. */}
                       <Grid
-                        size={{ xs: 12, md: 3 }}
-                        sx={{ display: 'flex', justifyContent: { md: 'end' } }}
+                        size={{ xs: 3, md: 3 }}
+                        sx={{ display: 'flex', justifyContent: 'flex-end' }}
                       >
                         <PayrollRunActionTail
                           payrollPeriod={selectedPayrollPeriod}
