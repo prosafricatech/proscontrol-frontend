@@ -165,6 +165,7 @@ export const PERMISSIONS = {
   STORES_EDIT: 'Stores:Edit',
   STORES_READ: 'Stores:Read',
   STORES_REPORTS: 'Stores:Reports',
+  STORE_VALUES: 'Store:Values',
 
   // human resources
   EMPLOYEES_CREATE: 'Employees:Create',

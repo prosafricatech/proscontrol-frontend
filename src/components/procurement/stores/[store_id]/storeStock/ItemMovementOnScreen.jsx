@@ -19,6 +19,7 @@ function ItemMovementOnScreen({ movementsData, authObject, baseCurrency }) {
   const { authOrganization, checkOrganizationPermission } = authObject;
   const financePersonnel = checkOrganizationPermission([
     PERMISSIONS.ACCOUNTS_REPORTS,
+    PERMISSIONS.STORE_VALUES,
   ]);
 
   const mainColor =

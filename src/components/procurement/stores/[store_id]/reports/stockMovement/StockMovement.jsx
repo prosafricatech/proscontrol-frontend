@@ -120,7 +120,7 @@ const ReportDocument = ({
               </Text>
             </View>
           )}
-          {checkOrganizationPermission(PERMISSIONS.ACCOUNTS_REPORTS) && (
+          {checkOrganizationPermission([PERMISSIONS.ACCOUNTS_REPORTS, PERMISSIONS.STORE_VALUES]) && (
             <View style={{ flex: 2, padding: 2 }}>
               <Text style={{ ...pdfStyles.minInfo, color: mainColor }}>
                 Estimated Closing Value
@@ -296,7 +296,7 @@ const ReportDocument = ({
             >
               Closing Balance
             </Text>
-            {checkOrganizationPermission(PERMISSIONS.ACCOUNTS_REPORTS) && (
+            {checkOrganizationPermission([PERMISSIONS.ACCOUNTS_REPORTS, PERMISSIONS.STORE_VALUES]) && (
               <React.Fragment>
                 <Text
                   style={{
@@ -468,7 +468,7 @@ const ReportDocument = ({
                 >
                   {closing_balance}
                 </Text>
-                {checkOrganizationPermission(PERMISSIONS.ACCOUNTS_REPORTS) && (
+                {checkOrganizationPermission([PERMISSIONS.ACCOUNTS_REPORTS, PERMISSIONS.STORE_VALUES]) && (
                   <React.Fragment>
                     <Text
                       style={{
@@ -636,9 +636,10 @@ function StockMovement({ toggleOpen, dormantStock = false, isFromDashboard }) {
     movementsData: movements,
     authOrganization: authOrganization,
     user: user,
-    checkOrganizationPermission: checkOrganizationPermission(
-      PERMISSIONS.ACCOUNTS_REPORTS
-    ),
+    checkOrganizationPermission: checkOrganizationPermission([
+      PERMISSIONS.ACCOUNTS_REPORTS,
+      PERMISSIONS.STORE_VALUES,
+    ]),
     store: isFromDashboard ? watch('store') : activeStore,
     reportTitle: reportTitle,
     withDetails: withDetails,
@@ -875,7 +876,7 @@ function StockMovement({ toggleOpen, dormantStock = false, isFromDashboard }) {
                     />
                   </Div>
                 </Grid>
-                {checkOrganizationPermission(PERMISSIONS.ACCOUNTS_REPORTS) && (
+                {checkOrganizationPermission([PERMISSIONS.ACCOUNTS_REPORTS, PERMISSIONS.STORE_VALUES]) && (
                   <Grid size={{ xs: 6, md: 4 }} textAlign={'left'}>
                     <Div sx={{ mt: 0.3 }}>
                       <FormControlLabel
