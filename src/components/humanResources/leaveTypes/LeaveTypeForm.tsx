@@ -11,9 +11,11 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControlLabel,
   Grid,
   MenuItem,
   Stack,
+  Switch,
   TextField,
   Tooltip,
   Typography,
@@ -201,6 +203,8 @@ const LeaveTypeForm = ({ setOpenDialog, leaveType }: LeaveTypeFormProp) => {
       .max(60, 'Carry forward cannot exceed 60 months')
       .nullable()
       .optional(),
+    excludes_saturday: yup.boolean().optional(),
+    excludes_sunday: yup.boolean().optional(),
     apply_to_employees: yup
       .string()
       .oneOf(['none', 'all', 'active_contracts'])
@@ -227,6 +231,8 @@ const LeaveTypeForm = ({ setOpenDialog, leaveType }: LeaveTypeFormProp) => {
       days_per_year: leaveType?.days_per_year || 1,
       cycle_months: leaveType?.cycle_months || 12,
       carry_forward_months: leaveType?.carry_forward_months ?? undefined,
+      excludes_saturday: leaveType?.excludes_saturday ?? false,
+      excludes_sunday: leaveType?.excludes_sunday ?? false,
       apply_to_employees: 'none',
       apply_to_gender: '',
       apply_start_date: '',
@@ -242,6 +248,8 @@ const LeaveTypeForm = ({ setOpenDialog, leaveType }: LeaveTypeFormProp) => {
       days_per_year: leaveType?.days_per_year || 1,
       cycle_months: leaveType?.cycle_months || 12,
       carry_forward_months: leaveType?.carry_forward_months ?? undefined,
+      excludes_saturday: leaveType?.excludes_saturday ?? false,
+      excludes_sunday: leaveType?.excludes_sunday ?? false,
       apply_to_employees: 'none',
       apply_to_gender: '',
       apply_start_date: '',
@@ -345,6 +353,52 @@ const LeaveTypeForm = ({ setOpenDialog, leaveType }: LeaveTypeFormProp) => {
                   error={!!errors?.carry_forward_months}
                   helperText={errors.carry_forward_months?.message}
                   {...register('carry_forward_months')}
+                />
+              </Div>
+            </Grid>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Div sx={{ mt: 1 }}>
+                <FieldLabel
+                  label='Excludes Saturday'
+                  hint='On — Saturdays within the requested date range are not counted as leave days. Off — Saturdays count like any other day.'
+                />
+                <Controller
+                  name='excludes_saturday'
+                  control={control}
+                  render={({ field }) => (
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={!!field.value}
+                          onChange={(e) => field.onChange(e.target.checked)}
+                        />
+                      }
+                      label={field.value ? 'Excluded' : 'Counted as a leave day'}
+                    />
+                  )}
+                />
+              </Div>
+            </Grid>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Div sx={{ mt: 1 }}>
+                <FieldLabel
+                  label='Excludes Sunday'
+                  hint='On — Sundays within the requested date range are not counted as leave days (e.g. Annual Leave in a 5- or 6-day work week). Off — Sundays count like any other day (e.g. some Sick Leave policies).'
+                />
+                <Controller
+                  name='excludes_sunday'
+                  control={control}
+                  render={({ field }) => (
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={!!field.value}
+                          onChange={(e) => field.onChange(e.target.checked)}
+                        />
+                      }
+                      label={field.value ? 'Excluded' : 'Counted as a leave day'}
+                    />
+                  )}
                 />
               </Div>
             </Grid>
