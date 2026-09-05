@@ -46,7 +46,9 @@ function RequisitionsTypeSelector({ onChange, value = 'all' }: RequisitionsTypeS
         >
           <MenuItem value="all" sx={{ justifyContent: 'flex-start' }}>All</MenuItem>
           <MenuItem value="purchase" sx={{ justifyContent: 'flex-start' }}>PURCHASE</MenuItem>
+          {/* MATERIAL disabled pending reassessment/improvement of the feature.
           <MenuItem value="material" sx={{ justifyContent: 'flex-start' }}>MATERIAL</MenuItem>
+          */}
           <MenuItem value="payment" sx={{ justifyContent: 'flex-start' }}>PAYMENT</MenuItem>
           <MenuItem value="imprest" sx={{ justifyContent: 'flex-start' }}>IMPREST</MenuItem>
         </Select>

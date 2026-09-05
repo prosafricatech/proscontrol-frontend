@@ -56,11 +56,15 @@ interface RFQComparisonProps {
   isAwarding: boolean;
   awardingSupplierId?: number | null;
   onAward: (selectedQuotes: Record<number, Quote>) => void;
+  // Awarding creates a Purchase Order directly, bypassing the requisition
+  // approval chain — only Purchases:Create holders may do it, or this becomes
+  // a loophole for ordering unapproved purchases.
+  canAward?: boolean;
 }
 
 const TABLE_MAX_HEIGHT = 560;
 
-const RFQComparisonUI: React.FC<RFQComparisonProps> = ({ comparison, rfqDetails, isAwarding, awardingSupplierId, onAward }) => {
+const RFQComparisonUI: React.FC<RFQComparisonProps> = ({ comparison, rfqDetails, isAwarding, awardingSupplierId, onAward, canAward = true }) => {
   const theme = useTheme();
   const isDarkMode = theme.type === 'dark';
 
@@ -278,17 +282,33 @@ const RFQComparisonUI: React.FC<RFQComparisonProps> = ({ comparison, rfqDetails,
 
                   return (
                     <TableCell key={supplier.id} align="center" sx={{ bgcolor: footerBg, borderTop: 2, borderColor: 'divider', py: 1.5 }}>
-                      <LoadingButton
-                        variant={count > 0 ? 'contained' : 'outlined'}
-                        size="small"
-                        loading={isThisSupplierAwarding}
-                        disabled={count === 0 || isAwarding}
-                        onClick={() => handleAwardSupplier(supplier.id)}
-                        startIcon={<ShoppingCartOutlined />}
-                        sx={{ minWidth: 'auto', px: 1.5 }}
-                      >
-                        Award{count > 0 ? ` (${count})` : ''}
-                      </LoadingButton>
+                      {canAward ? (
+                        <LoadingButton
+                          variant={count > 0 ? 'contained' : 'outlined'}
+                          size="small"
+                          loading={isThisSupplierAwarding}
+                          disabled={count === 0 || isAwarding}
+                          onClick={() => handleAwardSupplier(supplier.id)}
+                          startIcon={<ShoppingCartOutlined />}
+                          sx={{ minWidth: 'auto', px: 1.5 }}
+                        >
+                          Award{count > 0 ? ` (${count})` : ''}
+                        </LoadingButton>
+                      ) : (
+                        <Tooltip title="You don't have permission to create purchase orders">
+                          <span>
+                            <LoadingButton
+                              variant="outlined"
+                              size="small"
+                              disabled
+                              startIcon={<ShoppingCartOutlined />}
+                              sx={{ minWidth: 'auto', px: 1.5 }}
+                            >
+                              Award
+                            </LoadingButton>
+                          </span>
+                        </Tooltip>
+                      )}
                     </TableCell>
                   );
                 })}
