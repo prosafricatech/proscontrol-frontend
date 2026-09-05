@@ -198,6 +198,7 @@ const AssetFormDialogContent: React.FC<AssetFormDialogContentProps> = ({
                 <ProductSelect
                   label={dictionary.register.form.labels.product}
                   disabled={mode === 'edit'}
+                  allowedTypes={['Asset']}
                   defaultValue={assetProducts.find((p: any) => p.id === asset?.product_item?.product?.id) || null}
                   onChange={(newValue: any) => {
                     setValue('product_id', newValue ? newValue.id : null, { shouldValidate: true, shouldDirty: true });
