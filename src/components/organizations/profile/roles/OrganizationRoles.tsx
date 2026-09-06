@@ -103,6 +103,13 @@ const PERMISSION_MODULES: PermissionModuleConfig[] = [
     ],
   },
   {
+    key: 'asset_bookings',
+    displayName: MODULES.ASSET_BOOKINGS,
+    prefixes: [
+      'AssetBookings'
+    ],
+  },
+  {
     key: 'process_approval',
     displayName: MODULES.PROCESS_APPROVAL,
     prefixes: [
