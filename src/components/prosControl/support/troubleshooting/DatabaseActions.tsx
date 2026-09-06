@@ -316,7 +316,13 @@ function DatabaseActions() {
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleCloseDialog}>Cancel</Button>
-                    <Button onClick={handleConfirm} variant="contained">Confirm</Button>
+                    <Button
+                        onClick={handleConfirm}
+                        variant="contained"
+                        disabled={currentConfirmText !== selectedActionLabel}
+                    >
+                        Confirm
+                    </Button>
                 </DialogActions>
             </Dialog>
         </>
