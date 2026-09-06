@@ -3,6 +3,8 @@ import { getErrorMessage } from '@/utilities/helpers/errorHandler';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { LoadingButton } from '@mui/lab';
 import {
+  Alert,
+  Autocomplete,
   Button,
   DialogActions,
   DialogContent,
@@ -12,9 +14,9 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSnackbar } from 'notistack';
-import React from 'react';
+import React, { useState } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import dayjs from 'dayjs';
@@ -46,31 +48,21 @@ const AssetBookingFormDialogContent: React.FC<AssetBookingFormDialogContentProps
   const queryClient = useQueryClient();
   const dictionary = useDictionary();
   const mode = booking ? 'edit' : 'create';
+  const [submitting, setSubmitting] = useState(false);
+  const [selectedSale, setSelectedSale] = useState<any>(null);
+  const [selectedAsset, setSelectedAsset] = useState<any>(booking?.asset_detail ?? defaultAssetDetail ?? null);
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ['assetBookings'] });
     queryClient.invalidateQueries({ queryKey: ['assetBookingsCalendar'] });
   };
 
-  const addBooking = useMutation({
-    mutationFn: assetBookingsServices.add,
-    onSuccess: () => {
-      onClose();
-      enqueueSnackbar(dictionary.bookings.form.messages.createSuccess, { variant: 'success' });
-      invalidate();
-    },
-    onError: (error: any) => enqueueSnackbar(getErrorMessage(error), { variant: 'error' }),
-  });
-
-  const updateBooking = useMutation({
-    mutationFn: assetBookingsServices.update,
-    onSuccess: () => {
-      onClose();
-      enqueueSnackbar(dictionary.bookings.form.messages.updateSuccess, { variant: 'success' });
-      invalidate();
-    },
-    onError: (error: any) => enqueueSnackbar(getErrorMessage(error), { variant: 'error' }),
-  });
+  // No onSuccess/onError here on purpose — external bookings may need a
+  // confirm+link follow-up before the operation is really "done", so all of
+  // that (including the success/error toast) is handled once, centrally, in
+  // onSubmit below, rather than firing early off these mutations alone.
+  const addBooking = useMutation({ mutationFn: assetBookingsServices.add });
+  const updateBooking = useMutation({ mutationFn: assetBookingsServices.update });
 
   const validationSchema = yup.object({
     asset_detail_id: yup.number().required(dictionary.bookings.form.errors.validation.assetDetailId.required).positive(),
@@ -84,6 +76,15 @@ const AssetBookingFormDialogContent: React.FC<AssetBookingFormDialogContentProps
       .when('booking_type', {
         is: 'external',
         then: (schema) => schema.required(dictionary.bookings.form.errors.validation.stakeholderId.required).positive(),
+      }),
+    // An external booking must always be tied to a real sale — if this one
+    // isn't linked yet, picking one is mandatory before it can be saved.
+    sale_id: yup.number().nullable().transform((v, o) => (o === '' ? null : v))
+      .when('booking_type', {
+        is: 'external',
+        then: (schema) => booking?.sale_id
+          ? schema.nullable()
+          : schema.required(dictionary.bookings.form.errors.validation.saleId.required).positive(),
       }),
     start_at: yup.string().required(dictionary.bookings.form.errors.validation.startAt.required),
     end_at: yup.string().required(dictionary.bookings.form.errors.validation.endAt.required)
@@ -113,6 +114,7 @@ const AssetBookingFormDialogContent: React.FC<AssetBookingFormDialogContentProps
       booking_type: booking?.booking_type ?? 'internal',
       cost_center_id: booking?.cost_center_id ?? null,
       stakeholder_id: booking?.stakeholder_id ?? null,
+      sale_id: booking?.sale_id ?? null,
       start_at: booking?.start_at ? dayjs(booking.start_at).format('YYYY-MM-DDTHH:mm:ss') : (defaultStartAt ?? ''),
       end_at: booking?.end_at ? dayjs(booking.end_at).format('YYYY-MM-DDTHH:mm:ss') : (defaultEndAt ?? ''),
       purpose: booking?.purpose ?? '',
@@ -122,12 +124,46 @@ const AssetBookingFormDialogContent: React.FC<AssetBookingFormDialogContentProps
   });
 
   const bookingType = watch('booking_type');
+  const stakeholderId = watch('stakeholder_id');
+  const needsSaleLink = bookingType === 'external' && !booking?.sale_id;
 
-  const onSubmit: SubmitHandler<any> = (data) => {
-    if (mode === 'edit') {
-      updateBooking.mutate({ ...data, id: booking.id });
-    } else {
-      addBooking.mutate(data);
+  // Only sales for the same customer, rung up from an outlet deployed to
+  // the same cost center as the asset being booked — a sale from an
+  // unrelated hall/outlet has no business billing this booking. Sales are
+  // still not filtered by billing product (an org may bill under a bundled
+  // line item) — that's surfaced instead as a warning once one is picked.
+  const { data: linkableSales = [], isLoading: loadingLinkableSales } = useQuery<any[]>({
+    queryKey: ['assetBookingLinkableSales', stakeholderId, selectedAsset?.cost_center_id, selectedAsset?.billing_product_id],
+    queryFn: () => assetBookingsServices.getLinkableSales(stakeholderId, selectedAsset?.cost_center_id, selectedAsset?.billing_product_id),
+    enabled: needsSaleLink && Boolean(stakeholderId),
+  });
+
+  const onSubmit: SubmitHandler<any> = async (data) => {
+    setSubmitting(true);
+    try {
+      if (mode === 'edit') {
+        await updateBooking.mutateAsync({ ...data, id: booking.id });
+        if (needsSaleLink && data.sale_id) {
+          if (booking.status === 'draft') {
+            await assetBookingsServices.confirm(booking);
+          }
+          await assetBookingsServices.linkSale({ id: booking.id, sale_id: data.sale_id });
+        }
+        enqueueSnackbar(dictionary.bookings.form.messages.updateSuccess, { variant: 'success' });
+      } else {
+        const created = await addBooking.mutateAsync(data);
+        if (needsSaleLink && data.sale_id) {
+          await assetBookingsServices.confirm(created.booking);
+          await assetBookingsServices.linkSale({ id: created.booking.id, sale_id: data.sale_id });
+        }
+        enqueueSnackbar(dictionary.bookings.form.messages.createSuccess, { variant: 'success' });
+      }
+      onClose();
+      invalidate();
+    } catch (error: any) {
+      enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -144,7 +180,12 @@ const AssetBookingFormDialogContent: React.FC<AssetBookingFormDialogContentProps
               label={dictionary.bookings.form.labels.asset}
               defaultValue={booking?.asset_detail ?? defaultAssetDetail}
               frontError={errors.asset_detail_id as any}
-              onChange={(newValue) => setValue('asset_detail_id', newValue ? newValue.id : null, { shouldValidate: true, shouldDirty: true })}
+              onChange={(newValue) => {
+                setValue('asset_detail_id', newValue ? newValue.id : null, { shouldValidate: true, shouldDirty: true });
+                setSelectedAsset(newValue);
+                setSelectedSale(null);
+                setValue('sale_id', null, { shouldValidate: true });
+              }}
             />
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
@@ -157,20 +198,9 @@ const AssetBookingFormDialogContent: React.FC<AssetBookingFormDialogContentProps
               value={bookingType}
               onChange={(e) => setValue('booking_type', e.target.value, { shouldValidate: true, shouldDirty: true })}
             >
-              {/* External bookings are created from a Sale (see the Sales
-                  Counter's "Attach Asset Booking") so a customer is always
-                  billed correctly from the start — this form only offers it
-                  when editing a booking that's already external. */}
-              {bookingType === 'external' && (
-                <MenuItem value="external">{dictionary.bookings.form.labels.external}</MenuItem>
-              )}
+              <MenuItem value="external">{dictionary.bookings.form.labels.external}</MenuItem>
               <MenuItem value="internal">{dictionary.bookings.form.labels.internal}</MenuItem>
             </TextField>
-            {mode === 'create' && (
-              <Typography variant="caption" color="text.secondary" display="block" mt={0.5}>
-                {dictionary.bookings.form.help.externalFromSale}
-              </Typography>
-            )}
           </Grid>
 
           <Grid size={12}>
@@ -224,8 +254,54 @@ const AssetBookingFormDialogContent: React.FC<AssetBookingFormDialogContentProps
                 label={dictionary.bookings.form.labels.stakeholder}
                 defaultValue={booking?.stakeholder_id ?? null}
                 frontError={errors.stakeholder_id as any}
-                onChange={(newValue: any) => setValue('stakeholder_id', newValue && !Array.isArray(newValue) ? newValue.id : null, { shouldValidate: true })}
+                onChange={(newValue: any) => {
+                  setValue('stakeholder_id', newValue && !Array.isArray(newValue) ? newValue.id : null, { shouldValidate: true });
+                  setSelectedSale(null);
+                  setValue('sale_id', null, { shouldValidate: true });
+                }}
               />
+            </Grid>
+          )}
+          {needsSaleLink && (
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Autocomplete
+                size="small"
+                loading={loadingLinkableSales}
+                disabled={!stakeholderId}
+                options={linkableSales}
+                value={selectedSale}
+                onChange={(_, newValue) => {
+                  setSelectedSale(newValue);
+                  setValue('sale_id', newValue ? newValue.id : null, { shouldValidate: true });
+                }}
+                isOptionEqualToValue={(o, v) => o.id === v.id}
+                getOptionLabel={(o: any) => `${o.saleNo} — ${dayjs(o.transaction_date).format('DD MMM YYYY')} — ${Number(o.amount).toLocaleString()}`}
+                renderOption={(props, o: any) => {
+                  const { key, ...rest } = props as any;
+                  return (
+                    <li key={key} {...rest}>
+                      {o.has_billing_product === false ? '⚠️ ' : ''}
+                      {o.saleNo} — {dayjs(o.transaction_date).format('DD MMM YYYY')} — {Number(o.amount).toLocaleString()}
+                    </li>
+                  );
+                }}
+                noOptionsText={!stakeholderId
+                  ? dictionary.bookings.form.help.pickCustomerFirst
+                  : (loadingLinkableSales ? '...' : dictionary.bookings.linkSaleDialog.noSales)}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label={dictionary.bookings.form.labels.linkSale}
+                    error={Boolean(errors.sale_id)}
+                    helperText={errors.sale_id?.message as string}
+                  />
+                )}
+              />
+              {selectedSale && selectedSale.has_billing_product === false && (
+                <Alert severity="warning" sx={{ mt: 1 }}>
+                  {dictionary.bookings.form.help.saleMissingBillingProduct}
+                </Alert>
+              )}
             </Grid>
           )}
 
@@ -270,7 +346,7 @@ const AssetBookingFormDialogContent: React.FC<AssetBookingFormDialogContentProps
         <LoadingButton
           variant="contained"
           type="submit"
-          loading={addBooking.isPending || updateBooking.isPending}
+          loading={submitting}
           size="small"
         >
           {dictionary.bookings.form.buttons.save}

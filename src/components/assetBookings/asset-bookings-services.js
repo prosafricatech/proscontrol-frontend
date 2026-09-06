@@ -30,9 +30,9 @@ assetBookingsServices.checkAvailability = async ({ asset_detail_id, start_at, en
   return data;
 };
 
-assetBookingsServices.getLinkableSales = async (stakeholder_id) => {
+assetBookingsServices.getLinkableSales = async (stakeholder_id, cost_center_id, billing_product_id) => {
   const { data } = await axios.get('/api/asset-bookings/linkable-sales', {
-    params: { stakeholder_id },
+    params: { stakeholder_id, cost_center_id, billing_product_id },
   });
   return data;
 };

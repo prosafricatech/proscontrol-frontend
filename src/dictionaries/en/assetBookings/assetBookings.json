@@ -86,10 +86,12 @@
         "endAt": "End",
         "purpose": "Purpose / Notes",
         "rate": "Rate",
-        "currency": "Currency"
+        "currency": "Currency",
+        "linkSale": "Link to Existing Sale"
       },
       "help": {
-        "externalFromSale": "External (customer) bookings are created from a Sale — use \"Attach Asset Booking\" on the Sales Counter."
+        "pickCustomerFirst": "Pick a customer first",
+        "saleMissingBillingProduct": "This sale doesn't appear to include the asset's billing item — double-check it's the right sale before saving."
       },
       "buttons": { "save": "Save", "cancel": "Cancel" },
       "messages": {
@@ -107,6 +109,7 @@
           "bookingType": { "required": "Booking type is required" },
           "costCenterId": { "required": "Cost center is required for internal bookings" },
           "stakeholderId": { "required": "Customer is required for external bookings" },
+          "saleId": { "required": "External bookings must be linked to an existing sale" },
           "startAt": { "required": "Start date/time is required" },
           "endAt": { "required": "End date/time is required", "afterStart": "End must be after start" }
         },

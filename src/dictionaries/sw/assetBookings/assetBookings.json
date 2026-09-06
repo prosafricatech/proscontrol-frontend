@@ -86,10 +86,12 @@
         "endAt": "Malizia",
         "purpose": "Kusudi / Maelezo",
         "rate": "Kiwango",
-        "currency": "Sarafu"
+        "currency": "Sarafu",
+        "linkSale": "Unganisha na Mauzo Yaliyopo"
       },
       "help": {
-        "externalFromSale": "Uhifadhi wa nje (mteja) unatengenezwa kutoka kwa Mauzo — tumia \"Ambatanisha Uhifadhi wa Mali\" kwenye Kaunta ya Mauzo."
+        "pickCustomerFirst": "Chagua mteja kwanza",
+        "saleMissingBillingProduct": "Mauzo haya hayaonekani kuwa na kipengele cha kutoza cha mali hii — hakikisha ni mauzo sahihi kabla ya kuhifadhi."
       },
       "buttons": { "save": "Hifadhi", "cancel": "Ghairi" },
       "messages": {
@@ -107,6 +109,7 @@
           "bookingType": { "required": "Aina ya uhifadhi inahitajika" },
           "costCenterId": { "required": "Kituo cha gharama kinahitajika kwa uhifadhi wa ndani" },
           "stakeholderId": { "required": "Mteja anahitajika kwa uhifadhi wa nje" },
+          "saleId": { "required": "Uhifadhi wa nje lazima uunganishwe na mauzo yaliyopo" },
           "startAt": { "required": "Tarehe/muda wa kuanza unahitajika" },
           "endAt": { "required": "Tarehe/muda wa kumaliza unahitajika", "afterStart": "Muda wa kumaliza lazima uwe baada ya kuanza" }
         },

@@ -107,6 +107,13 @@ const AssetBookingQuickAddForm: React.FC<AssetBookingQuickAddFormProps> = ({
         />
       </Grid>
 
+      {asset && !asset.billing_product_id && (
+        <Grid size={12}>
+          <Alert severity="info">
+            {asset.code} has no billing product mapped — you'll need to add the appropriate item to this sale manually.
+          </Alert>
+        </Grid>
+      )}
       {checkingAvailability && (
         <Grid size={12} display="flex" alignItems="center" gap={1}>
           <CircularProgress size={16} />

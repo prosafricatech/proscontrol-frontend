@@ -6,6 +6,7 @@ import { PERMISSIONS } from '@/utilities/constants/permissions';
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import { LoadingButton } from '@mui/lab';
 import {
+  Alert,
   Autocomplete,
   Button,
   Chip,
@@ -49,8 +50,12 @@ const AssetBookingDetailDialog: React.FC<AssetBookingDetailDialogProps> = ({ boo
   const [selectedSale, setSelectedSale] = useState<any>(null);
 
   const { data: linkableSales = [], isLoading: loadingLinkableSales } = useQuery<any[]>({
-    queryKey: ['assetBookingLinkableSales', booking.stakeholder?.id],
-    queryFn: () => assetBookingsServices.getLinkableSales(booking.stakeholder.id),
+    queryKey: ['assetBookingLinkableSales', booking.stakeholder?.id, booking.asset_detail?.cost_center_id, booking.asset_detail?.billing_product_id],
+    queryFn: () => assetBookingsServices.getLinkableSales(
+      booking.stakeholder.id,
+      booking.asset_detail?.cost_center_id,
+      booking.asset_detail?.billing_product_id
+    ),
     enabled: linkingSale && Boolean(booking.stakeholder?.id),
   });
 
@@ -201,11 +206,25 @@ const AssetBookingDetailDialog: React.FC<AssetBookingDetailDialogProps> = ({ boo
                 onChange={(_, newValue) => setSelectedSale(newValue)}
                 isOptionEqualToValue={(o, v) => o.id === v.id}
                 getOptionLabel={(o: any) => `${o.saleNo} — ${dayjs(o.transaction_date).format('DD MMM YYYY')} — ${Number(o.amount).toLocaleString()}`}
+                renderOption={(props, o: any) => {
+                  const { key, ...rest } = props as any;
+                  return (
+                    <li key={key} {...rest}>
+                      {o.has_billing_product === false ? '⚠️ ' : ''}
+                      {o.saleNo} — {dayjs(o.transaction_date).format('DD MMM YYYY')} — {Number(o.amount).toLocaleString()}
+                    </li>
+                  );
+                }}
                 noOptionsText={loadingLinkableSales ? '...' : dictionary.bookings.linkSaleDialog.noSales}
                 renderInput={(params) => (
                   <TextField {...params} label={dictionary.bookings.linkSaleDialog.saleIdLabel} />
                 )}
               />
+              {selectedSale && selectedSale.has_billing_product === false && (
+                <Alert severity="warning" sx={{ mt: 1 }}>
+                  {dictionary.bookings.form.help.saleMissingBillingProduct}
+                </Alert>
+              )}
             </Grid>
           )}
         </Grid>
