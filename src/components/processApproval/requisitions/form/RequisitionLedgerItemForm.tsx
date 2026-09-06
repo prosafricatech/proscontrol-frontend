@@ -116,8 +116,9 @@ function RequisitionLedgerItemForm({
     currency?: any;
   } | null>(null);
 
-  const { organizationHasSubscribed, checkOrganizationPermission } =
+  const { organizationHasSubscribed, checkOrganizationPermission, authOrganization } =
     useJumboAuth();
+  const deferGrnBilling = !!authOrganization?.organization?.settings?.defer_grn_billing;
 
   const relatableTypes = [
     {
@@ -142,12 +143,24 @@ function RequisitionLedgerItemForm({
   };
 
   const processedRelatableTypes = useMemo(() => {
-    return relatableTypes.filter(
-      (t) =>
-        t.value !== 'subcontract_certificate' ||
-        organizationHasSubscribed(MODULES.PROJECT_MANAGEMENT)
-    );
-  }, [organizationHasSubscribed]);
+    return relatableTypes.filter((t) => {
+      if (t.value === 'subcontract_certificate') {
+        return organizationHasSubscribed(MODULES.PROJECT_MANAGEMENT);
+      }
+      // "Bill" only exists as a concept for orgs that bill their Purchase
+      // Orders/GRNs before paying them — where it applies, it's the
+      // authoritative "amount owed" record, so linking straight to the
+      // order instead would bypass its own paid/unpaid tracking; where it
+      // doesn't apply, "Bill" isn't a real option at all.
+      if (t.value === 'purchase') {
+        return !deferGrnBilling;
+      }
+      if (t.value === 'bill') {
+        return deferGrnBilling;
+      }
+      return true;
+    });
+  }, [organizationHasSubscribed, deferGrnBilling]);
 
   const getEmptyFormValues = () => ({
     ledger_id: null as any,

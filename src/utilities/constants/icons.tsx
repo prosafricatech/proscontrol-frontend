@@ -13,6 +13,7 @@ import {
   AssessmentOutlined,
   AssignmentTurnedInOutlined,
   BusinessCenterOutlined,
+  CalendarMonthOutlined,
   CardMembershipOutlined,
   ChecklistRtlOutlined,
   ContactPage,
@@ -116,6 +117,7 @@ export const ICONS = {
   businessCenter: BusinessCenterOutlined,
   assetRegister: WarehouseOutlined,
   depreciationRuns: TrendingDownOutlined,
+  assetBookings: CalendarMonthOutlined,
 } as const;
 
 export type IconName = keyof typeof ICONS;

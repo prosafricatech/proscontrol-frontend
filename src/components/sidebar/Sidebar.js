@@ -722,6 +722,13 @@ function Sidebar({ menus }) {
                 }
             }
 
+            if (organizationHasSubscribed(MODULES.ASSET_BOOKINGS)) {
+                //Asset Bookings
+                if (checkOrganizationPermission([PERMISSIONS.ASSET_BOOKINGS_READ])) {
+                    updatedMenus = [...updatedMenus, ...menus.filter(menu => menu.label === dictionary.sidebar.menu.assetBookings)];
+                }
+            }
+
             if (organizationHasSubscribed(MODULES.PROCUREMENT_AND_SUPPLY)) {
                 //Procurement & Supply
                 if (checkOrganizationPermission(

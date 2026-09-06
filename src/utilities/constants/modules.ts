@@ -9,4 +9,5 @@ export const MODULES = {
   PROCESS_APPROVAL: 'Process Approval',
   SMS: 'SMS',
   ASSET_REGISTER: 'Asset Register',
+  ASSET_BOOKINGS: 'Asset Bookings',
 };

@@ -20,9 +20,10 @@ import {
   TextField,
   Tooltip,
 } from '@mui/material';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import * as yup from 'yup';
+import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import LedgerSelect from '../ledgers/forms/LedgerSelect';
 import { useLedgerSelect } from '../ledgers/forms/LedgerSelectProvider';
 import QuickAddLedger from '../ledgers/forms/QuickAddLedger';
@@ -44,7 +45,7 @@ type TransactionItem = {
   relatableNo?: string;
 };
 
-const relatableTypeOptions: { value: ItemRelatableType; label: string }[] = [
+const allRelatableTypeOptions: { value: ItemRelatableType; label: string }[] = [
   { value: 'purchase', label: 'Purchase Order' },
   { value: 'bill', label: 'Bill' },
 ];
@@ -102,6 +103,20 @@ const TransactionItemForm: React.FC<TransactionItemFormProps> = ({
 }) => {
   const [isAdding, setIsAdding] = useState(false);
   const { ungroupedLedgerOptions } = useLedgerSelect();
+  const { authOrganization } = useJumboAuth();
+  const deferGrnBilling = !!authOrganization?.organization?.settings?.defer_grn_billing;
+  // "Bill" only exists as a concept for orgs that bill their Purchase
+  // Orders/GRNs before paying them — where it applies, it's the
+  // authoritative "amount owed" record, so linking a payment straight to
+  // the order instead would bypass its own paid/unpaid tracking; where it
+  // doesn't apply, "Bill" isn't a real option at all.
+  const relatableTypeOptions = useMemo(
+    () =>
+      allRelatableTypeOptions.filter((opt) =>
+        deferGrnBilling ? opt.value !== 'purchase' : opt.value !== 'bill'
+      ),
+    [deferGrnBilling]
+  );
   const [openLedgerQuickAdd, setOpenLedgerQuickAdd] = useState(false);
   const [ledgerType, setLedgerType] = useState<'debit' | 'credit'>('credit');
   const [addedLedger, setAddedLedger] = useState<Ledger | null>(null);

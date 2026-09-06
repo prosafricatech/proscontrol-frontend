@@ -3,9 +3,11 @@ import { Currency } from '@/components/masters/Currencies/CurrencyType';
 import { Stakeholder } from '@/components/masters/stakeholders/StakeholderType';
 import { Organization } from '@/types/auth-types';
 import {
+  Alert,
   Box,
   Divider,
   Grid,
+  LinearProgress,
   Paper,
   Table,
   TableBody,
@@ -46,6 +48,7 @@ interface SaleItem {
 }
 
 interface Sale {
+  id: number;
   saleNo: string;
   reference?: string;
   transaction_date: string;
@@ -60,14 +63,31 @@ interface Sale {
   currency: Currency;
 }
 
+interface SaleReceipt {
+  id: number;
+  voucherNo: string;
+  transaction_date: string;
+  narration?: string;
+  debit_ledger?: {
+    name: string;
+  };
+  amount: number;
+}
+
 interface SalePreviewOnscreenProps {
   sale: Sale;
   organization: Organization;
+  showStatement?: boolean;
+  saleReceipts?: SaleReceipt[];
+  isLoadingStatement?: boolean;
 }
 
 const SalePreviewOnscreen: React.FC<SalePreviewOnscreenProps> = ({
   sale,
   organization,
+  showStatement = false,
+  saleReceipts,
+  isLoadingStatement = false,
 }) => {
   const theme = useTheme();
   const currencyCode = sale.currency?.code;
@@ -95,6 +115,12 @@ const SalePreviewOnscreen: React.FC<SalePreviewOnscreenProps> = ({
   };
 
   const grandTotal = sale.amount + sale.vat_amount;
+
+  let runningBalance = grandTotal;
+  const statementRows = (saleReceipts || []).map((receipt: SaleReceipt) => {
+    runningBalance -= receipt.amount;
+    return { ...receipt, balance: runningBalance };
+  });
 
   return (
     <Box sx={{ padding: 2 }}>
@@ -502,6 +528,126 @@ const SalePreviewOnscreen: React.FC<SalePreviewOnscreenProps> = ({
           )}
         </Grid>
       </Box>
+
+      {/* Order Statement Section */}
+      {showStatement && (
+        <Box sx={{ mt: 3 }}>
+          <Typography
+            variant='subtitle1'
+            color={headerColor}
+            fontWeight='bold'
+            gutterBottom
+          >
+            ORDER STATEMENT
+          </Typography>
+          {isLoadingStatement && <LinearProgress />}
+          {!isLoadingStatement && statementRows.length === 0 && (
+            <Alert variant='outlined' severity='info'>
+              No Receipts Found
+            </Alert>
+          )}
+          {!isLoadingStatement && statementRows.length > 0 && (
+            <TableContainer
+              component={Paper}
+              sx={{ boxShadow: theme.shadows[2] }}
+            >
+              <Table size='small'>
+                <TableHead>
+                  <TableRow>
+                    <TableCell
+                      sx={{
+                        backgroundColor: mainColor,
+                        color: contrastText,
+                        fontSize: '0.875rem',
+                      }}
+                    >
+                      Date
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        backgroundColor: mainColor,
+                        color: contrastText,
+                        fontSize: '0.875rem',
+                      }}
+                    >
+                      Receipt No.
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        backgroundColor: mainColor,
+                        color: contrastText,
+                        fontSize: '0.875rem',
+                      }}
+                    >
+                      Received In
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        backgroundColor: mainColor,
+                        color: contrastText,
+                        fontSize: '0.875rem',
+                      }}
+                    >
+                      Narration
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        backgroundColor: mainColor,
+                        color: contrastText,
+                        fontSize: '0.875rem',
+                      }}
+                      align='right'
+                    >
+                      Amount Received
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        backgroundColor: mainColor,
+                        color: contrastText,
+                        fontSize: '0.875rem',
+                      }}
+                      align='right'
+                    >
+                      Balance
+                    </TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  <TableRow>
+                    <TableCell colSpan={5}>
+                      <Typography variant='body2' fontStyle='italic'>
+                        Order Amount
+                      </Typography>
+                    </TableCell>
+                    <TableCell
+                      align='right'
+                      sx={{ fontFamily: 'monospace' }}
+                    >
+                      {formatCurrency(grandTotal)}
+                    </TableCell>
+                  </TableRow>
+                  {statementRows.map((row: SaleReceipt & { balance: number }) => (
+                    <TableRow key={row.id}>
+                      <TableCell>
+                        {readableDate(row.transaction_date)}
+                      </TableCell>
+                      <TableCell>{row.voucherNo}</TableCell>
+                      <TableCell>{row.debit_ledger?.name || 'N/A'}</TableCell>
+                      <TableCell>{row.narration || 'N/A'}</TableCell>
+                      <TableCell align='right' sx={{ fontFamily: 'monospace' }}>
+                        {formatCurrency(row.amount)}
+                      </TableCell>
+                      <TableCell align='right' sx={{ fontFamily: 'monospace' }}>
+                        {formatCurrency(row.balance)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </Box>
+      )}
     </Box>
   );
 };

@@ -264,4 +264,11 @@ export const PERMISSIONS = {
   ASSETS_SETUP: 'Assets:Setup',
   ASSETS_DEPRECIATE: 'Assets:Depreciate',
   ASSETS_DISPOSE: 'Assets:Dispose',
+  // Asset Bookings
+  ASSET_BOOKINGS_READ: 'AssetBookings:Read',
+  ASSET_BOOKINGS_CREATE: 'AssetBookings:Create',
+  ASSET_BOOKINGS_EDIT: 'AssetBookings:Edit',
+  ASSET_BOOKINGS_DELETE: 'AssetBookings:Delete',
+  ASSET_BOOKINGS_CONFIRM: 'AssetBookings:Confirm',
+  ASSET_BOOKINGS_CANCEL: 'AssetBookings:Cancel',
 };

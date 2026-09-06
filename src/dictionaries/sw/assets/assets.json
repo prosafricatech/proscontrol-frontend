@@ -123,7 +123,9 @@
         "costCenter": "Kituo cha Gharama",
         "status": "Hali",
         "postJournal": "Weka jarida la ubadilishaji mtaji",
-        "creditLedger": "Daftari la Kukopeshwa"
+        "creditLedger": "Daftari la Kukopeshwa",
+        "isBookable": "Inaweza Kuhifadhiwa",
+        "billingProduct": "Bidhaa ya Kutoza"
       },
       "methods": {
         "straight_line": "Mstari Ulionyooka",
@@ -132,7 +134,9 @@
       },
       "help": {
         "postJournal": "Inaandika deni kwenye daftari la mali la kategoria kwa gharama ya ununuzi. Acha bila kuchagua iwapo gharama tayari ipo kwenye madaftari yako.",
-        "financialsLocked": "Uchakavu tayari umetozwa kwa mali hii — gharama na masharti ya uchakavu hayawezi kuhaririwa tena."
+        "financialsLocked": "Uchakavu tayari umetozwa kwa mali hii — gharama na masharti ya uchakavu hayawezi kuhaririwa tena.",
+        "isBookable": "Inafanya mali hii ichaguliwe kwenye kalenda ya Uhifadhi wa Mali.",
+        "billingProduct": "Bidhaa/huduma inayoongezwa kwenye mauzo wakati uhifadhi wa mali hii unapotozwa (mfano \"Hall Charges\"). Si lazima — acha wazi ili kuichagua mwenyewe kila wakati."
       },
       "buttons": { "save": "Hifadhi", "cancel": "Ghairi", "activate": "Amilisha" },
       "messages": {

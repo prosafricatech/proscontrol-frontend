@@ -17,7 +17,8 @@
       "manufacturing": "Manufacturing",
       "measurement_units": "Measurement Units",
       "humanResources": "Human Resources",
-      "fixedAssets": "Asset Register"
+      "fixedAssets": "Asset Register",
+      "assetBookings": "Asset Bookings"
     },
     "menuItem": {
       "masters": "Masters",
@@ -100,7 +101,8 @@
       "assetRegister": "Register",
       "depreciationRuns": "Depreciation Runs",
       "assetGlMappings": "GL Mappings",
-      "assetReports": "Reports"
+      "assetReports": "Reports",
+      "assetBookings": "Bookings"
     }
   },
 

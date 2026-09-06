@@ -350,6 +350,18 @@ export async function getMenus(locale: string) {
       ],
     },
     {
+      label: sidebar.menu.assetBookings,
+      type: 'section',
+      children: [
+        {
+          uri: `/${locale}/asset-bookings`,
+          label: sidebar.menuItem.assetBookings,
+          type: 'nav-item',
+          icon: icon('assetBookings'),
+        },
+      ],
+    },
+    {
       label: sidebar.menu.procurementAndSupply,
       type: 'section',
       children: [

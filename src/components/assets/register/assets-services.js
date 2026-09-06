@@ -58,4 +58,9 @@ assetsServices.bulkImport = async (formData) => {
   return data;
 };
 
+assetsServices.convertFromStock = async (payload) => {
+  const { data } = await axios.post('/api/assets/convert-from-stock', payload);
+  return data;
+};
+
 export default assetsServices;

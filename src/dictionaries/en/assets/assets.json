@@ -123,7 +123,9 @@
         "costCenter": "Cost Center",
         "status": "Status",
         "postJournal": "Post a capitalization journal",
-        "creditLedger": "Credit Ledger"
+        "creditLedger": "Credit Ledger",
+        "isBookable": "Bookable",
+        "billingProduct": "Billing Product"
       },
       "methods": {
         "straight_line": "Straight Line",
@@ -132,7 +134,9 @@
       },
       "help": {
         "postJournal": "Debits the category's asset ledger for the acquisition cost. Leave off if the cost already sits in your ledgers.",
-        "financialsLocked": "Depreciation has already been charged for this asset — cost and depreciation terms can no longer be edited."
+        "financialsLocked": "Depreciation has already been charged for this asset — cost and depreciation terms can no longer be edited.",
+        "isBookable": "Makes this asset selectable on the Asset Bookings calendar.",
+        "billingProduct": "The service/product added to the sale when this asset's booking is billed (e.g. \"Hall Charges\"). Optional — leave blank to pick it manually each time."
       },
       "buttons": { "save": "Save", "cancel": "Cancel", "activate": "Activate" },
       "messages": {

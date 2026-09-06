@@ -64,11 +64,18 @@ const DocumentDialogContent: React.FC<DocumentDialogContentProps> = ({
 }) => {
   const [thermalPrinter, setThermalPrinter] = useState(false);
   const [showOnScreen, setShowOnScreen] = useState(true);
+  const [showStatement, setShowStatement] = useState(false);
   const [pdfKey, setPdfKey] = useState(0); // Force remount when changing format
 
   const { data: sale, isFetching } = useQuery({
     queryKey: ['sale', { id: saleId }],
     queryFn: () => posServices.saleDetails(saleId),
+  });
+
+  const { data: saleReceipts, isLoading: isLoadingStatement } = useQuery({
+    queryKey: ['SaleReceipts', { saleId }],
+    queryFn: () => posServices.saleReceipts(saleId),
+    enabled: !!showStatement,
   });
 
   const handleThermalToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -106,9 +113,29 @@ const DocumentDialogContent: React.FC<DocumentDialogContentProps> = ({
       {/* )} */}
 
       <DialogContent dividers>
+        <Box
+          display='flex'
+          justifyContent='flex-end'
+          alignItems='center'
+          mb={2}
+        >
+          <Typography variant='body2'>Order Statement</Typography>
+          <Switch
+            checked={showStatement}
+            onChange={(e) => setShowStatement(e.target.checked)}
+            color='primary'
+            sx={{ mx: 1 }}
+          />
+        </Box>
         {showOnScreen ? (
           <Suspense fallback={<BackdropSpinner />}>
-            <SalePreviewOnscreen organization={organization} sale={sale} />
+            <SalePreviewOnscreen
+              organization={organization}
+              sale={sale}
+              showStatement={showStatement}
+              saleReceipts={saleReceipts}
+              isLoadingStatement={isLoadingStatement}
+            />
           </Suspense>
         ) : (
           <Box sx={{ minHeight: '300px' }}>
@@ -130,13 +157,15 @@ const DocumentDialogContent: React.FC<DocumentDialogContentProps> = ({
 
             <Suspense fallback={<BackdropSpinner />}>
               <PDFContent
-                key={`pdf-${pdfKey}`}
+                key={`pdf-${pdfKey}-${showStatement}`}
                 fileName={`${sale.saleNo}_${thermalPrinter ? '80mm' : 'A4'}`}
                 document={
                   <SalePDF
                     thermalPrinter={thermalPrinter}
                     organization={organization}
                     sale={sale}
+                    showStatement={showStatement}
+                    saleReceipts={saleReceipts}
                   />
                 }
               />
