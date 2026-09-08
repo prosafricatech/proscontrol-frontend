@@ -867,12 +867,24 @@ const SalarySheetDialog = ({
                                       }}
                                     >
                                       {fmt(
-                                        employeeAllowance.find(
-                                          (itm) =>
-                                            itm.employee_contract_id ===
-                                              entry.run.employee?.id &&
-                                            itm.label === type.label
-                                        )?.amount ?? 0
+                                        // Summed, not .find() — an employee
+                                        // can have more than one row under
+                                        // the same label (e.g. a per-type
+                                        // system line), and each should add
+                                        // to this column rather than the
+                                        // first one silently hiding the rest.
+                                        employeeAllowance
+                                          .filter(
+                                            (itm) =>
+                                              itm.employee_contract_id ===
+                                                entry.run.employee?.id &&
+                                              itm.label === type.label
+                                          )
+                                          .reduce(
+                                            (sum, itm) =>
+                                              sum + (itm.amount || 0),
+                                            0
+                                          )
                                       )}
                                     </TableCell>
                                   )
@@ -911,12 +923,25 @@ const SalarySheetDialog = ({
                                       }}
                                     >
                                       {fmt(
-                                        employeeDeductions.find(
-                                          (itm) =>
-                                            itm.employee_contract_id ===
-                                              entry.run.employee?.id &&
-                                            itm.label === type.label
-                                        )?.amount ?? 0
+                                        // Summed, not .find() — e.g. two
+                                        // concurrent staff loans both post
+                                        // under the same "Staff Loan
+                                        // Repayment" DeductionType/label, so
+                                        // both installments must add into
+                                        // this one column rather than only
+                                        // the first loan's amount showing.
+                                        employeeDeductions
+                                          .filter(
+                                            (itm) =>
+                                              itm.employee_contract_id ===
+                                                entry.run.employee?.id &&
+                                              itm.label === type.label
+                                          )
+                                          .reduce(
+                                            (sum, itm) =>
+                                              sum + (itm.amount || 0),
+                                            0
+                                          )
                                       )}
                                     </TableCell>
                                   )
@@ -966,14 +991,23 @@ const SalarySheetDialog = ({
                                       }}
                                     >
                                       {fmt(
-                                        employeecontributions.find(
-                                          (itm) =>
-                                            itm.employee_contract_id ===
-                                              entry.run.employee?.id &&
-                                            (itm.label === type.label ||
-                                              itm.employer_contribution_type_id ===
-                                                type.employer_contribution_type_id)
-                                        )?.amount ?? 0
+                                        // Summed, not .find() — same reason
+                                        // as the allowance/deduction cells
+                                        // above.
+                                        employeecontributions
+                                          .filter(
+                                            (itm) =>
+                                              itm.employee_contract_id ===
+                                                entry.run.employee?.id &&
+                                              (itm.label === type.label ||
+                                                itm.employer_contribution_type_id ===
+                                                  type.employer_contribution_type_id)
+                                          )
+                                          .reduce(
+                                            (sum, itm) =>
+                                              sum + (itm.amount || 0),
+                                            0
+                                          )
                                       )}
                                     </TableCell>
                                   )

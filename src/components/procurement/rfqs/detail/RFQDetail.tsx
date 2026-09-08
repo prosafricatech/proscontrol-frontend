@@ -687,6 +687,7 @@ function RFQDetail({ rfqId: rfqIdProp }: RFQDetailProps) {
               isAwarding={false}
               rfqDetails={rfq}
               onAward={handleAward}
+              canAward={checkOrganizationPermission(PERMISSIONS.PURCHASES_CREATE)}
             />
           )}
         </Box>

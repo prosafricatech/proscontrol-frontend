@@ -54,6 +54,9 @@ interface RqListProps {
 const CounterSalesActionTail = React.lazy(
   () => import('./CounterSalesActionTail')
 );
+const ProductSalesReportDialog = React.lazy(
+  () => import('./ProductSalesReportDialog')
+);
 
 const RqList: React.FC<RqListProps> = ({ activeCounter }) => {
   const [openFilters, setOpenFilters] = useState(false);
@@ -191,7 +194,8 @@ const RqList: React.FC<RqListProps> = ({ activeCounter }) => {
                           />
                         </Grid>
                         <Grid
-                          size={{ xs: 1.5, md: 1, lg: 0.5 }}
+                          size={{ xs: 12, md: 1, lg: 0.5 }}
+                          textAlign={{ xs: 'right', md: 'left' }}
                           alignContent={'end'}
                         >
                           <Tooltip title='Filter Dates'>
@@ -213,8 +217,17 @@ const RqList: React.FC<RqListProps> = ({ activeCounter }) => {
                         </Grid>
                       </>
                     )}
+                    {checkOrganizationPermission(
+                      PERMISSIONS.SALES_REPORTS
+                    ) && (
+                      <Grid size={{ xs: 2, lg: 0.5 }}>
+                        <React.Suspense fallback={null}>
+                          <ProductSalesReportDialog />
+                        </React.Suspense>
+                      </Grid>
+                    )}
                     <Grid
-                      size={{ xs: 10.5, md: 11, lg: 2 }}
+                      size={{ xs: 9, md: 11, lg: 2 }}
                       alignItems={'center'}
                     >
                       <CounterSalesStatusSelector

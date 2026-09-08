@@ -38,10 +38,10 @@ function SaleTopInformation({
   setStakeholderQuickAddDisplay,
   setCheckedForInstantSale,
   setValue,
-  watch, 
-  errors, 
-  clearErrors, 
-  register
+  watch,
+  errors,
+  clearErrors,
+  register,
 }) {
   const wc = { id: null, name: 'Walk-in Customer' };
   const [transaction_date] = useState(

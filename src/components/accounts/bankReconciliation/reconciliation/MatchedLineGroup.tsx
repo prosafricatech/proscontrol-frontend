@@ -6,11 +6,14 @@ import { LinkOffOutlined } from '@mui/icons-material';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSnackbar } from 'notistack';
 import bankReconciliationServices from '../bank-reconciliation-services';
+import { descriptionIncludesVoucher } from './journal-display';
 
 interface Journal {
   id: number;
   journal_date: string;
   description: string;
+  voucher_no?: string | null;
+  counterparty?: string | null;
   credit_ledger?: { name: string };
   debit_ledger?: { name: string };
 }
@@ -96,10 +99,15 @@ export default function MatchedLineGroup({ bankAccountId, matchedLine }: Props) 
         {matches.map((match) => (
           <Grid container spacing={1} alignItems='center' key={match.id} sx={{ py: 0.5 }}>
             <Grid size={{ xs: 12, md: 6 }}>
-              <Typography variant='caption' color='text.secondary'>Book Entry</Typography>
+              <Typography variant='caption' color='text.secondary'>
+                Book Entry{!descriptionIncludesVoucher(match.journal) && match.journal.voucher_no ? ` — ${match.journal.voucher_no}` : ''}
+              </Typography>
               <Typography variant='body2'>
                 {new Date(match.journal.journal_date).toLocaleDateString()} — {match.journal.description}
               </Typography>
+              {match.journal.counterparty && (
+                <Typography variant='caption' color='text.secondary'>{match.journal.counterparty}</Typography>
+              )}
             </Grid>
             <Grid size={{ xs: 8, md: 4 }}>
               <Typography variant='body2' fontWeight={600}>{formatAmount(match.matched_amount)}</Typography>

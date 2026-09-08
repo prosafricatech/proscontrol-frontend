@@ -340,9 +340,10 @@ function StockReport({ setOpenDialog, isFromDashboard }) {
   const belowLargeScreen = useMediaQuery(theme.breakpoints.down('lg'));
 
   const { checkOrganizationPermission } = useJumboAuth();
-  const hasPermissionToView = checkOrganizationPermission(
-    PERMISSIONS.ACCOUNTS_REPORTS
-  );
+  const hasPermissionToView = checkOrganizationPermission([
+    PERMISSIONS.ACCOUNTS_REPORTS,
+    PERMISSIONS.STORE_VALUES,
+  ]);
   const [includeChildren, setIncludeChildren] = useState(true);
   const [withDetails, setWithDetails] = useState(false);
 

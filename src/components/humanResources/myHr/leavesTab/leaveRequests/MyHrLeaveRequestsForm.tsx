@@ -19,10 +19,11 @@ import { DateTimePicker } from '@mui/x-date-pickers';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 import { useSnackbar } from 'notistack';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import humanResourcesServices from '../../../humanResourcesServices';
+import { computeLeaveDays } from '../../../leaveTypes/leaveDayCount';
 import { LeaveType } from '../../../leaveTypes/LeaveTypesType';
 
 interface LeaveRequestFormProps {
@@ -171,26 +172,72 @@ const MyHrLeaveRequestsForm = ({
     return leaveRequest?.id ? updateLeaveRequest : addLeaveRequest;
   }, [leaveRequest?.id, updateLeaveRequest, addLeaveRequest]);
 
+  const watchedLeaveTypeId = watch('leave_type_id');
   const watchedStartDate = watch('start_date');
   const watchedEndDate = watch('end_date');
   const watchedDaysRequested = watch('days_requested');
 
-  // Calendar span between the picked dates — purely informational, since a
-  // shorter days_requested is often correct (weekends/holidays excluded).
-  const dateSpanDays = useMemo(() => {
-    if (!watchedStartDate || !watchedEndDate) return null;
-    const start = dayjs(watchedStartDate).startOf('day');
-    const end = dayjs(watchedEndDate).startOf('day');
-    if (!start.isValid() || !end.isValid()) return null;
-    const diff = end.diff(start, 'day') + 1;
-    return diff > 0 ? diff : null;
-  }, [watchedStartDate, watchedEndDate]);
+  const selectedLeaveType = useMemo(
+    () => leaveTypes.find((type) => type.id === watchedLeaveTypeId),
+    [leaveTypes, watchedLeaveTypeId]
+  );
+
+  // What days_requested actually should be for the picked type/dates — a
+  // plain calendar span, or with Saturday/Sunday excluded per whatever this
+  // leave type's own convention is (LeaveType.excludes_saturday/excludes_sunday).
+  const computedDays = useMemo(
+    () =>
+      computeLeaveDays(
+        watchedStartDate,
+        watchedEndDate,
+        !!selectedLeaveType?.excludes_saturday,
+        !!selectedLeaveType?.excludes_sunday
+      ),
+    [
+      watchedStartDate,
+      watchedEndDate,
+      selectedLeaveType?.excludes_saturday,
+      selectedLeaveType?.excludes_sunday,
+    ]
+  );
+
+  // Auto-fills days_requested whenever the type or dates actually change —
+  // skips the render right after reset() (opening the dialog, or switching
+  // which leaveRequest is being edited) so an existing request's stored
+  // days_requested isn't silently overwritten just from being opened; only
+  // a real edit to type/dates recomputes it. The user can still hand-edit
+  // the field afterward — that only gets reset if type/dates change again.
+  const skipNextAutoDays = useRef(true);
+  useEffect(() => {
+    skipNextAutoDays.current = true;
+  }, [leaveRequest]);
+  useEffect(() => {
+    if (skipNextAutoDays.current) {
+      skipNextAutoDays.current = false;
+      return;
+    }
+    if (computedDays !== null) {
+      setValue('days_requested', computedDays, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+    }
+  }, [computedDays, setValue]);
+
+  const excludedDaysLabel = [
+    selectedLeaveType?.excludes_saturday && 'Saturdays',
+    selectedLeaveType?.excludes_sunday && 'Sundays',
+  ]
+    .filter(Boolean)
+    .join(' and ');
 
   const daysRequestedHint =
-    dateSpanDays === null
+    computedDays === null
       ? undefined
-      : `${dateSpanDays} calendar day${dateSpanDays === 1 ? '' : 's'} between selected dates${
-          Number(watchedDaysRequested) !== dateSpanDays
+      : `${computedDays} day${computedDays === 1 ? '' : 's'}${
+          excludedDaysLabel ? ` (${excludedDaysLabel} excluded)` : ''
+        } between selected dates${
+          Number(watchedDaysRequested) !== computedDays
             ? ' — differs from days requested'
             : ' — matches days requested'
         }`;
@@ -284,8 +331,8 @@ const MyHrLeaveRequestsForm = ({
                       sx: {
                         color:
                           !errors?.days_requested &&
-                          dateSpanDays !== null &&
-                          Number(watchedDaysRequested) !== dateSpanDays
+                          computedDays !== null &&
+                          Number(watchedDaysRequested) !== computedDays
                             ? 'warning.main'
                             : undefined,
                       },

@@ -19,3 +19,16 @@ export async function GET(request: NextRequest) {
 
   return handleJsonResponse(res);
 }
+
+export async function DELETE(request: NextRequest) {
+  const { headers, response } = await getAuthHeaders(request);
+  if (response) return response;
+
+  const res = await fetch(`${API_BASE}/notifications`, {
+    method: 'DELETE',
+    headers,
+    credentials: 'include',
+  });
+
+  return handleJsonResponse(res);
+}

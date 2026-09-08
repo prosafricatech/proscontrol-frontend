@@ -5,16 +5,20 @@ import { LoadingButton } from '@mui/lab';
 import {
   Button,
   Checkbox,
+  ClickAwayListener,
   DialogActions,
   DialogContent,
   DialogTitle,
   FormControlLabel,
   Grid,
   MenuItem,
+  Stack,
   TextField,
+  Tooltip,
   Typography,
   Alert,
 } from '@mui/material';
+import { InfoOutlined } from '@mui/icons-material';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSnackbar } from 'notistack';
 import React, { useState } from 'react';
@@ -36,6 +40,33 @@ import assetsServices from './assets-services';
 
 const METHODS = ['straight_line', 'reducing_balance', 'none'];
 
+// Click-to-show help, matching the info-icon pattern used on Payroll forms —
+// better than hover for touch devices, and keeps the help text out of the
+// layout until someone actually asks for it.
+const InfoTooltip: React.FC<{ text: string }> = ({ text }) => {
+  const [open, setOpen] = useState(false);
+  return (
+    <ClickAwayListener onClickAway={() => setOpen(false)}>
+      <Tooltip
+        title={text}
+        open={open}
+        onClose={() => setOpen(false)}
+        disableFocusListener
+        disableHoverListener
+        disableTouchListener
+        arrow
+      >
+        <InfoOutlined
+          fontSize="small"
+          color="action"
+          sx={{ cursor: 'pointer', verticalAlign: 'middle' }}
+          onClick={() => setOpen((o) => !o)}
+        />
+      </Tooltip>
+    </ClickAwayListener>
+  );
+};
+
 interface AssetFormDialogContentProps {
   onClose: () => void;
   asset?: any;
@@ -54,6 +85,7 @@ const AssetFormDialogContent: React.FC<AssetFormDialogContentProps> = ({
   const assetProducts = productOptions.filter((p: any) => p.type === 'Asset');
   const { organizationHasSubscribed, authOrganization } = useJumboAuth();
   const hrSubscribed = organizationHasSubscribed(MODULES.HUMAN_RESOURCES);
+  const bookingsSubscribed = organizationHasSubscribed(MODULES.ASSET_BOOKINGS);
   const multiCostCenters = authOrganization?.costCenters?.length > 1;
 
   const hasDepreciationHistory = mode === 'edit' && Boolean(asset?.latest_depreciation_entry || asset?.depreciation_entries?.length);
@@ -125,6 +157,8 @@ const AssetFormDialogContent: React.FC<AssetFormDialogContentProps> = ({
     current_store_id: yup.number().nullable(),
     current_custodian_id: yup.number().nullable(),
     cost_center_id: yup.number().nullable(),
+    is_bookable: yup.boolean().nullable(),
+    billing_product_id: yup.number().nullable(),
     remarks: yup.string().nullable(),
     credit_ledger_id: yup.number().nullable()
       .when('$postJournal', {
@@ -161,6 +195,8 @@ const AssetFormDialogContent: React.FC<AssetFormDialogContentProps> = ({
       current_store_id: asset?.current_store_id ?? null,
       current_custodian_id: asset?.current_custodian_id ?? null,
       cost_center_id: asset?.cost_center_id ?? null,
+      is_bookable: asset?.is_bookable ?? false,
+      billing_product_id: asset?.billing_product_id ?? null,
       status: asset?.status && asset.status !== 'draft' ? asset.status : 'active',
       credit_ledger_id: null,
     },
@@ -198,6 +234,7 @@ const AssetFormDialogContent: React.FC<AssetFormDialogContentProps> = ({
                 <ProductSelect
                   label={dictionary.register.form.labels.product}
                   disabled={mode === 'edit'}
+                  allowedTypes={['Asset']}
                   defaultValue={assetProducts.find((p: any) => p.id === asset?.product_item?.product?.id) || null}
                   onChange={(newValue: any) => {
                     setValue('product_id', newValue ? newValue.id : null, { shouldValidate: true, shouldDirty: true });
@@ -409,6 +446,33 @@ const AssetFormDialogContent: React.FC<AssetFormDialogContentProps> = ({
                 multiple={false}
                 defaultValue={asset?.cost_center ?? null}
                 onChange={(newValue: any) => setValue('cost_center_id', newValue && !Array.isArray(newValue) ? newValue.id : null)}
+              />
+            </Grid>
+          )}
+          {bookingsSubscribed && (
+            <Grid size={12}>
+              <Stack direction="row" alignItems="center" spacing={0.5}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={Boolean(watch('is_bookable'))}
+                      onChange={(e) => setValue('is_bookable', e.target.checked, { shouldDirty: true })}
+                    />
+                  }
+                  label={dictionary.register.form.labels.isBookable}
+                />
+                <InfoTooltip text={dictionary.register.form.help.isBookable} />
+              </Stack>
+            </Grid>
+          )}
+          {bookingsSubscribed && Boolean(watch('is_bookable')) && (
+            <Grid size={{ xs: 12, md: 6 }}>
+              <ProductSelect
+                label={dictionary.register.form.labels.billingProduct}
+                allowedTypes={['Service', 'Non-Inventory']}
+                defaultValue={asset?.billing_product ?? null}
+                startAdornment={<InfoTooltip text={dictionary.register.form.help.billingProduct} />}
+                onChange={(newValue: any) => setValue('billing_product_id', newValue && !Array.isArray(newValue) ? newValue.id : null)}
               />
             </Grid>
           )}

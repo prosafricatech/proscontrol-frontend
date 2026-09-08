@@ -1,0 +1,102 @@
+/* react-big-calendar's default stylesheet hardcodes light-mode colors
+ * (#373a3c text, #ddd borders, #fff popups) with no dark-mode awareness.
+ * These overrides only apply inside .pros-rbc-dark, which the calendar
+ * component adds when the MUI theme is in dark mode. */
+
+.pros-rbc-dark .rbc-off-range {
+  color: rgba(255, 255, 255, 0.3);
+}
+.pros-rbc-dark .rbc-off-range-bg {
+  background: rgba(255, 255, 255, 0.04);
+}
+.pros-rbc-dark .rbc-header {
+  color: rgba(255, 255, 255, 0.85);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+.pros-rbc-dark .rbc-header + .rbc-header,
+.pros-rbc-dark .rbc-rtl .rbc-header + .rbc-header {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+.pros-rbc-dark .rbc-month-view,
+.pros-rbc-dark .rbc-time-view,
+.pros-rbc-dark .rbc-agenda-view table.rbc-agenda-table {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+.pros-rbc-dark .rbc-day-bg,
+.pros-rbc-dark .rbc-day-bg + .rbc-day-bg,
+.pros-rbc-dark .rbc-month-row + .rbc-month-row,
+.pros-rbc-dark .rbc-date-cell {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.pros-rbc-dark .rbc-date-cell {
+  color: rgba(255, 255, 255, 0.85);
+}
+.pros-rbc-dark .rbc-date-cell.rbc-now {
+  color: #90caf9;
+  font-weight: 700;
+}
+.pros-rbc-dark .rbc-today {
+  background-color: rgba(144, 202, 249, 0.12);
+}
+.pros-rbc-dark .rbc-toolbar-label {
+  color: rgba(255, 255, 255, 0.9);
+}
+.pros-rbc-dark .rbc-toolbar button {
+  color: rgba(255, 255, 255, 0.85) !important;
+  border-color: rgba(255, 255, 255, 0.24) !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+.pros-rbc-dark .rbc-toolbar button:hover,
+.pros-rbc-dark .rbc-toolbar button:focus {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  color: #fff !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+}
+.pros-rbc-dark .rbc-toolbar button:active,
+.pros-rbc-dark .rbc-toolbar button.rbc-active,
+.pros-rbc-dark .rbc-toolbar button:active:hover,
+.pros-rbc-dark .rbc-toolbar button:active:focus,
+.pros-rbc-dark .rbc-toolbar button.rbc-active:hover,
+.pros-rbc-dark .rbc-toolbar button.rbc-active:focus {
+  background-color: rgba(255, 255, 255, 0.18) !important;
+  color: #fff !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+}
+.pros-rbc-dark .rbc-agenda-view table.rbc-agenda-table thead > tr > th {
+  color: rgba(255, 255, 255, 0.85);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+.pros-rbc-dark .rbc-agenda-view table.rbc-agenda-table tbody > tr > td {
+  border-color: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.85);
+}
+.pros-rbc-dark .rbc-agenda-time-cell {
+  color: rgba(255, 255, 255, 0.7);
+}
+.pros-rbc-dark .rbc-time-header,
+.pros-rbc-dark .rbc-time-content,
+.pros-rbc-dark .rbc-time-gutter,
+.pros-rbc-dark .rbc-timeslot-group,
+.pros-rbc-dark .rbc-time-slot,
+.pros-rbc-dark .rbc-time-header-content,
+.pros-rbc-dark .rbc-time-header-cell-single-day {
+  border-color: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.7);
+}
+.pros-rbc-dark .rbc-show-more {
+  color: #90caf9;
+  background: transparent;
+}
+.pros-rbc-dark .rbc-overlay {
+  background-color: #1e1e1e;
+  border-color: rgba(255, 255, 255, 0.16);
+  color: rgba(255, 255, 255, 0.85);
+}
+.pros-rbc-dark .rbc-overlay-header {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+.pros-rbc-dark .rbc-selected-cell {
+  background-color: rgba(255, 255, 255, 0.08);
+}

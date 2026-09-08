@@ -547,7 +547,14 @@ const DeductionTypeForm = ({
                     allowedGroups={
                       isStaffLoanRepayment
                         ? ['Current Assets']
-                        : ['Current Liabilities']
+                        : isAbsenceDeduction
+                          ? ['Current Liabilities']
+                          // Plain "Payable Ledger" — most deductions post to a
+                          // liability (money owed to a third party), but some
+                          // organizations route a deduction straight to an
+                          // asset ledger instead (e.g. a clearing/suspense
+                          // account), so both groups are offered here.
+                          : ['Current Liabilities', 'Current Assets']
                     }
                     frontError={errors.payable_ledger_id}
                     key={

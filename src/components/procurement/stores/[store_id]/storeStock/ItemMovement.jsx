@@ -881,6 +881,7 @@ function ItemMovement({ productStock = null, toggleOpen, isFromDashboard }) {
 
   const financePersonnel = checkOrganizationPermission([
     PERMISSIONS.ACCOUNTS_REPORTS,
+    PERMISSIONS.STORE_VALUES,
   ]);
 
   //Screen handling constants

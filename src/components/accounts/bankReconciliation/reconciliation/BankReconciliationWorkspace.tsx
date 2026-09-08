@@ -14,10 +14,11 @@ import {
   Typography,
   useMediaQuery,
 } from '@mui/material';
-import { CheckCircleOutlined, UploadOutlined } from '@mui/icons-material';
+import { CheckCircleOutlined, DeleteOutlined, UploadOutlined } from '@mui/icons-material';
 import { LoadingButton } from '@mui/lab';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSnackbar } from 'notistack';
+import { useJumboDialog } from '@jumbo/components/JumboDialog/hooks/useJumboDialog';
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import { PERMISSIONS } from '@/utilities/constants/permissions';
 import { useJumboTheme } from '@jumbo/components/JumboTheme/hooks';
@@ -38,6 +39,7 @@ const formatAmount = (amount: number) =>
 export default function BankReconciliationWorkspace({ bankAccountId }: Props) {
   const { enqueueSnackbar } = useSnackbar();
   const queryClient = useQueryClient();
+  const { showDialog, hideDialog } = useJumboDialog();
   const { checkOrganizationPermission } = useJumboAuth();
   const { theme } = useJumboTheme();
   const belowLargeScreen = useMediaQuery(theme.breakpoints.down('lg'));
@@ -60,14 +62,42 @@ export default function BankReconciliationWorkspace({ bankAccountId }: Props) {
     onError: (err: any) => enqueueSnackbar(err?.response?.data?.message || 'Failed to complete reconciliation', { variant: 'error' }),
   });
 
-  if (isLoading) {
-    return <Typography>Loading…</Typography>;
-  }
+  const deleteStatementMutation = useMutation({
+    mutationFn: () => bankReconciliationServices.deleteStatement(data.statement.id),
+    onSuccess: (result) => {
+      enqueueSnackbar(result.message || 'Statement deleted', { variant: 'success' });
+      hideDialog();
+      queryClient.invalidateQueries({ queryKey: ['bank-reconciliation-workspace', bankAccountId] });
+      queryClient.invalidateQueries({ queryKey: ['bank-accounts-list'] });
+    },
+    onError: (err: any) => enqueueSnackbar(err?.response?.data?.message || 'Failed to delete statement', { variant: 'error' }),
+  });
+
+  const confirmDeleteStatement = () => {
+    showDialog({
+      title: 'Delete this statement?',
+      content:
+        'This permanently deletes the imported statement, every one of its lines, and all matches made against it — freeing up any book entries they were linked to. This cannot be undone. Start this reconciliation over from scratch?',
+      variant: 'confirm',
+      onYes: () => deleteStatementMutation.mutate(),
+      onNo: () => hideDialog(),
+    });
+  };
 
   const bankAccount = data?.bank_account;
 
-  if (isError) {
-    return (
+  let mainContent: React.ReactNode;
+
+  if (isLoading) {
+    // Rendered inline (not as an early `return`) so the import dialog below
+    // stays mounted through this state too — a refetch triggered right after
+    // a successful first-ever import (the query was previously in an error
+    // state, so there's no cached data to show while it reloads) briefly
+    // passes through here, and an early return would unmount the dialog
+    // showing "Import Complete" along with it, losing that screen.
+    mainContent = <Typography>Loading…</Typography>;
+  } else if (isError) {
+    mainContent = (
       <Box>
         <Alert severity='info' sx={{ mb: 2 }}>
           {(error as any)?.response?.data?.message || 'No statement has been imported for this bank account yet.'}
@@ -77,126 +107,149 @@ export default function BankReconciliationWorkspace({ bankAccountId }: Props) {
             Import Bank Statement
           </Button>
         )}
-        <Dialog open={importDialogOpen} fullWidth maxWidth='sm' fullScreen={belowLargeScreen}>
-          {importDialogOpen && (
-            <ImportStatementDialog bankAccountId={bankAccountId} toggleOpen={setImportDialogOpen} />
+      </Box>
+    );
+  } else {
+    const { statement, matched_lines, unmatched_lines, ignored_lines, unmatched_journals, book_balance, difference, amount_tolerance } = data;
+    const tolerance = amount_tolerance ?? 0.01;
+    const isBalanced = Math.abs(difference) <= tolerance;
+    const isCompleted = statement.status === 'completed';
+
+    mainContent = (
+      <Box>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 1 }}>
+          <Box>
+            <Typography variant='h5'>{bankAccount?.ledger?.name}</Typography>
+            <Typography variant='body2' color='text.secondary'>
+              Statement {new Date(statement.statement_date_from).toLocaleDateString()} – {new Date(statement.statement_date_to).toLocaleDateString()}
+              {' '}<Chip size='small' label={statement.status} color={isCompleted ? 'success' : 'default'} sx={{ ml: 1 }} />
+            </Typography>
+          </Box>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            {!isCompleted && checkOrganizationPermission(PERMISSIONS.BANK_RECONCILIATION_CREATE) && (
+              <Button variant='outlined' startIcon={<UploadOutlined />} onClick={() => setImportDialogOpen(true)}>
+                Import New Statement
+              </Button>
+            )}
+            {checkOrganizationPermission(PERMISSIONS.BANK_RECONCILIATION_DELETE) && (
+              <LoadingButton
+                variant='outlined'
+                color='error'
+                startIcon={<DeleteOutlined />}
+                loading={deleteStatementMutation.isPending}
+                onClick={confirmDeleteStatement}
+              >
+                Delete Statement
+              </LoadingButton>
+            )}
+          </Box>
+        </Box>
+
+        <DifferenceSummary closingBalance={statement.closing_balance} bookBalance={book_balance} difference={difference} />
+
+        {!isCompleted && checkOrganizationPermission(PERMISSIONS.BANK_RECONCILIATION_EDIT) && (
+          <Box sx={{ mb: 2 }}>
+            <LoadingButton
+              variant='contained'
+              color='success'
+              startIcon={<CheckCircleOutlined />}
+              disabled={!isBalanced}
+              loading={completeMutation.isPending}
+              onClick={() => completeMutation.mutate()}
+            >
+              Complete Reconciliation
+            </LoadingButton>
+          </Box>
+        )}
+
+        <Paper variant='outlined'>
+          <Tabs value={tab} onChange={(e, v) => setTab(v)} sx={{ borderBottom: 1, borderColor: 'divider' }}>
+            <Tab label={`Unmatched Statement Lines (${unmatched_lines.length})`} />
+            <Tab label={`Unmatched Book Entries (${unmatched_journals.length})`} />
+            <Tab label={`Matched (${matched_lines.length})`} />
+            <Tab label={`Ignored (${ignored_lines.length})`} />
+          </Tabs>
+
+          {tab === 0 && (
+            <Box sx={{ p: 2 }}>
+              {unmatched_lines.length === 0 && (
+                <Typography color='text.secondary'>No unmatched statement lines.</Typography>
+              )}
+              {unmatched_lines.map((item: any) => (
+                <UnmatchedLineRow
+                  key={item.line.id}
+                  bankAccountId={bankAccountId}
+                  line={item.line}
+                  suggestions={item.suggestions}
+                  allUnmatchedJournals={unmatched_journals}
+                  existingMatches={item.existing_matches}
+                  remainingAmount={item.remaining_amount}
+                  tolerance={tolerance}
+                />
+              ))}
+            </Box>
           )}
-        </Dialog>
+
+          {tab === 1 && (
+            <Box sx={{ p: 2 }}>
+              {unmatched_journals.length === 0 && (
+                <Typography color='text.secondary'>No unmatched book entries.</Typography>
+              )}
+              {unmatched_journals.map((journal: any) => (
+                <UnmatchedJournalRow
+                  key={journal.id}
+                  bankAccountId={bankAccountId}
+                  journal={journal}
+                  allUnmatchedLines={unmatched_lines}
+                  existingMatches={journal.existing_matches}
+                  remainingAmount={journal.remaining_amount}
+                  tolerance={tolerance}
+                />
+              ))}
+            </Box>
+          )}
+
+          {tab === 2 && (
+            <Box sx={{ p: 2 }}>
+              {matched_lines.length === 0 && (
+                <Typography color='text.secondary'>No matched lines yet.</Typography>
+              )}
+              {matched_lines.map((matchedLine: any) => (
+                <MatchedLineGroup key={matchedLine.line.id} bankAccountId={bankAccountId} matchedLine={matchedLine} />
+              ))}
+            </Box>
+          )}
+
+          {tab === 3 && (
+            <Box sx={{ p: 2 }}>
+              {ignored_lines.length === 0 && (
+                <Typography color='text.secondary'>No ignored lines.</Typography>
+              )}
+              {ignored_lines.map((line: any) => (
+                <Box key={line.id} sx={{ py: 1 }}>
+                  <Divider sx={{ mb: 1 }} />
+                  <Typography variant='body2'>
+                    {new Date(line.line_date).toLocaleDateString()} — {line.description} — {formatAmount(line.amount)}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
+          )}
+        </Paper>
       </Box>
     );
   }
 
-  const { statement, matched_lines, unmatched_lines, ignored_lines, unmatched_journals, book_balance, difference } = data;
-  const isBalanced = Math.abs(difference) <= 0.01;
-  const isCompleted = statement.status === 'completed';
-
+  // The import dialog is always rendered at this same, single position in
+  // the tree — regardless of which branch above produced `mainContent` —
+  // so a successful import (which invalidates this query and flips `isError`
+  // from true to false mid-interaction) never causes React to unmount the
+  // dialog that's showing "Import Complete" and mount a fresh blank one in
+  // its place. That remount is what previously looked like the dialog
+  // reopening on its own right after a successful upload.
   return (
-    <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 1 }}>
-        <Box>
-          <Typography variant='h5'>{bankAccount?.ledger?.name}</Typography>
-          <Typography variant='body2' color='text.secondary'>
-            Statement {new Date(statement.statement_date_from).toLocaleDateString()} – {new Date(statement.statement_date_to).toLocaleDateString()}
-            {' '}<Chip size='small' label={statement.status} color={isCompleted ? 'success' : 'default'} sx={{ ml: 1 }} />
-          </Typography>
-        </Box>
-        {!isCompleted && checkOrganizationPermission(PERMISSIONS.BANK_RECONCILIATION_CREATE) && (
-          <Button variant='outlined' startIcon={<UploadOutlined />} onClick={() => setImportDialogOpen(true)}>
-            Import New Statement
-          </Button>
-        )}
-      </Box>
-
-      <DifferenceSummary closingBalance={statement.closing_balance} bookBalance={book_balance} difference={difference} />
-
-      {!isCompleted && checkOrganizationPermission(PERMISSIONS.BANK_RECONCILIATION_EDIT) && (
-        <Box sx={{ mb: 2 }}>
-          <LoadingButton
-            variant='contained'
-            color='success'
-            startIcon={<CheckCircleOutlined />}
-            disabled={!isBalanced}
-            loading={completeMutation.isPending}
-            onClick={() => completeMutation.mutate()}
-          >
-            Complete Reconciliation
-          </LoadingButton>
-        </Box>
-      )}
-
-      <Paper variant='outlined'>
-        <Tabs value={tab} onChange={(e, v) => setTab(v)} sx={{ borderBottom: 1, borderColor: 'divider' }}>
-          <Tab label={`Unmatched Statement Lines (${unmatched_lines.length})`} />
-          <Tab label={`Unmatched Book Entries (${unmatched_journals.length})`} />
-          <Tab label={`Matched (${matched_lines.length})`} />
-          <Tab label={`Ignored (${ignored_lines.length})`} />
-        </Tabs>
-
-        {tab === 0 && (
-          <Box sx={{ p: 2 }}>
-            {unmatched_lines.length === 0 && (
-              <Typography color='text.secondary'>No unmatched statement lines.</Typography>
-            )}
-            {unmatched_lines.map((item: any) => (
-              <UnmatchedLineRow
-                key={item.line.id}
-                bankAccountId={bankAccountId}
-                line={item.line}
-                suggestions={item.suggestions}
-                allUnmatchedJournals={unmatched_journals}
-                existingMatches={item.existing_matches}
-                remainingAmount={item.remaining_amount}
-              />
-            ))}
-          </Box>
-        )}
-
-        {tab === 1 && (
-          <Box sx={{ p: 2 }}>
-            {unmatched_journals.length === 0 && (
-              <Typography color='text.secondary'>No unmatched book entries.</Typography>
-            )}
-            {unmatched_journals.map((journal: any) => (
-              <UnmatchedJournalRow
-                key={journal.id}
-                bankAccountId={bankAccountId}
-                journal={journal}
-                allUnmatchedLines={unmatched_lines}
-                existingMatches={journal.existing_matches}
-                remainingAmount={journal.remaining_amount}
-              />
-            ))}
-          </Box>
-        )}
-
-        {tab === 2 && (
-          <Box sx={{ p: 2 }}>
-            {matched_lines.length === 0 && (
-              <Typography color='text.secondary'>No matched lines yet.</Typography>
-            )}
-            {matched_lines.map((matchedLine: any) => (
-              <MatchedLineGroup key={matchedLine.line.id} bankAccountId={bankAccountId} matchedLine={matchedLine} />
-            ))}
-          </Box>
-        )}
-
-        {tab === 3 && (
-          <Box sx={{ p: 2 }}>
-            {ignored_lines.length === 0 && (
-              <Typography color='text.secondary'>No ignored lines.</Typography>
-            )}
-            {ignored_lines.map((line: any) => (
-              <Box key={line.id} sx={{ py: 1 }}>
-                <Divider sx={{ mb: 1 }} />
-                <Typography variant='body2'>
-                  {new Date(line.line_date).toLocaleDateString()} — {line.description} — {formatAmount(line.amount)}
-                </Typography>
-              </Box>
-            ))}
-          </Box>
-        )}
-      </Paper>
-
+    <>
+      {mainContent}
       <Dialog open={importDialogOpen} fullWidth maxWidth='sm' fullScreen={belowLargeScreen}>
         {importDialogOpen && (
           <ImportStatementDialog
@@ -206,6 +259,6 @@ export default function BankReconciliationWorkspace({ bankAccountId }: Props) {
           />
         )}
       </Dialog>
-    </Box>
+    </>
   );
 }

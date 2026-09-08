@@ -42,7 +42,7 @@ interface Sale {
   };
   stakeholder: Stakeholder;
   sale_items: SaleItem[];
-  creator: User;
+  creator: User | null;
   currency: Currency;
   vfd_receipt?: VFDReceipt;
 }
@@ -380,7 +380,7 @@ const SaleReceiptPDF: React.FC<SaleReceiptPDFProps> = ({ user, organization, sal
 
         <View style={{ ...pdfStyles.tableRow, textAlign: 'center', marginBottom: 10 }}>
           <View style={{ flex: 1 }}>
-            <Text style={pdfStyles.minInfo}>Served by: {sale.creator.name}</Text>
+            <Text style={pdfStyles.minInfo}>Served by: {sale.creator?.name || '-'}</Text>
           </View>
         </View>
         <View style={{ ...pdfStyles.tableRow, textAlign: 'center', marginBottom: 15 }}>

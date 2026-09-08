@@ -102,7 +102,7 @@ const SaleReceiptForm: React.FC<SaleReceiptFormProps> = ({ toggleOpen, sale = nu
       defaultValues: {
         id: sale?.id,
         debit_ledger_id: null,
-        amount: 0,
+        amount: sale?.receiptable_amount || 0,
         receiptable_amount: sale?.receiptable_amount,
         reference: '',
         narration: '',
@@ -229,6 +229,7 @@ const SaleReceiptForm: React.FC<SaleReceiptFormProps> = ({ toggleOpen, sale = nu
                       InputProps={{
                         inputComponent: CommaSeparatedField,
                       }}
+                      value={amount}
                       onChange={(e) => {
                         setValue('amount', e.target.value ? sanitizedNumber(e.target.value) : 0, {
                           shouldValidate: true,

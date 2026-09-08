@@ -112,6 +112,19 @@ const CounterSalesListItem: React.FC<CounterSalesListItemProps> = ({
                 <Chip size='small' label={sale.debit_ledger.name} />
               </Tooltip>
             )}
+            {sale?.asset_booking && (
+              <Tooltip
+                title={`Booking ${sale.asset_booking.code} — ${sale.asset_booking.asset_detail?.code ?? ''}${
+                  sale.asset_booking.asset_detail?.product_item?.identification
+                    ? ' (' + sale.asset_booking.asset_detail.product_item.identification + ')'
+                    : ''
+                }`}
+              >
+                <Typography variant='caption' display='block' color='text.secondary'>
+                  {readableDate(sale.asset_booking.start_at)} — {readableDate(sale.asset_booking.end_at)}
+                </Typography>
+              </Tooltip>
+            )}
           </Grid>
           <Grid size={{ xs: 12, md: 2.5 }}>
             <Tooltip title='Reference'>

@@ -44,7 +44,7 @@ const StockMovementOnScreen = ({
   };
 
   const renderHeader = () => (
-    checkOrganizationPermission(PERMISSIONS.ACCOUNTS_REPORTS) && (
+    checkOrganizationPermission([PERMISSIONS.ACCOUNTS_REPORTS, PERMISSIONS.STORE_VALUES]) && (
       <Box sx={{ mb: 3 }}>
         <Box 
           sx={{ 
@@ -131,7 +131,7 @@ const StockMovementOnScreen = ({
             <TableCell align="right">Consumed</TableCell>
             <TableCell align="right">Sold</TableCell>
             <TableCell align="right">Closing</TableCell>
-            {checkOrganizationPermission(PERMISSIONS.ACCOUNTS_REPORTS) && (
+            {checkOrganizationPermission([PERMISSIONS.ACCOUNTS_REPORTS, PERMISSIONS.STORE_VALUES]) && (
               <>
                 <TableCell align="right">Rate</TableCell>
                 <TableCell align="right">Value</TableCell>
@@ -200,7 +200,7 @@ const StockMovementOnScreen = ({
                 <TableCell align="right" sx={{ fontFamily: 'monospace' }}>
                   {formatQuantity(closing_balance)}
                 </TableCell>
-                {checkOrganizationPermission(PERMISSIONS.ACCOUNTS_REPORTS) && (
+                {checkOrganizationPermission([PERMISSIONS.ACCOUNTS_REPORTS, PERMISSIONS.STORE_VALUES]) && (
                   <>
                     <TableCell align="right" sx={{ fontFamily: 'monospace' }}>
                       {formatNumber(parseFloat(movement.latest_rate))}
@@ -218,7 +218,7 @@ const StockMovementOnScreen = ({
           {movementsData.movements.length === 0 && (
             <TableRow>
               <TableCell 
-                colSpan={checkOrganizationPermission(PERMISSIONS.ACCOUNTS_REPORTS) ? 13 : 11} 
+                colSpan={checkOrganizationPermission([PERMISSIONS.ACCOUNTS_REPORTS, PERMISSIONS.STORE_VALUES]) ? 13 : 11} 
                 sx={{ textAlign: 'center', py: 4 }}
               >
                 <Typography variant="body1" color="text.secondary">

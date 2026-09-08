@@ -1,0 +1,120 @@
+{
+  "bookings": {
+    "calendar": {
+      "labels": {
+        "listHeader": "Uhifadhi wa Mali",
+        "newBooking": "Uhifadhi Mpya",
+        "allAssets": "Mali Zote",
+        "asset": "Mali",
+        "views": { "month": "Mwezi", "week": "Wiki", "day": "Siku", "agenda": "Ratiba" }
+      },
+      "event": {
+        "internal": "Ndani",
+        "external": "Nje"
+      }
+    },
+    "detail": {
+      "labels": {
+        "code": "Uhifadhi",
+        "asset": "Mali",
+        "type": "Aina",
+        "costCenter": "Kituo cha Gharama",
+        "stakeholder": "Mteja",
+        "period": "Kipindi",
+        "status": "Hali",
+        "purpose": "Kusudi",
+        "rate": "Kiwango",
+        "sale": "Mauzo",
+        "createdBy": "Imetengenezwa na"
+      },
+      "status": {
+        "draft": "Rasimu",
+        "confirmed": "Imethibitishwa",
+        "ongoing": "Inaendelea",
+        "completed": "Imekamilika",
+        "cancelled": "Imeghairiwa"
+      },
+      "buttons": {
+        "edit": "Hariri",
+        "confirm": "Thibitisha",
+        "cancel": "Ghairi Uhifadhi",
+        "delete": "Futa",
+        "linkSale": "Unganisha Mauzo Yaliyopo",
+        "unlinkSale": "Tengua Muunganiko wa Mauzo",
+        "close": "Funga"
+      },
+      "help": {
+        "billed": "Uhifadhi huu umetozwa kupitia mauzo"
+      }
+    },
+    "cancelDialog": {
+      "title": "Ghairi uhifadhi huu?",
+      "content": "Mali itapatikana tena kwa kipindi hiki.",
+      "reasonLabel": "Sababu (si lazima)",
+      "confirm": "Ndiyo, Ghairi",
+      "dismiss": "Hapana, Acha"
+    },
+    "deleteDialog": {
+      "title": "Futa rasimu hii ya uhifadhi?",
+      "content": "Hatua hii haiwezi kutenduliwa.",
+      "confirm": "Ndiyo, Futa",
+      "dismiss": "Hapana"
+    },
+    "linkSaleDialog": {
+      "title": "Unganisha Mauzo na Uhifadhi Huu",
+      "saleIdLabel": "Mauzo",
+      "help": "Chagua mauzo yaliyomtoza mteja wa uhifadhi huu.",
+      "noSales": "Hakuna mauzo yaliyopatikana kwa mteja huyu",
+      "confirm": "Unganisha"
+    },
+    "form": {
+      "title": "Uhifadhi Mpya",
+      "editTitle": "Hariri Uhifadhi",
+      "sections": {
+        "asset": "Mali",
+        "schedule": "Ratiba",
+        "billing": "Malipo"
+      },
+      "labels": {
+        "asset": "Mali",
+        "bookingType": "Aina ya Uhifadhi",
+        "internal": "Ndani (peleka kwenye kituo cha gharama)",
+        "external": "Nje (kodisha kwa mteja)",
+        "costCenter": "Kituo cha Gharama",
+        "stakeholder": "Mteja",
+        "startAt": "Anza",
+        "endAt": "Malizia",
+        "purpose": "Kusudi / Maelezo",
+        "rate": "Kiwango",
+        "currency": "Sarafu",
+        "linkSale": "Unganisha na Mauzo Yaliyopo"
+      },
+      "help": {
+        "pickCustomerFirst": "Chagua mteja kwanza",
+        "saleMissingBillingProduct": "Mauzo haya hayaonekani kuwa na kipengele cha kutoza cha mali hii — hakikisha ni mauzo sahihi kabla ya kuhifadhi."
+      },
+      "buttons": { "save": "Hifadhi", "cancel": "Ghairi" },
+      "messages": {
+        "createSuccess": "Uhifadhi umetengenezwa kwa mafanikio",
+        "updateSuccess": "Uhifadhi umesasishwa kwa mafanikio",
+        "confirmSuccess": "Uhifadhi umethibitishwa kwa mafanikio",
+        "cancelSuccess": "Uhifadhi umeghairiwa kwa mafanikio",
+        "deleteSuccess": "Uhifadhi umefutwa kwa mafanikio",
+        "linkSaleSuccess": "Uhifadhi umeunganishwa na mauzo kwa mafanikio",
+        "unlinkSaleSuccess": "Muunganiko wa uhifadhi na mauzo umetenguliwa kwa mafanikio"
+      },
+      "errors": {
+        "validation": {
+          "assetDetailId": { "required": "Mali inahitajika" },
+          "bookingType": { "required": "Aina ya uhifadhi inahitajika" },
+          "costCenterId": { "required": "Kituo cha gharama kinahitajika kwa uhifadhi wa ndani" },
+          "stakeholderId": { "required": "Mteja anahitajika kwa uhifadhi wa nje" },
+          "saleId": { "required": "Uhifadhi wa nje lazima uunganishwe na mauzo yaliyopo" },
+          "startAt": { "required": "Tarehe/muda wa kuanza unahitajika" },
+          "endAt": { "required": "Tarehe/muda wa kumaliza unahitajika", "afterStart": "Muda wa kumaliza lazima uwe baada ya kuanza" }
+        },
+        "overlap": "Mali hii tayari imehifadhiwa kwa sehemu ya kipindi kilichochaguliwa"
+      }
+    }
+  }
+}

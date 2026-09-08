@@ -1,0 +1,120 @@
+{
+  "bookings": {
+    "calendar": {
+      "labels": {
+        "listHeader": "Asset Bookings",
+        "newBooking": "New Booking",
+        "allAssets": "All Assets",
+        "asset": "Asset",
+        "views": { "month": "Month", "week": "Week", "day": "Day", "agenda": "Agenda" }
+      },
+      "event": {
+        "internal": "Internal",
+        "external": "External"
+      }
+    },
+    "detail": {
+      "labels": {
+        "code": "Booking",
+        "asset": "Asset",
+        "type": "Type",
+        "costCenter": "Cost Center",
+        "stakeholder": "Customer",
+        "period": "Period",
+        "status": "Status",
+        "purpose": "Purpose",
+        "rate": "Rate",
+        "sale": "Sale",
+        "createdBy": "Created By"
+      },
+      "status": {
+        "draft": "Draft",
+        "confirmed": "Confirmed",
+        "ongoing": "Ongoing",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      },
+      "buttons": {
+        "edit": "Edit",
+        "confirm": "Confirm",
+        "cancel": "Cancel Booking",
+        "delete": "Delete",
+        "linkSale": "Link Existing Sale",
+        "unlinkSale": "Undo Sale Link",
+        "close": "Close"
+      },
+      "help": {
+        "billed": "This booking has been billed on sale"
+      }
+    },
+    "cancelDialog": {
+      "title": "Cancel this booking?",
+      "content": "The asset will become available again for this period.",
+      "reasonLabel": "Reason (optional)",
+      "confirm": "Yes, Cancel",
+      "dismiss": "No, Keep It"
+    },
+    "deleteDialog": {
+      "title": "Delete this draft booking?",
+      "content": "This cannot be undone.",
+      "confirm": "Yes, Delete",
+      "dismiss": "No"
+    },
+    "linkSaleDialog": {
+      "title": "Link a Sale to this Booking",
+      "saleIdLabel": "Sale",
+      "help": "Pick the sale that billed this booking's customer.",
+      "noSales": "No sales found for this customer",
+      "confirm": "Link"
+    },
+    "form": {
+      "title": "New Booking",
+      "editTitle": "Edit Booking",
+      "sections": {
+        "asset": "Asset",
+        "schedule": "Schedule",
+        "billing": "Billing"
+      },
+      "labels": {
+        "asset": "Asset",
+        "bookingType": "Booking Type",
+        "internal": "Internal (deploy to a cost center)",
+        "external": "External (hire out to a customer)",
+        "costCenter": "Cost Center",
+        "stakeholder": "Customer",
+        "startAt": "Start",
+        "endAt": "End",
+        "purpose": "Purpose / Notes",
+        "rate": "Rate",
+        "currency": "Currency",
+        "linkSale": "Link to Existing Sale"
+      },
+      "help": {
+        "pickCustomerFirst": "Pick a customer first",
+        "saleMissingBillingProduct": "This sale doesn't appear to include the asset's billing item — double-check it's the right sale before saving."
+      },
+      "buttons": { "save": "Save", "cancel": "Cancel" },
+      "messages": {
+        "createSuccess": "Booking was created successfully",
+        "updateSuccess": "Booking was updated successfully",
+        "confirmSuccess": "Booking was confirmed successfully",
+        "cancelSuccess": "Booking was cancelled successfully",
+        "deleteSuccess": "Booking was deleted successfully",
+        "linkSaleSuccess": "Booking was linked to the sale successfully",
+        "unlinkSaleSuccess": "Booking was unlinked from the sale successfully"
+      },
+      "errors": {
+        "validation": {
+          "assetDetailId": { "required": "Asset is required" },
+          "bookingType": { "required": "Booking type is required" },
+          "costCenterId": { "required": "Cost center is required for internal bookings" },
+          "stakeholderId": { "required": "Customer is required for external bookings" },
+          "saleId": { "required": "External bookings must be linked to an existing sale" },
+          "startAt": { "required": "Start date/time is required" },
+          "endAt": { "required": "End date/time is required", "afterStart": "End must be after start" }
+        },
+        "overlap": "This asset is already booked for part of the selected period"
+      }
+    }
+  }
+}

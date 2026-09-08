@@ -380,14 +380,19 @@ export async function ExportPayrollToExcel(exportedData: any) {
       setTxt(COL_DESIGNATION, getDesignation(entry.run));
       setNum(COL_BASIC, entry.computed.basicSalary);
 
-      // Data rows use find() on the type arrays - EXACTLY like PDF
+      // Data rows are summed (not .find()'d) on the type arrays — an
+      // employee can have more than one row under the same label (e.g. two
+      // concurrent staff loans both under "Staff Loan Repayment"), and each
+      // must add into this one column rather than only the first showing.
       processedAllowanceTypes.forEach((type: any, i: number) => {
-        const found = allowanceTypes.find(
-          (itm: any) =>
-            itm.employee_contract_id === entry.run.employee?.id &&
-            itm.label === type.label
-        );
-        setNum(6 + i, found?.amount ?? 0);
+        const sum = allowanceTypes
+          .filter(
+            (itm: any) =>
+              itm.employee_contract_id === entry.run.employee?.id &&
+              itm.label === type.label
+          )
+          .reduce((s: number, itm: any) => s + (itm.amount || 0), 0);
+        setNum(6 + i, sum);
       });
 
       setNum(COL_GROSS, entry.computed.grossSalary);
@@ -395,26 +400,30 @@ export async function ExportPayrollToExcel(exportedData: any) {
       setNum(COL_PAYE, entry.computed.paye);
 
       processedDeductionTypes.forEach((type: any, i: number) => {
-        const found = deductionTypes.find(
-          (itm: any) =>
-            itm.employee_contract_id === entry.run.employee?.id &&
-            itm.label === type.label
-        );
-        setNum(9 + n + i, found?.amount ?? 0);
+        const sum = deductionTypes
+          .filter(
+            (itm: any) =>
+              itm.employee_contract_id === entry.run.employee?.id &&
+              itm.label === type.label
+          )
+          .reduce((s: number, itm: any) => s + (itm.amount || 0), 0);
+        setNum(9 + n + i, sum);
       });
 
       setNum(COL_TOTAL_DED, entry.computed.totalDeductions);
       setNum(COL_NET, entry.computed.netSalary);
 
       processedContributionTypes.forEach((type: any, i: number) => {
-        const found = contributionTypes.find(
-          (itm: any) =>
-            itm.employee_contract_id === entry.run.employee?.id &&
-            (itm.label === type.label ||
-              itm.employer_contribution_type_id ===
-                type.employer_contribution_type_id)
-        );
-        setNum(11 + n + m + i, found?.amount ?? 0);
+        const sum = contributionTypes
+          .filter(
+            (itm: any) =>
+              itm.employee_contract_id === entry.run.employee?.id &&
+              (itm.label === type.label ||
+                itm.employer_contribution_type_id ===
+                  type.employer_contribution_type_id)
+          )
+          .reduce((s: number, itm: any) => s + (itm.amount || 0), 0);
+        setNum(11 + n + m + i, sum);
       });
 
       setNum(COL_TOTAL_CONTRIB, entry.computed.totalEmployerContributions);

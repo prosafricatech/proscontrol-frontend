@@ -1,5 +1,10 @@
 import axios from '@/lib/services/config';
 
+export type NotificationMeta = {
+  label: string;
+  value: string;
+};
+
 export type NotificationItem = {
   id: string;
   type: string;
@@ -10,6 +15,7 @@ export type NotificationItem = {
     action_url: string | null;
     resource_type: string | null;
     resource_id: number | string | null;
+    meta?: NotificationMeta[];
   };
   read_at: string | null;
   created_at: string;
@@ -35,6 +41,14 @@ const notificationServices = {
   },
   markAllRead: async () => {
     const { data } = await axios.post('/api/notifications/mark-all-read');
+    return data;
+  },
+  deleteOne: async (id: string) => {
+    const { data } = await axios.delete(`/api/notifications/${id}`);
+    return data;
+  },
+  deleteAll: async () => {
+    const { data } = await axios.delete('/api/notifications');
     return data;
   },
 };

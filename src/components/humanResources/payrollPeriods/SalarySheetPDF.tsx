@@ -941,12 +941,17 @@ const SalarySheetPDF = ({
                         }}
                       >
                         {fmt(
-                          allowanceTypes.find(
-                            (itm) =>
-                              itm.employee_contract_id ===
-                                entry.run.employee?.id &&
-                              itm.label === type.label
-                          )?.amount ?? 0
+                          // Summed, not .find() — an employee can have more
+                          // than one row under the same label, and each
+                          // should add to this column.
+                          allowanceTypes
+                            .filter(
+                              (itm) =>
+                                itm.employee_contract_id ===
+                                  entry.run.employee?.id &&
+                                itm.label === type.label
+                            )
+                            .reduce((sum, itm) => sum + (itm.amount || 0), 0)
                         )}
                       </Text>
                     ))}
@@ -995,12 +1000,18 @@ const SalarySheetPDF = ({
                         }}
                       >
                         {fmt(
-                          deductionTypes.find(
-                            (itm) =>
-                              itm.employee_contract_id ===
-                                entry.run.employee?.id &&
-                              itm.label === type.label
-                          )?.amount ?? 0
+                          // Summed, not .find() — e.g. two concurrent staff
+                          // loans both post under the same "Staff Loan
+                          // Repayment" label, so both must add into this
+                          // one column.
+                          deductionTypes
+                            .filter(
+                              (itm) =>
+                                itm.employee_contract_id ===
+                                  entry.run.employee?.id &&
+                                itm.label === type.label
+                            )
+                            .reduce((sum, itm) => sum + (itm.amount || 0), 0)
                         )}
                       </Text>
                     ))}
@@ -1039,14 +1050,18 @@ const SalarySheetPDF = ({
                         }}
                       >
                         {fmt(
-                          contributionTypes.find(
-                            (itm) =>
-                              itm.employee_contract_id ===
-                                entry.run.employee?.id &&
-                              (itm.label === type.label ||
-                                itm.employer_contribution_type_id ===
-                                  type.employer_contribution_type_id)
-                          )?.amount ?? 0
+                          // Summed, not .find() — same reason as the
+                          // allowance/deduction columns above.
+                          contributionTypes
+                            .filter(
+                              (itm) =>
+                                itm.employee_contract_id ===
+                                  entry.run.employee?.id &&
+                                (itm.label === type.label ||
+                                  itm.employer_contribution_type_id ===
+                                    type.employer_contribution_type_id)
+                            )
+                            .reduce((sum, itm) => sum + (itm.amount || 0), 0)
                         )}
                       </Text>
                     ))}

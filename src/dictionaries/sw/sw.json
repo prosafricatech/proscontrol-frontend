@@ -18,7 +18,8 @@
       "manufacturing": "viwanda",
       "measurement_units": "Vipimo",
       "humanResources": "Rasilimali Watu",
-      "fixedAssets": "Daftari la Mali"
+      "fixedAssets": "Daftari la Mali",
+      "assetBookings": "Uhifadhi wa Mali"
     },
     "menuItem": {
       "masters": "Wakuu",
@@ -74,6 +75,7 @@
       "invitations": "Mialiko",
       "organizations": "Mashirika",
       
+      "hrDashboard": "Dashibodi",
       "employees": "Waajiriwa",
       "orgChart": "Muundo wa Shirika",
       "setup": "Mipangilio",
@@ -101,7 +103,8 @@
       "assetRegister": "Daftari",
       "depreciationRuns": "Uendeshaji wa Uchakavu",
       "assetGlMappings": "Uunganishaji wa Daftari",
-      "assetReports": "Ripoti"
+      "assetReports": "Ripoti",
+      "assetBookings": "Uhifadhi"
     }
   },
   

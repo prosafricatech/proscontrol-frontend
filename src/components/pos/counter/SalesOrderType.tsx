@@ -17,6 +17,13 @@ export interface SalesOrder {
   currency: Currency;
   currency_id?: number;
   debit_ledger: DebitLedger;
+  asset_booking?: {
+    id: number;
+    code: string;
+    start_at: string;
+    end_at: string;
+    asset_detail?: { id: number; code: string; product_item?: { identification: string } };
+  } | null;
   exchange_rate: number;
   has_receipts: boolean;
   is_fully_paid: boolean;

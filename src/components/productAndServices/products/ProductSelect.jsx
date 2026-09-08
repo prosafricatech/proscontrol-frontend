@@ -21,6 +21,7 @@ function ProductSelect(props) {
     excludeFuelProducts = false,
     includeOnlyFuelProducts = false,
     allowedCategoryIds = null,
+    allowedTypes = null,
     requiredProducts,
     addedProduct = null,
     defaultValue = null,
@@ -70,6 +71,10 @@ function ProductSelect(props) {
       opts = opts.filter((p) => allowedCategoryIds.includes(p.product_category_id));
     }
 
+    if (allowedTypes && allowedTypes.length > 0) {
+      opts = opts.filter((p) => allowedTypes.includes(p.type));
+    }
+
     if (addedProduct?.id) {
       opts = [...opts, addedProduct];
     }
@@ -87,6 +92,7 @@ function ProductSelect(props) {
     excludeFuelProducts,
     includeOnlyFuelProducts,
     allowedCategoryIds,
+    allowedTypes,
   ]);
 
   const handleOnChange = (_, newValue) => {

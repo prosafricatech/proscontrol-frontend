@@ -45,6 +45,7 @@ interface BankAccount {
   account_number?: string | null;
   iban?: string | null;
   swift_code?: string | null;
+  auto_match_day_tolerance?: number | null;
 }
 
 interface FormValues {
@@ -54,6 +55,7 @@ interface FormValues {
   account_number?: string;
   iban?: string;
   swift_code?: string;
+  auto_match_day_tolerance?: number;
 }
 
 interface BankAccountFormProps {
@@ -122,6 +124,7 @@ export default function BankAccountForm({ bankAccount, toggleOpen }: BankAccount
     account_number: yup.string().nullable(),
     iban: yup.string().nullable(),
     swift_code: yup.string().nullable(),
+    auto_match_day_tolerance: yup.number().min(0).max(60).nullable(),
   });
 
   const {
@@ -139,6 +142,7 @@ export default function BankAccountForm({ bankAccount, toggleOpen }: BankAccount
       account_number: bankAccount?.account_number ?? '',
       iban: bankAccount?.iban ?? '',
       swift_code: bankAccount?.swift_code ?? '',
+      auto_match_day_tolerance: bankAccount?.auto_match_day_tolerance ?? 0,
     },
     resolver: yupResolver(validationSchema) as any,
   });
@@ -284,6 +288,24 @@ export default function BankAccountForm({ bankAccount, toggleOpen }: BankAccount
                   error={!!serverError?.swift_code}
                   helperText={serverError?.swift_code?.[0]}
                   {...register('swift_code')}
+                />
+              </Div>
+            </Grid>
+            <Grid size={12}>
+              <Div sx={{ mt: 1 }}>
+                <TextField
+                  fullWidth
+                  type='number'
+                  label='Auto-Match Day Tolerance'
+                  size='small'
+                  inputProps={{ min: 0, max: 60 }}
+                  error={!!errors.auto_match_day_tolerance || !!serverError?.auto_match_day_tolerance}
+                  helperText={
+                    errors.auto_match_day_tolerance?.message ||
+                    serverError?.auto_match_day_tolerance?.[0] ||
+                    'How many days before/after a statement line’s date to search for a matching book entry when auto-matching on import. 0 = same day only. Raise this if this bank tends to settle a day or two after the transaction.'
+                  }
+                  {...register('auto_match_day_tolerance', { valueAsNumber: true })}
                 />
               </Div>
             </Grid>

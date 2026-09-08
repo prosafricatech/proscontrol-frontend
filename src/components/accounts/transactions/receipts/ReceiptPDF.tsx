@@ -49,7 +49,7 @@ function ReceiptPDF({ transaction, authObject }: ReceiptPDFProps) {
             title={`${transaction.voucherNo} | ${organization.name}`}
             author={transaction.creator.name}
             subject={'Receipt Voucher Document'}
-            keywords={transaction.narration}
+            keywords={transaction.narration || ''}
             creator={`${user?.name || ''} | Powered By ProsERP`}
             producer='ProsERP'
         >
@@ -198,7 +198,7 @@ function ReceiptPDF({ transaction, authObject }: ReceiptPDFProps) {
                 <View style={{ ...pdfStyles.tableRow, marginTop: 20}}>
                     <View style={{ flex: 1, padding: 2 }}>
                         <Text style={{...pdfStyles.minInfo, color: mainColor }}>Narration</Text>
-                        <Text style={{...pdfStyles.minInfo }}>{transaction.narration}</Text>
+                        <Text style={{...pdfStyles.minInfo }}>{transaction.narration || '-'}</Text>
                     </View>
                     <View style={{ flex: 1, padding: 2 }}>
                         <Text style={{...pdfStyles.minInfo, color: mainColor }}>Posted By</Text>

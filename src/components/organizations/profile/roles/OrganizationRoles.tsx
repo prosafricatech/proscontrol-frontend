@@ -96,6 +96,20 @@ const PERMISSION_MODULES: PermissionModuleConfig[] = [
     ],
   },
   {
+    key: 'asset_register',
+    displayName: MODULES.ASSET_REGISTER,
+    prefixes: [
+      'Assets'
+    ],
+  },
+  {
+    key: 'asset_bookings',
+    displayName: MODULES.ASSET_BOOKINGS,
+    prefixes: [
+      'AssetBookings'
+    ],
+  },
+  {
     key: 'process_approval',
     displayName: MODULES.PROCESS_APPROVAL,
     prefixes: [
@@ -135,6 +149,7 @@ const PERMISSION_MODULES: PermissionModuleConfig[] = [
       'Products',
       'Purchases',
       'StockAdjustments',
+      'Store',
       'Stores',
       'RFQs'
     ],

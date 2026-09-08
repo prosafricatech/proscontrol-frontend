@@ -3,12 +3,12 @@ import { getMessaging, onMessage, isSupported } from "firebase/messaging";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyBIlSPh6GPPHdumTYmkuowo_8SXpHIVbmA",
-  authDomain: "proserp-faea0.firebaseapp.com",
-  projectId: "proserp-faea0",
-  storageBucket: "proserp-faea0.appspot.com",
-  messagingSenderId: "907299356831",
-  appId: "1:907299356831:web:b4c18d752233178797a2aa"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
 // Initialize Firebase App (safe even on server)

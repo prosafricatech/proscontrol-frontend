@@ -4,14 +4,16 @@ import { useCurrencySelect } from '@/components/masters/Currencies/CurrencySelec
 import stakeholderServices from '@/components/masters/stakeholders/stakeholder-services';
 import { useVFD } from '@/components/vfd/VFDProvider';
 import { MODULE_SETTINGS } from '@/utilities/constants/moduleSettings';
+import { MODULES } from '@/utilities/constants/modules';
 import { PERMISSIONS } from '@/utilities/constants/permissions';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useJumboTheme } from '@jumbo/components/JumboTheme/hooks';
-import { HighlightOff, Link, LinkOff } from '@mui/icons-material';
+import { HighlightOff, Link, LinkOff, CalendarMonthOutlined, CloseOutlined } from '@mui/icons-material';
 import {
   Alert,
   Box,
   Button,
+  Chip,
   Dialog,
   DialogActions,
   DialogContent,
@@ -29,6 +31,10 @@ import { FormProvider, useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import posServices from '../../pos-services';
 import { useCounter } from '../CounterProvider';
+import assetBookingsServices from '@/components/assetBookings/asset-bookings-services';
+import AssetBookingQuickAddForm from '@/components/assetBookings/AssetBookingQuickAddForm';
+import { getErrorMessage } from '@/utilities/helpers/errorHandler';
+import { useProductsSelect } from '@/components/productAndServices/products/ProductsSelectProvider';
 import ProductsSaleSummary from './ProductsSaleSummary';
 import SaleItemForm from './SaleItemForm';
 import SaleItemRow from './SaleItemRow';
@@ -36,7 +42,7 @@ import SaleTopInformation from './SaleTopInformation';
 
 function SaleDialogForm({ toggleOpen, sale = null }) {
   const [items, setItems] = useState([]);
-  const { activeCounter } = useCounter();
+  const { activeCounter, outlet } = useCounter();
   const [transaction_date] = useState(
     sale ? dayjs(sale.transaction_date) : dayjs()
   );
@@ -46,6 +52,7 @@ function SaleDialogForm({ toggleOpen, sale = null }) {
   const {
     authOrganization: { organization },
     checkOrganizationPermission,
+    organizationHasSubscribed,
     moduleSetting,
   } = useJumboAuth();
   const queryClient = useQueryClient();
@@ -59,6 +66,16 @@ function SaleDialogForm({ toggleOpen, sale = null }) {
   const [checkedForInstantSale, setCheckedForInstantSale] = useState(
     sale ? (!sale.is_instant_sale ? false : true) : true
   );
+
+  // Lets a cashier attach an Asset Booking without leaving the Sale form —
+  // only offered for new, stakeholder-billed sales (a booking needs a real
+  // customer; walk-in/instant sales have none). Nothing is created until
+  // the sale itself saves — pendingBooking just holds the form values, so
+  // an abandoned sale never leaves an orphaned draft booking behind.
+  const bookingsSubscribed = organizationHasSubscribed(MODULES.ASSET_BOOKINGS);
+  const { productOptions } = useProductsSelect();
+  const [showBookingQuickAdd, setShowBookingQuickAdd] = useState(false);
+  const [pendingBooking, setPendingBooking] = useState(null);
 
   const { connected, connect, disconnect, sendZero } = useVFD();
 
@@ -248,9 +265,34 @@ function SaleDialogForm({ toggleOpen, sale = null }) {
     enabled: !majorInfoOnly,
   });
 
+  // Extends the Checkout/Suspend loading state past addSale's own pending
+  // window while the pending booking's create+confirm+link chain runs, so
+  // the dialog doesn't close (and "saved" doesn't show) until the booking
+  // is actually attached — otherwise a sales list checked in that gap would
+  // legitimately show the sale with no booking yet.
+  const [finalizingBooking, setFinalizingBooking] = useState(false);
+
   const addSale = useMutation({
     mutationFn: posServices.addSale,
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
+      if (pendingBooking && data?.id) {
+        setFinalizingBooking(true);
+        try {
+          const { booking } = await assetBookingsServices.add(pendingBooking.payload);
+          await assetBookingsServices.confirm(booking);
+          await assetBookingsServices.linkSale({ id: booking.id, sale_id: data.id });
+          queryClient.invalidateQueries({ queryKey: ['assetBookings'] });
+          queryClient.invalidateQueries({ queryKey: ['assetBookingsCalendar'] });
+        } catch (bookingError) {
+          enqueueSnackbar(
+            getErrorMessage(bookingError) || 'Sale saved, but the attached booking could not be created/linked — add it manually from the Bookings calendar.',
+            { variant: 'warning' }
+          );
+        } finally {
+          setFinalizingBooking(false);
+        }
+      }
+
       toggleOpen(false);
       enqueueSnackbar(data.message, { variant: 'success' });
       queryClient.invalidateQueries({ queryKey: ['counterSales'] });
@@ -370,6 +412,54 @@ function SaleDialogForm({ toggleOpen, sale = null }) {
               organization={organization}
             />
           </Grid>
+
+          {bookingsSubscribed && !sale && stakeholder_id && (
+            <Grid size={12} mb={2}>
+              {pendingBooking ? (
+                <Chip
+                  icon={<CalendarMonthOutlined fontSize="small" />}
+                  label={`${pendingBooking.asset.code} booking will be created & linked when this sale is saved`}
+                  onDelete={() => setPendingBooking(null)}
+                  deleteIcon={<CloseOutlined fontSize="small" />}
+                />
+              ) : showBookingQuickAdd ? (
+                <AssetBookingQuickAddForm
+                  stakeholderId={stakeholder_id}
+                  currencyId={watch('currency_id')}
+                  costCenterId={outlet?.cost_center?.id}
+                  onAttach={(payload, asset) => {
+                    setPendingBooking({ payload, asset });
+                    setShowBookingQuickAdd(false);
+
+                    // Only auto-add the item when there's a real rate to put on it —
+                    // an item with an empty rate fails the sale's own item validation
+                    // (required+positive), which would silently block Checkout/Suspend.
+                    const billingProduct = asset?.billing_product_id
+                      && productOptions.find((p) => p.id === asset.billing_product_id);
+                    if (billingProduct && payload.rate) {
+                      setItems((items) => [...items, {
+                        product: billingProduct,
+                        product_id: billingProduct.id,
+                        store_id: null,
+                        description: `Booking for ${asset.code}`,
+                        quantity: 1,
+                        rate: payload.rate,
+                        conversion_factor: 1,
+                        measurement_unit_id: billingProduct.measurement_unit_id,
+                        unit_symbol: billingProduct.unit_symbol,
+                        available_balance: 'N/A',
+                      }]);
+                    }
+                  }}
+                  onCancel={() => setShowBookingQuickAdd(false)}
+                />
+              ) : (
+                <Button size="small" startIcon={<CalendarMonthOutlined />} onClick={() => setShowBookingQuickAdd(true)}>
+                  Attach Asset Booking
+                </Button>
+              )}
+            </Grid>
+          )}
 
           {!majorInfoOnly && (
             <Grid size={12}>
@@ -509,7 +599,7 @@ function SaleDialogForm({ toggleOpen, sale = null }) {
             <>
               {!majorInfoOnly && (
                 <Button
-                  loading={addSale.isPending || updateSale.isPending}
+                  loading={addSale.isPending || updateSale.isPending || finalizingBooking}
                   size='small'
                   variant='contained'
                   onClick={(e) => {
@@ -523,7 +613,7 @@ function SaleDialogForm({ toggleOpen, sale = null }) {
 
               {checkOrganizationPermission(PERMISSIONS.SALES_COMPLETE) && (
                 <Button
-                  loading={addSale.isPending || updateSale.isPending}
+                  loading={addSale.isPending || updateSale.isPending || finalizingBooking}
                   size='small'
                   type='submit'
                   color='success'

@@ -105,6 +105,8 @@ const SaleReceipt: React.FC<SaleReceiptProps> = ({
     if (sale) {
       reset({
         customer_tin: sale?.stakeholder?.tin || '',
+        customer_vrn: sale?.stakeholder?.vrn || '',
+        customer_name: sale?.stakeholder?.name || '',
         id: sale?.id?.toString() || '', // Convert number to string if needed
         vat_percentage: sale?.vat_percentage || 0,
         items: sale?.sale_items || []

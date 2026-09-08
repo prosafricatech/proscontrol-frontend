@@ -350,6 +350,18 @@ export async function getMenus(locale: string) {
       ],
     },
     {
+      label: sidebar.menu.assetBookings,
+      type: 'section',
+      children: [
+        {
+          uri: `/${locale}/asset-bookings`,
+          label: sidebar.menuItem.assetBookings,
+          type: 'nav-item',
+          icon: icon('assetBookings'),
+        },
+      ],
+    },
+    {
       label: sidebar.menu.procurementAndSupply,
       type: 'section',
       children: [
@@ -411,6 +423,12 @@ export async function getMenus(locale: string) {
       label: sidebar.menu.humanResources,
       type: 'section',
       children: [
+        {
+          uri: `/${locale}/humanResources/dashboard`,
+          label: sidebar.menuItem.hrDashboard,
+          type: 'nav-item',
+          icon: icon('dashboard'),
+        },
         {
           uri: `/${locale}/humanResources/employees`,
           label: sidebar.menuItem.employees,

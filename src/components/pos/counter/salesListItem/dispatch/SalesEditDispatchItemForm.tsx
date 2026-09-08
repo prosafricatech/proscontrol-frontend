@@ -2,15 +2,17 @@ import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import StoreSelector from '@/components/procurement/stores/StoreSelector';
 import productServices from '@/components/productAndServices/products/productServices';
 import { Div } from '@jumbo/shared';
+import { HighlightOff } from '@mui/icons-material';
 import {
   Divider,
   Grid,
+  IconButton,
   LinearProgress,
   TextField,
   Tooltip,
   Typography,
 } from '@mui/material';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useCounter } from '../../CounterProvider';
 
@@ -66,6 +68,39 @@ function SalesEditDispatchItemForm({
   }>();
 
   const [isRetrieving, setIsRetrieving] = useState<Record<number, boolean>>({});
+  const [removedItemIds, setRemovedItemIds] = useState<Set<number>>(new Set());
+  // Raw text per row, kept separate from the numeric RHF value — a
+  // controlled TextField bound straight to the coerced number would snap
+  // "5." back to "5" on every keystroke, making it impossible to ever type
+  // the fractional part of a decimal quantity.
+  const [quantityInputs, setQuantityInputs] = useState<Record<number, string>>(
+    {}
+  );
+
+  // Removed rows stay in `items` (so indices/RHF field paths stay stable)
+  // but are hidden here, with their quantity zeroed so the existing
+  // quantity > 0 submit filter (SalesDispatchForm.validateItems) drops them —
+  // DeliveryNoteController::update() rebuilds movements from scratch on
+  // every save, so an item missing from the payload is simply not recreated.
+  const visibleItems = useMemo(
+    () =>
+      items
+        .map((item, index) => ({ item, index }))
+        .filter(({ index }) => !removedItemIds.has(index)),
+    [items, removedItemIds]
+  );
+
+  const handleRemoveItem = useCallback(
+    (index: number) => {
+      setValue(`items.${index}.quantity`, 0, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+      setQuantityInputs((prev) => ({ ...prev, [index]: '' }));
+      setRemovedItemIds((prev) => new Set(prev).add(index));
+    },
+    [setValue]
+  );
 
   const retrieveBalances = useCallback(
     async (productId: number, storeId: number | undefined, index: number) => {
@@ -131,8 +166,19 @@ function SalesEditDispatchItemForm({
     });
   }, [items, retrieveBalances]);
 
+  useEffect(() => {
+    const initialInputs: Record<number, string> = {};
+    items.forEach((item, index) => {
+      initialInputs[index] = String(item.quantity);
+    });
+    setQuantityInputs(initialInputs);
+  }, [items]);
+
   const handleQuantityChange = (index: number, value: string) => {
-    setValue(`items.${index}.quantity`, Number(value), {
+    setQuantityInputs((prev) => ({ ...prev, [index]: value }));
+
+    const numeric = value === '' ? 0 : Number(value);
+    setValue(`items.${index}.quantity`, Number.isNaN(numeric) ? 0 : numeric, {
       shouldValidate: true,
       shouldDirty: true,
     });
@@ -145,7 +191,7 @@ function SalesEditDispatchItemForm({
 
   return (
     <>
-      {items.map((item, index) => (
+      {visibleItems.map(({ item, index }) => (
         <React.Fragment key={`${item.product.id}-${index}`}>
           <Grid
             container
@@ -163,7 +209,7 @@ function SalesEditDispatchItemForm({
             <Grid size={0.5}>
               <Div sx={{ mt: 1.7, mb: 1.7 }}>{index + 1}.</Div>
             </Grid>
-            <Grid size={{ xs: 9.5, md: 8, lg: 4 }}>
+            <Grid size={{ xs: 9.5, md: 8, lg: 3.5 }}>
               <Div sx={{ mt: 1.7, mb: 1.7 }}>
                 <Tooltip title='Dispatched Product'>
                   <Typography>{item.product.name}</Typography>
@@ -230,10 +276,26 @@ function SalesEditDispatchItemForm({
                   size='small'
                   error={!!errors.items?.[index]?.quantity}
                   helperText={errors.items?.[index]?.quantity?.message}
-                  value={watch(`items.${index}.quantity`) || ''}
+                  value={quantityInputs[index] ?? ''}
                   onChange={(e) => handleQuantityChange(index, e.target.value)}
                 />
               </Div>
+            </Grid>
+            <Grid
+              size={{ xs: 12, md: 12, lg: 0.5 }}
+              textAlign={{ xs: 'right', lg: 'center' }}
+            >
+              {visibleItems.length > 1 && (
+                <Tooltip title='Remove item'>
+                  <IconButton
+                    size='small'
+                    color='error'
+                    onClick={() => handleRemoveItem(index)}
+                  >
+                    <HighlightOff fontSize='small' />
+                  </IconButton>
+                </Tooltip>
+              )}
             </Grid>
           </Grid>
         </React.Fragment>

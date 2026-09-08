@@ -3,7 +3,11 @@
 import useProsERPStyles from '@/app/helpers/style-helpers';
 import LedgerSelectProvider from '@/components/accounts/ledgers/forms/LedgerSelectProvider';
 import StakeholderSelectProvider from '@/components/masters/stakeholders/StakeholderSelectProvider';
-import { faReceipt, faTableCells } from '@fortawesome/free-solid-svg-icons';
+import {
+  faReceipt,
+  faTableCells,
+  faChartColumn,
+} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import JumboCardQuick from '@jumbo/components/JumboCardQuick/JumboCardQuick';
 import { useJumboTheme } from '@jumbo/components/JumboTheme/hooks';
@@ -19,6 +23,7 @@ import React, { ReactNode, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import DippingReport from './dippingReport/DippingReport';
 import FuelVouchersReport from './FuelVouchersReport/FuelVouchersReport';
+import StockSalesSummaryReport from './stockSalesSummaryReport/StockSalesSummaryReport';
 
 interface ReportProps {
   closeDialog: () => void;
@@ -52,6 +57,8 @@ const FuelStationReports: React.FC = () => {
       openReport(DippingReport);
     } else if (reportParam === 'fv-report') {
       openReport(FuelVouchersReport);
+    } else if (reportParam === 'stock-sales-summary-report') {
+      openReport(StockSalesSummaryReport);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mounted, searchParams]);
@@ -122,6 +129,24 @@ const FuelStationReports: React.FC = () => {
                 style={{ fontSize: '48px' }}
               />
               <Typography mt={1}>FV Report</Typography>
+            </Grid>
+
+            {/* Fuel Stock & Sales Summary Report */}
+            <Grid
+              sx={{
+                cursor: 'pointer',
+                '&:hover': { bgcolor: 'action.hover' },
+              }}
+              size={{ xs: 6, md: 3, lg: 2 }}
+              p={2}
+              onClick={() => openReport(StockSalesSummaryReport)}
+            >
+              <FontAwesomeIcon
+                size='lg'
+                icon={faChartColumn}
+                style={{ fontSize: '48px' }}
+              />
+              <Typography mt={1}>Fuel Stock & Sales Summary</Typography>
             </Grid>
           </Grid>
         </JumboCardQuick>

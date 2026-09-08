@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from 'next';
 import '@/styles/style.css';
 import '@assets/fonts/noir-pro/styles.css';
+import 'react-big-calendar/lib/css/react-big-calendar.css';
+import '@/components/assetBookings/asset-booking-calendar-dark.css';
 import { ReactNode } from 'react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Providers } from '../providers';
