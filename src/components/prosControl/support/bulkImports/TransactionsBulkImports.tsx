@@ -16,12 +16,17 @@ import {
   Box,
   Button,
   Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Grid,
   LinearProgress,
   Paper,
   Stack,
   Tab,
   Tabs,
+  TextField,
   Typography,
   useTheme,
 } from '@mui/material';
@@ -29,6 +34,10 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSnackbar } from 'notistack';
 import React, { ChangeEvent, useState } from 'react';
 import supportServices from '../support-services';
+
+// Mirrors CONFIRMATION_PHRASE in TransactionsBulkImportController::import() —
+// keep both in sync if this changes.
+const CONFIRMATION_PHRASE = 'IMPORT TRANSACTIONS';
 
 interface ImportResult {
   message: string;
@@ -89,6 +98,9 @@ const TransactionsBulkImportsContent = () => {
   const [tabValue, setTabValue] = useState(0);
   const [file, setFile] = useState<File | null>(null);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
+  const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
+  const [confirmText, setConfirmText] = useState('');
+  const [password, setPassword] = useState('');
 
   // Download template mutation
   const { mutate: downloadTemplate, isPending: isDownloading } = useMutation({
@@ -112,14 +124,24 @@ const TransactionsBulkImportsContent = () => {
 
   // Upload transactions mutation
   const { mutate: importTransactions, isPending: isImporting } = useMutation({
-    mutationFn: (file: File) => {
+    mutationFn: ({
+      file,
+      password,
+    }: {
+      file: File;
+      password: string;
+    }) => {
       const formData = new FormData();
       formData.append('transactions_excel', file);
+      formData.append('password', password);
+      formData.append('confirmation_phrase', CONFIRMATION_PHRASE);
       return supportServices.importTransactionsBulkExcel(formData);
     },
     onSuccess: (response: any) => {
       setImportResult(response);
       setFile(null);
+      setConfirmText('');
+      setPassword('');
 
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       queryClient.invalidateQueries({ queryKey: ['payments'] });
@@ -179,6 +201,25 @@ const TransactionsBulkImportsContent = () => {
     setFile(null);
     setImportResult(null);
     setTabValue(0);
+  };
+
+  const handleCloseConfirmDialog = () => {
+    setOpenConfirmDialog(false);
+    setConfirmText('');
+    setPassword('');
+  };
+
+  const handleConfirmImport = () => {
+    if (!file || confirmText !== CONFIRMATION_PHRASE || !password) {
+      return;
+    }
+    setOpenConfirmDialog(false);
+    importTransactions({ file, password });
+    // Cleared immediately rather than waiting on the mutation to settle —
+    // no reason to keep a typed password in state longer than it takes to
+    // hand it off, success or failure.
+    setConfirmText('');
+    setPassword('');
   };
 
   const getTotalImported = () => {
@@ -474,7 +515,7 @@ const TransactionsBulkImportsContent = () => {
                   <Button
                     variant="contained"
                     startIcon={<UploadOutlined />}
-                    onClick={() => importTransactions(file)}
+                    onClick={() => setOpenConfirmDialog(true)}
                     disabled={isImporting}
                     size="large"
                     sx={{
@@ -748,6 +789,63 @@ const TransactionsBulkImportsContent = () => {
           )}
         </Stack>
       </TabPanel>
+
+      <Dialog
+        open={openConfirmDialog}
+        onClose={handleCloseConfirmDialog}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle sx={{ textAlign: 'center' }}>
+          <Typography
+            component="span"
+            fontWeight="bold"
+            sx={{ color: 'red', fontSize: '1.2rem' }}
+          >
+            Confirm Bulk Import
+          </Typography>
+          <Typography variant="body1" mt={1}>
+            This will create Payments, Receipts and Fund Transfers directly —
+            please confirm the action and enter your password.
+          </Typography>
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+            {file?.name}
+          </Typography>
+          <TextField
+            fullWidth
+            label={`Type "${CONFIRMATION_PHRASE}" to confirm`}
+            value={confirmText}
+            onChange={(e) => setConfirmText(e.target.value)}
+            onPaste={(e) => e.preventDefault()}
+            onDrop={(e) => e.preventDefault()}
+            onContextMenu={(e) => e.preventDefault()}
+            size="small"
+            margin="dense"
+            autoComplete="off"
+          />
+          <TextField
+            fullWidth
+            type="password"
+            label="Enter Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            size="small"
+            margin="dense"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseConfirmDialog}>Cancel</Button>
+          <Button
+            onClick={handleConfirmImport}
+            variant="contained"
+            disabled={confirmText !== CONFIRMATION_PHRASE || !password}
+          >
+            Confirm & Import
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

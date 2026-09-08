@@ -1,5 +1,5 @@
 import { useJumboTheme } from '@jumbo/components/JumboTheme/hooks';
-import { AddOutlined, UploadFileOutlined } from '@mui/icons-material';
+import { AddOutlined, FileDownloadOutlined, UploadFileOutlined } from '@mui/icons-material';
 import {
   Box,
   ButtonGroup,
@@ -9,10 +9,24 @@ import {
   alpha,
   useMediaQuery,
 } from '@mui/material';
+import { useMutation } from '@tanstack/react-query';
+import { useSnackbar } from 'notistack';
 import { useState } from 'react';
+import humanResourcesServices from '../humanResourcesServices';
 import { DepartmentsProvider } from '../departments/DepartmentsProvider';
 import EmployeeForm from './EmployeeForm';
 import EmployeeOnboardingDialog from './EmployeeOnboardingDialog';
+
+const getErrorMessage = (error: any) => {
+  const validationErrors = error?.response?.data?.validation_errors;
+  if (validationErrors && typeof validationErrors === 'object') {
+    const first = Object.values(validationErrors)[0] as any;
+    return Array.isArray(first) ? first[0] : String(first);
+  }
+  return (
+    error?.response?.data?.message || error?.message || 'Something went wrong'
+  );
+};
 
 // Simple Excel-styled icon with "XLS" badge
 const ExcelUploadIcon = () => (
@@ -48,6 +62,21 @@ const EmployeeActionTail = () => {
   const [openOnboardingDialog, setOpenOnboardingDialog] = useState(false);
   const { theme } = useJumboTheme();
   const belowLargeScreen = useMediaQuery(theme.breakpoints.down('lg'));
+  const { enqueueSnackbar } = useSnackbar();
+
+  const { mutate: exportExcel, isPending: isExporting } = useMutation({
+    mutationFn: humanResourcesServices.exportEmployeesExcel,
+    onSuccess: (blob: Blob) => {
+      const url = window.URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = 'Employees.xlsx';
+      anchor.click();
+      window.URL.revokeObjectURL(url);
+    },
+    onError: (error: any) =>
+      enqueueSnackbar(getErrorMessage(error), { variant: 'error' }),
+  });
 
   return (
     <>
@@ -94,6 +123,16 @@ const EmployeeActionTail = () => {
           >
             <ExcelUploadIcon />
           </IconButton>
+        </Tooltip>
+        <Tooltip title='Export Employees to Excel'>
+          <span>
+            <IconButton
+              disabled={isExporting}
+              onClick={() => exportExcel({})}
+            >
+              <FileDownloadOutlined />
+            </IconButton>
+          </span>
         </Tooltip>
         <Tooltip title='Add Employee'>
           <IconButton onClick={() => setOpenDialog(true)}>

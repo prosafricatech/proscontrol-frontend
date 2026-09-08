@@ -38,8 +38,22 @@ financialReportsServices.trialBalance = async (params) => {
   return data;
 }
 
+financialReportsServices.trialBalanceGrouped = async (params) => {
+  const { data } = await axios.get(`/api/financialReports/trialBalanceGrouped`, {
+    params
+  })
+  return data;
+}
+
 financialReportsServices.downloadExcelTrialBalance = async (params) => {
   const { data } = await axios.post(`/api/financialReports/downloadExcelTrialBalance`, params, {
+    responseType: 'blob',
+  })
+  return data;
+}
+
+financialReportsServices.downloadExcelTrialBalanceGrouped = async (params) => {
+  const { data } = await axios.post(`/api/financialReports/downloadExcelTrialBalanceGrouped`, params, {
     responseType: 'blob',
   })
   return data;

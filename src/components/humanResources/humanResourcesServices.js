@@ -64,6 +64,14 @@ humanResourcesServices.deleteEmployeePhoto = async (id) => {
     return data;
 }
 
+humanResourcesServices.exportEmployeesExcel = async (params = {}) => {
+    const { data } = await axios.get('/api/humanResources/employees/export-excel', {
+        params,
+        responseType: 'blob',
+    });
+    return data;
+}
+
 humanResourcesServices.downloadEmployeesRegistrationTemplate = async () => {
     const { data } = await axios.post('/api/humanResources/employees/registration-excel-template', {}, {
         responseType: 'blob',
