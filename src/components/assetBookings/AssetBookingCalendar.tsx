@@ -46,7 +46,7 @@ const AssetBookingCalendar = () => {
   const belowLargeScreen = useMediaQuery(theme.breakpoints.down('lg'));
   const belowSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
-  const [view, setView] = useState<View>('week');
+  const [view, setView] = useState<View>('month');
 
   // Resource columns (one per asset) are unusable squeezed onto a phone —
   // default to Agenda there instead. Only runs once on mount so a manual
@@ -56,8 +56,8 @@ const AssetBookingCalendar = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const [range, setRange] = useState(() => ({
-    from: dayjs().startOf('week').format('YYYY-MM-DD'),
-    to: dayjs().endOf('week').format('YYYY-MM-DD'),
+    from: dayjs().startOf('month').format('YYYY-MM-DD'),
+    to: dayjs().endOf('month').format('YYYY-MM-DD'),
   }));
   const [assetFilter, setAssetFilter] = useState<number | 'all'>('all');
 
@@ -90,11 +90,13 @@ const AssetBookingCalendar = () => {
   const events = useMemo(() => bookings.map((b: any) => {
     // Lead with whoever/whatever identifies this booking at a glance —
     // the customer for external bookings, the cost center for internal —
-    // the code alone isn't enough to tell events apart in the grid.
-    const identifier = b.stakeholder?.name ?? b.cost_center?.name;
-    const title = identifier
-      ? `${identifier} · ${b.code}`
-      : `${b.code} · ${dictionary.bookings.calendar.event[b.booking_type]}`;
+    // then which asset it actually is, since the code alone doesn't say
+    // "Africana Hall" vs "Bahari Beach Hall" at a glance in the all-assets view.
+    const identifier = b.stakeholder?.name ?? b.cost_center?.name
+      ?? dictionary.bookings.calendar.event[b.booking_type];
+    const assetName = b.asset_detail?.product_item?.identification
+      ?? b.asset_detail?.product_item?.product?.item_name;
+    const title = assetName ? `${assetName} · ${identifier} (${b.code})` : `${identifier} · ${b.code}`;
 
     return {
       id: b.id,
