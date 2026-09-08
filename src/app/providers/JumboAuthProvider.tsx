@@ -360,8 +360,7 @@ export const JumboAuthProvider = ({
           Notification.requestPermission().then(async (permission) => {
             if (permission === 'granted') {
               return getToken(messaging, {
-                vapidKey:
-                  'BE0EDrXQ7XCFZnkE3LpiSS3sag1jXpF3Vzb2c83R8HrRoKTknbDRcKHdCvC4dWjbZRA1zybLep2ozXiIO0oZniw',
+                vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
               })
                 .then((currentToken) => {
                   if (currentToken) {

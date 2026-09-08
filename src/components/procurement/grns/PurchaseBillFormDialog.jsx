@@ -521,7 +521,7 @@ const PurchaseBillFormDialog = ({ grn, order, setOpenDialog }) => {
                             render={({ field: ledgerField }) => (
                               <LedgerSelect
                                 label='Debit Ledger'
-                                allowedGroups={['Direct Expenses', 'Indirect Expenses']}
+                                allowedGroups={['Direct Expenses', 'Indirect Expenses', 'Current Assets', 'Current Liabilities']}
                                 onChange={(ledger) => ledgerField.onChange(ledger?.id ?? null)}
                               />
                             )}
