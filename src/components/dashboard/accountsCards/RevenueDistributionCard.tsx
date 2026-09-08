@@ -4,11 +4,16 @@ import { useJumboTheme } from '@jumbo/components/JumboTheme/hooks';
 import { Box, Skeleton, Typography, useMediaQuery } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import Highcharts from 'highcharts';
-import HighchartsReact from 'highcharts-react-official';
+// import HighchartsReact from 'highcharts-react-official';
 import exportingModule from 'highcharts/modules/exporting';
+import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
 import financialReportsServices from '../../accounts/reports/financial-reports-services';
 import { useDashboardSettings } from '../Dashboard';
+
+const HighchartsReact = dynamic(() => import('highcharts-react-official'), {
+  ssr: false,
+});
 
 interface RevenueData {
   ledger_name: string;
