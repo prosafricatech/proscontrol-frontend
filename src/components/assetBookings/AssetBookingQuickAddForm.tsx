@@ -72,7 +72,12 @@ const AssetBookingQuickAddForm: React.FC<AssetBookingQuickAddFormProps> = ({
   });
 
   const isUnavailable = Boolean(debounced) && availability && !availability.available;
-  const canSubmit = hasValidRange && !checkingAvailability && !isUnavailable;
+  // An asset with a billing product mapped only gets its sale line item
+  // auto-added when a rate is actually entered here — without this guard,
+  // clicking Add with the Rate box left blank used to attach the booking
+  // silently, with no item and no indication anything was skipped.
+  const needsRateForBilling = Boolean(asset?.billing_product_id) && !rate;
+  const canSubmit = hasValidRange && !checkingAvailability && !isUnavailable && !needsRateForBilling;
 
   return (
     <Grid container spacing={1} p={1} sx={{ border: '1px dashed', borderColor: 'divider', borderRadius: 1 }}>
@@ -111,6 +116,13 @@ const AssetBookingQuickAddForm: React.FC<AssetBookingQuickAddFormProps> = ({
         <Grid size={12}>
           <Alert severity="info">
             {asset.code} has no billing product mapped — you'll need to add the appropriate item to this sale manually.
+          </Alert>
+        </Grid>
+      )}
+      {needsRateForBilling && (
+        <Grid size={12}>
+          <Alert severity="warning">
+            Enter a rate to add {asset.billing_product?.item_name || 'the billing product'} as a line item on this sale — it won't be added automatically without one.
           </Alert>
         </Grid>
       )}

@@ -151,6 +151,8 @@
           "identification": { "required": "Kitambulisho / namba ya serial inahitajika" },
           "acquisitionDate": { "required": "Tarehe ya ununuzi inahitajika" },
           "acquisitionCost": { "required": "Gharama ya ununuzi inahitajika", "positive": "Gharama ya ununuzi lazima iwe zaidi ya 0" },
+          "salvageValue": { "lessThan": "Thamani ya mabaki lazima iwe pungufu ya gharama ya ununuzi" },
+          "accumulatedDepreciationBf": { "lessThan": "Uchakavu uliokusanywa lazima uwe pungufu ya gharama ya ununuzi" },
           "depreciationMethod": { "required": "Mbinu ya uchakavu inahitajika" },
           "usefulLifeMonths": { "required": "Muda wa matumizi unahitajika kwa uchakavu wa mstari ulionyooka" },
           "depreciationRate": { "required": "Kiwango cha uchakavu kinahitajika kwa uchakavu wa salio linalopungua" },

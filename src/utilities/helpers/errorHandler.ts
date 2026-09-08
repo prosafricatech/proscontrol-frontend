@@ -13,20 +13,25 @@ export const getErrorMessage = (error: any) => {
 
     // Try different common response formats
     if (typeof data === 'string') return data;
-    if (data?.message) return data.message;
-    if (data?.error)
-      return typeof data.error === 'string' ? data.error : data.error.message;
 
-    // Handle validation errors
+    // Field-level validation errors are more actionable than the generic
+    // wrapper message ("Please check the information you submitted") that
+    // always accompanies them — surface those first so the user learns what
+    // was actually wrong instead of just that something was.
     if (data?.validation_errors) {
       const errors = data.validation_errors;
       // If it's an object with arrays of errors
       if (typeof errors === 'object' && !Array.isArray(errors)) {
         const messages = Object.values(errors).flat();
-        return messages.join(', ');
+        if (messages.length > 0) return messages.join(', ');
+      } else if (Array.isArray(errors) && errors.length > 0) {
+        return errors.join(', ');
       }
-      return Array.isArray(errors) ? errors.join(', ') : String(errors);
     }
+
+    if (data?.message) return data.message;
+    if (data?.error)
+      return typeof data.error === 'string' ? data.error : data.error.message;
 
     // Handle general errors object
     if (data?.errors) {

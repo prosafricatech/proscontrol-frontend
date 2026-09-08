@@ -23,9 +23,6 @@ import dayjs from 'dayjs';
 import { DateTimePicker } from '@mui/x-date-pickers';
 import CostCenterSelector from '@/components/masters/costCenters/CostCenterSelector';
 import StakeholderSelector from '@/components/masters/stakeholders/StakeholderSelector';
-import CurrencySelector from '@/components/masters/Currencies/CurrencySelector';
-import CommaSeparatedField from '@/shared/Inputs/CommaSeparatedField';
-import { sanitizedNumber } from '@/app/helpers/input-sanitization-helpers';
 import AssetDetailSelector from './AssetDetailSelector';
 import assetBookingsServices from './asset-bookings-services';
 
@@ -93,12 +90,6 @@ const AssetBookingFormDialogContent: React.FC<AssetBookingFormDialogContentProps
         return !start_at || !value || dayjs(value).isAfter(dayjs(start_at));
       }),
     purpose: yup.string().nullable(),
-    rate: yup.number().nullable().transform((v, o) => (o === '' ? null : v)),
-    currency_id: yup.number().nullable()
-      .when('rate', {
-        is: (r: any) => !!r,
-        then: (schema) => schema.required(),
-      }),
   });
 
   const {
@@ -118,8 +109,6 @@ const AssetBookingFormDialogContent: React.FC<AssetBookingFormDialogContentProps
       start_at: booking?.start_at ? dayjs(booking.start_at).format('YYYY-MM-DDTHH:mm:ss') : (defaultStartAt ?? ''),
       end_at: booking?.end_at ? dayjs(booking.end_at).format('YYYY-MM-DDTHH:mm:ss') : (defaultEndAt ?? ''),
       purpose: booking?.purpose ?? '',
-      rate: booking?.rate ?? '',
-      currency_id: booking?.currency_id ?? 1,
     },
   });
 
@@ -305,30 +294,6 @@ const AssetBookingFormDialogContent: React.FC<AssetBookingFormDialogContentProps
             </Grid>
           )}
 
-          <Grid size={12}>
-            <Typography variant="subtitle2" color="text.secondary" mt={1}>{dictionary.bookings.form.sections.billing}</Typography>
-          </Grid>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <TextField
-              fullWidth
-              size="small"
-              label={dictionary.bookings.form.labels.rate}
-              value={watch('rate') || ''}
-              InputProps={{ inputComponent: CommaSeparatedField as any }}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                setValue('rate', sanitizedNumber(e.target.value), { shouldValidate: true, shouldDirty: true });
-              }}
-            />
-          </Grid>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <CurrencySelector
-              label={dictionary.bookings.form.labels.currency}
-              required={false}
-              defaultValue={booking?.currency_id ?? 1}
-              frontError={errors.currency_id as any}
-              onChange={(newValue: any) => setValue('currency_id', newValue ? newValue.id : null, { shouldValidate: true })}
-            />
-          </Grid>
           <Grid size={12}>
             <TextField
               fullWidth
