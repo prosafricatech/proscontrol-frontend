@@ -17,6 +17,12 @@ export interface BillOption {
   total_amount?: number;
   approved_payment_amount?: number;
   unapproved_amount?: number;
+  // When true, the amounts above are capped against the bill's originating
+  // Purchase Order (an advance already approved directly on it) rather than
+  // the bill's own value — see SupplierInvoice::getIsCappedByPurchaseOrderAttribute()
+  // on the backend.
+  capped_by_purchase_order?: boolean;
+  purchase_order_no?: string | null;
   stakeholder?: { id: number; name: string } | null;
 }
 
@@ -142,7 +148,11 @@ function BillPicker({
             option?.invoiceNo
               ? `${option.invoiceNo} (${readableDate(option.transaction_date, false)} - ${Number(
                   option.unapproved_amount ?? option.net_amount ?? option.total_amount ?? 0
-                ).toLocaleString()})`
+                ).toLocaleString()}${
+                  option.capped_by_purchase_order
+                    ? ` - capped by ${option.purchase_order_no}`
+                    : ''
+                })`
               : ''
           }
           isOptionEqualToValue={(option: any, val: any) => option.id === val?.id}

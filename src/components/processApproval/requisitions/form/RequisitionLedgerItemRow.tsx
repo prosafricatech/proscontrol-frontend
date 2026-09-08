@@ -269,7 +269,13 @@ function RequisitionLedgerItemRow({
                 }
                 secondary={
                   <>
-                    <Tooltip title={'Order Date - (Amount)'}>
+                    <Tooltip
+                      title={
+                        ledger_item.relatable?.capped_by_purchase_order
+                          ? `Order Date - (Amount) — capped against ${ledger_item.relatable?.purchase_order_no}, not this Bill itself`
+                          : 'Order Date - (Amount)'
+                      }
+                    >
                       <Typography
                         variant={'caption'}
                         fontSize={14}
@@ -289,6 +295,10 @@ function RequisitionLedgerItemRow({
                                 }
                               : { minimumFractionDigits: 2 }
                           ) || ''
+                        }${
+                          ledger_item.relatable?.capped_by_purchase_order
+                            ? ` (${ledger_item.relatable?.purchase_order_no})`
+                            : ''
                         }`}
                       </Typography>
                     </Tooltip>

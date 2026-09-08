@@ -216,7 +216,9 @@ function RequisitionLedgerItemForm({
                   }
 
                   return this.createError({
-                    message: `Amount should not exceed unapproved amount (${maxAmount.toLocaleString()}) of selected relatable`,
+                    message: currentRelatable?.capped_by_purchase_order
+                      ? `Amount should not exceed unapproved amount (${maxAmount.toLocaleString()}) — capped against ${currentRelatable?.purchase_order_no}, not this Bill itself`
+                      : `Amount should not exceed unapproved amount (${maxAmount.toLocaleString()}) of selected relatable`,
                   });
                 }
               )
@@ -401,7 +403,9 @@ function RequisitionLedgerItemForm({
               if (currentAmount > maxUnapprovedAmount) {
                 setError('amount', {
                   type: 'manual',
-                  message: `Amount should not exceed unapproved amount (${maxUnapprovedAmount.toLocaleString()}) of selected relatable`,
+                  message: latestRelated?.capped_by_purchase_order
+                    ? `Amount should not exceed unapproved amount (${maxUnapprovedAmount.toLocaleString()}) — capped against ${latestRelated?.purchase_order_no}, not this Bill itself`
+                    : `Amount should not exceed unapproved amount (${maxUnapprovedAmount.toLocaleString()}) of selected relatable`,
                 });
               } else {
                 clearErrors('amount');
