@@ -163,7 +163,14 @@ export default function BankReconciliationWorkspace({ bankAccountId }: Props) {
         )}
 
         <Paper variant='outlined'>
-          <Tabs value={tab} onChange={(e, v) => setTab(v)} sx={{ borderBottom: 1, borderColor: 'divider' }}>
+          <Tabs
+            value={tab}
+            onChange={(e, v) => setTab(v)}
+            variant='scrollable'
+            scrollButtons='auto'
+            allowScrollButtonsMobile
+            sx={{ borderBottom: 1, borderColor: 'divider' }}
+          >
             <Tab label={`Unmatched Statement Lines (${unmatched_lines.length})`} />
             <Tab label={`Unmatched Book Entries (${unmatched_journals.length})`} />
             <Tab label={`Matched (${matched_lines.length})`} />

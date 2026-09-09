@@ -76,8 +76,10 @@ const StatTile = ({
         width: 48,
         height: 48,
         borderRadius: '50%',
-        bgcolor: color ? `${color}.light` : 'action.hover',
-        color: color ? `${color}.dark` : 'text.secondary',
+        bgcolor: 'transparent',
+        border: '2px solid',
+        borderColor: color ? `${color}.main` : 'text.secondary',
+        color: color ? `${color}.main` : 'text.secondary',
         flexShrink: 0,
       }}
     >
