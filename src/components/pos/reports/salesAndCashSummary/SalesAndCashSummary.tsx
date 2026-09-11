@@ -4,10 +4,12 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControlLabel,
   Grid,
   IconButton,
   LinearProgress,
   Stack,
+  Switch,
   Tooltip,
   Typography,
   useMediaQuery,
@@ -45,8 +47,16 @@ interface ReportData {
   }[];
   credit_sales: {
     name: string;
-    credit_amount: number;
+    amount: number;
+  }[];
+  payments_received: {
+    name: string;
+    amount: number;
+  }[];
+  credit_sales_summary: {
+    name: string;
     debit_amount: number;
+    credit_amount: number;
     balance: number;
   }[];
   payments: {
@@ -72,9 +82,10 @@ interface ReportDocumentProps {
   from: string;
   to: string;
   costCenters: CostCenter[];
+  separateCreditSales?: boolean;
 }
 
-const ReportDocument: React.FC<ReportDocumentProps> = ({ reportData, authOrganization, user, from, to, costCenters }) => {
+const ReportDocument: React.FC<ReportDocumentProps> = ({ reportData, authOrganization, user, from, to, costCenters, separateCreditSales = false }) => {
   const reportPeriod = `${readableDate(from, true)} to ${readableDate(to, true)}`;
   const mainColor = authOrganization.organization.settings?.main_color || "#2113AD";
   const lightColor = authOrganization.organization.settings?.light_color || "#bec5da";
@@ -83,10 +94,15 @@ const ReportDocument: React.FC<ReportDocumentProps> = ({ reportData, authOrganiz
   // Calculate total for Payments Collected table
   const totalCollectedAmount = reportData.collection_distribution.reduce((acc, cd) => acc + (cd.amount || 0), 0);
 
-  // Calculate totals for Credits and Received Payments table
-  const totalCreditAmount = reportData.credit_sales.reduce((acc, creditSale) => acc + (creditSale.credit_amount || 0), 0);
-  const totalDebitAmount = reportData.credit_sales.reduce((acc, creditSale) => acc + (creditSale.debit_amount || 0), 0);
-  const totalBalance = reportData.credit_sales.reduce((acc, creditSale) => acc + (creditSale.balance || 0), 0);
+  // Calculate totals for Credit Sales and Payments Received tables
+  const totalCreditSalesAmount = reportData.credit_sales.reduce((acc, creditSale) => acc + (creditSale.amount || 0), 0);
+  const totalPaymentsReceivedAmount = (reportData.payments_received || []).reduce((acc, paymentReceived) => acc + (paymentReceived.amount || 0), 0);
+
+  // Calculate totals for the combined Credits and Received Payments table
+  const creditSalesSummary = reportData.credit_sales_summary || [];
+  const totalCreditSalesSummaryDebit = creditSalesSummary.reduce((acc, item) => acc + (item.debit_amount || 0), 0);
+  const totalCreditSalesSummaryCredit = creditSalesSummary.reduce((acc, item) => acc + (item.credit_amount || 0), 0);
+  const totalCreditSalesSummaryBalance = creditSalesSummary.reduce((acc, item) => acc + (item.balance || 0), 0);
 
   // Calculate total for Payments table
   const totalPaymentsAmount = reportData.payments.reduce((acc, payment) => acc + (payment.amount || 0), 0);
@@ -161,39 +177,86 @@ const ReportDocument: React.FC<ReportDocumentProps> = ({ reportData, authOrganiz
           </View>
         </View>
 
-        {/* Credits and Received Payments Table */}
-        {reportData.credit_sales.length > 0 &&
-          <View style={{...pdfStyles.table, minHeight: 70 }}>
-            <View style={{ ...pdfStyles.tableRow, marginTop: 10}}>
-              <Text style={{ ...pdfStyles.tableHeader, ...pdfStyles.midInfo, backgroundColor: mainColor, color: contrastText, flex: 1, textAlign: 'center' }}>Credits and Received Payments</Text>
-            </View>
-            <View style={pdfStyles.tableRow}>
-              <Text style={{...pdfStyles.tableHeader, backgroundColor: mainColor, color: contrastText, flex : 0.1 }}>S/N</Text>
-              <Text style={{...pdfStyles.tableHeader, backgroundColor: mainColor, color: contrastText, flex : 0.3 }}>Client</Text>
-              <Text style={{...pdfStyles.tableHeader, backgroundColor: mainColor, color: contrastText, flex : 0.2, textAlign: 'right' }}>Purchase</Text>
-              <Text style={{...pdfStyles.tableHeader, backgroundColor: mainColor, color: contrastText, flex : 0.2, textAlign: 'right' }}>Payment</Text>
-              <Text style={{...pdfStyles.tableHeader, backgroundColor: mainColor, color: contrastText, flex : 0.2, textAlign: 'right' }}>Balance</Text>
-            </View>
-            {
-              reportData.credit_sales.map((creditSale, index) => (
-                <View key={index} style={pdfStyles.tableRow}>
-                  <Text style={{ ...pdfStyles.tableCell, backgroundColor: index % 2 === 0 ? '#FFFFFF' : lightColor, flex : 0.1 }}>{index + 1}</Text>
-                  <Text style={{ ...pdfStyles.tableCell, backgroundColor: index % 2 === 0 ? '#FFFFFF' : lightColor, flex : 0.3 }}>{creditSale.name}</Text>
-                  <Text style={{ ...pdfStyles.tableCell, backgroundColor: index % 2 === 0 ? '#FFFFFF' : lightColor, flex : 0.2, textAlign: 'right' }}>{creditSale.debit_amount ? creditSale.debit_amount?.toLocaleString('en-US',{maximumFractionDigits:2,minimumFractionDigits:2}) : '-'}</Text>
-                  <Text style={{ ...pdfStyles.tableCell, backgroundColor: index % 2 === 0 ? '#FFFFFF' : lightColor, flex : 0.2, textAlign: 'right' }}>{creditSale.credit_amount ? creditSale.credit_amount?.toLocaleString('en-US',{maximumFractionDigits:2,minimumFractionDigits:2}) : '-'}</Text>
-                  <Text style={{ ...pdfStyles.tableCell, backgroundColor: index % 2 === 0 ? '#FFFFFF' : lightColor, flex : 0.2, textAlign: 'right' }}>{creditSale.balance.toLocaleString('en-US',{maximumFractionDigits:2,minimumFractionDigits:2})}</Text>
+        {separateCreditSales ? (
+          <>
+            {/* Credit Sales Table */}
+            {reportData.credit_sales.length > 0 &&
+              <View style={{...pdfStyles.table, minHeight: 50 }}>
+                <View style={{ ...pdfStyles.tableRow, marginTop: 10}}>
+                  <Text style={{ ...pdfStyles.tableHeader, ...pdfStyles.midInfo, backgroundColor: mainColor, color: contrastText, flex: 1, textAlign: 'center' }}>Credit Sales</Text>
                 </View>
-              ))
+                {
+                  reportData.credit_sales.map((creditSale, index) => (
+                    <View key={index} style={{ ...pdfStyles.tableRow, flexDirection: 'row' }}>
+                      <Text style={{ ...pdfStyles.tableCell, backgroundColor: index % 2 === 0 ? '#FFFFFF' : lightColor, flex : 0.7 }}>{creditSale.name}</Text>
+                      <Text style={{ ...pdfStyles.tableCell, backgroundColor: index % 2 === 0 ? '#FFFFFF' : lightColor, flex : 0.3, textAlign: 'right' }}>{creditSale.amount?.toLocaleString('en-US',{maximumFractionDigits:2,minimumFractionDigits:2})}</Text>
+                    </View>
+                  ))
+                }
+                {/* Totals Row */}
+                <View style={{ ...pdfStyles.tableRow, flexDirection: 'row' }}>
+                  <Text style={{ ...pdfStyles.tableCell, backgroundColor: mainColor, color: contrastText, flex: 0.7 }}>Total</Text>
+                  <Text style={{ ...pdfStyles.tableCell, backgroundColor: mainColor, color: contrastText, flex: 0.3, textAlign: 'right' }}>{totalCreditSalesAmount?.toLocaleString('en-US',{maximumFractionDigits:2,minimumFractionDigits:2})}</Text>
+                </View>
+              </View>
             }
-            {/* Totals Row */}
-            <View style={pdfStyles.tableRow}>
-              <Text style={{ ...pdfStyles.tableCell, backgroundColor: mainColor, color: contrastText, flex: 0.41, textAlign: 'center' }}>Total</Text>
-              <Text style={{ ...pdfStyles.tableCell, backgroundColor: mainColor, color: contrastText, flex: 0.2, textAlign: 'right' }}>{totalDebitAmount?.toLocaleString('en-US',{maximumFractionDigits:2,minimumFractionDigits:2})}</Text>
-              <Text style={{ ...pdfStyles.tableCell, backgroundColor: mainColor, color: contrastText, flex: 0.2, textAlign: 'right' }}>{totalCreditAmount?.toLocaleString('en-US',{maximumFractionDigits:2,minimumFractionDigits:2})}</Text>
-              <Text style={{ ...pdfStyles.tableCell, backgroundColor: mainColor, color: contrastText, flex: 0.2, textAlign: 'right' }}>{totalBalance.toLocaleString('en-US',{maximumFractionDigits:2,minimumFractionDigits:2})}</Text>
+
+            {/* Payments Received Table */}
+            {(reportData.payments_received?.length ?? 0) > 0 &&
+              <View style={{...pdfStyles.table, minHeight: 50 }}>
+                <View style={{ ...pdfStyles.tableRow, marginTop: 10}}>
+                  <Text style={{ ...pdfStyles.tableHeader, ...pdfStyles.midInfo, backgroundColor: mainColor, color: contrastText, flex: 1, textAlign: 'center' }}>Payments Received</Text>
+                </View>
+                {
+                  reportData.payments_received.map((paymentReceived, index) => (
+                    <View key={index} style={{ ...pdfStyles.tableRow, flexDirection: 'row' }}>
+                      <Text style={{ ...pdfStyles.tableCell, backgroundColor: index % 2 === 0 ? '#FFFFFF' : lightColor, flex : 0.7 }}>{paymentReceived.name}</Text>
+                      <Text style={{ ...pdfStyles.tableCell, backgroundColor: index % 2 === 0 ? '#FFFFFF' : lightColor, flex : 0.3, textAlign: 'right' }}>{paymentReceived.amount?.toLocaleString('en-US',{maximumFractionDigits:2,minimumFractionDigits:2})}</Text>
+                    </View>
+                  ))
+                }
+                {/* Totals Row */}
+                <View style={{ ...pdfStyles.tableRow, flexDirection: 'row' }}>
+                  <Text style={{ ...pdfStyles.tableCell, backgroundColor: mainColor, color: contrastText, flex: 0.7 }}>Total</Text>
+                  <Text style={{ ...pdfStyles.tableCell, backgroundColor: mainColor, color: contrastText, flex: 0.3, textAlign: 'right' }}>{totalPaymentsReceivedAmount?.toLocaleString('en-US',{maximumFractionDigits:2,minimumFractionDigits:2})}</Text>
+                </View>
+              </View>
+            }
+          </>
+        ) : (
+          /* Credits and Received Payments Table (combined — default) */
+          creditSalesSummary.length > 0 &&
+            <View style={{...pdfStyles.table, minHeight: 70 }}>
+              <View style={{ ...pdfStyles.tableRow, marginTop: 10}}>
+                <Text style={{ ...pdfStyles.tableHeader, ...pdfStyles.midInfo, backgroundColor: mainColor, color: contrastText, flex: 1, textAlign: 'center' }}>Credits and Received Payments</Text>
+              </View>
+              <View style={pdfStyles.tableRow}>
+                <Text style={{...pdfStyles.tableHeader, backgroundColor: mainColor, color: contrastText, flex : 0.1 }}>S/N</Text>
+                <Text style={{...pdfStyles.tableHeader, backgroundColor: mainColor, color: contrastText, flex : 0.3 }}>Client</Text>
+                <Text style={{...pdfStyles.tableHeader, backgroundColor: mainColor, color: contrastText, flex : 0.2, textAlign: 'right' }}>Purchase</Text>
+                <Text style={{...pdfStyles.tableHeader, backgroundColor: mainColor, color: contrastText, flex : 0.2, textAlign: 'right' }}>Payment</Text>
+                <Text style={{...pdfStyles.tableHeader, backgroundColor: mainColor, color: contrastText, flex : 0.2, textAlign: 'right' }}>Balance</Text>
+              </View>
+              {
+                creditSalesSummary.map((item, index) => (
+                  <View key={index} style={pdfStyles.tableRow}>
+                    <Text style={{ ...pdfStyles.tableCell, backgroundColor: index % 2 === 0 ? '#FFFFFF' : lightColor, flex : 0.1 }}>{index + 1}</Text>
+                    <Text style={{ ...pdfStyles.tableCell, backgroundColor: index % 2 === 0 ? '#FFFFFF' : lightColor, flex : 0.3 }}>{item.name}</Text>
+                    <Text style={{ ...pdfStyles.tableCell, backgroundColor: index % 2 === 0 ? '#FFFFFF' : lightColor, flex : 0.2, textAlign: 'right' }}>{item.debit_amount ? item.debit_amount?.toLocaleString('en-US',{maximumFractionDigits:2,minimumFractionDigits:2}) : '-'}</Text>
+                    <Text style={{ ...pdfStyles.tableCell, backgroundColor: index % 2 === 0 ? '#FFFFFF' : lightColor, flex : 0.2, textAlign: 'right' }}>{item.credit_amount ? item.credit_amount?.toLocaleString('en-US',{maximumFractionDigits:2,minimumFractionDigits:2}) : '-'}</Text>
+                    <Text style={{ ...pdfStyles.tableCell, backgroundColor: index % 2 === 0 ? '#FFFFFF' : lightColor, flex : 0.2, textAlign: 'right' }}>{item.balance.toLocaleString('en-US',{maximumFractionDigits:2,minimumFractionDigits:2})}</Text>
+                  </View>
+                ))
+              }
+              {/* Totals Row */}
+              <View style={pdfStyles.tableRow}>
+                <Text style={{ ...pdfStyles.tableCell, backgroundColor: mainColor, color: contrastText, flex: 0.41, textAlign: 'center' }}>Total</Text>
+                <Text style={{ ...pdfStyles.tableCell, backgroundColor: mainColor, color: contrastText, flex: 0.2, textAlign: 'right' }}>{totalCreditSalesSummaryDebit?.toLocaleString('en-US',{maximumFractionDigits:2,minimumFractionDigits:2})}</Text>
+                <Text style={{ ...pdfStyles.tableCell, backgroundColor: mainColor, color: contrastText, flex: 0.2, textAlign: 'right' }}>{totalCreditSalesSummaryCredit?.toLocaleString('en-US',{maximumFractionDigits:2,minimumFractionDigits:2})}</Text>
+                <Text style={{ ...pdfStyles.tableCell, backgroundColor: mainColor, color: contrastText, flex: 0.2, textAlign: 'right' }}>{totalCreditSalesSummaryBalance.toLocaleString('en-US',{maximumFractionDigits:2,minimumFractionDigits:2})}</Text>
+              </View>
             </View>
-          </View>
-        }
+        )}
 
         {/* Fuel Vouchers to Internal/Non-Collectible Ledgers Table */}
         {(reportData.non_collectible_fuel_vouchers?.length ?? 0) > 0 &&
@@ -271,6 +334,9 @@ const SalesAndCashSummary: React.FC<SalesAndCashSummaryProps> = ({ setOpenSalesA
   const [reportData, setReportData] = useState<ReportData | null>(null);
   const [showOnScreen, setShowOnScreen] = useState(true);
   const [isDownloadingExcel, setIsDownloadingExcel] = useState(false);
+  // Most orgs want the debtor's Purchase/Payment/Balance in one table; only some want
+  // Credit Sales and Payments Received broken out separately.
+  const [separateCreditSales, setSeparateCreditSales] = useState(false);
 
   // Screen handling constants
   const {theme} = useJumboTheme();
@@ -310,6 +376,7 @@ const SalesAndCashSummary: React.FC<SalesAndCashSummaryProps> = ({ setOpenSalesA
         from: watch('from'),
         to: watch('to'),
         cost_center_ids: watch('cost_center_ids'),
+        separate_credit_sales: separateCreditSales,
       };
       const responseData = await financialReportsServices.downloadExcelSalesAndCashSummary(filters);
 
@@ -436,6 +503,19 @@ const SalesAndCashSummary: React.FC<SalesAndCashSummaryProps> = ({ setOpenSalesA
               <Grid size={12} textAlign="right">
                 <Stack direction="row" spacing={0.5} justifyContent="flex-end" alignItems="center">
                   {reportData && (
+                    <FormControlLabel
+                      sx={{ mr: 1 }}
+                      control={
+                        <Switch
+                          size="small"
+                          checked={separateCreditSales}
+                          onChange={(e) => setSeparateCreditSales(e.target.checked)}
+                        />
+                      }
+                      label="Show Credit Sales & Payments Received separately"
+                    />
+                  )}
+                  {reportData && (
                     <FileExportGrid
                       exportExcel
                       handlExcelExport={() => downloadExcel()}
@@ -466,6 +546,7 @@ const SalesAndCashSummary: React.FC<SalesAndCashSummaryProps> = ({ setOpenSalesA
               <SalesAndCashSummaryOnScreen
                 reportData={reportData}
                 authOrganization={authOrganization as AuthOrganization}
+                separateCreditSales={separateCreditSales}
               />
             ) : (
               <PDFContent
@@ -477,6 +558,7 @@ const SalesAndCashSummary: React.FC<SalesAndCashSummaryProps> = ({ setOpenSalesA
                     to={watch('to')}
                     user={user as User}
                     costCenters={watch('cost_centers')}
+                    separateCreditSales={separateCreditSales}
                   />
                 }
                 fileName={`Sales And Cash Summary From ${readableDate(watch('from'), true)} To ${readableDate(watch('to'), true)}`}

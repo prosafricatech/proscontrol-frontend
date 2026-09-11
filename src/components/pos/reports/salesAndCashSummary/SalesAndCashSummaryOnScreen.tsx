@@ -21,8 +21,18 @@ interface CollectionDistribution {
 
 interface CreditSale {
   name: string;
-  credit_amount?: number;
-  debit_amount?: number;
+  amount: number;
+}
+
+interface PaymentReceived {
+  name: string;
+  amount: number;
+}
+
+interface CreditSaleSummary {
+  name: string;
+  debit_amount: number;
+  credit_amount: number;
   balance: number;
 }
 
@@ -41,6 +51,8 @@ interface ReportData {
   revenue: number;
   collection_distribution: CollectionDistribution[];
   credit_sales: CreditSale[];
+  payments_received: PaymentReceived[];
+  credit_sales_summary?: CreditSaleSummary[];
   payments: Payment[];
   non_collectible_fuel_vouchers?: NonCollectibleFuelVoucher[];
 }
@@ -48,11 +60,13 @@ interface ReportData {
 interface SalesAndCashSummaryOnScreenProps {
   reportData: ReportData;
   authOrganization: AuthOrganization;
+  separateCreditSales?: boolean;
 }
 
-const SalesAndCashSummaryOnScreen: React.FC<SalesAndCashSummaryOnScreenProps> = ({ 
-  reportData, 
-  authOrganization 
+const SalesAndCashSummaryOnScreen: React.FC<SalesAndCashSummaryOnScreenProps> = ({
+  reportData,
+  authOrganization,
+  separateCreditSales = false,
 }) => {
   const theme = useTheme();
   const mainColor = authOrganization.organization.settings?.main_color || "#2113AD";
@@ -64,16 +78,25 @@ const SalesAndCashSummaryOnScreen: React.FC<SalesAndCashSummaryOnScreenProps> = 
     (acc, cd) => acc + (cd.amount || 0), 
     0
   );
-  const totalCreditAmount = reportData.credit_sales.reduce(
-    (acc, creditSale) => acc + (creditSale.credit_amount || 0), 
+  const totalCreditSalesAmount = reportData.credit_sales.reduce(
+    (acc, creditSale) => acc + (creditSale.amount || 0),
     0
   );
-  const totalDebitAmount = reportData.credit_sales.reduce(
-    (acc, creditSale) => acc + (creditSale.debit_amount || 0), 
+  const totalPaymentsReceivedAmount = reportData.payments_received.reduce(
+    (acc, paymentReceived) => acc + (paymentReceived.amount || 0),
     0
   );
-  const totalBalance = reportData.credit_sales.reduce(
-    (acc, creditSale) => acc + (creditSale.balance || 0), 
+  const creditSalesSummary = reportData.credit_sales_summary || [];
+  const totalCreditSalesSummaryDebit = creditSalesSummary.reduce(
+    (acc, item) => acc + (item.debit_amount || 0),
+    0
+  );
+  const totalCreditSalesSummaryCredit = creditSalesSummary.reduce(
+    (acc, item) => acc + (item.credit_amount || 0),
+    0
+  );
+  const totalCreditSalesSummaryBalance = creditSalesSummary.reduce(
+    (acc, item) => acc + (item.balance || 0),
     0
   );
   const totalPaymentsAmount = reportData.payments.reduce(
@@ -157,104 +180,217 @@ const SalesAndCashSummaryOnScreen: React.FC<SalesAndCashSummaryOnScreenProps> = 
         </Box>
       )}
 
-      {/* Credits and Received Payments Section */}
-      {reportData.credit_sales.length > 0 && (
-        <Box sx={{ mb: 3 }}>
-          <Typography
-            variant="h6"
-            sx={{
-              backgroundColor: mainColor,
-              color: contrastText,
-              padding: 1.5,
-              textAlign: "center",
-              
-              fontSize: '1rem'
-            }}
-          >
-            Credits and Received Payments
-          </Typography>
-          <TableContainer 
-            component={Paper}
-            sx={{
-              boxShadow: theme.shadows[1],
-              '& .MuiTableRow-root:hover': {
-                backgroundColor: theme.palette.action.hover,
-              }
-            }}
-          >
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell sx={{ backgroundColor: theme.palette.background.default,  fontSize: '0.875rem' }}>
-                    Client
-                  </TableCell>
-                  <TableCell align="right" sx={{ backgroundColor: theme.palette.background.default,  fontSize: '0.875rem' }}>
-                    Purchase
-                  </TableCell>
-                  <TableCell align="right" sx={{ backgroundColor: theme.palette.background.default,  fontSize: '0.875rem' }}>
-                    Payment
-                  </TableCell>
-                  <TableCell align="right" sx={{ backgroundColor: theme.palette.background.default,  fontSize: '0.875rem' }}>
-                    Balance
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {reportData.credit_sales.map((creditSale, index) => (
-                  <TableRow
-                    key={index}
-                    sx={{
-                      backgroundColor: theme.palette.background.paper,
-                      '&:nth-of-type(even)': {
-                        backgroundColor: theme.palette.action.hover,
-                      }
-                    }}
-                  >
-                    <TableCell>{creditSale.name}</TableCell>
-                    <TableCell align="right" sx={{ fontFamily: 'monospace' }}>
-                      {creditSale.debit_amount ? formatNumber(creditSale.debit_amount) : "-"}
+      {separateCreditSales ? (
+        <>
+          {/* Credit Sales Section */}
+          {reportData.credit_sales.length > 0 && (
+            <Box sx={{ mb: 3 }}>
+              <Typography
+                variant="h6"
+                sx={{
+                  backgroundColor: mainColor,
+                  color: contrastText,
+                  padding: 1.5,
+                  textAlign: "center",
+                  fontSize: '1rem'
+                }}
+              >
+                Credit Sales
+              </Typography>
+              <TableContainer
+                component={Paper}
+                sx={{
+                  boxShadow: theme.shadows[1],
+                  '& .MuiTableRow-root:hover': {
+                    backgroundColor: theme.palette.action.hover,
+                  }
+                }}
+              >
+                <Table>
+                  <TableBody>
+                    {reportData.credit_sales.map((creditSale, index) => (
+                      <TableRow
+                        key={index}
+                        sx={{
+                          backgroundColor: theme.palette.background.paper,
+                          '&:nth-of-type(even)': {
+                            backgroundColor: theme.palette.action.hover,
+                          }
+                        }}
+                      >
+                        <TableCell>{creditSale.name}</TableCell>
+                        <TableCell align="right" sx={{ fontFamily: 'monospace' }}>
+                          {formatNumber(creditSale.amount)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    <TableRow sx={{ backgroundColor: theme.palette.background.default }}>
+                      <TableCell sx={{  borderBottom: 'none' }}>
+                        Total
+                      </TableCell>
+                      <TableCell align="right" sx={{ fontFamily: 'monospace',  borderBottom: 'none' }}>
+                        {formatNumber(totalCreditSalesAmount)}
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Box>
+          )}
+
+          {/* Payments Received Section */}
+          {reportData.payments_received.length > 0 && (
+            <Box sx={{ mb: 3 }}>
+              <Typography
+                variant="h6"
+                sx={{
+                  backgroundColor: mainColor,
+                  color: contrastText,
+                  padding: 1.5,
+                  textAlign: "center",
+                  fontSize: '1rem'
+                }}
+              >
+                Payments Received
+              </Typography>
+              <TableContainer
+                component={Paper}
+                sx={{
+                  boxShadow: theme.shadows[1],
+                  '& .MuiTableRow-root:hover': {
+                    backgroundColor: theme.palette.action.hover,
+                  }
+                }}
+              >
+                <Table>
+                  <TableBody>
+                    {reportData.payments_received.map((paymentReceived, index) => (
+                      <TableRow
+                        key={index}
+                        sx={{
+                          backgroundColor: theme.palette.background.paper,
+                          '&:nth-of-type(even)': {
+                            backgroundColor: theme.palette.action.hover,
+                          }
+                        }}
+                      >
+                        <TableCell>{paymentReceived.name}</TableCell>
+                        <TableCell align="right" sx={{ fontFamily: 'monospace' }}>
+                          {formatNumber(paymentReceived.amount)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    <TableRow sx={{ backgroundColor: theme.palette.background.default }}>
+                      <TableCell sx={{  borderBottom: 'none' }}>
+                        Total
+                      </TableCell>
+                      <TableCell align="right" sx={{ fontFamily: 'monospace',  borderBottom: 'none' }}>
+                        {formatNumber(totalPaymentsReceivedAmount)}
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Box>
+          )}
+        </>
+      ) : (
+        /* Credits and Received Payments Section (combined — default) */
+        creditSalesSummary.length > 0 && (
+          <Box sx={{ mb: 3 }}>
+            <Typography
+              variant="h6"
+              sx={{
+                backgroundColor: mainColor,
+                color: contrastText,
+                padding: 1.5,
+                textAlign: "center",
+                fontSize: '1rem'
+              }}
+            >
+              Credits and Received Payments
+            </Typography>
+            <TableContainer
+              component={Paper}
+              sx={{
+                boxShadow: theme.shadows[1],
+                '& .MuiTableRow-root:hover': {
+                  backgroundColor: theme.palette.action.hover,
+                }
+              }}
+            >
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={{ backgroundColor: theme.palette.background.default,  fontSize: '0.875rem' }}>
+                      Client
                     </TableCell>
-                    <TableCell align="right" sx={{ fontFamily: 'monospace' }}>
-                      {creditSale.credit_amount ? formatNumber(creditSale.credit_amount) : "-"}
+                    <TableCell align="right" sx={{ backgroundColor: theme.palette.background.default,  fontSize: '0.875rem' }}>
+                      Purchase
                     </TableCell>
-                    <TableCell 
-                      align="right" 
-                      sx={{ 
-                        fontFamily: 'monospace', 
-                        
-                        color: (creditSale.balance || 0) < 0 ? 'error.main' : 'success.main'
-                      }}
-                    >
-                      {formatNumber(creditSale.balance)}
+                    <TableCell align="right" sx={{ backgroundColor: theme.palette.background.default,  fontSize: '0.875rem' }}>
+                      Payment
+                    </TableCell>
+                    <TableCell align="right" sx={{ backgroundColor: theme.palette.background.default,  fontSize: '0.875rem' }}>
+                      Balance
                     </TableCell>
                   </TableRow>
-                ))}
-                <TableRow sx={{ backgroundColor: theme.palette.background.default }}>
-                  <TableCell sx={{  borderBottom: 'none' }}>
-                    Total
-                  </TableCell>
-                  <TableCell align="right" sx={{ fontFamily: 'monospace',  borderBottom: 'none' }}>
-                    {formatNumber(totalDebitAmount)}
-                  </TableCell>
-                  <TableCell align="right" sx={{ fontFamily: 'monospace',  borderBottom: 'none' }}>
-                    {formatNumber(totalCreditAmount)}
-                  </TableCell>
-                  <TableCell 
-                    align="right" 
-                    sx={{ 
-                      fontFamily: 'monospace', 
-                       
-                      borderBottom: 'none',
-                      color: totalBalance < 0 ? 'error.main' : 'success.main'
-                    }}
-                  >
-                    {formatNumber(totalBalance)}
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Box>
+                </TableHead>
+                <TableBody>
+                  {creditSalesSummary.map((item, index) => (
+                    <TableRow
+                      key={index}
+                      sx={{
+                        backgroundColor: theme.palette.background.paper,
+                        '&:nth-of-type(even)': {
+                          backgroundColor: theme.palette.action.hover,
+                        }
+                      }}
+                    >
+                      <TableCell>{item.name}</TableCell>
+                      <TableCell align="right" sx={{ fontFamily: 'monospace' }}>
+                        {item.debit_amount ? formatNumber(item.debit_amount) : "-"}
+                      </TableCell>
+                      <TableCell align="right" sx={{ fontFamily: 'monospace' }}>
+                        {item.credit_amount ? formatNumber(item.credit_amount) : "-"}
+                      </TableCell>
+                      <TableCell
+                        align="right"
+                        sx={{
+                          fontFamily: 'monospace',
+                          color: (item.balance || 0) < 0 ? 'error.main' : 'success.main'
+                        }}
+                      >
+                        {formatNumber(item.balance)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  <TableRow sx={{ backgroundColor: theme.palette.background.default }}>
+                    <TableCell sx={{  borderBottom: 'none' }}>
+                      Total
+                    </TableCell>
+                    <TableCell align="right" sx={{ fontFamily: 'monospace',  borderBottom: 'none' }}>
+                      {formatNumber(totalCreditSalesSummaryDebit)}
+                    </TableCell>
+                    <TableCell align="right" sx={{ fontFamily: 'monospace',  borderBottom: 'none' }}>
+                      {formatNumber(totalCreditSalesSummaryCredit)}
+                    </TableCell>
+                    <TableCell
+                      align="right"
+                      sx={{
+                        fontFamily: 'monospace',
+                        borderBottom: 'none',
+                        color: totalCreditSalesSummaryBalance < 0 ? 'error.main' : 'success.main'
+                      }}
+                    >
+                      {formatNumber(totalCreditSalesSummaryBalance)}
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Box>
+        )
       )}
 
       {/* Fuel Vouchers to Internal/Non-Collectible Ledgers Section */}
@@ -408,27 +544,6 @@ const SalesAndCashSummaryOnScreen: React.FC<SalesAndCashSummaryOnScreenProps> = 
                 </Typography>
               </Grid>
             )}
-            {/* {reportData.credit_sales.length > 0 && (
-              <>
-                <Grid size={{xs: 12, sm: 6, md: 3}}>
-                  <Typography variant="body2" fontWeight="medium">Total Credit:</Typography>
-                  <Typography variant="body1" fontWeight="bold" fontFamily="monospace">
-                    {formatNumber(totalCreditAmount)}
-                  </Typography>
-                </Grid>
-                <Grid size={{xs: 12, sm: 6, md: 3}}>
-                  <Typography variant="body2" fontWeight="medium">Net Balance:</Typography>
-                  <Typography 
-                    variant="body1" 
-                    fontWeight="bold" 
-                    fontFamily="monospace"
-                    color={totalBalance < 0 ? 'error.main' : 'success.main'}
-                  >
-                    {formatNumber(totalBalance)}
-                  </Typography>
-                </Grid>
-              </>
-            )} */}
             {reportData.payments.length > 0 && (
               <Grid size={{xs: 12, sm: 6, md: 3}}>
                 <Typography variant="body2" fontWeight="medium">Total Payments:</Typography>
