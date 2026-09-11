@@ -80,6 +80,13 @@ financialReportsServices.fetchSalesAndCashSummary = async (params) => {
   return data;
 }
 
+financialReportsServices.downloadExcelSalesAndCashSummary = async (params) => {
+  const { data } = await axios.post(`/api/financialReports/downloadExcelSalesAndCashSummary`, params, {
+    responseType: 'blob',
+  })
+  return data;
+}
+
 financialReportsServices.balanceSheet = async (params) => {
   const { data } = await axios.get(`/api/financialReports/balanceSheet`, {
     params: params,

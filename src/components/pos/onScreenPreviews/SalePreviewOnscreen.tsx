@@ -621,27 +621,48 @@ const SalePreviewOnscreen: React.FC<SalePreviewOnscreenProps> = ({
                     </TableCell>
                     <TableCell
                       align='right'
-                      sx={{ fontFamily: 'monospace' }}
+                      sx={{
+                        fontFamily: 'monospace',
+                        ...(statementRows.length === 0 && Math.abs(grandTotal) >= 0.01 && {
+                          color: 'error.main',
+                          fontWeight: 'bold',
+                          fontSize: '1.1rem',
+                        }),
+                      }}
                     >
                       {formatCurrency(grandTotal)}
                     </TableCell>
                   </TableRow>
-                  {statementRows.map((row: SaleReceipt & { balance: number }) => (
-                    <TableRow key={row.id}>
-                      <TableCell>
-                        {readableDate(row.transaction_date)}
-                      </TableCell>
-                      <TableCell>{row.voucherNo}</TableCell>
-                      <TableCell>{row.debit_ledger?.name || 'N/A'}</TableCell>
-                      <TableCell>{row.narration || 'N/A'}</TableCell>
-                      <TableCell align='right' sx={{ fontFamily: 'monospace' }}>
-                        {formatCurrency(row.amount)}
-                      </TableCell>
-                      <TableCell align='right' sx={{ fontFamily: 'monospace' }}>
-                        {formatCurrency(row.balance)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {statementRows.map((row: SaleReceipt & { balance: number }, index: number) => {
+                    const isLastRow = index === statementRows.length - 1;
+                    const isOutstanding = isLastRow && Math.abs(row.balance) >= 0.01;
+                    return (
+                      <TableRow key={row.id}>
+                        <TableCell>
+                          {readableDate(row.transaction_date)}
+                        </TableCell>
+                        <TableCell>{row.voucherNo}</TableCell>
+                        <TableCell>{row.debit_ledger?.name || 'N/A'}</TableCell>
+                        <TableCell>{row.narration || 'N/A'}</TableCell>
+                        <TableCell align='right' sx={{ fontFamily: 'monospace' }}>
+                          {formatCurrency(row.amount)}
+                        </TableCell>
+                        <TableCell
+                          align='right'
+                          sx={{
+                            fontFamily: 'monospace',
+                            ...(isOutstanding && {
+                              color: 'error.main',
+                              fontWeight: 'bold',
+                              fontSize: '1.1rem',
+                            }),
+                          }}
+                        >
+                          {formatCurrency(row.balance)}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </TableContainer>

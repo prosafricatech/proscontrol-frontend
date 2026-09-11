@@ -1,18 +1,17 @@
 'use client'
-import { 
-  Button, 
-  DialogActions, 
-  DialogContent, 
-  DialogTitle, 
-  Grid, 
-  IconButton, 
-  LinearProgress, 
-  Tab, 
-  Tabs, 
-  Tooltip, 
-  Typography, 
+import {
+  Button,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Grid,
+  IconButton,
+  LinearProgress,
+  Stack,
+  Tooltip,
+  Typography,
   useMediaQuery,
-  Divider, 
+  Divider,
   Skeleton
 } from '@mui/material';
 import * as yup from 'yup';
@@ -36,6 +35,7 @@ import { useJumboTheme } from '@jumbo/components/JumboTheme/hooks';
 import CostCenterSelector from '@/components/masters/costCenters/CostCenterSelector';
 import { CostCenter } from '@/components/masters/costCenters/CostCenterType';
 import { Organization, User } from '@/types/auth-types';
+import { FileExportGrid } from '@/components/sharedComponents/FileExportGrid';
 
 interface ReportData {
   revenue: number;
@@ -240,7 +240,8 @@ const SalesAndCashSummary: React.FC<SalesAndCashSummaryProps> = ({ setOpenSalesA
   const user = authUser?.user;
   const [isFetching, setIsFetching] = useState(false);
   const [reportData, setReportData] = useState<ReportData | null>(null);
-  const [activeTab, setActiveTab] = useState(0);
+  const [showOnScreen, setShowOnScreen] = useState(true);
+  const [isDownloadingExcel, setIsDownloadingExcel] = useState(false);
 
   // Screen handling constants
   const {theme} = useJumboTheme();
@@ -273,8 +274,29 @@ const SalesAndCashSummary: React.FC<SalesAndCashSummaryProps> = ({ setOpenSalesA
     }
   };
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setActiveTab(newValue);
+  const downloadExcel = async () => {
+    setIsDownloadingExcel(true);
+    try {
+      const filters = {
+        from: watch('from'),
+        to: watch('to'),
+        cost_center_ids: watch('cost_center_ids'),
+      };
+      const responseData = await financialReportsServices.downloadExcelSalesAndCashSummary(filters);
+
+      const blob = new Blob([responseData], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      });
+
+      const link = document.createElement('a');
+      link.href = window.URL.createObjectURL(blob);
+      link.download = `Sales And Cash Summary From ${readableDate(filters.from, true)} To ${readableDate(filters.to, true)}.xlsx`;
+      link.click();
+    } catch (error) {
+      console.error('Error downloading Excel:', error);
+    } finally {
+      setIsDownloadingExcel(false);
+    }
   };
 
   return (
@@ -383,9 +405,20 @@ const SalesAndCashSummary: React.FC<SalesAndCashSummaryProps> = ({ setOpenSalesA
                 </div>
               </Grid>
               <Grid size={12} textAlign="right">
-                <LoadingButton loading={isFetching} type="submit" size="small" variant="contained">
-                  Filter
-                </LoadingButton>
+                <Stack direction="row" spacing={0.5} justifyContent="flex-end" alignItems="center">
+                  {reportData && (
+                    <FileExportGrid
+                      exportExcel
+                      handlExcelExport={() => downloadExcel()}
+                      exportingExcel={isDownloadingExcel}
+                      exportPdf
+                      handlePdf={() => setShowOnScreen((prev) => !prev)}
+                    />
+                  )}
+                  <LoadingButton loading={isFetching} type="submit" size="small" variant="contained">
+                    Filter
+                  </LoadingButton>
+                </Stack>
               </Grid>
             </Grid>
           </form>
@@ -400,33 +433,26 @@ const SalesAndCashSummary: React.FC<SalesAndCashSummaryProps> = ({ setOpenSalesA
           </div>
         ) : (
           reportData && (
-            <>
-              {belowLargeScreen && (
-                <Tabs value={activeTab} onChange={handleTabChange} variant="fullWidth">
-                  <Tab label="On-Screen" />
-                  <Tab label="PDF" />
-                </Tabs>
-              )}
-              {(belowLargeScreen && activeTab === 0) ?
-                <SalesAndCashSummaryOnScreen
-                  reportData={reportData}
-                  authOrganization={authOrganization as AuthOrganization}
-                /> :
-                <PDFContent
-                  document={
-                    <ReportDocument
-                      reportData={reportData}
-                      authOrganization={authOrganization as AuthOrganization}
-                      from={watch('from')}
-                      to={watch('to')}
-                      user={user as User}
-                      costCenters={watch('cost_centers')}
-                    />
-                  }
-                  fileName={`Sales And Cash Summary From ${readableDate(watch('from'), true)} To ${readableDate(watch('to'), true)}`}
-                />
-              }
-            </>
+            showOnScreen ? (
+              <SalesAndCashSummaryOnScreen
+                reportData={reportData}
+                authOrganization={authOrganization as AuthOrganization}
+              />
+            ) : (
+              <PDFContent
+                document={
+                  <ReportDocument
+                    reportData={reportData}
+                    authOrganization={authOrganization as AuthOrganization}
+                    from={watch('from')}
+                    to={watch('to')}
+                    user={user as User}
+                    costCenters={watch('cost_centers')}
+                  />
+                }
+                fileName={`Sales And Cash Summary From ${readableDate(watch('from'), true)} To ${readableDate(watch('to'), true)}`}
+              />
+            )
           )
         )}
       </DialogContent>

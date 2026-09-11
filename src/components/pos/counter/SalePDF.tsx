@@ -54,23 +54,44 @@ const SalePDF: React.FC<SalePDFProps> = ({ sale, organization, thermalPrinter = 
             </View>
             <View style={{ ...pdfStyles.tableRow, borderTop: '1px', borderTopStyle: 'solid' }}>
                 <Text style={{ ...pdfStyles.tableCell, flex: 5.1, fontStyle: 'italic' }}>Order Amount</Text>
-                <Text style={{ ...pdfStyles.tableCell, flex: 1.7, textAlign: 'right' }}>
+                <Text style={{
+                    ...pdfStyles.tableCell,
+                    flex: 1.7,
+                    textAlign: 'right',
+                    ...(statementRows.length === 0 && Math.abs(grandTotal) >= 0.01 && {
+                        color: 'red',
+                        fontFamily: 'Helvetica-Bold',
+                        fontSize: '12px',
+                    }),
+                }}>
                     {grandTotal.toLocaleString('en-US', { style: 'currency', currency: currencyCode })}
                 </Text>
             </View>
-            {statementRows.map((row) => (
-                <View key={row.id} style={{ ...pdfStyles.tableRow, borderTop: '1px', borderTopStyle: 'solid' }}>
-                    <Text style={{ ...pdfStyles.tableCell, flex: 1.3 }}>{readableDate(row.transaction_date)}</Text>
-                    <Text style={{ ...pdfStyles.tableCell, flex: 1.3 }}>{row.voucherNo}</Text>
-                    <Text style={{ ...pdfStyles.tableCell, flex: 1.5 }}>{row.debit_ledger?.name || 'N/A'}</Text>
-                    <Text style={{ ...pdfStyles.tableCell, flex: 1.7, textAlign: 'right' }}>
-                        {row.amount.toLocaleString('en-US', { style: 'currency', currency: currencyCode })}
-                    </Text>
-                    <Text style={{ ...pdfStyles.tableCell, flex: 1.7, textAlign: 'right' }}>
-                        {row.balance.toLocaleString('en-US', { style: 'currency', currency: currencyCode })}
-                    </Text>
-                </View>
-            ))}
+            {statementRows.map((row, index) => {
+                const isOutstanding = index === statementRows.length - 1 && Math.abs(row.balance) >= 0.01;
+                return (
+                    <View key={row.id} style={{ ...pdfStyles.tableRow, borderTop: '1px', borderTopStyle: 'solid' }}>
+                        <Text style={{ ...pdfStyles.tableCell, flex: 1.3 }}>{readableDate(row.transaction_date)}</Text>
+                        <Text style={{ ...pdfStyles.tableCell, flex: 1.3 }}>{row.voucherNo}</Text>
+                        <Text style={{ ...pdfStyles.tableCell, flex: 1.5 }}>{row.debit_ledger?.name || 'N/A'}</Text>
+                        <Text style={{ ...pdfStyles.tableCell, flex: 1.7, textAlign: 'right' }}>
+                            {row.amount.toLocaleString('en-US', { style: 'currency', currency: currencyCode })}
+                        </Text>
+                        <Text style={{
+                            ...pdfStyles.tableCell,
+                            flex: 1.7,
+                            textAlign: 'right',
+                            ...(isOutstanding && {
+                                color: 'red',
+                                fontFamily: 'Helvetica-Bold',
+                                fontSize: '12px',
+                            }),
+                        }}>
+                            {row.balance.toLocaleString('en-US', { style: 'currency', currency: currencyCode })}
+                        </Text>
+                    </View>
+                );
+            })}
             {statementRows.length === 0 && (
                 <View style={{ ...pdfStyles.tableRow, borderTop: '1px', borderTopStyle: 'solid' }}>
                     <Text style={{ ...pdfStyles.tableCell, flex: 1 }}>No Receipts Found</Text>
@@ -93,7 +114,14 @@ const SalePDF: React.FC<SalePDFProps> = ({ sale, organization, thermalPrinter = 
                     <Text style={{ ...pdfStyles.minInfo, fontFamily: 'Helvetica-Bold' }}>Order Amount</Text>
                 </View>
                 <View style={{ flex: 1, textAlign: 'right' }}>
-                    <Text style={pdfStyles.minInfo}>
+                    <Text style={{
+                        ...pdfStyles.minInfo,
+                        ...(statementRows.length === 0 && Math.abs(grandTotal) >= 0.01 && {
+                            color: 'red',
+                            fontFamily: 'Helvetica-Bold',
+                            fontSize: '11px',
+                        }),
+                    }}>
                         {grandTotal.toLocaleString('en-US', { style: 'currency', currency: currencyCode })}
                     </Text>
                 </View>
@@ -101,49 +129,59 @@ const SalePDF: React.FC<SalePDFProps> = ({ sale, organization, thermalPrinter = 
             <View style={{ ...pdfStyles.tableRow }}>
                 <View style={{ ...pdfStyles.blackLine, flex: 1 }} />
             </View>
-            {statementRows.map((row) => (
-                <React.Fragment key={row.id}>
-                    <View style={{ ...pdfStyles.tableRow }}>
-                        <View style={{ flex: 1 }}>
-                            <Text style={{ ...pdfStyles.minInfo, fontFamily: 'Helvetica-Bold' }}>{row.voucherNo}</Text>
+            {statementRows.map((row, index) => {
+                const isOutstanding = index === statementRows.length - 1 && Math.abs(row.balance) >= 0.01;
+                return (
+                    <React.Fragment key={row.id}>
+                        <View style={{ ...pdfStyles.tableRow }}>
+                            <View style={{ flex: 1 }}>
+                                <Text style={{ ...pdfStyles.minInfo, fontFamily: 'Helvetica-Bold' }}>{row.voucherNo}</Text>
+                            </View>
+                            <View style={{ flex: 1, textAlign: 'right' }}>
+                                <Text style={pdfStyles.minInfo}>{readableDate(row.transaction_date)}</Text>
+                            </View>
                         </View>
-                        <View style={{ flex: 1, textAlign: 'right' }}>
-                            <Text style={pdfStyles.minInfo}>{readableDate(row.transaction_date)}</Text>
+                        <View style={{ ...pdfStyles.tableRow }}>
+                            <View style={{ flex: 1 }}>
+                                <Text style={{ ...pdfStyles.minInfo, fontFamily: 'Helvetica-Bold' }}>Received In</Text>
+                            </View>
+                            <View style={{ flex: 1, textAlign: 'right' }}>
+                                <Text style={pdfStyles.minInfo}>{row.debit_ledger?.name || 'N/A'}</Text>
+                            </View>
                         </View>
-                    </View>
-                    <View style={{ ...pdfStyles.tableRow }}>
-                        <View style={{ flex: 1 }}>
-                            <Text style={{ ...pdfStyles.minInfo, fontFamily: 'Helvetica-Bold' }}>Received In</Text>
+                        <View style={{ ...pdfStyles.tableRow }}>
+                            <View style={{ flex: 1 }}>
+                                <Text style={{ ...pdfStyles.minInfo, fontFamily: 'Helvetica-Bold' }}>Amount</Text>
+                            </View>
+                            <View style={{ flex: 1, textAlign: 'right' }}>
+                                <Text style={pdfStyles.minInfo}>
+                                    {row.amount.toLocaleString('en-US', { style: 'currency', currency: currencyCode })}
+                                </Text>
+                            </View>
                         </View>
-                        <View style={{ flex: 1, textAlign: 'right' }}>
-                            <Text style={pdfStyles.minInfo}>{row.debit_ledger?.name || 'N/A'}</Text>
+                        <View style={{ ...pdfStyles.tableRow }}>
+                            <View style={{ flex: 1 }}>
+                                <Text style={{ ...pdfStyles.minInfo, fontFamily: 'Helvetica-Bold' }}>Balance</Text>
+                            </View>
+                            <View style={{ flex: 1, textAlign: 'right' }}>
+                                <Text style={{
+                                    ...pdfStyles.minInfo,
+                                    ...(isOutstanding && {
+                                        color: 'red',
+                                        fontFamily: 'Helvetica-Bold',
+                                        fontSize: '11px',
+                                    }),
+                                }}>
+                                    {row.balance.toLocaleString('en-US', { style: 'currency', currency: currencyCode })}
+                                </Text>
+                            </View>
                         </View>
-                    </View>
-                    <View style={{ ...pdfStyles.tableRow }}>
-                        <View style={{ flex: 1 }}>
-                            <Text style={{ ...pdfStyles.minInfo, fontFamily: 'Helvetica-Bold' }}>Amount</Text>
+                        <View style={{ ...pdfStyles.tableRow }}>
+                            <View style={{ ...pdfStyles.blackLine, flex: 1 }} />
                         </View>
-                        <View style={{ flex: 1, textAlign: 'right' }}>
-                            <Text style={pdfStyles.minInfo}>
-                                {row.amount.toLocaleString('en-US', { style: 'currency', currency: currencyCode })}
-                            </Text>
-                        </View>
-                    </View>
-                    <View style={{ ...pdfStyles.tableRow }}>
-                        <View style={{ flex: 1 }}>
-                            <Text style={{ ...pdfStyles.minInfo, fontFamily: 'Helvetica-Bold' }}>Balance</Text>
-                        </View>
-                        <View style={{ flex: 1, textAlign: 'right' }}>
-                            <Text style={pdfStyles.minInfo}>
-                                {row.balance.toLocaleString('en-US', { style: 'currency', currency: currencyCode })}
-                            </Text>
-                        </View>
-                    </View>
-                    <View style={{ ...pdfStyles.tableRow }}>
-                        <View style={{ ...pdfStyles.blackLine, flex: 1 }} />
-                    </View>
-                </React.Fragment>
-            ))}
+                    </React.Fragment>
+                );
+            })}
             {statementRows.length === 0 && (
                 <View style={{ ...pdfStyles.tableRow }}>
                     <View style={{ flex: 1 }}>

@@ -116,6 +116,8 @@ export interface LoanRequestType {
     phone: string;
   } | null;
   disbursement_reference: string | null;
+  cancelled_by: number | null;
+  cancelled_at: string | null;
   created_by: number;
   created_at: string;
   updated_at: string;

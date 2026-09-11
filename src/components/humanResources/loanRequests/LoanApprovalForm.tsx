@@ -3,6 +3,7 @@
 import { sanitizedNumber } from '@/app/helpers/input-sanitization-helpers';
 import CommaSeparatedField from '@/shared/Inputs/CommaSeparatedField';
 import { getErrorMessage } from '@/utilities/helpers/errorHandler';
+import { useJumboDialog } from '@jumbo/components/JumboDialog/hooks/useJumboDialog';
 import { LoadingButton } from '@mui/lab';
 import {
   Alert,
@@ -80,6 +81,7 @@ const LoanApprovalForm = ({
 
   const { enqueueSnackbar } = useSnackbar();
   const queryClient = useQueryClient();
+  const { showDialog, hideDialog } = useJumboDialog();
 
   useEffect(() => {
     if (!open) return;
@@ -153,25 +155,45 @@ const LoanApprovalForm = ({
       return;
     }
 
-    submitDecision({
-      id: loanRequest.id,
-      loan_request_id: loanRequest.id,
-      chain_level_id: chainLevelId,
-      status,
-      amount_approved:
-        status === 'approved' ? Number(amountApproved) : undefined,
-      recovery_mode: status === 'approved' ? recoveryMode : undefined,
-      installments_approved:
-        status === 'approved' && recoveryMode === 'installments'
-          ? Number(installmentsApproved)
-          : undefined,
-      installment_amount_approved:
-        status === 'approved' && recoveryMode === 'fixed_amount'
-          ? Number(installmentAmountApproved)
-          : undefined,
-      remarks,
-      approval_date: approvalDate || undefined,
-    });
+    const submit = () =>
+      submitDecision({
+        id: loanRequest.id,
+        loan_request_id: loanRequest.id,
+        chain_level_id: chainLevelId,
+        status,
+        amount_approved:
+          status === 'approved' ? Number(amountApproved) : undefined,
+        recovery_mode: status === 'approved' ? recoveryMode : undefined,
+        installments_approved:
+          status === 'approved' && recoveryMode === 'installments'
+            ? Number(installmentsApproved)
+            : undefined,
+        installment_amount_approved:
+          status === 'approved' && recoveryMode === 'fixed_amount'
+            ? Number(installmentAmountApproved)
+            : undefined,
+        remarks,
+        approval_date: approvalDate || undefined,
+      });
+
+    // Rejection is a terminal, single-click decision (unlike Approve, which
+    // just moves the request to the next level) — a confirm step guards
+    // against a mis-click ending the request outright.
+    if (status === 'rejected') {
+      showDialog({
+        title: 'Reject Loan Request',
+        content: 'This rejects the loan request. Continue?',
+        onYes: () => {
+          hideDialog();
+          submit();
+        },
+        onNo: () => hideDialog(),
+        variant: 'confirm',
+      });
+      return;
+    }
+
+    submit();
   };
 
   return (

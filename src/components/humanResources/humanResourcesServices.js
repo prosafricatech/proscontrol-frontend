@@ -799,6 +799,16 @@ humanResourcesServices.reverseLoanApproval = async (id) => {
     return data;
 }
 
+humanResourcesServices.reverseLoanRejection = async (id) => {
+    const { data } = await axios.post(`/api/humanResources/loanRequests/${id}/reverseRejection`);
+    return data;
+}
+
+humanResourcesServices.reverseLoanCancellation = async (id) => {
+    const { data } = await axios.post(`/api/humanResources/loanRequests/${id}/reverseCancellation`);
+    return data;
+}
+
 humanResourcesServices.initiateLoanRepayment = async ({ id, ...payload }) => {
     const { data } = await axios.post(`/api/humanResources/loanRequests/${id}/repayments`, payload);
     return data;

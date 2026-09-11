@@ -136,6 +136,20 @@ const LoanRequestItemAction = ({
     hasLoanEditPermission &&
     Number(authUser?.user?.id) === loanRequest.reviewed_by;
 
+  // Same idea as canReverseApproval, for the other terminal outcome — only
+  // whoever rejected it can undo a mis-click or a wrong final decision.
+  const canReverseRejection =
+    loanRequest.status === 'rejected' &&
+    hasLoanEditPermission &&
+    Number(authUser?.user?.id) === loanRequest.reviewed_by;
+
+  // Same idea again, for a cancellation — only whoever clicked Cancel can
+  // undo it.
+  const canReverseCancellation =
+    loanRequest.status === 'cancelled' &&
+    hasLoanEditPermission &&
+    Number(authUser?.user?.id) === loanRequest.cancelled_by;
+
   // A real Payment behind the disbursement needs the same finance-side
   // permission disburse() itself requires; the HR-only mark-disbursed path
   // only needs the general loan-edit ability.
@@ -172,6 +186,42 @@ const LoanRequestItemAction = ({
         });
         queryClient.invalidateQueries({ queryKey: ['loanRequests'] });
         enqueueSnackbar('Loan approval reversed', { variant: 'success' });
+      },
+      onError: (error: any) => {
+        enqueueSnackbar(
+          error?.response?.data?.message || 'Something went wrong',
+          { variant: 'error' }
+        );
+      },
+    });
+
+  const { mutate: reverseRejection, isPending: isReversingRejection } =
+    useMutation({
+      mutationFn: humanResourcesServices.reverseLoanRejection,
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: ['showLoanRequest', loanRequest.id],
+        });
+        queryClient.invalidateQueries({ queryKey: ['loanRequests'] });
+        enqueueSnackbar('Loan rejection reversed', { variant: 'success' });
+      },
+      onError: (error: any) => {
+        enqueueSnackbar(
+          error?.response?.data?.message || 'Something went wrong',
+          { variant: 'error' }
+        );
+      },
+    });
+
+  const { mutate: reverseCancellation, isPending: isReversingCancellation } =
+    useMutation({
+      mutationFn: humanResourcesServices.reverseLoanCancellation,
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: ['showLoanRequest', loanRequest.id],
+        });
+        queryClient.invalidateQueries({ queryKey: ['loanRequests'] });
+        enqueueSnackbar('Loan cancellation reversed', { variant: 'success' });
       },
       onError: (error: any) => {
         enqueueSnackbar(
@@ -241,6 +291,34 @@ const LoanRequestItemAction = ({
       onYes: () => {
         hideDialog();
         reverseApproval(loanRequest.id);
+      },
+      onNo: () => hideDialog(),
+      variant: 'confirm',
+    });
+  };
+
+  const handleReverseRejection = () => {
+    showDialog({
+      title: 'Reverse Rejection',
+      content:
+        'This puts the request back to In Review so it can be re-decided. Continue?',
+      onYes: () => {
+        hideDialog();
+        reverseRejection(loanRequest.id);
+      },
+      onNo: () => hideDialog(),
+      variant: 'confirm',
+    });
+  };
+
+  const handleReverseCancellation = () => {
+    showDialog({
+      title: 'Reverse Cancellation',
+      content:
+        'This restores the request to what it was before it was cancelled. Continue?',
+      onYes: () => {
+        hideDialog();
+        reverseCancellation(loanRequest.id);
       },
       onNo: () => hideDialog(),
       variant: 'confirm',
@@ -395,6 +473,30 @@ const LoanRequestItemAction = ({
             size='small'
             disabled={isReversingApproval}
             onClick={handleReverseApproval}
+          >
+            <UndoOutlined color='warning' />
+          </IconButton>
+        </Tooltip>
+      )}
+
+      {canReverseRejection && (
+        <Tooltip title='Reverse Rejection'>
+          <IconButton
+            size='small'
+            disabled={isReversingRejection}
+            onClick={handleReverseRejection}
+          >
+            <UndoOutlined color='warning' />
+          </IconButton>
+        </Tooltip>
+      )}
+
+      {canReverseCancellation && (
+        <Tooltip title='Reverse Cancellation'>
+          <IconButton
+            size='small'
+            disabled={isReversingCancellation}
+            onClick={handleReverseCancellation}
           >
             <UndoOutlined color='warning' />
           </IconButton>
