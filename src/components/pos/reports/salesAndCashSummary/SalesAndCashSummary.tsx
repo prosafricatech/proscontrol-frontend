@@ -500,11 +500,16 @@ const SalesAndCashSummary: React.FC<SalesAndCashSummaryProps> = ({ setOpenSalesA
                   />
                 </div>
               </Grid>
-              <Grid size={12} textAlign="right">
-                <Stack direction="row" spacing={0.5} justifyContent="flex-end" alignItems="center">
+              <Grid size={12}>
+                <Stack
+                  direction={{ xs: 'column', sm: 'row' }}
+                  spacing={1}
+                  justifyContent="flex-end"
+                  alignItems="center"
+                >
                   {reportData && (
                     <FormControlLabel
-                      sx={{ mr: 1 }}
+                      sx={{ mr: { xs: 0, sm: 1 }, justifyContent: 'center' }}
                       control={
                         <Switch
                           size="small"
@@ -512,21 +517,29 @@ const SalesAndCashSummary: React.FC<SalesAndCashSummaryProps> = ({ setOpenSalesA
                           onChange={(e) => setSeparateCreditSales(e.target.checked)}
                         />
                       }
-                      label="Show Credit Sales & Payments Received separately"
+                      label="Separate Credit Sales & Receipts"
                     />
                   )}
-                  {reportData && (
-                    <FileExportGrid
-                      exportExcel
-                      handlExcelExport={() => downloadExcel()}
-                      exportingExcel={isDownloadingExcel}
-                      exportPdf
-                      handlePdf={() => setShowOnScreen((prev) => !prev)}
-                    />
-                  )}
-                  <LoadingButton loading={isFetching} type="submit" size="small" variant="contained">
-                    Filter
-                  </LoadingButton>
+                  <Stack
+                    direction="row"
+                    spacing={1}
+                    alignItems="center"
+                    justifyContent={{ xs: 'space-between', sm: 'flex-end' }}
+                    width={{ xs: '100%', sm: 'auto' }}
+                  >
+                    {reportData && (
+                      <FileExportGrid
+                        exportExcel
+                        handlExcelExport={() => downloadExcel()}
+                        exportingExcel={isDownloadingExcel}
+                        exportPdf
+                        handlePdf={() => setShowOnScreen((prev) => !prev)}
+                      />
+                    )}
+                    <LoadingButton loading={isFetching} type="submit" size="small" variant="contained">
+                      Filter
+                    </LoadingButton>
+                  </Stack>
                 </Stack>
               </Grid>
             </Grid>
