@@ -32,11 +32,17 @@ interface Payment {
   amount: number;
 }
 
+interface NonCollectibleFuelVoucher {
+  name: string;
+  amount: number;
+}
+
 interface ReportData {
   revenue: number;
   collection_distribution: CollectionDistribution[];
   credit_sales: CreditSale[];
   payments: Payment[];
+  non_collectible_fuel_vouchers?: NonCollectibleFuelVoucher[];
 }
 
 interface SalesAndCashSummaryOnScreenProps {
@@ -71,7 +77,11 @@ const SalesAndCashSummaryOnScreen: React.FC<SalesAndCashSummaryOnScreenProps> = 
     0
   );
   const totalPaymentsAmount = reportData.payments.reduce(
-    (acc, payment) => acc + (payment.amount || 0), 
+    (acc, payment) => acc + (payment.amount || 0),
+    0
+  );
+  const totalNonCollectibleAmount = (reportData.non_collectible_fuel_vouchers || []).reduce(
+    (acc, item) => acc + (item.amount || 0),
     0
   );
 
@@ -176,7 +186,7 @@ const SalesAndCashSummaryOnScreen: React.FC<SalesAndCashSummaryOnScreenProps> = 
               <TableHead>
                 <TableRow>
                   <TableCell sx={{ backgroundColor: theme.palette.background.default,  fontSize: '0.875rem' }}>
-                    Paid To
+                    Client
                   </TableCell>
                   <TableCell align="right" sx={{ backgroundColor: theme.palette.background.default,  fontSize: '0.875rem' }}>
                     Purchase
@@ -239,6 +249,62 @@ const SalesAndCashSummaryOnScreen: React.FC<SalesAndCashSummaryOnScreenProps> = 
                     }}
                   >
                     {formatNumber(totalBalance)}
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Box>
+      )}
+
+      {/* Fuel Vouchers to Internal/Non-Collectible Ledgers Section */}
+      {(reportData.non_collectible_fuel_vouchers?.length ?? 0) > 0 && (
+        <Box sx={{ mb: 3 }}>
+          <Typography
+            variant="h6"
+            sx={{
+              backgroundColor: mainColor,
+              color: contrastText,
+              padding: 1.5,
+              textAlign: "center",
+              fontSize: '1rem'
+            }}
+          >
+            Fuel Vouchers to Internal/Non-Collectible Ledgers
+          </Typography>
+          <TableContainer
+            component={Paper}
+            sx={{
+              boxShadow: theme.shadows[1],
+              '& .MuiTableRow-root:hover': {
+                backgroundColor: theme.palette.action.hover,
+              }
+            }}
+          >
+            <Table>
+              <TableBody>
+                {reportData.non_collectible_fuel_vouchers!.map((item, index) => (
+                  <TableRow
+                    key={index}
+                    sx={{
+                      backgroundColor: theme.palette.background.paper,
+                      '&:nth-of-type(even)': {
+                        backgroundColor: theme.palette.action.hover,
+                      }
+                    }}
+                  >
+                    <TableCell>{item.name}</TableCell>
+                    <TableCell align="right" sx={{ fontFamily: 'monospace' }}>
+                      {formatNumber(item.amount)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+                <TableRow sx={{ backgroundColor: theme.palette.background.default }}>
+                  <TableCell sx={{  borderBottom: 'none' }}>
+                    Total
+                  </TableCell>
+                  <TableCell align="right" sx={{ fontFamily: 'monospace',  borderBottom: 'none' }}>
+                    {formatNumber(totalNonCollectibleAmount)}
                   </TableCell>
                 </TableRow>
               </TableBody>

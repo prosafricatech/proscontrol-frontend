@@ -54,6 +54,10 @@ interface ReportData {
     from: string;
     amount: number;
   }[];
+  non_collectible_fuel_vouchers: {
+    name: string;
+    amount: number;
+  }[];
 }
 
 interface AuthOrganization {
@@ -86,6 +90,9 @@ const ReportDocument: React.FC<ReportDocumentProps> = ({ reportData, authOrganiz
 
   // Calculate total for Payments table
   const totalPaymentsAmount = reportData.payments.reduce((acc, payment) => acc + (payment.amount || 0), 0);
+
+  // Calculate total for Fuel Vouchers to Internal/Non-Collectible Ledgers table
+  const totalNonCollectibleAmount = (reportData.non_collectible_fuel_vouchers || []).reduce((acc, item) => acc + (item.amount || 0), 0);
 
   return reportData ? (
     <Document
@@ -184,6 +191,28 @@ const ReportDocument: React.FC<ReportDocumentProps> = ({ reportData, authOrganiz
               <Text style={{ ...pdfStyles.tableCell, backgroundColor: mainColor, color: contrastText, flex: 0.2, textAlign: 'right' }}>{totalDebitAmount?.toLocaleString('en-US',{maximumFractionDigits:2,minimumFractionDigits:2})}</Text>
               <Text style={{ ...pdfStyles.tableCell, backgroundColor: mainColor, color: contrastText, flex: 0.2, textAlign: 'right' }}>{totalCreditAmount?.toLocaleString('en-US',{maximumFractionDigits:2,minimumFractionDigits:2})}</Text>
               <Text style={{ ...pdfStyles.tableCell, backgroundColor: mainColor, color: contrastText, flex: 0.2, textAlign: 'right' }}>{totalBalance.toLocaleString('en-US',{maximumFractionDigits:2,minimumFractionDigits:2})}</Text>
+            </View>
+          </View>
+        }
+
+        {/* Fuel Vouchers to Internal/Non-Collectible Ledgers Table */}
+        {(reportData.non_collectible_fuel_vouchers?.length ?? 0) > 0 &&
+          <View style={{ ...pdfStyles.table, minHeight: 50 }}>
+            <View style={{ ...pdfStyles.tableRow, marginTop: 10 }}>
+              <Text style={{ ...pdfStyles.tableHeader, ...pdfStyles.midInfo, backgroundColor: mainColor, color: contrastText, flex: 1, textAlign: 'center' }}>Fuel Vouchers to Internal/Non-Collectible Ledgers</Text>
+            </View>
+            {
+              reportData.non_collectible_fuel_vouchers.map((item, index) => (
+                <View key={index} style={{ ...pdfStyles.tableRow, flexDirection: 'row' }}>
+                  <Text style={{ ...pdfStyles.tableCell, backgroundColor: index % 2 === 0 ? '#FFFFFF' : lightColor, flex: 0.7 }}>{item.name}</Text>
+                  <Text style={{ ...pdfStyles.tableCell, backgroundColor: index % 2 === 0 ? '#FFFFFF' : lightColor, flex: 0.3, textAlign: 'right' }}>{item.amount?.toLocaleString('en-US',{maximumFractionDigits:2,minimumFractionDigits:2})}</Text>
+                </View>
+              ))
+            }
+            {/* Totals Row for Fuel Vouchers to Internal/Non-Collectible Ledgers */}
+            <View style={{ ...pdfStyles.tableRow, flexDirection: 'row' }}>
+              <Text style={{ ...pdfStyles.tableCell, backgroundColor: mainColor, color: contrastText, flex: 0.7 }}>Total</Text>
+              <Text style={{ ...pdfStyles.tableCell, backgroundColor: mainColor, color: contrastText, flex: 0.3, textAlign: 'right' }}>{totalNonCollectibleAmount?.toLocaleString('en-US',{maximumFractionDigits:2,minimumFractionDigits:2})}</Text>
             </View>
           </View>
         }
