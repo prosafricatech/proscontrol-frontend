@@ -16,6 +16,8 @@ import {
   IconButton,
   LinearProgress,
   Stack,
+  ToggleButton,
+  ToggleButtonGroup,
   Tooltip,
   Typography,
   useMediaQuery,
@@ -32,6 +34,7 @@ import pdfStyles from '../../../pdf/pdf-styles';
 import PDFContent from '../../../pdf/PDFContent';
 import PdfLogo from '../../../pdf/PdfLogo';
 import financialReportsServices from '../financial-reports-services';
+import TrialBalanceGroupedOnScreen from './TrialBalanceGroupedOnScreen';
 import TrialBalanceOnScreen from './TrialBalanceOnScreen';
 
 const ReportDocumet = ({ reportData, authOrganization, user }) => {
@@ -279,10 +282,12 @@ function TrialBalance({ setOpenTrialBalanceDialog }) {
 
   const [isFetching, setisFetching] = useState(false);
   const [reportData, setReportData] = useState(null);
+  const [groupedReportData, setGroupedReportData] = useState(null);
   const [isDownloadingTemplate, setIsDownloadingTemplate] =
     React.useState(false);
   const [uploadFieldsKey, setUploadFieldsKey] = useState(0);
   const [showOnScreen, setShowOnScreen] = useState(true);
+  const [viewMode, setViewMode] = useState('flat');
 
   //Screen handling constants
   const { theme } = useJumboTheme();
@@ -301,7 +306,9 @@ function TrialBalance({ setOpenTrialBalanceDialog }) {
 
       // Pass all filters to the service
       const responseData =
-        await financialReportsServices.downloadExcelTrialBalance(filters);
+        viewMode === 'grouped'
+          ? await financialReportsServices.downloadExcelTrialBalanceGrouped(filters)
+          : await financialReportsServices.downloadExcelTrialBalance(filters);
 
       const blob = new Blob([responseData], {
         type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -309,7 +316,7 @@ function TrialBalance({ setOpenTrialBalanceDialog }) {
 
       const link = document.createElement('a');
       link.href = window.URL.createObjectURL(blob);
-      link.download = `Trial Balance ${readableDate(filters.as_at, true)}.xlsx`;
+      link.download = `Trial Balance ${viewMode === 'grouped' ? 'Grouped ' : ''}${readableDate(filters.as_at, true)}.xlsx`;
       link.click();
       setIsDownloadingTemplate(false);
     } catch (error) {
@@ -320,9 +327,13 @@ function TrialBalance({ setOpenTrialBalanceDialog }) {
 
   const retrieveReport = async (filters) => {
     setisFetching(true);
-    const report = await financialReportsServices.trialBalance(filters);
+    const [report, groupedReport] = await Promise.all([
+      financialReportsServices.trialBalance(filters),
+      financialReportsServices.trialBalanceGrouped(filters),
+    ]);
 
     setReportData(report);
+    setGroupedReportData(groupedReport);
     setisFetching(false);
   };
 
@@ -410,6 +421,20 @@ function TrialBalance({ setOpenTrialBalanceDialog }) {
                 >
                   <>
                     {reportData && (
+                      <ToggleButtonGroup
+                        size='small'
+                        color='primary'
+                        exclusive
+                        value={viewMode}
+                        onChange={(event, newViewMode) => {
+                          if (newViewMode) setViewMode(newViewMode);
+                        }}
+                      >
+                        <ToggleButton value='flat'>Flat</ToggleButton>
+                        <ToggleButton value='grouped'>Grouped</ToggleButton>
+                      </ToggleButtonGroup>
+                    )}
+                    {reportData && (
                       <FileExportGrid
                         exportExcel
                         handlExcelExport={() => downloadExcelTemplate()}
@@ -442,10 +467,17 @@ function TrialBalance({ setOpenTrialBalanceDialog }) {
           reportData && (
             <>
               {showOnScreen ? (
-                <TrialBalanceOnScreen
-                  reportData={reportData}
-                  authOrganization={authOrganization}
-                />
+                viewMode === 'grouped' ? (
+                  <TrialBalanceGroupedOnScreen
+                    reportData={groupedReportData}
+                    authOrganization={authOrganization}
+                  />
+                ) : (
+                  <TrialBalanceOnScreen
+                    reportData={reportData}
+                    authOrganization={authOrganization}
+                  />
+                )
               ) : (
                 <PDFContent
                   document={

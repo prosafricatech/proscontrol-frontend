@@ -6,6 +6,7 @@ import JumboCardQuick from '@jumbo/components/JumboCardQuick/JumboCardQuick';
 import {
   AssessmentOutlined,
   AutoStoriesOutlined,
+  CalendarMonthOutlined,
   FormatListNumberedRtl,
   Inventory2Outlined,
   ListOutlined,
@@ -383,6 +384,24 @@ function QuickLinks() {
             )}
           </>
         )}
+        {organizationHasSubscribed(MODULES.ASSET_BOOKINGS) &&
+          checkOrganizationPermission([PERMISSIONS.ASSET_BOOKINGS_READ]) && (
+            <Grid
+              size={{ xs: 6, md: 2, lg: 1.5 }}
+              p={1}
+              textAlign={'center'}
+              sx={{
+                cursor: 'pointer',
+                '&:hover': {
+                  bgcolor: 'action.hover',
+                },
+              }}
+              onClick={() => handleNavigation('/asset-bookings')}
+            >
+              <CalendarMonthOutlined sx={{ fontSize: '40px' }} />
+              <Typography>Asset Bookings</Typography>
+            </Grid>
+          )}
       </Grid>
     </JumboCardQuick>
   );

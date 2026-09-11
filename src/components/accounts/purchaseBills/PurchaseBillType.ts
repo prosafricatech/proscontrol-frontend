@@ -36,6 +36,11 @@ export interface PurchaseBill {
   net_amount: number;
   approved_payment_amount?: number;
   unapproved_amount?: number;
+  // When true, approved_payment_amount/unapproved_amount above are capped
+  // against the bill's originating Purchase Order (an advance already
+  // approved directly on it) rather than this bill's own value.
+  capped_by_purchase_order?: boolean;
+  purchase_order_no?: string | null;
   total_amount?: number;
   paid_amount?: number;
   unpaid_amount?: number;

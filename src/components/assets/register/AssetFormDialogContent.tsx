@@ -136,7 +136,8 @@ const AssetFormDialogContent: React.FC<AssetFormDialogContentProps> = ({
     acquisition_cost: mode !== 'activate'
       ? yup.number().required(dictionary.register.form.errors.validation.acquisitionCost.required).positive(dictionary.register.form.errors.validation.acquisitionCost.positive)
       : yup.number().nullable(),
-    salvage_value: yup.number().nullable().transform((v, o) => (o === '' ? 0 : v)),
+    salvage_value: yup.number().nullable().transform((v, o) => (o === '' ? 0 : v))
+      .lessThan(yup.ref('acquisition_cost'), dictionary.register.form.errors.validation.salvageValue.lessThan),
     depreciation_method: yup.string().required(dictionary.register.form.errors.validation.depreciationMethod.required),
     useful_life_months: yup.number().nullable().transform((v, o) => (o === '' ? null : v))
       .when('depreciation_method', {
@@ -153,7 +154,8 @@ const AssetFormDialogContent: React.FC<AssetFormDialogContentProps> = ({
         is: (m: string) => m !== 'none',
         then: (schema) => schema.required(dictionary.register.form.errors.validation.depreciationStartDate.required),
       }),
-    accumulated_depreciation_bf: yup.number().nullable().transform((v, o) => (o === '' ? 0 : v)),
+    accumulated_depreciation_bf: yup.number().nullable().transform((v, o) => (o === '' ? 0 : v))
+      .lessThan(yup.ref('acquisition_cost'), dictionary.register.form.errors.validation.accumulatedDepreciationBf.lessThan),
     current_store_id: yup.number().nullable(),
     current_custodian_id: yup.number().nullable(),
     cost_center_id: yup.number().nullable(),
@@ -302,6 +304,8 @@ const AssetFormDialogContent: React.FC<AssetFormDialogContentProps> = ({
               size="small"
               disabled={financialsLocked}
               label={dictionary.register.form.labels.salvageValue}
+              error={Boolean(errors.salvage_value)}
+              helperText={errors.salvage_value?.message as string}
               value={watch('salvage_value') || ''}
               InputProps={{
                 inputComponent: CommaSeparatedField as any,
@@ -321,6 +325,8 @@ const AssetFormDialogContent: React.FC<AssetFormDialogContentProps> = ({
                 size="small"
                 disabled={financialsLocked}
                 label={dictionary.register.form.labels.accumulatedDepreciationBf}
+                error={Boolean(errors.accumulated_depreciation_bf)}
+                helperText={errors.accumulated_depreciation_bf?.message as string}
                 value={watch('accumulated_depreciation_bf') || ''}
                 InputProps={{
                   inputComponent: CommaSeparatedField as any,

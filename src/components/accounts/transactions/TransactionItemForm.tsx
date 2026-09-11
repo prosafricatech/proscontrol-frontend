@@ -182,8 +182,13 @@ const TransactionItemForm: React.FC<TransactionItemFormProps> = ({
             return true;
           }
 
+          const cappedByPurchaseOrder = (relatable as BillOption)
+            ?.capped_by_purchase_order;
+
           return this.createError({
-            message: `Amount should not exceed unapproved amount (${maxAmount.toLocaleString()}) of selected relatable`,
+            message: cappedByPurchaseOrder
+              ? `Amount should not exceed unapproved amount (${maxAmount.toLocaleString()}) — capped against ${(relatable as BillOption)?.purchase_order_no}, not this Bill itself`
+              : `Amount should not exceed unapproved amount (${maxAmount.toLocaleString()}) of selected relatable`,
           });
         }
       )

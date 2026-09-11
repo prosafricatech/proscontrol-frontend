@@ -151,6 +151,8 @@
           "identification": { "required": "Identification / serial number is required" },
           "acquisitionDate": { "required": "Acquisition date is required" },
           "acquisitionCost": { "required": "Acquisition cost is required", "positive": "Acquisition cost must be greater than 0" },
+          "salvageValue": { "lessThan": "Salvage value must be less than acquisition cost" },
+          "accumulatedDepreciationBf": { "lessThan": "Accumulated depreciation must be less than acquisition cost" },
           "depreciationMethod": { "required": "Depreciation method is required" },
           "usefulLifeMonths": { "required": "Useful life is required for straight line depreciation" },
           "depreciationRate": { "required": "Depreciation rate is required for reducing balance depreciation" },
