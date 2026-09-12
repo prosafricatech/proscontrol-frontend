@@ -10,15 +10,16 @@ export interface JournalLike {
  * manually) — in which case showing voucher_no as its own separate field
  * next to it would just repeat the same text.
  */
-export const descriptionIncludesVoucher = (journal: JournalLike): boolean =>
-  !!journal.voucher_no && !!journal.description?.toLowerCase().includes(journal.voucher_no.toLowerCase());
+export const descriptionIncludesVoucher = (journal?: JournalLike | null): boolean =>
+  !!journal?.voucher_no && !!journal.description?.toLowerCase().includes(journal.voucher_no.toLowerCase());
 
 /**
  * The identifying parts of a journal (voucher number, counterparty ledger,
  * description) with the voucher number dropped whenever the description
  * already contains it, so callers never have to repeat that check.
  */
-export const journalDisplayParts = (journal: JournalLike): string[] => {
+export const journalDisplayParts = (journal?: JournalLike | null): string[] => {
+  if (!journal) return [];
   const parts = [
     descriptionIncludesVoucher(journal) ? null : journal.voucher_no,
     journal.counterparty,

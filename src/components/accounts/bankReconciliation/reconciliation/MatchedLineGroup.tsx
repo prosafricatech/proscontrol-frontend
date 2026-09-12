@@ -100,12 +100,12 @@ export default function MatchedLineGroup({ bankAccountId, matchedLine }: Props) 
           <Grid container spacing={1} alignItems='center' key={match.id} sx={{ py: 0.5 }}>
             <Grid size={{ xs: 12, md: 6 }}>
               <Typography variant='caption' color='text.secondary'>
-                Book Entry{!descriptionIncludesVoucher(match.journal) && match.journal.voucher_no ? ` — ${match.journal.voucher_no}` : ''}
+                Book Entry{!descriptionIncludesVoucher(match.journal) && match.journal?.voucher_no ? ` — ${match.journal.voucher_no}` : ''}
               </Typography>
               <Typography variant='body2'>
-                {new Date(match.journal.journal_date).toLocaleDateString()} — {match.journal.description}
+                {match.journal?.journal_date && new Date(match.journal.journal_date).toLocaleDateString()} — {match.journal?.description}
               </Typography>
-              {match.journal.counterparty && (
+              {match.journal?.counterparty && (
                 <Typography variant='caption' color='text.secondary'>{match.journal.counterparty}</Typography>
               )}
             </Grid>

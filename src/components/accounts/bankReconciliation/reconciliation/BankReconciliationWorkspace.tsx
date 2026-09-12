@@ -73,6 +73,15 @@ export default function BankReconciliationWorkspace({ bankAccountId }: Props) {
     onError: (err: any) => enqueueSnackbar(err?.response?.data?.message || 'Failed to delete statement', { variant: 'error' }),
   });
 
+  const unignoreMutation = useMutation({
+    mutationFn: (lineId: number) => bankReconciliationServices.unignoreLine(lineId),
+    onSuccess: (result) => {
+      enqueueSnackbar(result.message || 'Line restored', { variant: 'success' });
+      queryClient.invalidateQueries({ queryKey: ['bank-reconciliation-workspace', bankAccountId] });
+    },
+    onError: (err: any) => enqueueSnackbar(err?.response?.data?.message || 'Failed to restore line', { variant: 'error' }),
+  });
+
   const confirmDeleteStatement = () => {
     showDialog({
       title: 'Delete this statement?',
@@ -120,9 +129,11 @@ export default function BankReconciliationWorkspace({ bankAccountId }: Props) {
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 1 }}>
           <Box>
             <Typography variant='h5'>{bankAccount?.ledger?.name}</Typography>
-            <Typography variant='body2' color='text.secondary'>
-              Statement {new Date(statement.statement_date_from).toLocaleDateString()} – {new Date(statement.statement_date_to).toLocaleDateString()}
-              {' '}<Chip size='small' label={statement.status} color={isCompleted ? 'success' : 'default'} sx={{ ml: 1 }} />
+            <Typography variant='body2' color='text.secondary' component='div' sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <span>
+                Statement {new Date(statement.statement_date_from).toLocaleDateString()} – {new Date(statement.statement_date_to).toLocaleDateString()}
+              </span>
+              <Chip size='small' label={statement.status} color={isCompleted ? 'success' : 'default'} />
             </Typography>
           </Box>
           <Box sx={{ display: 'flex', gap: 1 }}>
@@ -233,11 +244,20 @@ export default function BankReconciliationWorkspace({ bankAccountId }: Props) {
                 <Typography color='text.secondary'>No ignored lines.</Typography>
               )}
               {ignored_lines.map((line: any) => (
-                <Box key={line.id} sx={{ py: 1 }}>
-                  <Divider sx={{ mb: 1 }} />
+                <Box key={line.id} sx={{ py: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, flexWrap: 'wrap' }}>
+                  <Divider sx={{ mb: 1, width: '100%' }} />
                   <Typography variant='body2'>
                     {new Date(line.line_date).toLocaleDateString()} — {line.description} — {formatAmount(line.amount)}
                   </Typography>
+                  {checkOrganizationPermission(PERMISSIONS.BANK_RECONCILIATION_EDIT) && (
+                    <LoadingButton
+                      size='small'
+                      loading={unignoreMutation.isPending && unignoreMutation.variables === line.id}
+                      onClick={() => unignoreMutation.mutate(line.id)}
+                    >
+                      Restore
+                    </LoadingButton>
+                  )}
                 </Box>
               ))}
             </Box>

@@ -11,18 +11,29 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase App (safe even on server)
-const app = initializeApp(firebaseConfig);
+const hasFirebaseConfig = Boolean(firebaseConfig.projectId && firebaseConfig.messagingSenderId && firebaseConfig.appId);
+
+// Initialize Firebase App (safe even on server) — only when configured, since
+// an all-undefined config still "succeeds" here but throws later on
+// getMessaging(), which is an easy footgun to hit in environments (e.g. local
+// dev) where the NEXT_PUBLIC_FIREBASE_* env vars simply aren't set.
+const app = hasFirebaseConfig ? initializeApp(firebaseConfig) : null;
 
 let messaging: any = null;
 
 // Initialize messaging only in the browser
-if (typeof window !== "undefined") {
-  isSupported().then((supported) => {
-    if (supported) {
-      messaging = getMessaging(app);
-    }
-  });
+if (app && typeof window !== "undefined") {
+  isSupported()
+    .then((supported) => {
+      if (supported) {
+        messaging = getMessaging(app);
+      }
+    })
+    .catch(() => {
+      // Push notifications are optional — never let a messaging setup
+      // failure (unsupported browser, service worker registration issue)
+      // surface as an unhandled error.
+    });
 }
 
 export const onMessageListener = () =>
