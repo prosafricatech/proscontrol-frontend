@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  Alert,
   Grid,
   Typography,
   Paper,
@@ -36,6 +37,8 @@ interface Transaction {
   creator: {
     name: string
   }
+  cancelled_at?: string | null;
+  cancel_reason?: string | null;
 }
 
 interface TransferOnScreenProps {
@@ -71,6 +74,19 @@ function TransferOnScreen({ transaction, authObject }: TransferOnScreenProps) {
           </Typography>
         )}
       </Box>
+
+      {transaction.cancelled_at && (
+        <Alert severity="error" variant="filled" sx={{ mb: 3, fontWeight: 'bold' }}>
+          <Typography variant="subtitle1" fontWeight="bold">
+            CANCELLED on {readableDate(transaction.cancelled_at, true)}
+          </Typography>
+          {transaction.cancel_reason && (
+            <Typography variant="body2">
+              Reason: {transaction.cancel_reason}
+            </Typography>
+          )}
+        </Alert>
+      )}
 
       {/* Metadata Section */}
       <Grid container spacing={2} sx={{ mb: 3 }}>

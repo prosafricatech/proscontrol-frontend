@@ -515,6 +515,7 @@ const CashierReport: React.FC<CashierReportProps> = ({
   const [isFetching, setIsFetching] = useState(false);
   const [reportData, setReportData] = useState<ReportItem[] | null>(null);
   const [detailed, setDetailed] = useState(false);
+  const [isDownloadingExcel, setIsDownloadingExcel] = useState(false);
 
   // Screen handling constants
   const { theme } = useJumboTheme();
@@ -563,6 +564,34 @@ const CashierReport: React.FC<CashierReportProps> = ({
       console.error('Error fetching report:', error);
     } finally {
       setIsFetching(false);
+    }
+  };
+
+  const downloadExcel = async () => {
+    setIsDownloadingExcel(true);
+    try {
+      const filters = {
+        from: watch('from'),
+        to: watch('to'),
+        cost_center_ids: watch('cost_center_ids'),
+        ledger_ids: watch('ledger_ids'),
+        detailed: watch('detailed'),
+      };
+      const responseData =
+        await financialReportsServices.downloadExcelCashierReport(filters);
+
+      const blob = new Blob([responseData], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      });
+
+      const link = document.createElement('a');
+      link.href = window.URL.createObjectURL(blob);
+      link.download = `Cashier Report From ${readableDate(filters.from, true)} To ${readableDate(filters.to, true)}.xlsx`;
+      link.click();
+    } catch (error) {
+      console.error('Error downloading Excel:', error);
+    } finally {
+      setIsDownloadingExcel(false);
     }
   };
 
@@ -693,6 +722,9 @@ const CashierReport: React.FC<CashierReportProps> = ({
               <Grid size={{ xs: 10, md: 4, lg: 3 }} textAlign='right'>
                 {reportData && (
                   <FileExportGrid
+                    exportExcel
+                    handlExcelExport={() => downloadExcel()}
+                    exportingExcel={isDownloadingExcel}
                     exportPdf
                     handlePdf={() => {
                       setShowOnScreen((prev) => !prev);

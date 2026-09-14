@@ -23,5 +23,15 @@ receiptServices.delete = async (receipt) => {
     return data;
 };
 
+receiptServices.cancel = async (receipt, {reason, cancellation_date}) => {
+    const {data} = await axios.post(`/api/accountsAndFinance/transactions/receipts/${receipt.id}/cancel`, {reason, cancellation_date});
+    return data;
+};
+
+receiptServices.reverseCancellation = async (receipt) => {
+    const {data} = await axios.post(`/api/accountsAndFinance/transactions/receipts/${receipt.id}/reverse-cancellation`);
+    return data;
+};
+
 
 export default receiptServices;

@@ -22,4 +22,14 @@ fundTransferServices.delete = async (transfer) => {
     return data;
 };
 
+fundTransferServices.cancel = async (transfer, {reason, cancellation_date}) => {
+    const {data} = await axios.post(`/api/accountsAndFinance/transactions/transfers/${transfer.id}/cancel`, {reason, cancellation_date});
+    return data;
+};
+
+fundTransferServices.reverseCancellation = async (transfer) => {
+    const {data} = await axios.post(`/api/accountsAndFinance/transactions/transfers/${transfer.id}/reverse-cancellation`);
+    return data;
+};
+
 export default fundTransferServices;

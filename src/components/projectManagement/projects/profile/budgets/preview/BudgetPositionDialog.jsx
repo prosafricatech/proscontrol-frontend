@@ -789,7 +789,7 @@ function BudgetPositionDialog({ open, onClose, budget }) {
         <Dialog
           open={ledgerDialogOpen}
           onClose={() => setLedgerDialogOpen(false)}
-          maxWidth='md'
+          maxWidth='lg'
           fullWidth
           fullScreen={belowLargeScreen}
         >
