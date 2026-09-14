@@ -16,7 +16,7 @@ import {
 } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSnackbar } from 'notistack';
-import { useState } from 'react';
+import { ChangeEvent, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import AttachmentsRow from './AttachmentsRow';
@@ -33,39 +33,36 @@ type AttachmentFormProps = {
   attachment_sourceNo?: string;
 };
 
+const allowedFormats = [
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/bmp',
+  'image/svg+xml',
+  'image/webp',
+  'video/mp4',
+  'video/quicktime',
+  'video/x-msvideo',
+  'video/x-matroska',
+  'video/x-ms-wmv',
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.ms-powerpoint',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  'audio/mpeg',
+];
+
+// Only 'name' goes through react-hook-form — the file itself is tracked as
+// plain component state (matching every other upload form in this codebase,
+// e.g. TransactionsBulkImportsContent). Routing a file input through RHF's
+// register() via MUI Input's `inputProps` indirection is unreliable: the
+// ref/onChange don't always reach the native element, so the submitted
+// value can end up as `{}` instead of the actual File.
 const validationSchema = yup.object({
   name: yup.string().required('File Name is required'),
-
-  file: yup
-    .mixed()
-    .required('File is required')
-    .test('fileType', 'Unsupported File Format', (value: unknown) => {
-      const fileList = value as FileList;
-      if (!fileList || fileList.length === 0) return false;
-      const file = fileList[0];
-      const allowedFormats = [
-        'image/jpeg',
-        'image/png',
-        'image/gif',
-        'image/bmp',
-        'image/svg+xml',
-        'image/webp',
-        'video/mp4',
-        'video/quicktime',
-        'video/x-msvideo',
-        'video/x-matroska',
-        'video/x-ms-wmv',
-        'application/pdf',
-        'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'application/vnd.ms-excel',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'application/vnd.ms-powerpoint',
-        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-        'audio/mpeg',
-      ];
-      return allowedFormats.includes(file?.type);
-    }),
 });
 
 function AttachmentForm({
@@ -80,13 +77,15 @@ function AttachmentForm({
   const { enqueueSnackbar } = useSnackbar();
   const queryClient = useQueryClient();
   const [isFetching, setIsFetching] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
 
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<{ name: string; file: FileList }>({
+  } = useForm<{ name: string }>({
     resolver: yupResolver(validationSchema) as any,
     defaultValues: {
       name: '',
@@ -100,7 +99,9 @@ function AttachmentForm({
         variant: 'success',
       });
       queryClient.invalidateQueries({ queryKey: ['attachments'] });
-      reset({ name: '', file: undefined as unknown as FileList });
+      reset({ name: '' });
+      setFile(null);
+      setFileError(null);
     },
     onError: (error: any) => {
       enqueueSnackbar(getErrorMessage(error), { variant: 'error' });
@@ -122,13 +123,29 @@ function AttachmentForm({
     queryFn: fetchAttachments,
   });
 
-  const onSubmit = (data: { name: string; file: FileList }) => {
-    const formData = {
-      ...data,
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const selected = event.target.files?.[0] || null;
+    if (selected && !allowedFormats.includes(selected.type)) {
+      setFile(null);
+      setFileError('Unsupported File Format');
+      return;
+    }
+    setFile(selected);
+    setFileError(null);
+  };
+
+  const onSubmit = (data: { name: string }) => {
+    if (!file) {
+      setFileError('File is required');
+      return;
+    }
+
+    addAttachment.mutate({
+      name: data.name,
+      file,
       attachmentable_id,
       attachmentable_type,
-    };
-    addAttachment.mutate(formData);
+    });
   };
 
   return (
@@ -158,13 +175,13 @@ function AttachmentForm({
                 <Input
                   type='file'
                   id='file'
-                  error={!!errors?.file}
-                  inputProps={{ ...register('file') }}
+                  error={!!fileError}
+                  inputProps={{ onChange: handleFileChange }}
                 />
-                {!errors?.file ? (
+                {!fileError ? (
                   <InputLabel htmlFor='file-input'>File Attachment</InputLabel>
                 ) : (
-                  <FormHelperText error>{errors?.file?.message}</FormHelperText>
+                  <FormHelperText error>{fileError}</FormHelperText>
                 )}
               </Grid>
 

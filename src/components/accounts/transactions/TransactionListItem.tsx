@@ -24,8 +24,25 @@ import ReceiptItemAction from './receipts/ReceiptItemAction';
 import TransferItemAction from './tranfers/TransferItemAction';
 import { Transaction, TransactionTypes } from './TransactionTypes';
 
-const attachmentableTypeFor = (transaction: Transaction) =>
-  transaction.type === 'transfer' ? 'fund_transfer' : transaction.type;
+// Backend attachmentable_type values (see AttachmentController::
+// getAttachmentableClass()) are singular and don't match this component's
+// own `type` prop naming 1:1 — keyed off `type` (always set by the caller),
+// not `transaction.type`, which the Payment/Receipt/FundTransfer/
+// JournalVoucher list endpoints never actually return on each row.
+const attachmentableTypeFor = (type: TransactionTypes): string => {
+  switch (type) {
+    case 'payments':
+      return 'payment';
+    case 'receipts':
+      return 'receipt';
+    case 'journal_vouchers':
+      return 'journal_voucher';
+    case 'transfers':
+      return 'fund_transfer';
+    default:
+      return type;
+  }
+};
 
 function TransactionListItem({
   transaction,
@@ -239,7 +256,7 @@ function TransactionListItem({
             setAttachDialog={setAttachDialog}
             attachment_sourceNo={transaction.voucherNo}
             attachment_name={'Transaction'}
-            attachmentable_type={attachmentableTypeFor(transaction)}
+            attachmentable_type={attachmentableTypeFor(type)}
             attachmentable_id={transaction.id}
           />
         )}

@@ -11,6 +11,7 @@ import dayjs, { Dayjs } from 'dayjs';
 import approvalChainsServices from '../../masters/approvalChains/approvalChainsServices';
 import ApprovedRequisitionsListItem from './ApprovedRequisitionsListItem';
 import RequisitionsTypeSelector from '../RequisitionsTypeSelector';
+import PaymentOrOrderStatusSelector from './PaymentOrOrderStatusSelector';
 import CostCenterSelector from '../../masters/costCenters/CostCenterSelector';
 import ProductsProvider from '../../productAndServices/products/ProductsProvider';
 import ProductsSelectProvider from '../../productAndServices/products/ProductsSelectProvider';
@@ -37,6 +38,8 @@ interface QueryParams {
   cost_center_ids: number[];
   from?: string | null;
   to?: string | null;
+  payment_status?: string;
+  order_status?: string;
 }
 
 interface QueryOptions {
@@ -112,7 +115,32 @@ const ApprovedRequisitionsRqList: React.FC<ApprovedRequisitionsRqListProps> = ({
       ...state,
       queryParams: {
         ...state.queryParams,
-        process_type: type
+        process_type: type,
+        // Clear whichever status filter no longer applies — otherwise a stale
+        // value silently filters out every row once the incompatible type is
+        // selected (e.g. payment_status left set while switching to purchase).
+        payment_status: ['payment', 'imprest'].includes(type) ? state.queryParams.payment_status : undefined,
+        order_status: type === 'purchase' ? state.queryParams.order_status : undefined,
+      }
+    }));
+  }, []);
+
+  const handleOnPaymentStatusChange = useCallback((status: string) => {
+    setQueryOptions(state => ({
+      ...state,
+      queryParams: {
+        ...state.queryParams,
+        payment_status: status
+      }
+    }));
+  }, []);
+
+  const handleOnOrderStatusChange = useCallback((status: string) => {
+    setQueryOptions(state => ({
+      ...state,
+      queryParams: {
+        ...state.queryParams,
+        order_status: status
       }
     }));
   }, []);
@@ -137,6 +165,8 @@ const ApprovedRequisitionsRqList: React.FC<ApprovedRequisitionsRqListProps> = ({
         ...state.queryParams,
         from: null,
         to: null,
+        payment_status: undefined,
+        order_status: undefined,
       }
     }));
   }, []);
@@ -231,6 +261,30 @@ const ApprovedRequisitionsRqList: React.FC<ApprovedRequisitionsRqListProps> = ({
                             <RequisitionsTypeSelector
                               value={queryOptions.queryParams.process_type}
                               onChange={handleOnTypeChange}
+                            />
+                          </Grid>
+                        )}
+                        {['payment', 'imprest'].includes(queryOptions.queryParams.process_type) && (
+                          <Grid size={{ xs: 12, md: 6, lg: 3 }} alignItems={'center'}>
+                            <PaymentOrOrderStatusSelector
+                              label="Payment Status"
+                              noneLabel="Without Payments"
+                              partialLabel="Partially Paid"
+                              fullLabel="Fully Paid"
+                              value={queryOptions.queryParams.payment_status}
+                              onChange={handleOnPaymentStatusChange}
+                            />
+                          </Grid>
+                        )}
+                        {queryOptions.queryParams.process_type === 'purchase' && (
+                          <Grid size={{ xs: 12, md: 6, lg: 3 }} alignItems={'center'}>
+                            <PaymentOrOrderStatusSelector
+                              label="Order Status"
+                              noneLabel="Not Ordered"
+                              partialLabel="Partially Ordered"
+                              fullLabel="Fully Ordered"
+                              value={queryOptions.queryParams.order_status}
+                              onChange={handleOnOrderStatusChange}
                             />
                           </Grid>
                         )}
