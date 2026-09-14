@@ -273,9 +273,13 @@ const ApprovedPurchaseForm: React.FC<ApprovedPurchaseFormProps> = ({
           return {
             ...orderItem,
             quantity: sanitizedNumber(orderItem.quantity),
+            // When this order already consumed the full approved quantity,
+            // the requisition has nothing left pending and prevItem won't be
+            // found - fall back to the order's own quantity rather than 0,
+            // otherwise the item gets filtered out of the edit form entirely.
             unordered_quantity: prevItem
               ? orderItem.quantity + prevItem.unordered_quantity
-              : 0,
+              : orderItem.quantity,
             requisition_approval_product_item_id:
               orderItem.requisition_approval_product_item_id,
             fulfillment_type: 'PURCHASE',
@@ -584,9 +588,12 @@ const ApprovedPurchaseForm: React.FC<ApprovedPurchaseFormProps> = ({
         return {
           ...orderItem,
           quantity: sanitizedNumber(orderItem.quantity),
+          // Same fallback as the initial state above - fully-consumed items
+          // won't have a matching prevItem, so fall back to the order's own
+          // quantity instead of 0 so the item isn't filtered out below.
           unordered_quantity: prevItem
             ? orderItem.quantity + prevItem.unordered_quantity
-            : 0,
+            : orderItem.quantity,
           requisition_approval_product_item_id:
             orderItem.requisition_approval_product_item_id,
           fulfillment_type: 'PURCHASE',
@@ -608,9 +615,14 @@ const ApprovedPurchaseForm: React.FC<ApprovedPurchaseFormProps> = ({
         }));
     }
 
-    // Apply stakeholder filter if needed
+    // Apply stakeholder filter if needed - only meaningful for items sourced
+    // from approvedDetails.items (new-order flow), which carry a per-item
+    // `vendors` list of preferred suppliers. Items sourced from an existing
+    // order's purchase_order_items never have a `vendors` field at all (the
+    // supplier is already fixed on the order), so filtering by it there
+    // would incorrectly wipe out every item whenever a stakeholder is set.
     let filteredItems = sourceItems;
-    if (stakeholder_id) {
+    if (stakeholder_id && !order?.purchase_order_items) {
       filteredItems = sourceItems.filter(
         (item: any) =>
           item.vendors?.some((vendor: any) => vendor.id === stakeholder_id) ||
