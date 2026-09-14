@@ -1,14 +1,14 @@
 'use client'
 
-import { Dialog, Tooltip } from '@mui/material'
+import { Dialog, Tooltip, useMediaQuery } from '@mui/material'
 import React, { useState } from 'react'
 import { DeleteOutlined, EditOutlined, MoreHorizOutlined, SwapHorizOutlined, ViewTimelineOutlined } from '@mui/icons-material'
 import { useJumboDialog } from '@jumbo/components/JumboDialog/hooks/useJumboDialog'
+import { useJumboTheme } from '@jumbo/components/JumboTheme/hooks'
 import ledgerServices from '../ledger-services'
 import LedgerStatementDialogContent from './ledgerStatement/LedgerStatementDialogContent'
 import { useSnackbar } from 'notistack'
 import LedgerForm from '../forms/LedgerForm'
-import { deviceType } from '@/utilities/helpers/user-agent-helpers'
 import { PERMISSIONS } from '@/utilities/constants/permissions'
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -39,7 +39,8 @@ function LedgerListItemAction({ ledger }: LedgerListItemActionProps) {
   const queryClient = useQueryClient();
   const [openEditLedgerFormDialog, setOpenEditLedgerFormDialog] = useState(false);
   const [openFundTransferFormDialog, setOpenFundTransferFormDialog] = useState(false);
-  const isMobile = deviceType() === 'mobile';
+  const { theme } = useJumboTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
 
   const canFundTransfer =
     ledger?.is_cash_or_bank &&
@@ -108,7 +109,7 @@ function LedgerListItemAction({ ledger }: LedgerListItemActionProps) {
         open={openDocumentDialog || openEditLedgerFormDialog}
         fullWidth
         fullScreen={isMobile}
-        maxWidth={openEditLedgerFormDialog ? 'sm' : 'md'}
+        maxWidth={openEditLedgerFormDialog ? 'sm' : 'lg'}
       >
         {openDocumentDialog && <LedgerStatementDialogContent ledger={ledger} setOpen={setOpenDocumentDialog} />}
         {openEditLedgerFormDialog && <LedgerForm ledger={ledger} toggleOpen={setOpenEditLedgerFormDialog} />}

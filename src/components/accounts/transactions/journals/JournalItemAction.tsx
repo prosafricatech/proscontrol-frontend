@@ -13,25 +13,33 @@ import { useJumboTheme } from '@jumbo/components/JumboTheme/hooks';
 import { MenuItemProps } from '@jumbo/types';
 import {
   AttachmentOutlined,
+  BlockOutlined,
   ContentCopyOutlined,
   DeleteOutlined,
   EditOutlined,
   HighlightOff,
   MoreHorizOutlined,
+  SettingsBackupRestoreOutlined,
   VisibilityOutlined,
 } from '@mui/icons-material';
+import { LoadingButton } from '@mui/lab';
 import {
   Box,
   Button,
   Dialog,
+  DialogActions,
   DialogContent,
+  DialogTitle,
+  Grid,
   IconButton,
   Skeleton,
+  TextField,
   Tooltip,
   useMediaQuery,
 } from '@mui/material';
+import { DateTimePicker } from '@mui/x-date-pickers';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import dayjs from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
 import { Transaction } from '../TransactionTypes';
@@ -164,6 +172,7 @@ const JournalItemAction: React.FC<JournalItemActionProps> = ({
   const [openDuplicateDialog, setOpenDuplicateDialog] = useState(false);
   const [openDocumentDialog, setOpenDocumentDialog] = useState(false);
   const [attachDialog, setAttachDialog] = useState(false);
+  const [openCancelDialog, setOpenCancelDialog] = useState(false);
 
   const { data: journalData, isFetching } = useQuery({
     queryKey: ['journal', transaction.id],
@@ -176,6 +185,30 @@ const JournalItemAction: React.FC<JournalItemActionProps> = ({
 
   const deleteMutation = useMutation({
     mutationFn: journalServices.delete,
+    onSuccess: (data) => {
+      enqueueSnackbar(data.message, { variant: 'success' });
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+    },
+    onError: (error: any) => {
+      enqueueSnackbar(error?.response?.data?.message, { variant: 'error' });
+    },
+  });
+
+  const cancelJournalVoucher = useMutation({
+    mutationFn: (vars: { reason: string; cancellation_date: string }) =>
+      journalServices.cancel(transaction, vars),
+    onSuccess: (data) => {
+      enqueueSnackbar(data.message, { variant: 'success' });
+      setOpenCancelDialog(false);
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+    },
+    onError: (error: any) => {
+      enqueueSnackbar(error?.response?.data?.message, { variant: 'error' });
+    },
+  });
+
+  const reverseCancellation = useMutation({
+    mutationFn: journalServices.reverseCancellation,
     onSuccess: (data) => {
       enqueueSnackbar(data.message, { variant: 'success' });
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
@@ -211,6 +244,7 @@ const JournalItemAction: React.FC<JournalItemActionProps> = ({
       PERMISSIONS.ACCOUNTS_TRANSACTIONS_EDIT,
       PERMISSIONS.JOURNAL_VOUCHERS_EDIT,
     ]) &&
+      !transaction.cancelled_at &&
       (checkPermission([
         PERMISSIONS.ACCOUNTS_TRANSACTIONS_BACKDATE,
         PERMISSIONS.JOURNAL_VOUCHERS_BACKDATE,
@@ -225,6 +259,7 @@ const JournalItemAction: React.FC<JournalItemActionProps> = ({
       PERMISSIONS.ACCOUNTS_TRANSACTIONS_DELETE,
       PERMISSIONS.JOURNAL_VOUCHERS_DELETE,
     ]) &&
+      !transaction.cancelled_at &&
       (checkPermission([
         PERMISSIONS.ACCOUNTS_TRANSACTIONS_BACKDATE,
         PERMISSIONS.JOURNAL_VOUCHERS_BACKDATE,
@@ -235,7 +270,101 @@ const JournalItemAction: React.FC<JournalItemActionProps> = ({
         title: 'Delete',
         action: 'delete',
       },
+    !!transaction.cancellable &&
+      checkPermission([
+        PERMISSIONS.ACCOUNTS_TRANSACTIONS_CANCEL,
+        PERMISSIONS.JOURNAL_VOUCHERS_CANCEL,
+      ]) && {
+        icon: <BlockOutlined color='error' />,
+        title: 'Cancel',
+        action: 'cancel',
+      },
+    !!transaction.cancelled_at &&
+      checkPermission([
+        PERMISSIONS.ACCOUNTS_TRANSACTIONS_CANCEL,
+        PERMISSIONS.JOURNAL_VOUCHERS_CANCEL,
+      ]) && {
+        icon: <SettingsBackupRestoreOutlined />,
+        title: 'Reverse Cancellation',
+        action: 'reverse-cancellation',
+      },
   ].filter(Boolean) as MenuItemProps[];
+
+  const CancelJournalVoucherDialog = () => {
+    const [reason, setReason] = useState('');
+    const [cancellationDate, setCancellationDate] = useState<Dayjs>(dayjs());
+
+    const canBackdate = checkPermission([
+      PERMISSIONS.ACCOUNTS_TRANSACTIONS_BACKDATE,
+      PERMISSIONS.JOURNAL_VOUCHERS_BACKDATE,
+    ]);
+    const canPostdate = checkPermission([
+      PERMISSIONS.ACCOUNTS_TRANSACTIONS_POSTDATE,
+      PERMISSIONS.JOURNAL_VOUCHERS_POSTDATE,
+    ]);
+
+    return (
+      <>
+        <DialogTitle>Cancel {transaction.voucherNo}</DialogTitle>
+        <DialogContent>
+          <Grid container columnSpacing={1} rowSpacing={2} sx={{ mt: 0.5 }}>
+            <Grid size={12}>
+              <TextField
+                label='Reason for cancellation'
+                fullWidth
+                multiline
+                minRows={2}
+                size='small'
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+              />
+            </Grid>
+            <Grid size={12}>
+              <DateTimePicker
+                label='Cancellation Date (MM/DD/YYYY)'
+                value={cancellationDate}
+                minDate={
+                  canBackdate
+                    ? dayjs(
+                        authObject.authOrganization?.organization
+                          .recording_start_date
+                      )
+                    : dayjs().startOf('day')
+                }
+                maxDate={
+                  canPostdate
+                    ? dayjs().add(10, 'year').endOf('year')
+                    : dayjs().endOf('day')
+                }
+                slotProps={{ textField: { size: 'small', fullWidth: true } }}
+                onChange={(newValue) => newValue && setCancellationDate(newValue)}
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button size='small' onClick={() => setOpenCancelDialog(false)}>
+            Close
+          </Button>
+          <LoadingButton
+            size='small'
+            variant='contained'
+            color='error'
+            loading={cancelJournalVoucher.isPending}
+            disabled={!reason.trim()}
+            onClick={() =>
+              cancelJournalVoucher.mutate({
+                reason,
+                cancellation_date: cancellationDate.toISOString(),
+              })
+            }
+          >
+            Cancel Journal Voucher
+          </LoadingButton>
+        </DialogActions>
+      </>
+    );
+  };
 
   const handleItemAction = (menuItem: MenuItemProps) => {
     switch (menuItem.action) {
@@ -262,6 +391,22 @@ const JournalItemAction: React.FC<JournalItemActionProps> = ({
         break;
       case 'open':
         setOpenDocumentDialog(true);
+        break;
+      case 'cancel':
+        setOpenCancelDialog(true);
+        break;
+      case 'reverse-cancellation':
+        showDialog({
+          title: 'Reverse Cancellation?',
+          content:
+            'If you say yes, the reversing entry will be removed and this journal voucher will take effect again.',
+          onYes: () => {
+            hideDialog();
+            reverseCancellation.mutate(transaction);
+          },
+          onNo: () => hideDialog(),
+          variant: 'confirm',
+        });
         break;
     }
   };
@@ -381,6 +526,22 @@ const JournalItemAction: React.FC<JournalItemActionProps> = ({
             transaction={transaction}
             setAttachDialog={setAttachDialog}
           />
+        )}
+      </Dialog>
+
+      <Dialog
+        open={openCancelDialog}
+        fullWidth
+        maxWidth='sm'
+        onClose={() => setOpenCancelDialog(false)}
+      >
+        {checkPermission([
+          PERMISSIONS.ACCOUNTS_TRANSACTIONS_CANCEL,
+          PERMISSIONS.JOURNAL_VOUCHERS_CANCEL,
+        ]) ? (
+          <CancelJournalVoucherDialog />
+        ) : (
+          <UnauthorizedAccess />
         )}
       </Dialog>
 

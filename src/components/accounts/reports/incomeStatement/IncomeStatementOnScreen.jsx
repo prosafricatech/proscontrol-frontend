@@ -833,7 +833,7 @@ const IncomeStatementOnScreen = ({ reportData }) => {
         <Dialog
           open={ledgerDialogOpen}
           onClose={() => setLedgerDialogOpen(false)}
-          maxWidth='md'
+          maxWidth='lg'
           fullWidth
           fullScreen={belowLargeScreen}
         >

@@ -7,6 +7,7 @@ import { Attachment } from '@mui/icons-material';
 import {
   Badge,
   Box,
+  Chip,
   Dialog,
   Grid,
   IconButton,
@@ -110,6 +111,17 @@ function TransactionListItem({
                   <Typography variant='caption' color='gray' component='span'>
                     &nbsp;{` - ${transaction.requisitionNo}`}
                   </Typography>
+                </Tooltip>
+              )}
+              {!!transaction.cancelled_at && (
+                <Tooltip title={transaction.cancel_reason || 'Cancelled'}>
+                  <Chip
+                    label='Cancelled'
+                    size='small'
+                    color='error'
+                    variant='outlined'
+                    sx={{ ml: 1, height: 18, fontSize: 11 }}
+                  />
                 </Tooltip>
               )}
             </Stack>

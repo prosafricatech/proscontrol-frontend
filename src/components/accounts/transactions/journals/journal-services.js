@@ -24,4 +24,14 @@ journalServices.delete = async (journal) => {
     return data;
 };
 
+journalServices.cancel = async (journal, {reason, cancellation_date}) => {
+    const {data} = await axios.post(`/api/accountsAndFinance/transactions/journal/${journal.id}/cancel`, {reason, cancellation_date});
+    return data;
+};
+
+journalServices.reverseCancellation = async (journal) => {
+    const {data} = await axios.post(`/api/accountsAndFinance/transactions/journal/${journal.id}/reverse-cancellation`);
+    return data;
+};
+
 export default journalServices;

@@ -7,22 +7,19 @@ import PDFContent from '@/components/pdf/PDFContent';
 import PdfLogo from '@/components/pdf/PdfLogo';
 import { Organization } from '@/types/auth-types';
 import { PERMISSIONS } from '@/utilities/constants/permissions';
-import { deviceType } from '@/utilities/helpers/user-agent-helpers';
-import { faFileExcel } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { FileExportGrid } from '@/components/sharedComponents/FileExportGrid';
 import { Div } from '@jumbo/shared';
 import { LoadingButton } from '@mui/lab';
 import {
   Button,
-  Checkbox,
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControlLabel,
   Grid,
   Skeleton,
   Stack,
-  Tab,
-  Tabs,
+  Switch,
   Typography,
   Chip,
 } from '@mui/material';
@@ -46,6 +43,8 @@ interface Transaction {
   debit_foreign?: number;  // ✅ New: foreign currency debit
   credit_foreign?: number; // ✅ New: foreign currency credit
   correspondingLedger?: string | null;
+  isCancelled?: boolean;
+  isReversal?: boolean;
 }
 
 interface ReportDocumentProps {
@@ -198,11 +197,17 @@ const ReportDocument: React.FC<ReportDocumentProps> = ({
             : (transaction.credit_foreign || 0) - (transaction.debit_foreign || 0);
       }
 
+      const cancellationTag = transaction.isCancelled
+        ? ' (Cancelled)'
+        : transaction.isReversal
+          ? ' (Reversal)'
+          : '';
+
       return {
         transactionDate: transaction.transactionDate,
         reference:
           `${transaction.voucherNo ? transaction.voucherNo : ''} ${transaction.reference ? transaction.reference : ''}`.trim(),
-        description: transaction.description,
+        description: transaction.description + cancellationTag,
         correspondingLedger: transaction.correspondingLedger || '',
         debit: transaction.debit,
         credit: transaction.credit,
@@ -437,8 +442,8 @@ const LedgerStatementDialogContent: React.FC<
   const user = authUser?.user;
   const [withItemDescription, setWithItemDescription] =
     useState(!!commingFilters);
-  const [activeTab, setActiveTab] = useState(0);
-  const isMobile = deviceType() === 'mobile';
+  const [hideCancelled, setHideCancelled] = useState(false);
+  const [showOnScreen, setShowOnScreen] = useState(true);
   const { enqueueSnackbar } = useSnackbar();
   const [isExporting, setIsExporting] = useState(false);
   const [uploadFieldsKey, setUploadFieldsKey] = useState(0);
@@ -457,6 +462,7 @@ const LedgerStatementDialogContent: React.FC<
               (cost_center: any) => cost_center.id
             ) || []),
       with_item_description: commingFilters ? true : withItemDescription,
+      hide_cancelled: hideCancelled,
     },
   });
 
@@ -467,6 +473,7 @@ const LedgerStatementDialogContent: React.FC<
       ledger_id?: number;
       cost_center_ids: number[] | 'all';
       with_item_description: boolean;
+      hide_cancelled?: boolean;
     }) => {
       try {
         setIsFetching(true);
@@ -553,10 +560,6 @@ const LedgerStatementDialogContent: React.FC<
     }
   };
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setActiveTab(newValue);
-  };
-
   return (
     <React.Fragment>
       <DialogTitle textAlign={'center'}>
@@ -589,12 +592,7 @@ const LedgerStatementDialogContent: React.FC<
                     )}
                   </Stack>
                 </Grid>
-                {!ledger && (
-                  <Grid size={{ xs: 12, md: 4 }}>
-                    <Div sx={{ mt: 1, mb: 1 }}></Div>
-                  </Grid>
-                )}
-                <Grid size={{ xs: 12 }}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <CostCenterSelector
                     label='Cost Centers'
                     multiple={true}
@@ -611,7 +609,7 @@ const LedgerStatementDialogContent: React.FC<
                     }}
                   />
                 </Grid>
-                <Grid size={{ xs: 12, md: 6 }}>
+                <Grid size={{ xs: 12, md: 3 }}>
                   <Div sx={{ mt: 1, mb: 1 }}>
                     <DateTimePicker
                       label='From (MM/DD/YYYY)'
@@ -639,7 +637,7 @@ const LedgerStatementDialogContent: React.FC<
                     />
                   </Div>
                 </Grid>
-                <Grid size={{ xs: 12, md: 6 }}>
+                <Grid size={{ xs: 12, md: 3 }}>
                   <Div sx={{ mt: 1, mb: 1 }}>
                     <DateTimePicker
                       label='To (MM/DD/YYYY)'
@@ -661,65 +659,85 @@ const LedgerStatementDialogContent: React.FC<
                     />
                   </Div>
                 </Grid>
-                <Grid size={{ xs: 12, md: 11 }}>
-                  <Div sx={{ mt: 1, mb: 1 }}>
-                    <Checkbox
-                      checked={withItemDescription}
-                      onChange={(e) => {
-                        const isChecked = e.target.checked;
-                        setWithItemDescription(isChecked);
-                        setValue('with_item_description', isChecked, {
-                          shouldValidate: true,
-                          shouldDirty: true,
-                        });
-                      }}
-                    />
-                    With Items Description
-                  </Div>
-                </Grid>
               </>
             )}
-            <Grid size={{ xs: 12 }} textAlign={'right'}>
+            <Grid size={{ xs: 12 }}>
               <Stack
-                direction='row'
-                spacing={0.5}
-                justifyContent='flex-end'
-                alignItems='center'
+                direction={{ xs: 'column', md: 'row' }}
+                spacing={1}
+                justifyContent='space-between'
+                alignItems={{ xs: 'stretch', md: 'center' }}
               >
-                <LoadingButton
-                  size='small'
-                  onClick={() => handlExcelExport(exportedData)}
-                  loading={isExporting}
-                  disabled={isFetching}
-                  variant='contained'
-                  color='success'
-                >
-                  <FontAwesomeIcon icon={faFileExcel} color='green' />
-                  Excel
-                </LoadingButton>
                 {!commingFilters && (
-                  <LoadingButton
-                    loading={isFetching}
-                    type='submit'
-                    size='small'
-                    variant='contained'
+                  <Stack
+                    direction={{ xs: 'column', sm: 'row' }}
+                    spacing={{ xs: 0, sm: 2 }}
                   >
-                    Filter
-                  </LoadingButton>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={withItemDescription}
+                          onChange={(e) => {
+                            const isChecked = e.target.checked;
+                            setWithItemDescription(isChecked);
+                            setValue('with_item_description', isChecked, {
+                              shouldValidate: true,
+                              shouldDirty: true,
+                            });
+                          }}
+                        />
+                      }
+                      label='Detailed'
+                    />
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={!hideCancelled}
+                          onChange={(e) => {
+                            const showCancellations = e.target.checked;
+                            const isChecked = !showCancellations;
+                            setHideCancelled(isChecked);
+                            setValue('hide_cancelled', isChecked, {
+                              shouldValidate: true,
+                              shouldDirty: true,
+                            });
+                          }}
+                        />
+                      }
+                      label='Show Cancellations'
+                    />
+                  </Stack>
                 )}
-              </Stack>
-            </Grid>
-            <Grid size={12}>
-              {transactions && isMobile && (
-                <Tabs
-                  value={activeTab}
-                  onChange={handleTabChange}
-                  variant='fullWidth'
+                <Stack
+                  direction={{ xs: 'column', sm: 'row' }}
+                  spacing={1}
+                  justifyContent='flex-end'
+                  alignItems='center'
+                  sx={{ ml: { md: 'auto' } }}
                 >
-                  <Tab label='On-Screen' />
-                  <Tab label='PDF' />
-                </Tabs>
-              )}
+                  {transactions && (
+                    <FileExportGrid
+                      exportExcel
+                      exportData={exportedData}
+                      handlExcelExport={handlExcelExport}
+                      exportingExcel={isExporting}
+                      exportPdf
+                      handlePdf={() => setShowOnScreen((prev) => !prev)}
+                    />
+                  )}
+                  {!commingFilters && (
+                    <LoadingButton
+                      loading={isFetching}
+                      type='submit'
+                      size='small'
+                      variant='contained'
+                      sx={{ width: { xs: '100%', sm: 'auto' } }}
+                    >
+                      Filter
+                    </LoadingButton>
+                  )}
+                </Stack>
+              </Stack>
             </Grid>
           </Grid>
         </form>
@@ -751,7 +769,7 @@ const LedgerStatementDialogContent: React.FC<
           authOrganization &&
           user && (
             <>
-              {isMobile && activeTab === 0 ? (
+              {showOnScreen ? (
                 <LedgerStatementOnScreen
                   transactionsData={transactions}
                   authOrganization={authOrganization}

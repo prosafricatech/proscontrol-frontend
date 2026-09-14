@@ -24,4 +24,14 @@ paymentServices.delete = async (payment) => {
     return data;
 };
 
+paymentServices.cancel = async (payment, {reason, cancellation_date}) => {
+    const {data} = await axios.post(`/api/accountsAndFinance/transactions/payments/${payment.id}/cancel`, {reason, cancellation_date});
+    return data;
+};
+
+paymentServices.reverseCancellation = async (payment) => {
+    const {data} = await axios.post(`/api/accountsAndFinance/transactions/payments/${payment.id}/reverse-cancellation`);
+    return data;
+};
+
 export default paymentServices;

@@ -31,6 +31,9 @@ export type BaseTransaction = {
   requisition_approval_id?: number;
   editable?: boolean;
   attachments_count?: number;
+  cancellable?: boolean;
+  cancelled_at?: string | null;
+  cancel_reason?: string | null;
 };
 
 export type PaymentTransaction = BaseTransaction & {

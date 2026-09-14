@@ -38,6 +38,8 @@ interface Transaction {
   debit_foreign?: number;  // ✅ New
   credit_foreign?: number; // ✅ New
   correspondingLedger?: string | null;
+  isCancelled?: boolean;
+  isReversal?: boolean;
 }
 
 interface TransactionsData {
@@ -143,6 +145,8 @@ const LedgerStatementOnScreen: React.FC<LedgerStatementOnScreenProps> = ({
             debit_foreign: hasForeignCurrency ? (openingBalanceTx.debit_foreign || null) : null,
             credit_foreign: hasForeignCurrency ? (openingBalanceTx.credit_foreign || null) : null,
             balance_foreign: hasForeignCurrency ? foreignOpeningBalance : null,
+            isCancelled: false,
+            isReversal: false,
           },
         ]
       : []),
@@ -171,6 +175,8 @@ const LedgerStatementOnScreen: React.FC<LedgerStatementOnScreenProps> = ({
         debit_foreign: hasForeignCurrency ? (transaction.debit_foreign || null) : null,
         credit_foreign: hasForeignCurrency ? (transaction.credit_foreign || null) : null,
         balance_foreign: hasForeignCurrency ? foreignRunningBalance : null,
+        isCancelled: transaction.isCancelled,
+        isReversal: transaction.isReversal,
       };
     }),
   ];
@@ -275,7 +281,27 @@ const LedgerStatementOnScreen: React.FC<LedgerStatementOnScreenProps> = ({
                 {readableDate(row.transactionDate)}
               </TableCell>
               <TableCell>{row.reference}</TableCell>
-              <TableCell>{row.description}</TableCell>
+              <TableCell>
+                {row.description}
+                {row.isCancelled && (
+                  <Chip
+                    label='Cancelled'
+                    size='small'
+                    color='error'
+                    variant='outlined'
+                    sx={{ ml: 1, height: 18, fontSize: 11 }}
+                  />
+                )}
+                {row.isReversal && (
+                  <Chip
+                    label='Reversal'
+                    size='small'
+                    color='warning'
+                    variant='outlined'
+                    sx={{ ml: 1, height: 18, fontSize: 11 }}
+                  />
+                )}
+              </TableCell>
               <TableCell>{row.correspondingLedger}</TableCell>
               <TableCell align='right'>
                 {row.debit && row.debit !== 0 ? formatBalance(row.debit) : '-'}

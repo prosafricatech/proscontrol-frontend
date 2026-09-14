@@ -13,24 +13,32 @@ import { useJumboTheme } from '@jumbo/components/JumboTheme/hooks';
 import { MenuItemProps } from '@jumbo/types';
 import {
   AttachmentOutlined,
+  BlockOutlined,
   DeleteOutlined,
   EditOutlined,
   HighlightOff,
   MoreHorizOutlined,
+  SettingsBackupRestoreOutlined,
   VisibilityOutlined,
 } from '@mui/icons-material';
+import { LoadingButton } from '@mui/lab';
 import {
   Box,
   Button,
   Dialog,
+  DialogActions,
   DialogContent,
+  DialogTitle,
+  Grid,
   IconButton,
   Skeleton,
+  TextField,
   Tooltip,
   useMediaQuery,
 } from '@mui/material';
+import { DateTimePicker } from '@mui/x-date-pickers';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import dayjs from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
 import { useSnackbar } from 'notistack';
 import React, { useState } from 'react';
 import { Transaction } from '../TransactionTypes';
@@ -163,6 +171,7 @@ const ReceiptItemAction: React.FC<ReceiptItemActionProps> = ({
   const { enqueueSnackbar } = useSnackbar();
   const [openEditDialog, setOpenEditDialog] = useState(false);
   const [attachDialog, setAttachDialog] = useState(false);
+  const [openCancelDialog, setOpenCancelDialog] = useState(false);
   const queryClient = useQueryClient();
   const authObject = useJumboAuth();
   const checkOrganizationPermission = authObject.checkOrganizationPermission;
@@ -172,6 +181,30 @@ const ReceiptItemAction: React.FC<ReceiptItemActionProps> = ({
 
   const deleteReceipt = useMutation({
     mutationFn: receiptServices.delete,
+    onSuccess: (data) => {
+      enqueueSnackbar(data.message, { variant: 'success' });
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+    },
+    onError: (error: any) => {
+      enqueueSnackbar(error?.response?.data?.message, { variant: 'error' });
+    },
+  });
+
+  const cancelReceipt = useMutation({
+    mutationFn: (vars: { reason: string; cancellation_date: string }) =>
+      receiptServices.cancel(transaction, vars),
+    onSuccess: (data) => {
+      enqueueSnackbar(data.message, { variant: 'success' });
+      setOpenCancelDialog(false);
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+    },
+    onError: (error: any) => {
+      enqueueSnackbar(error?.response?.data?.message, { variant: 'error' });
+    },
+  });
+
+  const reverseCancellation = useMutation({
+    mutationFn: receiptServices.reverseCancellation,
     onSuccess: (data) => {
       enqueueSnackbar(data.message, { variant: 'success' });
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
@@ -200,6 +233,7 @@ const ReceiptItemAction: React.FC<ReceiptItemActionProps> = ({
       PERMISSIONS.RECEIPTS_EDIT,
     ]) &&
     !!transaction.editable &&
+    !transaction.cancelled_at &&
     (checkOrganizationPermission([
       PERMISSIONS.ACCOUNTS_TRANSACTIONS_BACKDATE,
       PERMISSIONS.RECEIPTS_BACKDATE,
@@ -212,6 +246,7 @@ const ReceiptItemAction: React.FC<ReceiptItemActionProps> = ({
       PERMISSIONS.RECEIPTS_DELETE,
     ]) &&
     !!transaction.editable &&
+    !transaction.cancelled_at &&
     (checkOrganizationPermission([
       PERMISSIONS.ACCOUNTS_TRANSACTIONS_BACKDATE,
       PERMISSIONS.RECEIPTS_BACKDATE,
@@ -221,6 +256,24 @@ const ReceiptItemAction: React.FC<ReceiptItemActionProps> = ({
           icon: <DeleteOutlined color='error' />,
           title: 'Delete',
           action: 'delete',
+        }
+      : null,
+    !!transaction.cancellable &&
+    checkOrganizationPermission([
+      PERMISSIONS.ACCOUNTS_TRANSACTIONS_CANCEL,
+      PERMISSIONS.RECEIPTS_CANCEL,
+    ])
+      ? { icon: <BlockOutlined color='error' />, title: 'Cancel', action: 'cancel' }
+      : null,
+    !!transaction.cancelled_at &&
+    checkOrganizationPermission([
+      PERMISSIONS.ACCOUNTS_TRANSACTIONS_CANCEL,
+      PERMISSIONS.RECEIPTS_CANCEL,
+    ])
+      ? {
+          icon: <SettingsBackupRestoreOutlined />,
+          title: 'Reverse Cancellation',
+          action: 'reverse-cancellation',
         }
       : null,
   ].filter((item): item is MenuItemProps => item !== null);
@@ -267,6 +320,82 @@ const ReceiptItemAction: React.FC<ReceiptItemActionProps> = ({
     }
   }, [openEditDialog, transaction.id, queryClient]);
 
+  const CancelReceiptDialog = () => {
+    const [reason, setReason] = useState('');
+    const [cancellationDate, setCancellationDate] = useState<Dayjs>(dayjs());
+
+    const canBackdate = checkOrganizationPermission([
+      PERMISSIONS.ACCOUNTS_TRANSACTIONS_BACKDATE,
+      PERMISSIONS.RECEIPTS_BACKDATE,
+    ]);
+    const canPostdate = checkOrganizationPermission([
+      PERMISSIONS.ACCOUNTS_TRANSACTIONS_POSTDATE,
+      PERMISSIONS.RECEIPTS_POSTDATE,
+    ]);
+
+    return (
+      <>
+        <DialogTitle>Cancel {transaction.voucherNo}</DialogTitle>
+        <DialogContent>
+          <Grid container columnSpacing={1} rowSpacing={2} sx={{ mt: 0.5 }}>
+            <Grid size={12}>
+              <TextField
+                label='Reason for cancellation'
+                fullWidth
+                multiline
+                minRows={2}
+                size='small'
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+              />
+            </Grid>
+            <Grid size={12}>
+              <DateTimePicker
+                label='Cancellation Date (MM/DD/YYYY)'
+                value={cancellationDate}
+                minDate={
+                  canBackdate
+                    ? dayjs(
+                        authObject.authOrganization?.organization
+                          .recording_start_date
+                      )
+                    : dayjs().startOf('day')
+                }
+                maxDate={
+                  canPostdate
+                    ? dayjs().add(10, 'year').endOf('year')
+                    : dayjs().endOf('day')
+                }
+                slotProps={{ textField: { size: 'small', fullWidth: true } }}
+                onChange={(newValue) => newValue && setCancellationDate(newValue)}
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button size='small' onClick={() => setOpenCancelDialog(false)}>
+            Close
+          </Button>
+          <LoadingButton
+            size='small'
+            variant='contained'
+            color='error'
+            loading={cancelReceipt.isPending}
+            disabled={!reason.trim()}
+            onClick={() =>
+              cancelReceipt.mutate({
+                reason,
+                cancellation_date: cancellationDate.toISOString(),
+              })
+            }
+          >
+            Cancel Receipt
+          </LoadingButton>
+        </DialogActions>
+      </>
+    );
+  };
+
   const handleItemAction = (menuItem: MenuItemProps) => {
     switch (menuItem.action) {
       case 'delete':
@@ -289,6 +418,22 @@ const ReceiptItemAction: React.FC<ReceiptItemActionProps> = ({
         break;
       case 'open':
         setOpenDocumentDialog(true);
+        break;
+      case 'cancel':
+        setOpenCancelDialog(true);
+        break;
+      case 'reverse-cancellation':
+        showDialog({
+          title: 'Reverse Cancellation?',
+          content:
+            'If you say yes, the reversing entry will be removed and this receipt will take effect again.',
+          onYes: () => {
+            hideDialog();
+            reverseCancellation.mutate(transaction);
+          },
+          onNo: () => hideDialog(),
+          variant: 'confirm',
+        });
         break;
       default:
         break;
@@ -336,6 +481,23 @@ const ReceiptItemAction: React.FC<ReceiptItemActionProps> = ({
           />
         )}
       </Dialog>
+
+      <Dialog
+        open={openCancelDialog}
+        fullWidth
+        maxWidth='sm'
+        onClose={() => setOpenCancelDialog(false)}
+      >
+        {checkOrganizationPermission([
+          PERMISSIONS.ACCOUNTS_TRANSACTIONS_CANCEL,
+          PERMISSIONS.RECEIPTS_CANCEL,
+        ]) ? (
+          <CancelReceiptDialog />
+        ) : (
+          <UnauthorizedAccess />
+        )}
+      </Dialog>
+
       <JumboDdMenu
         icon={
           <Tooltip title='Actions'>

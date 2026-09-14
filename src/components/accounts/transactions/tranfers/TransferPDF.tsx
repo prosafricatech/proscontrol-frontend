@@ -27,6 +27,8 @@ interface Transaction {
   creator: {
     name: string
   };
+  cancelled_at?: string | null;
+  cancel_reason?: string | null;
 }
 
 interface TransferPDFProps {
@@ -66,6 +68,25 @@ function TransferPDF({ transaction, authObject }: TransferPDFProps) {
                         )}
                     </View>
                 </View>
+
+                {transaction.cancelled_at && (
+                    <View style={{
+                        backgroundColor: '#B00020',
+                        padding: 8,
+                        marginBottom: 10,
+                        borderRadius: 4,
+                    }}>
+                        <Text style={{ color: '#FFFFFF', fontFamily: 'Helvetica-Bold', fontSize: 11 }}>
+                            CANCELLED on {readableDate(transaction.cancelled_at, true)}
+                        </Text>
+                        {transaction.cancel_reason && (
+                            <Text style={{ color: '#FFFFFF', fontSize: 9, marginTop: 2 }}>
+                                Reason: {transaction.cancel_reason}
+                            </Text>
+                        )}
+                    </View>
+                )}
+
                 <View style={{ ...pdfStyles.tableRow}}>
                     <View style={{ flex: 1, padding: 2}}>
                         <Text style={{...pdfStyles.minInfo, color: mainColor }}>Transfer Date</Text>
