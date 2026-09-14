@@ -3,7 +3,9 @@
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import { readableDate } from '@/app/helpers/input-sanitization-helpers';
 import PDFContent from '@/components/pdf/PDFContent';
+import { useJumboTheme } from '@jumbo/components/JumboTheme/hooks';
 import AddIcon from '@mui/icons-material/Add';
+import PreviewOutlined from '@mui/icons-material/PreviewOutlined';
 import PrintOutlined from '@mui/icons-material/PrintOutlined';
 import RemoveIcon from '@mui/icons-material/Remove';
 import {
@@ -11,16 +13,17 @@ import {
   AccordionDetails,
   AccordionSummary,
   Alert,
+  Button,
   Chip,
   Dialog,
+  DialogActions,
   DialogContent,
   Grid,
   IconButton,
   LinearProgress,
-  Tab,
-  Tabs,
   Tooltip,
   Typography,
+  useMediaQuery,
 } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import dayjs from 'dayjs';
@@ -30,6 +33,7 @@ import LeaveApprovalItemAction from './LeaveApprovalItemAction';
 import LeaveApprovalsActionTail from './LeaveApprovalsActionTail';
 import LeaveRequestItemAction from './LeaveRequestItemAction';
 import LeaveRequestPDF from './LeaveRequestPDF';
+import LeaveRequestPreview from './LeaveRequestPreview';
 import { LeaveRequestType } from './LeaveRequestType';
 
 const LeaveRequestsListItem = ({
@@ -38,10 +42,12 @@ const LeaveRequestsListItem = ({
   leaveRequest: LeaveRequestType;
 }) => {
   const [expanded, setExpanded] = useState(false);
-  const [activeTab, setActiveTab] = useState(0);
   const [openPrint, setOpenPrint] = useState(false);
+  const [openPreview, setOpenPreview] = useState(false);
   const { authOrganization, authUser } = useJumboAuth() as any;
   const organization = authOrganization?.organization;
+  const { theme } = useJumboTheme();
+  const belowLargeScreen = useMediaQuery(theme.breakpoints.down('lg'));
 
   const { data: leaveDetails, isLoading } = useQuery({
     queryKey: ['showLeaveRequest', leaveRequest.id],
@@ -179,8 +185,32 @@ const LeaveRequestsListItem = ({
       </AccordionSummary>
 
       <AccordionDetails sx={{ backgroundColor: 'background.paper', mb: 3 }}>
-        <Dialog open={openPrint} onClose={() => setOpenPrint(false)} maxWidth='md' fullWidth>
-          <DialogContent sx={{ height: '80vh', p: 0 }}>
+        <Dialog
+          open={openPreview}
+          fullWidth
+          maxWidth='sm'
+          fullScreen={belowLargeScreen}
+          scroll={belowLargeScreen ? 'body' : 'paper'}
+          onClose={() => setOpenPreview(false)}
+        >
+          <DialogContent>
+            <LeaveRequestPreview leaveRequest={details} />
+          </DialogContent>
+          <DialogActions>
+            <Button size='small' onClick={() => setOpenPreview(false)}>
+              Close
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        <Dialog
+          open={openPrint}
+          onClose={() => setOpenPrint(false)}
+          maxWidth='md'
+          fullWidth
+          fullScreen={belowLargeScreen}
+        >
+          <DialogContent sx={{ height: belowLargeScreen ? '100%' : '80vh', p: 0 }}>
             {openPrint && (
               <PDFContent
                 document={
@@ -198,6 +228,11 @@ const LeaveRequestsListItem = ({
 
         <Grid container spacing={1}>
           <Grid size={{ xs: 12 }} textAlign='end'>
+            <Tooltip title='Preview'>
+              <IconButton size='small' onClick={() => setOpenPreview(true)}>
+                <PreviewOutlined color='primary' />
+              </IconButton>
+            </Tooltip>
             <Tooltip title='Print Leave Application Form'>
               <IconButton size='small' onClick={() => setOpenPrint(true)}>
                 <PrintOutlined color='primary' />
@@ -208,137 +243,102 @@ const LeaveRequestsListItem = ({
               approvalsCount={approvals.length}
             />
           </Grid>
-          <Grid size={{ xs: 12 }}>
-            <Tabs
-              value={activeTab}
-              onChange={(_, v) => setActiveTab(v)}
-              variant='scrollable'
-              scrollButtons='auto'
-              allowScrollButtonsMobile
-              sx={{ display: 'flex', justifyContent: 'center' }}
-            >
-              <Tab label='Approvals' />
-            </Tabs>
-          </Grid>
-        </Grid>
-
-        <Grid container>
-          {activeTab === 0 && (
-            <Grid
-              container
-              spacing={1}
-              justifyContent='center'
-              width='100%'
-              marginTop={1}
-            >
-              {isLoading ? (
-                <Grid size={{ xs: 12 }}>
-                  <LinearProgress />
-                </Grid>
-              ) : (
-                <>
-                  {/* Not gated on approvals.length === 0 — see the identical
-                      note in LoanRequestsListItem.tsx: this prompt has to show
-                      for every pending approver, not just the very first one. */}
-                  {details?.approval_chain_id && (
-                    <Grid size={{ xs: 12 }} textAlign='end'>
-                      <LeaveApprovalsActionTail leaveRequest={details} />
-                    </Grid>
-                  )}
-                  <Grid size={{ xs: 12 }}>
-                    <Grid container spacing={2}>
-                      {approvals.length > 0 ? (
-                        approvals.map((approval, index) => {
-                          const approvalStatus = (
-                            approval.status || ''
-                          ).toLowerCase();
-                          const chipColor =
-                            approvalStatus === 'rejected'
-                              ? 'error'
-                              : approvalStatus === 'on hold'
-                                ? 'warning'
-                                : approvalStatus === 'approved'
-                                  ? 'success'
-                                  : 'info';
-
-                          const chainLevel =
-                            details?.approval_chain?.levels?.find(
-                              (level) =>
-                                Number(level.id) ===
-                                Number(
-                                  approval.chain_level_id ||
-                                    approval.approval_chain_level_id
-                                )
-                            );
-
-                          return (
-                            <Grid
-                              key={approval.id || index}
-                              size={{ xs: 12 }}
-                              sx={{
-                                cursor: 'pointer',
-                                borderTop: 1,
-                                borderColor: 'divider',
-                                '&:hover': { bgcolor: 'action.hover' },
-                                padding: 1,
-                              }}
-                              container
-                              spacing={2}
-                              width='100%'
-                              alignItems='center'
-                            >
-                              <Grid size={{ xs: 12, md: 3, lg: 3 }}>
-                                <Tooltip title='Action Date'>
-                                  <Typography variant='h6'>
-                                    {approval.approval_date
-                                      ? readableDate(approval.approval_date)
-                                      : ''}
-                                  </Typography>
-                                </Tooltip>
-                              </Grid>
-
-                              <Grid size={{ xs: 12, md: 3, lg: 3 }}>
-                                <Tooltip title='Done By'>
-                                  <Typography variant='h6'>
-                                    {(approval as any).creator?.name || ''}
-                                  </Typography>
-                                </Tooltip>
-                              </Grid>
-
-                              <Grid size={{ xs: 12, md: 4, lg: 4 }}>
-                                <Chip
-                                  size='small'
-                                  label={approval.status || 'Pending'}
-                                  color={chipColor as any}
-                                  sx={{ textTransform: 'capitalize' }}
-                                />
-                              </Grid>
-
-                              <Grid
-                                size={{ xs: 12, md: 2, lg: 2 }}
-                                textAlign='right'
-                              >
-                                <LeaveApprovalItemAction
-                                  leaveRequest={details}
-                                  approval={approval}
-                                  approvals={approvals}
-                                />
-                              </Grid>
-                            </Grid>
-                          );
-                        })
-                      ) : (
-                        <Grid size={{ xs: 12 }}>
-                          <Alert variant='outlined' severity='info'>
-                            No Approvals Found
-                          </Alert>
-                        </Grid>
-                      )}
-                    </Grid>
-                  </Grid>
-                </>
-              )}
+          {isLoading ? (
+            <Grid size={{ xs: 12 }}>
+              <LinearProgress />
             </Grid>
+          ) : (
+            <>
+              {/* Only shown for the very first decision — nothing exists yet
+                  to attach an inline Approve button to. Once at least one
+                  approval exists, the next approver's Approve button lives
+                  on the last row in Approval History below instead (mirrors
+                  RequisitionsListItem's ApprovalsTab/ApprovalItemAction). */}
+              {details?.approval_chain_id && approvals.length === 0 && (
+                <Grid size={{ xs: 12 }} textAlign='end'>
+                  <LeaveApprovalsActionTail leaveRequest={details} />
+                </Grid>
+              )}
+
+              <Grid size={{ xs: 12 }}>
+                <Typography variant='subtitle2' color='text.secondary' mb={1}>
+                  Approval History
+                </Typography>
+                {approvals.length === 0 ? (
+                  <Alert variant='outlined' severity='info'>
+                    No Approvals Found
+                  </Alert>
+                ) : (
+                  <Grid container spacing={1}>
+                    {approvals.map((approval, index) => {
+                      const approvalStatus = (
+                        approval.status || ''
+                      ).toLowerCase();
+                      const chipColor =
+                        approvalStatus === 'rejected'
+                          ? 'error'
+                          : approvalStatus === 'on hold'
+                            ? 'warning'
+                            : approvalStatus === 'approved'
+                              ? 'success'
+                              : 'info';
+
+                      return (
+                        <Grid
+                          key={approval.id || index}
+                          size={{ xs: 12 }}
+                          container
+                          spacing={2}
+                          alignItems='center'
+                          sx={{
+                            borderTop: 1,
+                            borderColor: 'divider',
+                            py: 1,
+                          }}
+                        >
+                          <Grid size={{ xs: 12, md: 3 }}>
+                            <Tooltip title='Action Date'>
+                              <Typography variant='body2'>
+                                {approval.approval_date
+                                  ? readableDate(approval.approval_date)
+                                  : ''}
+                              </Typography>
+                            </Tooltip>
+                          </Grid>
+
+                          <Grid size={{ xs: 12, md: 3 }}>
+                            <Tooltip title='Done By'>
+                              <Typography variant='body2'>
+                                {(approval as any).creator?.name || ''}
+                              </Typography>
+                            </Tooltip>
+                          </Grid>
+
+                          <Grid size={{ xs: 8, md: 3 }}>
+                            <Chip
+                              size='small'
+                              label={approval.status || 'Pending'}
+                              color={chipColor as any}
+                              sx={{ textTransform: 'capitalize' }}
+                            />
+                          </Grid>
+
+                          <Grid size={{ xs: 4, md: 3 }} textAlign='right'>
+                            {index === approvals.length - 1 && (
+                              <LeaveApprovalItemAction
+                                leaveRequest={details}
+                                approval={approval}
+                                approvals={approvals}
+                              />
+                            )}
+                          </Grid>
+                        </Grid>
+                      );
+                    })}
+                  </Grid>
+                )}
+              </Grid>
+            </>
           )}
         </Grid>
       </AccordionDetails>

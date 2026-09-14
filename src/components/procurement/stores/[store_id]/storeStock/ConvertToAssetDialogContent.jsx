@@ -138,6 +138,7 @@ function ConvertToAssetDialogContent({ productStock, toggleOpen }) {
             <ProductSelect
               label="Receiving Asset Product"
               allowedTypes={['Asset']}
+              showType={false}
               onChange={(newValue) => setValue('asset_product_id', newValue ? newValue.id : null, { shouldValidate: true })}
               frontError={errors.asset_product_id}
             />

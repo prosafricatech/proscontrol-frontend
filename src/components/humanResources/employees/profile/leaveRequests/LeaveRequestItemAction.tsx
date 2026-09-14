@@ -65,7 +65,7 @@ const LeaveRequestItemAction = ({
   leaveRequest: LeaveRequestType;
   approvalsCount?: number;
 }) => {
-  const { checkOrganizationPermission } = useJumboAuth();
+  const { checkOrganizationPermission, authUser } = useJumboAuth();
   const [openEditDialog, setOpenEditDialog] = useState(false);
   const { showDialog, hideDialog } = useJumboDialog();
   const { enqueueSnackbar } = useSnackbar();
@@ -157,9 +157,16 @@ const LeaveRequestItemAction = ({
     });
   };
 
-  const canEditRequest = checkOrganizationPermission(
-    PERMISSIONS.LEAVE_REQUESTS_EDIT
-  );
+  // Mirrors the backend's update() guard (and LoanRequestItemAction's
+  // identical canEdit) — only the creator, and only before anyone has acted
+  // on it. Status alone doesn't cover this: a chain-driven request stays
+  // 'in_review' for its whole multi-level walk, so !hasApprovals is checked
+  // directly here too, not just via the parent's wrapping condition.
+  const canEditRequest =
+    leaveRequest.status === 'in_review' &&
+    !hasApprovals &&
+    leaveRequest.created_by === Number(authUser?.user?.id) &&
+    checkOrganizationPermission(PERMISSIONS.LEAVE_REQUESTS_CREATE);
   const canDeleteRequest = checkOrganizationPermission(
     PERMISSIONS.LEAVE_REQUESTS_DELETE
   );

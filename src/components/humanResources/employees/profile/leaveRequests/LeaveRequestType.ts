@@ -6,6 +6,8 @@ export interface LeaveRequestType {
   end_date: string;
   days_requested: number;
   days_granted?: number | null;
+  granted_start_date?: string | null;
+  granted_end_date?: string | null;
   reason?: string;
   status: 'pending' | 'in_review' | 'approved' | 'rejected' | 'cancelled';
   // Backend-computed — "Waiting for {Role}" while under a pending approval
@@ -29,6 +31,8 @@ export interface LeaveRequestType {
   leave_type?: {
     id: number;
     name: string;
+    excludes_saturday?: boolean;
+    excludes_sunday?: boolean;
   };
   approval_chain?: {
     id?: number;
@@ -53,6 +57,8 @@ export interface LeaveRequestType {
     label?: string;
     status_label?: string;
     days_approved?: number;
+    approved_start_date?: string | null;
+    approved_end_date?: string | null;
     remarks?: string;
     approval_date?: string;
     creator?: {

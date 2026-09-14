@@ -9,7 +9,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import humanResourcesServices from '../../../humanResourcesServices';
 import LeaveApprovalDialog, {
-  getLeaveApprovalDecision,
   getNextPendingLeaveLevel,
 } from './LeaveApprovalDialog';
 import { LeaveRequestType } from './LeaveRequestType';
@@ -27,6 +26,7 @@ const LeaveApprovalItemAction = ({
 }: LeaveApprovalItemActionProps) => {
   const [openDialog, setOpenDialog] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [openApproveDialog, setOpenApproveDialog] = useState(false);
 
   const queryClient = useQueryClient();
   const { authUser, hasOrganizationRole } = useJumboAuth();
@@ -34,21 +34,7 @@ const LeaveApprovalItemAction = ({
   const { theme } = useJumboTheme();
   const belowLargeScreen = useMediaQuery(theme.breakpoints.down('lg'));
 
-  const latestApproval = approvals[approvals.length - 1];
-  const latestApprovalDecision = getLeaveApprovalDecision(latestApproval);
-  const pendingLevel = getNextPendingLeaveLevel(leaveRequest);
-  const pendingRoleName = (pendingLevel as any)?.role?.name || '';
   const isLatestApproval = approvals[approvals.length - 1]?.id === approval?.id;
-
-  // Same role check as LeaveApprovalsActionTail (the first-approval entry
-  // point) — without it, this button showed for anyone viewing the
-  // approvals history, not just the person whose role the next level
-  // actually belongs to.
-  const canNextApprove =
-    isLatestApproval &&
-    latestApprovalDecision === 'approved' &&
-    !!pendingLevel &&
-    (!pendingRoleName || hasOrganizationRole(pendingRoleName))
 
   const canEdit =
     isLatestApproval && (approval as any)?.creator?.id === authUser?.user?.id;
@@ -56,6 +42,17 @@ const LeaveApprovalItemAction = ({
   const canDelete =
     isLatestApproval &&
     (approval as any)?.creator?.id === authUser?.user?.id;
+
+  // The next approver's action lives on the last existing row instead of a
+  // separate top-of-list button — mirrors RequisitionsListItem's
+  // ApprovalItemAction (Approve attaches to the latest approval's row, not
+  // a floating prompt) once at least one decision already exists.
+  const pendingLevel = getNextPendingLeaveLevel(leaveRequest);
+  const pendingRoleName = (pendingLevel as any)?.role?.name || '';
+  const canNextApprove =
+    isLatestApproval &&
+    !!pendingLevel &&
+    (!pendingRoleName || hasOrganizationRole(pendingRoleName));
 
   const { mutate: deleteApproval, isPending: isDeleting } = useMutation({
     mutationFn: (id: number) => humanResourcesServices.deleteLeaveRequestApproval(id),
@@ -94,14 +91,17 @@ const LeaveApprovalItemAction = ({
         }}
       />
 
+      <LeaveApprovalDialog
+        open={openApproveDialog}
+        isEditMode={false}
+        belowLargeScreen={belowLargeScreen}
+        leaveRequest={leaveRequest}
+        onClose={() => setOpenApproveDialog(false)}
+      />
+
       {canNextApprove && (
         <Tooltip title='Approve'>
-          <IconButton 
-            onClick={() => {
-              setIsEditMode(false);
-              setOpenDialog(true);
-            }}
-          >
+          <IconButton onClick={() => setOpenApproveDialog(true)}>
             <FactCheckOutlined />
           </IconButton>
         </Tooltip>

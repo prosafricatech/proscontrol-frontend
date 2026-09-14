@@ -13,8 +13,8 @@ export async function PUT(
   if (response) return response;
 
   const body = await req.json();
-  const res = await fetch(`${API_BASE}/leave-requests/${id}/${body.status}`, {
-    method: 'POST',
+  const res = await fetch(`${API_BASE}/leave-requests/${id}`, {
+    method: 'PUT',
     headers,
     credentials: 'include',
     body: JSON.stringify(body),

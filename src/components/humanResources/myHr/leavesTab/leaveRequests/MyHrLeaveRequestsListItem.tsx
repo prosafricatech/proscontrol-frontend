@@ -1,18 +1,24 @@
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import { LeaveRequestType } from '@/components/humanResources/employees/profile/leaveRequests/LeaveRequestType';
 import LeaveRequestPDF from '@/components/humanResources/employees/profile/leaveRequests/LeaveRequestPDF';
+import LeaveRequestPreview from '@/components/humanResources/employees/profile/leaveRequests/LeaveRequestPreview';
 import humanResourcesServices from '@/components/humanResources/humanResourcesServices';
 import PDFContent from '@/components/pdf/PDFContent';
+import { useJumboTheme } from '@jumbo/components/JumboTheme/hooks';
+import PreviewOutlined from '@mui/icons-material/PreviewOutlined';
 import PrintOutlined from '@mui/icons-material/PrintOutlined';
 import {
+  Button,
   Chip,
   Dialog,
+  DialogActions,
   DialogContent,
   Divider,
   Grid,
   IconButton,
   Tooltip,
   Typography,
+  useMediaQuery,
 } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import dayjs from 'dayjs';
@@ -24,14 +30,19 @@ const MyHrLeaveRequestsListItem = ({
   leaveRequest: LeaveRequestType;
 }) => {
   const [openPrint, setOpenPrint] = useState(false);
+  const [openPreview, setOpenPreview] = useState(false);
   const { authOrganization, authUser } = useJumboAuth() as any;
   const organization = authOrganization?.organization;
+  const { theme } = useJumboTheme();
+  const belowLargeScreen = useMediaQuery(theme.breakpoints.down('lg'));
 
-  const { data: details } = useQuery({
+  const { data: leaveDetails } = useQuery({
     queryKey: ['myHrShowLeaveRequest', leaveRequest.id],
     queryFn: () => humanResourcesServices.myHrShowLeaveRequest(leaveRequest.id),
-    enabled: openPrint,
+    enabled: openPrint || openPreview,
   });
+
+  const details: LeaveRequestType = (leaveDetails || leaveRequest) as LeaveRequestType;
 
   const statusColor: any =
     leaveRequest.status === 'approved'
@@ -103,7 +114,7 @@ const MyHrLeaveRequestsListItem = ({
           </Tooltip>
         </Grid>
 
-        <Grid size={{ xs: 10, md: 2.5 }}>
+        <Grid size={{ xs: 8, md: 2 }}>
           <Chip
             label={formattedStatus}
             size='small'
@@ -113,7 +124,12 @@ const MyHrLeaveRequestsListItem = ({
           />
         </Grid>
 
-        <Grid size={{ xs: 2, md: 0.5 }} textAlign='end'>
+        <Grid size={{ xs: 4, md: 1 }} textAlign='end'>
+          <Tooltip title='Preview'>
+            <IconButton size='small' onClick={() => setOpenPreview(true)}>
+              <PreviewOutlined color='primary' fontSize='small' />
+            </IconButton>
+          </Tooltip>
           <Tooltip title='Print Leave Application Form'>
             <IconButton size='small' onClick={() => setOpenPrint(true)}>
               <PrintOutlined color='primary' fontSize='small' />
@@ -122,8 +138,32 @@ const MyHrLeaveRequestsListItem = ({
         </Grid>
       </Grid>
 
-      <Dialog open={openPrint} onClose={() => setOpenPrint(false)} maxWidth='md' fullWidth>
-        <DialogContent sx={{ height: '80vh', p: 0 }}>
+      <Dialog
+        open={openPreview}
+        fullWidth
+        maxWidth='sm'
+        fullScreen={belowLargeScreen}
+        scroll={belowLargeScreen ? 'body' : 'paper'}
+        onClose={() => setOpenPreview(false)}
+      >
+        <DialogContent>
+          <LeaveRequestPreview leaveRequest={details} title='Your Leave Request' />
+        </DialogContent>
+        <DialogActions>
+          <Button size='small' onClick={() => setOpenPreview(false)}>
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={openPrint}
+        onClose={() => setOpenPrint(false)}
+        maxWidth='md'
+        fullWidth
+        fullScreen={belowLargeScreen}
+      >
+        <DialogContent sx={{ height: belowLargeScreen ? '100%' : '80vh', p: 0 }}>
           {openPrint && details && (
             <PDFContent
               document={

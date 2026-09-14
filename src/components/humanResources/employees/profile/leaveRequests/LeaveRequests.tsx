@@ -6,7 +6,7 @@ import { getSanitizedSearchKeyword } from '@/utilities/getSanitizedSearchKeyword
 import JumboListToolbar from '@jumbo/components/JumboList/components/JumboListToolbar';
 import JumboRqList from '@jumbo/components/JumboReactQuery/JumboRqList';
 import JumboSearch from '@jumbo/components/JumboSearch';
-import { Card, Stack } from '@mui/material';
+import { Card, Grid, Stack } from '@mui/material';
 import { useParams, useSearchParams } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
 import RequisitionsWaitingForSelector from '@/components/processApproval/RequisitionsWaitingForSelector';
@@ -103,16 +103,24 @@ const LeaveRequests = ({ employeeId }: { employeeId?: number }) => {
         toolbar={
           <JumboListToolbar
             hideItemsPerPage={true}
+            action={
+              <Grid container spacing={2} mb={2} mt={2} justifyContent='center'>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <JumboSearch
+                    onChange={handleOnChange}
+                    value={queryOptions.queryParams.keyword}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <RequisitionsWaitingForSelector
+                    value={queryOptions.queryParams.next_approval_role_id}
+                    onChange={handleOnWaitingForChange}
+                  />
+                </Grid>
+              </Grid>
+            }
             actionTail={
-              <Stack direction='row' spacing={1} alignItems='center'>
-                <RequisitionsWaitingForSelector
-                  value={queryOptions.queryParams.next_approval_role_id}
-                  onChange={handleOnWaitingForChange}
-                />
-                <JumboSearch
-                  onChange={handleOnChange}
-                  value={queryOptions.queryParams.keyword}
-                />
+              <Stack direction='row' justifyContent='end'>
                 {checkOrganizationPermission(
                   PERMISSIONS.LEAVE_REQUESTS_CREATE
                 ) && <LeaveRequestActionTail employeeId={resolvedEmployeeId} />}

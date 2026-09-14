@@ -1,6 +1,5 @@
 'use client';
 
-import { sanitizedNumber } from '@/app/helpers/input-sanitization-helpers';
 import { LoadingButton } from '@mui/lab';
 import {
   Alert,
@@ -11,13 +10,15 @@ import {
   DialogTitle,
   Stack,
   TextField,
+  Typography,
 } from '@mui/material';
-import { DateTimePicker } from '@mui/x-date-pickers';
+import { DatePicker, DateTimePicker } from '@mui/x-date-pickers';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import dayjs from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
 import { useSnackbar } from 'notistack';
 import { useEffect, useState } from 'react';
 import humanResourcesServices from '../../../humanResourcesServices';
+import { computeLeaveDays } from '../../../leaveTypes/leaveDayCount';
 import { LeaveRequestType } from './LeaveRequestType';
 
 export type LeaveApprovalDecision = 'approved' | 'rejected' | 'on hold';
@@ -105,31 +106,60 @@ const LeaveApprovalDialog = ({
   approval,
   onClose,
 }: LeaveApprovalDialogProps) => {
-  const [daysApproved, setDaysApproved] = useState<number | ''>(
-    leaveRequest.days_requested || 1
+  // An approver may reschedule the leave to whatever dates suit operations
+  // best — the dates aren't confined to the request's own range. What IS
+  // still bounded, same idea as loans' ceilingAmount: the day COUNT may only
+  // shrink from one level to the next. When editing a decision (always the
+  // latest one — see LeaveApprovalItemAction's canEdit), the ceiling is
+  // whatever the level before it granted, not the decision being edited
+  // itself. For a fresh decision, it's simply the latest decision so far.
+  const approvals = leaveRequest.approvals || [];
+  const priorApproval = isEditMode
+    ? approvals[approvals.length - 2]
+    : approvals[approvals.length - 1];
+  const ceilingDays = priorApproval?.days_approved ?? leaveRequest.days_requested;
+  // Pre-fill with whatever's currently on the table — just a starting
+  // point, not a bound; the approver can move the dates anywhere.
+  const defaultStartDate = priorApproval?.approved_start_date ?? leaveRequest.start_date;
+  const defaultEndDate = priorApproval?.approved_end_date ?? leaveRequest.end_date;
+
+  const [startDate, setStartDate] = useState<string>(
+    approval?.approved_start_date || defaultStartDate
+  );
+  const [endDate, setEndDate] = useState<string>(
+    approval?.approved_end_date || defaultEndDate
   );
   const [remarks, setRemarks] = useState('');
   const [remarksError, setRemarksError] = useState('');
-  const [daysError, setDaysError] = useState('');
+  const [datesError, setDatesError] = useState('');
   const [approvalDate, setApprovalDate] = useState(DEFAULT_APPROVAL_DATE());
 
   const { enqueueSnackbar } = useSnackbar();
   const queryClient = useQueryClient();
   const pendingLevel = getNextPendingLeaveLevel(leaveRequest);
 
+  // Days approved is derived from the chosen dates, the same way
+  // days_requested is derived when the request is first submitted — never
+  // typed in directly, so it can't disagree with the range.
+  const daysApproved = computeLeaveDays(
+    startDate,
+    endDate,
+    !!leaveRequest.leave_type?.excludes_saturday,
+    !!leaveRequest.leave_type?.excludes_sunday
+  );
+
   const balance = leaveRequest.leave_balance;
   const remainingDays = balance?.remaining_days ?? null;
   const wouldExceedBalance =
     balance?.has_allocation &&
-    daysApproved !== '' &&
-    Number(daysApproved) > (remainingDays ?? 0);
+    daysApproved != null &&
+    daysApproved > (remainingDays ?? 0);
 
   useEffect(() => {
     if (!open) return;
 
-    setDaysApproved(
-      approval?.days_approved || leaveRequest.days_requested || 1
-    );
+    setStartDate(approval?.approved_start_date || defaultStartDate);
+    setEndDate(approval?.approved_end_date || defaultEndDate);
     setRemarks(approval?.remarks || '');
     setApprovalDate(
       approval?.approval_date
@@ -137,12 +167,15 @@ const LeaveApprovalDialog = ({
         : DEFAULT_APPROVAL_DATE()
     );
     setRemarksError('');
-    setDaysError('');
+    setDatesError('');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     approval?.approval_date,
-    approval?.days_approved,
+    approval?.approved_start_date,
+    approval?.approved_end_date,
     approval?.remarks,
-    leaveRequest.days_requested,
+    defaultStartDate,
+    defaultEndDate,
     open,
   ]);
 
@@ -191,16 +224,27 @@ const LeaveApprovalDialog = ({
       return;
     }
 
-    if (
-      status === 'approved' &&
-      (daysApproved === '' || Number(daysApproved) <= 0)
-    ) {
-      setDaysError('Days approved is required');
-      return;
+    if (status === 'approved') {
+      if (!startDate || !endDate) {
+        setDatesError('Start and end date are required');
+        return;
+      }
+      if (dayjs(endDate).isBefore(dayjs(startDate))) {
+        setDatesError('End date cannot be before start date');
+        return;
+      }
+      if (!daysApproved || daysApproved <= 0) {
+        setDatesError('Selected dates grant no leave days');
+        return;
+      }
+      if (daysApproved > Number(ceilingDays)) {
+        setDatesError(`Days approved cannot exceed ${ceilingDays}`);
+        return;
+      }
     }
 
     setRemarksError('');
-    setDaysError('');
+    setDatesError('');
 
     if (isEditMode) {
       if (!approval?.id) {
@@ -211,7 +255,9 @@ const LeaveApprovalDialog = ({
       editApproval({
         id: approval.id,
         status,
-        days_approved: status === 'approved' ? Number(daysApproved) : undefined,
+        days_approved: status === 'approved' ? daysApproved : undefined,
+        approved_start_date: status === 'approved' ? startDate : undefined,
+        approved_end_date: status === 'approved' ? endDate : undefined,
         remarks,
         approval_date: approvalDate || undefined,
       });
@@ -229,7 +275,9 @@ const LeaveApprovalDialog = ({
       leave_request_id: leaveRequest.id,
       chain_level_id: chainLevelId,
       status,
-      days_approved: status === 'approved' ? Number(daysApproved) : undefined,
+      days_approved: status === 'approved' ? daysApproved : undefined,
+      approved_start_date: status === 'approved' ? startDate : undefined,
+      approved_end_date: status === 'approved' ? endDate : undefined,
       remarks,
       approval_date: approvalDate || undefined,
     });
@@ -278,24 +326,48 @@ const LeaveApprovalDialog = ({
           )}
           {wouldExceedBalance && (
             <Alert severity='error'>
-              Approving {daysApproved} day{Number(daysApproved) === 1 ? '' : 's'} exceeds the
-              requester&apos;s remaining balance of {remainingDays}.
+              {`Approving ${daysApproved} day${daysApproved === 1 ? '' : 's'} exceeds the requester's remaining balance of ${remainingDays}.`}
             </Alert>
           )}
-          <TextField
-            label='Days Approved'
-            size='small'
-            fullWidth
-            value={daysApproved}
-            error={!!daysError}
-            helperText={daysError}
-            onChange={(e: any) => {
-              setDaysError('');
-              setDaysApproved(
-                e.target.value === '' ? '' : sanitizedNumber(e.target.value)
-              );
-            }}
-          />
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+            <DatePicker
+              label='Approved Start Date'
+              value={startDate ? dayjs(startDate) : null}
+              onChange={(val: Dayjs | null) => {
+                setDatesError('');
+                setStartDate(val?.format('YYYY-MM-DD') || '');
+              }}
+              slotProps={{
+                textField: {
+                  size: 'small',
+                  fullWidth: true,
+                  error: !!datesError,
+                },
+              }}
+            />
+            <DatePicker
+              label='Approved End Date'
+              value={endDate ? dayjs(endDate) : null}
+              onChange={(val: Dayjs | null) => {
+                setDatesError('');
+                setEndDate(val?.format('YYYY-MM-DD') || '');
+              }}
+              slotProps={{
+                textField: {
+                  size: 'small',
+                  fullWidth: true,
+                  error: !!datesError,
+                },
+              }}
+            />
+          </Stack>
+          <Typography
+            variant='caption'
+            color={datesError ? 'error' : 'text.secondary'}
+          >
+            {datesError ||
+              `${daysApproved ?? 0} day${daysApproved === 1 ? '' : 's'} — max ${ceilingDays} days`}
+          </Typography>
           <DateTimePicker
             label='Approval Date & Time'
             value={approvalDate ? dayjs(approvalDate) : null}

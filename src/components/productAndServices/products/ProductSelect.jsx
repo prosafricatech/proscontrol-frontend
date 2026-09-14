@@ -27,6 +27,7 @@ function ProductSelect(props) {
     defaultValue = null,
     disabled = false,
     readOnly = false,
+    showType = true,
     onChange,
   } = props;
   const { productOptions } = useProductsSelect();
@@ -109,7 +110,13 @@ function ProductSelect(props) {
       value={selectedItems}
       disableCloseOnSelect={multiple}
       onChange={handleOnChange}
-      getOptionLabel={(o) => o?.name || ''}
+      getOptionLabel={(o) => {
+        if (!o) return '';
+        // Only show the type suffix if it exists, same as LedgerSelect only
+        // shows a currency suffix when a ledger has one set.
+        if (showType && o.type) return `${o.name} (${o.type})`;
+        return o.name || '';
+      }}
       isOptionEqualToValue={(o, v) => o.id === v.id}
       renderOption={(props, option, { selected }) => {
         const { key, ...rest } = props;
@@ -157,7 +164,7 @@ function ProductSelect(props) {
                 </Avatar>
               )}
 
-              <Box>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <Typography
                   variant='body1'
                   // fontWeight={500}
@@ -165,8 +172,22 @@ function ProductSelect(props) {
                   {option.name}
                 </Typography>
 
-                {hasImage && option.type && (
-                  <Typography variant='caption' color='text.secondary'>
+                {showType && option.type && (
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      backgroundColor: 'primary.light',
+                      padding: '0 8px',
+                      borderRadius: '4px',
+                      fontSize: '0.65rem',
+                      fontWeight: 500,
+                      color: 'primary.contrastText',
+                      ml: 1,
+                      height: '18px',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                    }}
+                  >
                     {option.type}
                   </Typography>
                 )}
@@ -178,6 +199,7 @@ function ProductSelect(props) {
       renderTags={(value, getTagProps) =>
         value.map((option, index) => {
           const { key, ...rest } = getTagProps({ index });
+          const tagLabel = showType && option.type ? `${option.name} (${option.type})` : option.name;
 
           return (
             <Chip
@@ -190,7 +212,7 @@ function ProductSelect(props) {
                     imageUrl={option.image_url}
                     size={36}
                   /> */}
-                  {option.name}
+                  {tagLabel}
                 </Box>
               }
               size='medium'
