@@ -475,7 +475,7 @@ function SaleItemForm({
                                 </div>
                             ),
                         }}
-                        defaultValue={quantityFieldKey > 0 ? (Math.round((watch('quantity') || 0) * 100) / 100) : (item ? item?.quantity : null)}
+                        defaultValue={quantityFieldKey > 0 ? (Math.round((watch('quantity') || 0) * 100000000) / 100000000) : (item ? item?.quantity : null)}
                     />
                 </Grid>
                 <Grid size={{xs: 12, md: 6, lg: !!checkedForInstantSale && isInventory ? 2.5 : (!vat_factor ? 3 : 2)}}>
@@ -565,29 +565,11 @@ function SaleItemForm({
                             const effectiveRate = rate * vatMultiplier;
                             const newQuantity = effectiveRate > 0 ? newAmount / effectiveRate : 0;
 
-                            //Rounded to 2dp, not 8dp - dividing amount by rate otherwise
-                            //produces a repeating-decimal quantity (e.g. 2068.96551724)
-                            //that VFD/fiscal receipt posting later rejects as an amount
-                            //mismatch, since a fiscal receipt's quantity has to be a clean
-                            //figure that reconciles with the amount at 2dp.
-                            setValue(`quantity`, Math.round(newQuantity * 100) / 100, {
+                            setValue(`quantity`, Math.round(newQuantity * 100000000) / 100000000, {
                                 shouldValidate: true,
                                 shouldDirty: true
                             });
                             setQuantityFieldKey(key => key + 1);
-                        }}
-                        onBlur={() => {
-                            //Once quantity has been rounded to 2dp, it no longer multiplies
-                            //back to exactly what was typed here - snap this field to show
-                            //the real, reconciled amount so that's visible rather than
-                            //silently diverging from what quantity * rate actually is.
-                            if (!isAmountFieldChange) return;
-                            const rate = parseFloat(watch('rate')) || 0;
-                            const vatMultiplier = 1 + (product?.vat_exempted !== 1 ? vat_factor : 0);
-                            const effectiveRate = rate * vatMultiplier;
-                            const currentQuantity = parseFloat(watch('quantity')) || 0;
-                            setAmountValue(effectiveRate > 0 ? currentQuantity * effectiveRate : amountValue);
-                            setAmountFieldKey(key => key + 1);
                         }}
                     />
                 </Grid>
