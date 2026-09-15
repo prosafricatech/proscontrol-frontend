@@ -16,7 +16,7 @@ import {
   Tooltip,
   useMediaQuery,
 } from '@mui/material';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import LedgerStatementDialogContent from '../../ledgers/list/ledgerStatement/LedgerStatementDialogContent';
 
 const IncomeStatementOnScreen = ({ reportData }) => {
@@ -165,6 +165,123 @@ const IncomeStatementOnScreen = ({ reportData }) => {
     setLedgerDialogOpen(true);
   };
 
+  // Revenue/Direct/Indirect Expenses are now trees (ledger group -> subgroups
+  // -> leaf ledgers, only non-zero branches present), matching Balance Sheet.
+  // Each node — group or leaf — already carries a rolled-up `amounts` array,
+  // so only the row renderer needs to change; the section totals below still
+  // just sum the top-level array and stay correct.
+  const [openTreeRows, setOpenTreeRows] = useState({});
+  const toggleTreeRow = (nodeId) => {
+    setOpenTreeRows((prev) => ({ ...prev, [nodeId]: !prev[nodeId] }));
+  };
+
+  const renderLedgerNode = (node, depth, keyPrefix) => {
+    const isGroup = Array.isArray(node.children) && node.children.length > 0;
+    const isOpen = !!openTreeRows[node.id];
+    const rowKey = `${keyPrefix}-${node.id}`;
+
+    return (
+      <React.Fragment key={rowKey}>
+        <TableRow
+          onClick={isGroup ? () => toggleTreeRow(node.id) : undefined}
+          sx={{
+            cursor: isGroup ? 'pointer' : 'default',
+            '&:hover': { bgcolor: 'action.hover' },
+          }}
+        >
+          <TableCell
+            sx={categoryCellSx}
+            style={{
+              paddingLeft: 24 + depth * 20,
+              fontWeight: isGroup ? 'bold' : 'normal',
+            }}
+          >
+            <Box display='flex' alignItems='center'>
+              {isGroup && (
+                <IconButton size='small' sx={{ mr: 0.5 }}>
+                  {isOpen ? <KeyboardArrowDown /> : <KeyboardArrowRight />}
+                </IconButton>
+              )}
+              {node.name}
+            </Box>
+          </TableCell>
+          {periods.map((periodItem) => {
+            const amountItem = getAmountItemByPeriod(node, periodItem.period);
+            const timeframe =
+              amountItem && amountItem.start_datetime && amountItem.end_datetime
+                ? `\n${formatDateTime(amountItem.start_datetime)} - ${formatDateTime(amountItem.end_datetime)}`
+                : '';
+            const amountTooltipTitle = `${node.name} - Period: ${periodItem.period}${timeframe}`;
+            const clickable = !isGroup && !!amountItem;
+
+            return (
+              <TableCell key={`${rowKey}-${periodItem.period}`} align='right'>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'flex-end',
+                    gap: 0.5,
+                  }}
+                >
+                  <Tooltip
+                    title={
+                      <span style={{ whiteSpace: 'pre-line' }}>
+                        {amountTooltipTitle}
+                        {clickable ? '\nClick to view statement' : ''}
+                      </span>
+                    }
+                    placement='top'
+                    arrow
+                  >
+                    <span
+                      style={{
+                        cursor: clickable ? 'pointer' : 'default',
+                        fontWeight: isGroup ? 'bold' : 'normal',
+                      }}
+                      onClick={
+                        clickable
+                          ? (e) => {
+                              e.stopPropagation();
+                              handleViewLedger(
+                                node.ledger_id,
+                                node.name,
+                                node.increasesWith,
+                                amountItem?.start_datetime,
+                                amountItem?.end_datetime
+                              );
+                            }
+                          : undefined
+                      }
+                    >
+                      {getAmountByPeriod(node, periodItem.period).toLocaleString(
+                        'en-US',
+                        { minimumFractionDigits: 2, maximumFractionDigits: 2 }
+                      )}
+                    </span>
+                  </Tooltip>
+                </Box>
+              </TableCell>
+            );
+          })}
+          {periods.length > 1 && (
+            <TableCell align='right' style={{ fontWeight: 'bold' }}>
+              {getLedgerTotal(node).toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </TableCell>
+          )}
+        </TableRow>
+        {isGroup &&
+          isOpen &&
+          node.children.map((child) =>
+            renderLedgerNode(child, depth + 1, keyPrefix)
+          )}
+      </React.Fragment>
+    );
+  };
+
   return (
     <>
       <TableContainer
@@ -296,94 +413,7 @@ const IncomeStatementOnScreen = ({ reportData }) => {
             </TableRow>
 
             {openRows.revenue &&
-              incomes.map((component, index) => (
-                <TableRow
-                  key={`revenue-ledger-${index}`}
-                  sx={{ '&:hover': { bgcolor: 'action.hover' } }}
-                >
-                  <TableCell sx={{ ...categoryCellSx, pl: 4, paddingLeft: 6 }}>
-                    <Box display='flex' alignItems='center'>
-                      {component.ledger_name}
-                    </Box>
-                  </TableCell>
-                  {periods.map((periodItem) => {
-                    const amountItem = getAmountItemByPeriod(
-                      component,
-                      periodItem.period
-                    );
-                    const timeframe =
-                      amountItem &&
-                      amountItem.start_datetime &&
-                      amountItem.end_datetime
-                        ? `\n${formatDateTime(amountItem.start_datetime)} - ${formatDateTime(amountItem.end_datetime)}`
-                        : '';
-                    const amountTooltipTitle = `${component.ledger_name} - Period: ${periodItem.period}${timeframe}`;
-
-                    return (
-                      <TableCell
-                        key={`revenue-ledger-${index}-${periodItem.period}`}
-                        align='right'
-                      >
-                        <Box
-                          sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'flex-end',
-                            gap: 0.5,
-                          }}
-                        >
-                          <Tooltip
-                            title={
-                              <span style={{ whiteSpace: 'pre-line' }}>
-                                {amountTooltipTitle}
-                                {amountItem ? '\nClick to view statement' : ''}
-                              </span>
-                            }
-                            placement='top'
-                            arrow
-                          >
-                            <span
-                              style={{
-                                cursor: amountItem ? 'pointer' : 'default',
-                              }}
-                              onClick={
-                                amountItem
-                                  ? (e) => {
-                                      e.stopPropagation();
-                                      handleViewLedger(
-                                        component.ledger_id,
-                                        component.ledger_name,
-                                        component.increasesWith,
-                                        amountItem?.start_datetime,
-                                        amountItem?.end_datetime
-                                      );
-                                    }
-                                  : undefined
-                              }
-                            >
-                              {getAmountByPeriod(
-                                component,
-                                periodItem.period
-                              ).toLocaleString('en-US', {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2,
-                              })}
-                            </span>
-                          </Tooltip>
-                        </Box>
-                      </TableCell>
-                    );
-                  })}
-                  {periods.length > 1 && (
-                    <TableCell align='right' style={{ fontWeight: 'bold' }}>
-                      {getLedgerTotal(component).toLocaleString('en-US', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}
-                    </TableCell>
-                  )}
-                </TableRow>
-              ))}
+              incomes.map((node) => renderLedgerNode(node, 0, 'revenue'))}
 
             {/* Cost of Revenue Section */}
             <TableRow
@@ -462,94 +492,7 @@ const IncomeStatementOnScreen = ({ reportData }) => {
             </TableRow>
 
             {openRows.costOfRevenue &&
-              directExpenses.map((component, index) => (
-                <TableRow
-                  key={`cost-ledger-${index}`}
-                  sx={{ '&:hover': { bgcolor: 'action.hover' } }}
-                >
-                  <TableCell sx={{ ...categoryCellSx, pl: 4, paddingLeft: 6 }}>
-                    <Box display='flex' alignItems='center'>
-                      {component.ledger_name}
-                    </Box>
-                  </TableCell>
-                  {periods.map((periodItem) => {
-                    const amountItem = getAmountItemByPeriod(
-                      component,
-                      periodItem.period
-                    );
-                    const timeframe =
-                      amountItem &&
-                      amountItem.start_datetime &&
-                      amountItem.end_datetime
-                        ? `\n${formatDateTime(amountItem.start_datetime)} - ${formatDateTime(amountItem.end_datetime)}`
-                        : '';
-                    const amountTooltipTitle = `${component.ledger_name} - Period: ${periodItem.period}${timeframe}`;
-
-                    return (
-                      <TableCell
-                        key={`cost-ledger-${index}-${periodItem.period}`}
-                        align='right'
-                      >
-                        <Box
-                          sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'flex-end',
-                            gap: 0.5,
-                          }}
-                        >
-                          <Tooltip
-                            title={
-                              <span style={{ whiteSpace: 'pre-line' }}>
-                                {amountTooltipTitle}
-                                {amountItem ? '\nClick to view statement' : ''}
-                              </span>
-                            }
-                            placement='top'
-                            arrow
-                          >
-                            <span
-                              style={{
-                                cursor: amountItem ? 'pointer' : 'default',
-                              }}
-                              onClick={
-                                amountItem
-                                  ? (e) => {
-                                      e.stopPropagation();
-                                      handleViewLedger(
-                                        component.ledger_id,
-                                        component.ledger_name,
-                                        component.increasesWith,
-                                        amountItem?.start_datetime,
-                                        amountItem?.end_datetime
-                                      );
-                                    }
-                                  : undefined
-                              }
-                            >
-                              {getAmountByPeriod(
-                                component,
-                                periodItem.period
-                              ).toLocaleString('en-US', {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2,
-                              })}
-                            </span>
-                          </Tooltip>
-                        </Box>
-                      </TableCell>
-                    );
-                  })}
-                  {periods.length > 1 && (
-                    <TableCell align='right' style={{ fontWeight: 'bold' }}>
-                      {getLedgerTotal(component).toLocaleString('en-US', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}
-                    </TableCell>
-                  )}
-                </TableRow>
-              ))}
+              directExpenses.map((node) => renderLedgerNode(node, 0, 'cost'))}
 
             {/* Gross Profit section */}
             <TableRow
@@ -681,94 +624,9 @@ const IncomeStatementOnScreen = ({ reportData }) => {
             </TableRow>
 
             {openRows.operatingExpenses &&
-              indirectExpenses.map((component, index) => (
-                <TableRow
-                  key={`expense-ledger-${index}`}
-                  sx={{ '&:hover': { bgcolor: 'action.hover' } }}
-                >
-                  <TableCell sx={{ ...categoryCellSx, pl: 4, paddingLeft: 6 }}>
-                    <Box display='flex' alignItems='center'>
-                      {component.ledger_name}
-                    </Box>
-                  </TableCell>
-                  {periods.map((periodItem) => {
-                    const amountItem = getAmountItemByPeriod(
-                      component,
-                      periodItem.period
-                    );
-                    const timeframe =
-                      amountItem &&
-                      amountItem.start_datetime &&
-                      amountItem.end_datetime
-                        ? `\n${formatDateTime(amountItem.start_datetime)} - ${formatDateTime(amountItem.end_datetime)}`
-                        : '';
-                    const amountTooltipTitle = `${component.ledger_name} - Period: ${periodItem.period}${timeframe}`;
-
-                    return (
-                      <TableCell
-                        key={`expense-ledger-${index}-${periodItem.period}`}
-                        align='right'
-                      >
-                        <Box
-                          sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'flex-end',
-                            gap: 0.5,
-                          }}
-                        >
-                          <Tooltip
-                            title={
-                              <span style={{ whiteSpace: 'pre-line' }}>
-                                {amountTooltipTitle}
-                                {amountItem ? '\nClick to view statement' : ''}
-                              </span>
-                            }
-                            placement='top'
-                            arrow
-                          >
-                            <span
-                              style={{
-                                cursor: amountItem ? 'pointer' : 'default',
-                              }}
-                              onClick={
-                                amountItem
-                                  ? (e) => {
-                                      e.stopPropagation();
-                                      handleViewLedger(
-                                        component.ledger_id,
-                                        component.ledger_name,
-                                        component.increasesWith,
-                                        amountItem?.start_datetime,
-                                        amountItem?.end_datetime
-                                      );
-                                    }
-                                  : undefined
-                              }
-                            >
-                              {getAmountByPeriod(
-                                component,
-                                periodItem.period
-                              ).toLocaleString('en-US', {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2,
-                              })}
-                            </span>
-                          </Tooltip>
-                        </Box>
-                      </TableCell>
-                    );
-                  })}
-                  {periods.length > 1 && (
-                    <TableCell align='right' style={{ fontWeight: 'bold' }}>
-                      {getLedgerTotal(component).toLocaleString('en-US', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}
-                    </TableCell>
-                  )}
-                </TableRow>
-              ))}
+              indirectExpenses.map((node) =>
+                renderLedgerNode(node, 0, 'expense')
+              )}
 
             {/* Net Income section */}
             <TableRow

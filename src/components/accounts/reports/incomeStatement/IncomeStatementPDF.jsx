@@ -12,11 +12,31 @@ const IncomeStatementPDF = ({ reportData, authOrganization, user }) => {
   const lightColor =
     authOrganization.organization.settings?.light_color || '#bec5da';
 
-  const incomes = reportData?.incomes || [];
-  const directExpenses =
-    reportData?.directExpenses || reportData?.direct_expenses || [];
-  const indirectExpenses =
-    reportData?.indirectExpenses || reportData?.indirect_expenses || [];
+  // On screen, incomes/directExpenses/indirectExpenses are now ledger-group
+  // trees (subgroups shown collapsible, matching Balance Sheet). The PDF
+  // still lists individual ledgers flat, so flatten back down to leaves
+  // here rather than reworking this layout into a nested table too.
+  const flattenLedgerLeaves = (nodes) =>
+    (nodes || []).flatMap((node) =>
+      Array.isArray(node.children) && node.children.length > 0
+        ? flattenLedgerLeaves(node.children)
+        : [
+            {
+              ledger_id: node.ledger_id,
+              ledger_name: node.name ?? node.ledger_name,
+              increasesWith: node.increasesWith,
+              amounts: node.amounts,
+            },
+          ]
+    );
+
+  const incomes = flattenLedgerLeaves(reportData?.incomes);
+  const directExpenses = flattenLedgerLeaves(
+    reportData?.directExpenses || reportData?.direct_expenses
+  );
+  const indirectExpenses = flattenLedgerLeaves(
+    reportData?.indirectExpenses || reportData?.indirect_expenses
+  );
 
   const getLedgerTotal = (ledger) => {
     if (!Array.isArray(ledger?.amounts)) return 0;

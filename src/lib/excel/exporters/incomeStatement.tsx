@@ -6,11 +6,28 @@ export async function exportIncomeStatementToExcel(exportedData: any) {
   try {
     const { authOrganization, reportData, user } = exportedData;
 
+    // incomes/directExpenses/indirectExpenses are ledger-group trees
+    // (subgroups shown collapsible, matching Balance Sheet on screen) —
+    // only non-zero branches present. Each node, group or leaf, carries a
+    // rolled-up `amounts` array, so totals below (which sum the top-level
+    // array) stay correct unchanged; writeLedgerTreeRows() below is what
+    // walks the tree for display, using native Excel row outline levels so
+    // subgroups collapse the same way the on-screen tree does.
     const incomes = reportData?.incomes || [];
     const directExpenses =
       reportData?.directExpenses || reportData?.direct_expenses || [];
     const indirectExpenses =
       reportData?.indirectExpenses || reportData?.indirect_expenses || [];
+
+    // Flat leaves only, for period discovery (periodMeta below) — a group
+    // node's own `amounts` would just duplicate periods its children
+    // already report.
+    const flattenLedgerLeaves = (nodes: any): any[] =>
+      (nodes || []).flatMap((node: any) =>
+        Array.isArray(node.children) && node.children.length > 0
+          ? flattenLedgerLeaves(node.children)
+          : [node]
+      );
 
     const getLedgerTotal = (ledger: any) => {
       if (!Array.isArray(ledger?.amounts)) return 0;
@@ -33,7 +50,11 @@ export async function exportIncomeStatementToExcel(exportedData: any) {
       });
     };
 
-    const allLedgers = [...incomes, ...directExpenses, ...indirectExpenses];
+    const allLedgers = flattenLedgerLeaves([
+      ...incomes,
+      ...directExpenses,
+      ...indirectExpenses,
+    ]);
 
     const periodMeta = allLedgers
       .flatMap((ledger: any) =>
@@ -119,6 +140,13 @@ export async function exportIncomeStatementToExcel(exportedData: any) {
     // create workbook and worksheet
     const wb = createWorkbook();
     const ws = wb.addWorksheet('Income Statement');
+    // Each group's own row sits above its children (not a trailing subtotal),
+    // so the collapse toggle needs to live on that row too: summaryBelow
+    // false tells Excel the parent is above the detail it controls.
+    ws.properties.outlineProperties = {
+      summaryBelow: false,
+      summaryRight: false,
+    };
 
     // column widths
     const baseColumns = [
@@ -136,6 +164,72 @@ export async function exportIncomeStatementToExcel(exportedData: any) {
     ];
 
     ws.columns = baseColumns;
+
+    // Writes one row per tree node (group or leaf), recursing into children
+    // immediately below their own row, and gives every row below the
+    // top-level a row outlineLevel so Excel's native group collapse arrows
+    // work exactly like the on-screen collapsible tree. Returns the next
+    // free row number, since every section below chains off ws.lastRow.
+    const writeLedgerTreeRows = (
+      nodes: any[],
+      depth: number,
+      startRow: number
+    ): number => {
+      let rowNum = startRow;
+
+      nodes.forEach((node: any) => {
+        const isGroup = Array.isArray(node.children) && node.children.length > 0;
+        const cellBorder = {
+          top: { style: 'thin' as const, color: { argb: COLORS.BLACK } },
+          bottom: { style: 'thin' as const, color: { argb: COLORS.BLACK } },
+          left: { style: 'thin' as const, color: { argb: COLORS.BLACK } },
+          right: { style: 'thin' as const, color: { argb: COLORS.BLACK } },
+        };
+
+        const nameCell = ws.getCell(`A${rowNum}`);
+        nameCell.value = node.name ?? node.ledger_name;
+        nameCell.alignment = { indent: depth };
+        nameCell.border = cellBorder;
+        if (isGroup) nameCell.font = { bold: true };
+
+        let periodCol = 66;
+        mergedPeriods.forEach((period: any) => {
+          const cell = ws.getCell(`${String.fromCharCode(periodCol)}${rowNum}`);
+          cell.value = getAmountByPeriodGroup(node, period);
+          cell.numFmt = '#,###.00';
+          cell.border = cellBorder;
+          if (isGroup) cell.font = { bold: true };
+          periodCol++;
+        });
+
+        if (mergedPeriods.length > 1) {
+          const usedColumns = ws.getRow(rowNum).cellCount;
+          const totalCell = ws.getCell(
+            `${String.fromCharCode(65 + usedColumns)}${rowNum}`
+          );
+          totalCell.value = getLedgerTotal(node);
+          totalCell.numFmt = '#,###.00';
+          totalCell.border = cellBorder;
+          if (isGroup) totalCell.font = { bold: true };
+        }
+
+        // Top-level rows (immediate children of Revenue/Direct/Indirect)
+        // stay always visible; only deeper rows get an outline level, so
+        // collapsing a subgroup hides its own descendants without the
+        // whole section disappearing.
+        if (depth > 0) {
+          ws.getRow(rowNum).outlineLevel = depth;
+        }
+
+        rowNum++;
+
+        if (isGroup) {
+          rowNum = writeLedgerTreeRows(node.children, depth + 1, rowNum);
+        }
+      });
+
+      return rowNum;
+    };
 
     // header section
     ws.addRow([organization.name, ' ', ' ', 'INCOME STATEMENT']);
@@ -281,53 +375,7 @@ export async function exportIncomeStatementToExcel(exportedData: any) {
     }
 
     // revenue data rows
-    let revenueDataRow = (ws.lastRow?.number ?? 0) + 1;
-    incomes.forEach((income: any, index: number) => {
-      ws.getCell(`A${revenueDataRow}`).value = income.ledger_name;
-      ws.getCell(`A${revenueDataRow}`).border = {
-        top: { style: 'thin', color: { argb: COLORS.BLACK } },
-        bottom: { style: 'thin', color: { argb: COLORS.BLACK } },
-        left: { style: 'thin', color: { argb: COLORS.BLACK } },
-        right: { style: 'thin', color: { argb: COLORS.BLACK } },
-      };
-      let periodCol = 66;
-      mergedPeriods.forEach((period: any, index: number) => {
-        ws.getCell(`${String.fromCharCode(periodCol)}${revenueDataRow}`).value =
-          getAmountByPeriodGroup(income, period);
-        ws.getCell(
-          `${String.fromCharCode(periodCol)}${revenueDataRow}`
-        ).numFmt = '#,###.00';
-        ws.getCell(
-          `${String.fromCharCode(periodCol)}${revenueDataRow}`
-        ).border = {
-          top: { style: 'thin', color: { argb: COLORS.BLACK } },
-          bottom: { style: 'thin', color: { argb: COLORS.BLACK } },
-          left: { style: 'thin', color: { argb: COLORS.BLACK } },
-          right: { style: 'thin', color: { argb: COLORS.BLACK } },
-        };
-        periodCol++;
-      });
-
-      if (mergedPeriods.length > 1) {
-        let usedColumns = ws.getRow(revenueDataRow).cellCount;
-        ws.getCell(
-          `${String.fromCharCode(65 + usedColumns)}${revenueDataRow}`
-        ).value = getLedgerTotal(income);
-        ws.getCell(
-          `${String.fromCharCode(65 + usedColumns)}${revenueDataRow}`
-        ).numFmt = '#,###.00';
-        ws.getCell(
-          `${String.fromCharCode(65 + usedColumns)}${revenueDataRow}`
-        ).border = {
-          top: { style: 'thin', color: { argb: COLORS.BLACK } },
-          bottom: { style: 'thin', color: { argb: COLORS.BLACK } },
-          left: { style: 'thin', color: { argb: COLORS.BLACK } },
-          right: { style: 'thin', color: { argb: COLORS.BLACK } },
-        };
-      }
-
-      revenueDataRow++;
-    });
+    writeLedgerTreeRows(incomes, 0, (ws.lastRow?.number ?? 0) + 1);
 
     // revenue totals row
     const revenueTotalsRow = (ws.lastRow?.number ?? 0) + 1;
@@ -396,55 +444,8 @@ export async function exportIncomeStatementToExcel(exportedData: any) {
       ws.mergeCells(`A${constOfRevenueRow}:B${constOfRevenueRow}`);
     }
 
-    // const of revenue data rows
-    let constOfRevenueDataRow = (ws.lastRow?.number ?? 0) + 1;
-    directExpenses.forEach((exp: any, index: number) => {
-      ws.getCell(`A${constOfRevenueDataRow}`).value = exp.ledger_name;
-      ws.getCell(`A${constOfRevenueDataRow}`).border = {
-        top: { style: 'thin', color: { argb: COLORS.BLACK } },
-        bottom: { style: 'thin', color: { argb: COLORS.BLACK } },
-        left: { style: 'thin', color: { argb: COLORS.BLACK } },
-        right: { style: 'thin', color: { argb: COLORS.BLACK } },
-      };
-      let periodCol = 66;
-      mergedPeriods.forEach((period: any, index: number) => {
-        ws.getCell(
-          `${String.fromCharCode(periodCol)}${constOfRevenueDataRow}`
-        ).value = getAmountByPeriodGroup(exp, period);
-        ws.getCell(
-          `${String.fromCharCode(periodCol)}${constOfRevenueDataRow}`
-        ).numFmt = '#,###.00';
-        ws.getCell(
-          `${String.fromCharCode(periodCol)}${constOfRevenueDataRow}`
-        ).border = {
-          top: { style: 'thin', color: { argb: COLORS.BLACK } },
-          bottom: { style: 'thin', color: { argb: COLORS.BLACK } },
-          left: { style: 'thin', color: { argb: COLORS.BLACK } },
-          right: { style: 'thin', color: { argb: COLORS.BLACK } },
-        };
-        periodCol++;
-      });
-
-      if (mergedPeriods.length > 1) {
-        let usedColumns = ws.getRow(constOfRevenueDataRow).cellCount;
-        ws.getCell(
-          `${String.fromCharCode(65 + usedColumns)}${constOfRevenueDataRow}`
-        ).value = getLedgerTotal(exp);
-        ws.getCell(
-          `${String.fromCharCode(65 + usedColumns)}${constOfRevenueDataRow}`
-        ).numFmt = '#,###.00';
-        ws.getCell(
-          `${String.fromCharCode(65 + usedColumns)}${constOfRevenueDataRow}`
-        ).border = {
-          top: { style: 'thin', color: { argb: COLORS.BLACK } },
-          bottom: { style: 'thin', color: { argb: COLORS.BLACK } },
-          left: { style: 'thin', color: { argb: COLORS.BLACK } },
-          right: { style: 'thin', color: { argb: COLORS.BLACK } },
-        };
-      }
-
-      constOfRevenueDataRow++;
-    });
+    // cost of revenue data rows
+    writeLedgerTreeRows(directExpenses, 0, (ws.lastRow?.number ?? 0) + 1);
 
     // cost of revenue totals row
     const constOfRevenueTotalsRow = (ws.lastRow?.number ?? 0) + 1;
@@ -571,54 +572,7 @@ export async function exportIncomeStatementToExcel(exportedData: any) {
     }
 
     // operating expenses data rows
-    let operatingExpsDataRow = (ws.lastRow?.number ?? 0) + 1;
-    indirectExpenses.forEach((exp: any, index: number) => {
-      ws.getCell(`A${operatingExpsDataRow}`).value = exp.ledger_name;
-      ws.getCell(`A${operatingExpsDataRow}`).border = {
-        top: { style: 'thin', color: { argb: COLORS.BLACK } },
-        bottom: { style: 'thin', color: { argb: COLORS.BLACK } },
-        left: { style: 'thin', color: { argb: COLORS.BLACK } },
-        right: { style: 'thin', color: { argb: COLORS.BLACK } },
-      };
-      let periodCol = 66;
-      mergedPeriods.forEach((period: any, index: number) => {
-        ws.getCell(
-          `${String.fromCharCode(periodCol)}${operatingExpsDataRow}`
-        ).value = getAmountByPeriodGroup(exp, period);
-        ws.getCell(
-          `${String.fromCharCode(periodCol)}${operatingExpsDataRow}`
-        ).numFmt = '#,###.00';
-        ws.getCell(
-          `${String.fromCharCode(periodCol)}${operatingExpsDataRow}`
-        ).border = {
-          top: { style: 'thin', color: { argb: COLORS.BLACK } },
-          bottom: { style: 'thin', color: { argb: COLORS.BLACK } },
-          left: { style: 'thin', color: { argb: COLORS.BLACK } },
-          right: { style: 'thin', color: { argb: COLORS.BLACK } },
-        };
-        periodCol++;
-      });
-
-      if (mergedPeriods.length > 1) {
-        let usedColumns = ws.getRow(operatingExpsDataRow).cellCount;
-        ws.getCell(
-          `${String.fromCharCode(65 + usedColumns)}${operatingExpsDataRow}`
-        ).value = getLedgerTotal(exp);
-        ws.getCell(
-          `${String.fromCharCode(65 + usedColumns)}${operatingExpsDataRow}`
-        ).numFmt = '#,###.00';
-        ws.getCell(
-          `${String.fromCharCode(65 + usedColumns)}${operatingExpsDataRow}`
-        ).border = {
-          top: { style: 'thin', color: { argb: COLORS.BLACK } },
-          bottom: { style: 'thin', color: { argb: COLORS.BLACK } },
-          left: { style: 'thin', color: { argb: COLORS.BLACK } },
-          right: { style: 'thin', color: { argb: COLORS.BLACK } },
-        };
-      }
-
-      operatingExpsDataRow++;
-    });
+    writeLedgerTreeRows(indirectExpenses, 0, (ws.lastRow?.number ?? 0) + 1);
 
     // operating expenses totals row
     const operatingExpsTotalsRow = (ws.lastRow?.number ?? 0) + 1;
