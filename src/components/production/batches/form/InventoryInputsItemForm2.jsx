@@ -295,6 +295,25 @@ import StoreSelector from '@/components/procurement/stores/StoreSelector';
                       const val = sanitizedNumber(e.target.value);
                       setValue(`inventory_inputs.${index}.quantity`, val);
                       setFormValues(setValue, index, currentItem, watch);
+
+                      // Keep the inventoryInputs state array (what PBSummary
+                      // actually reads via combinedInputsConsumptions) in
+                      // sync with the manually edited quantity - setValue()
+                      // above only updates the form, not this state.
+                      setInventoryInputs((prevInputs) => {
+                        const updatedInputs = [...prevInputs];
+                        updatedInputs[index] = {
+                          ...(updatedInputs[index] || {}),
+                          ...currentItem,
+                          product_id: currentItem.product_id || currentItem.product.id,
+                          quantity: val,
+                          store_id: updatedInputs[index]?.store_id,
+                          available_balance: updatedInputs[index]?.available_balance,
+                          unit_cost: updatedInputs[index]?.unit_cost,
+                          consumption_date: updatedInputs[index]?.consumption_date,
+                        };
+                        return updatedInputs;
+                      });
                     }}
                   />
                 </Grid>
@@ -335,6 +354,14 @@ import StoreSelector from '@/components/procurement/stores/StoreSelector';
                     onChange={(e) => {
                       setFormValues(setValue, index, currentItem, watch);
                       setValue(`inventory_inputs.${index}.remarks`, e.target.value);
+                      setInventoryInputs((prevInputs) => {
+                        const updatedInputs = [...prevInputs];
+                        updatedInputs[index] = {
+                          ...(updatedInputs[index] || {}),
+                          remarks: e.target.value,
+                        };
+                        return updatedInputs;
+                      });
                     }}
                   />
                 </Grid>
