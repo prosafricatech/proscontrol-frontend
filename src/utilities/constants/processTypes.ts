@@ -2,7 +2,7 @@ export const PROCESS_TYPES = [
   'PURCHASE',
   'PAYMENT',
   'IMPREST',
-  // 'MATERIAL', // Disabled pending reassessment/improvement of the feature.
+  'MATERIAL',
   'IMPREST RETIREMENT',
   'LEAVE REQUEST',
   'PAYROLL',
@@ -52,5 +52,4 @@ export const DEPARTMENT_SCOPABLE_PROCESS_TYPES = ['LEAVE REQUEST', 'LOAN'];
 // and the newer Subcontract Certificate / Project Payment Claim / Stock
 // Adjustment) only shares the process_type field for ApprovalChain
 // configuration purposes — none of those are things a Requisition can be.
-// 'MATERIAL' disabled pending reassessment/improvement of the feature.
-export const REQUISITION_PROCESS_TYPES = ['PURCHASE', 'PAYMENT', 'IMPREST'];
+export const REQUISITION_PROCESS_TYPES = ['PURCHASE', 'PAYMENT', 'IMPREST', 'MATERIAL'];
