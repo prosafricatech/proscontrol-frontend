@@ -300,6 +300,22 @@ projectsServices.showDeliverablesAndGroups = async (id) => {
     return data;
 }
 
+projectsServices.downloadDeliverablesExcelTemplate = async (projectId) => {
+    const { data } = await axios.post('/api/projectManagement/project/downloadDeliverablesExcelTemplate', { project_id: projectId }, {
+        responseType: 'blob',
+    });
+    return data;
+}
+
+projectsServices.importDeliverablesExcel = async (formData) => {
+    const { data } = await axios.post('/api/projectManagement/project/importDeliverablesExcel', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    });
+    return data;
+}
+
 projectsServices.showProjectTimelineActivities = async (id) => {
     const { data } = await axios.get(`/api/projectManagement/project/${id}/showProjectTimelineActivities`);
     return data;

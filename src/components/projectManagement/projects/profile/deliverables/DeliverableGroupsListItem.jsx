@@ -1,16 +1,19 @@
 import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Grid, ListItemText, Stack, Typography, Divider, Tooltip } from '@mui/material';
+import { Alert, Dialog, Grid, IconButton, ListItemText, Stack, Typography, Divider, Tooltip, useMediaQuery } from '@mui/material';
 import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
+import UploadFileIcon from '@mui/icons-material/UploadFile';
 import JumboSearch from '@jumbo/components/JumboSearch';
 import DeliverablesListItem from './DeliverablesListItem';
 import { useProjectProfile } from '../ProjectProfileProvider';
 import DeliverableGroupItemAction from './DeliverableGroupItemAction';
 import DeliverableGroupActionTail from './DeliverableGroupActionTail';
+import DeliverablesBulkImport from './DeliverablesBulkImport';
 import { useCurrencySelect } from '@/components/masters/Currencies/CurrencySelectProvider';
+import { useJumboTheme } from '@jumbo/components/JumboTheme/hooks';
 
 function getNestedKey(parentKey, index) {
   return parentKey ? `${parentKey}.${index}` : `${index}`;
@@ -224,8 +227,11 @@ const DeliverableGroupsAccordion = memo(function DeliverableGroupsAccordion({
 
 
 function DeliverableGroupsListItem() {
-  const { deliverable_groups } = useProjectProfile();
+  const { project, deliverable_groups } = useProjectProfile();
+  const { theme } = useJumboTheme();
+  const belowLargeScreen = useMediaQuery(theme.breakpoints.down('lg'));
   const [openDialog, setOpenDialog] = useState(false);
+  const [openBulkImportDialog, setOpenBulkImportDialog] = useState(false);
   const [expandedById, setExpandedById] = useState({});
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -284,6 +290,10 @@ function DeliverableGroupsListItem() {
 
   return (
     <React.Fragment>
+      <Dialog maxWidth="md" fullWidth fullScreen={belowLargeScreen} open={openBulkImportDialog}>
+        {openBulkImportDialog && <DeliverablesBulkImport project={project} setOpenDialog={setOpenBulkImportDialog} />}
+      </Dialog>
+
       <Grid container columnSpacing={1} justifyContent="flex-end" alignItems="center">
         {deliverable_groups?.length > 0 &&
           <Grid>
@@ -293,6 +303,13 @@ function DeliverableGroupsListItem() {
             />
           </Grid>
         }
+        <Grid>
+          <Tooltip title={'Bulk Import Deliverables'}>
+            <IconButton onClick={() => setOpenBulkImportDialog(true)}>
+              <UploadFileIcon />
+            </IconButton>
+          </Tooltip>
+        </Grid>
         <Grid>
           <DeliverableGroupActionTail openDialog={openDialog} setOpenDialog={setOpenDialog} group={null} />
         </Grid>
