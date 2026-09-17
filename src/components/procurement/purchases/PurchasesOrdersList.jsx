@@ -115,7 +115,7 @@ function PurchasesOrdersList() {
         <ProductsSelectProvider>
             <CurrencySelectProvider>
                 <LedgerSelectProvider>
-                    <StakeholderSelectProvider type='suppliers'>
+                    <StakeholderSelectProvider>
                         <Typography variant={'h4'} mb={2}>Purchase Orders</Typography>
                         <JumboRqList
                             ref={listRef}

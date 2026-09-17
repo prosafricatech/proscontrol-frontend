@@ -184,7 +184,7 @@ const ApprovedRequisitionsRqList: React.FC<ApprovedRequisitionsRqListProps> = ({
       <ProductsSelectProvider>
         <CurrencySelectProvider>
           <LedgerSelectProvider>
-            <StakeholderSelectProvider type='suppliers'>
+            <StakeholderSelectProvider>
               <JumboRqList
                 ref={listRef}
                 wrapperComponent={Card}
