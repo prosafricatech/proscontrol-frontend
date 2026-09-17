@@ -193,6 +193,21 @@ function SaleDialogForm({ toggleOpen, sale = null }) {
           (!checkOrganizationPermission(PERMISSIONS.SALES_BACKDATE) &&
             sale.transaction_date < dayjs().startOf('day').toISOString() &&
             (sale.status !== 'Pending' || sale.status !== 'Ordered'))), //Allow BackDate if Sale is pending or ordered and doesn't have receipts nor invoices
+      // Items may still be edited once only a deposit receipt exists (no
+      // invoice, no delivery notes yet) — e.g. a hall booking whose menu is
+      // finalized after the deposit — but only for users holding
+      // Sales:ModifyAfterReceipt; everyone else keeps the previous
+      // behavior of items being locked as soon as a receipt exists.
+      // Financial header fields stay governed by major_info_only above;
+      // this only relaxes item editability.
+      items_locked:
+        !!sale &&
+        (!!sale.is_invoiced ||
+          !!sale.has_delivery_notes ||
+          (!!sale.has_receipts &&
+            !checkOrganizationPermission(
+              PERMISSIONS.SALES_MODIFY_AFTER_RECEIPT
+            ))),
       submitType: 'complete',
       remarks: sale && sale?.remarks,
       instant_sale: checkedForInstantSale,
@@ -203,6 +218,7 @@ function SaleDialogForm({ toggleOpen, sale = null }) {
   const stakeholder_id = watch('stakeholder_id');
   const salesDate = watch(`transaction_date`);
   const majorInfoOnly = watch('major_info_only');
+  const itemsLocked = watch('items_locked');
   const currencyId = watch('currency_id');
 
   useEffect(() => {
@@ -461,7 +477,7 @@ function SaleDialogForm({ toggleOpen, sale = null }) {
             </Grid>
           )}
 
-          {!majorInfoOnly && (
+          {!itemsLocked && (
             <Grid size={12}>
               <SaleItemForm
                 setClearFormKey={setClearFormKey}
@@ -485,7 +501,7 @@ function SaleDialogForm({ toggleOpen, sale = null }) {
           )}
         </Grid>
       </DialogTitle>
-      {!majorInfoOnly && (
+      {!itemsLocked && (
         <DialogContent>
           {errors?.items?.message && items.length < 1 && (
             <Alert severity='error'>{errors.items.message}</Alert>
@@ -597,7 +613,7 @@ function SaleDialogForm({ toggleOpen, sale = null }) {
 
           {!stakeholderQuickAddDisplay && (
             <>
-              {!majorInfoOnly && (
+              {!itemsLocked && (
                 <Button
                   loading={addSale.isPending || updateSale.isPending || finalizingBooking}
                   size='small'
