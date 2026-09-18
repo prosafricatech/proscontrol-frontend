@@ -75,11 +75,10 @@ const PayrollRunsListItem = ({
   const hasChain = Boolean(
     payrollRun.approval_chain_id || payrollRun.approval_chain
   );
-  const hasPayslips =
-    status === 'approved' ||
-    status === 'posted' ||
-    status === 'partially_paid' ||
-    status === 'paid';
+  // Real Payslip rows exist from the moment a run is submitted (submit()
+  // persists them for every eligible employee) through every status after
+  // — draft is the only status with nothing real to show yet.
+  const hasPayslips = !isDraft;
 
   const orgHasAccountsAndFinance = organizationHasSubscribed(
     MODULES.ACCOUNTS_AND_FINANCE
@@ -566,7 +565,7 @@ const PayrollRunsListItem = ({
                   allowance_breakdown={allowanceBreakdown}
                   deduction_breakdown={deductionBreakdown}
                   contribution_breakdown={contributionBreakdown}
-                  onSimulate={handleSimulateEmployee}
+                  onSimulate={isDraft ? handleSimulateEmployee : undefined}
                   isSimulating={isSimulating}
                 />
               </TabPanel>
