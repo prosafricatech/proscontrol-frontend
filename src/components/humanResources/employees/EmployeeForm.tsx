@@ -903,7 +903,7 @@ const EmployeeForm = ({
                     <LedgerSelect
                       frontError={errors.payable_ledger_id}
                       value={selectedLedger}
-                      allowedGroups={['Accounts Payable']}
+                      allowedGroups={['Liabilities']}
                       onChange={(val) => {
                         if (!Array.isArray(val)) {
                           setValue('payable_ledger_id', val?.id || 0, {

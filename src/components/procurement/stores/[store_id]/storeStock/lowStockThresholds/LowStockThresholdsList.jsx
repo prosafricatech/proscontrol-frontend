@@ -6,14 +6,17 @@ import JumboSearch from '@jumbo/components/JumboSearch/JumboSearch';
 import LowStockThresholdListItem from './LowStockThresholdListItem';
 import lowStockThresholdServices from './lowStockThreshold-services';
 import { useParams } from 'next/navigation';
+import { useStoreProfile } from '../../StoreProfileProvider';
 
 function LowStockThreholdsList() {
   const params = useParams();
+  const { activeStore } = useStoreProfile();
+  const storeId = activeStore?.id ?? params.id;
   const listRef = React.useRef();
 
   const [queryOptions, setQueryOptions] = React.useState({
     queryKey: 'lowStockAlerts',
-    queryParams: { store_id: params.id, keyword: '' },
+    queryParams: { store_id: storeId, keyword: '' },
     countKey: 'total',
     dataKey: 'data',
   });
@@ -21,9 +24,9 @@ function LowStockThreholdsList() {
   React.useEffect(() => {
     setQueryOptions((state) => ({
       ...state,
-      queryParams: { ...state.queryParams, store_id: params.id },
+      queryParams: { ...state.queryParams, store_id: storeId },
     }));
-  }, [params]);
+  }, [storeId]);
   
   const renderAlertItems = React.useCallback((lowStockAlert) => {
     return <LowStockThresholdListItem lowStockAlert={lowStockAlert} />;
