@@ -811,7 +811,7 @@ export const PayrollRunActions = ({
 
             <LedgerSelect
               label='PAYE Payable Account'
-              allowedGroups={['Accounts Payable']}
+              allowedGroups={['Liabilities']}
               onChange={(ledger: any) =>
                 setPostForm((state) => ({
                   ...state,
@@ -822,7 +822,7 @@ export const PayrollRunActions = ({
 
             <LedgerSelect
               label='Fallback Employee Payable Account'
-              allowedGroups={['Accounts Payable']}
+              allowedGroups={['Liabilities']}
               onChange={(ledger: any) =>
                 setPostForm((state) => ({
                   ...state,
