@@ -217,6 +217,7 @@ const AssetGlMappingFormDialogContent: React.FC<AssetGlMappingFormDialogContentP
               type="number"
               label={dictionary.glMappings.form.labels.defaultDepreciationRate}
               helperText={dictionary.glMappings.form.help.defaultDepreciationRate}
+              inputProps={{ step: 'any' }}
               {...register('default_depreciation_rate')}
             />
           </Grid>

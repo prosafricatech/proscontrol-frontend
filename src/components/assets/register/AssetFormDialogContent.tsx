@@ -391,6 +391,7 @@ const AssetFormDialogContent: React.FC<AssetFormDialogContentProps> = ({
                 label={dictionary.register.form.labels.depreciationRate}
                 error={Boolean(errors.depreciation_rate)}
                 helperText={errors.depreciation_rate?.message as string}
+                inputProps={{ step: 'any' }}
                 {...register('depreciation_rate')}
               />
             </Grid>
