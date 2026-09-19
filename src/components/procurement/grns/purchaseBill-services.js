@@ -44,4 +44,17 @@ purchaseBillServices.listByStakeholder = async (stakeholderId, params = {}) => {
   return data;
 };
 
+// Manual override for the Due Invoices dashboard card — removes a bill from
+// it when it's been settled through a Payment that was never linked via
+// BillPicker. See SupplierInvoice::getUnpaidAmountAttribute().
+purchaseBillServices.markPaid = async (id) => {
+  const { data } = await axios.post(`/api/purchaseBills/${id}/mark-paid`);
+  return data;
+};
+
+purchaseBillServices.unmarkPaid = async (id) => {
+  const { data } = await axios.post(`/api/purchaseBills/${id}/unmark-paid`);
+  return data;
+};
+
 export default purchaseBillServices;

@@ -65,6 +65,8 @@
         "category": "Kategoria",
         "store": "Ghala",
         "custodian": "Mwangalizi",
+        "costCenter": "Kituo cha Gharama",
+        "location": "Ghala / Kituo cha Gharama",
         "status": "Hali",
         "netBookValue": "Thamani Halisi ya Kitabu",
         "actions": "Vitendo",
@@ -130,6 +132,7 @@
       "methods": {
         "straight_line": "Mstari Ulionyooka",
         "reducing_balance": "Salio Linalopungua",
+        "fixed_percentage": "Asilimia Isiyobadilika ya Gharama",
         "none": "Hakuna"
       },
       "help": {
@@ -152,7 +155,7 @@
           "acquisitionDate": { "required": "Tarehe ya ununuzi inahitajika" },
           "acquisitionCost": { "required": "Gharama ya ununuzi inahitajika", "positive": "Gharama ya ununuzi lazima iwe zaidi ya 0" },
           "salvageValue": { "lessThan": "Thamani ya mabaki lazima iwe pungufu ya gharama ya ununuzi" },
-          "accumulatedDepreciationBf": { "lessThan": "Uchakavu uliokusanywa lazima uwe pungufu ya gharama ya ununuzi" },
+          "accumulatedDepreciationBf": { "max": "Uchakavu uliokusanywa hauwezi kuzidi gharama ya ununuzi" },
           "depreciationMethod": { "required": "Mbinu ya uchakavu inahitajika" },
           "usefulLifeMonths": { "required": "Muda wa matumizi unahitajika kwa uchakavu wa mstari ulionyooka" },
           "depreciationRate": { "required": "Kiwango cha uchakavu kinahitajika kwa uchakavu wa salio linalopungua" },
@@ -175,10 +178,12 @@
     },
     "import": {
       "title": "Leta Salio la Ufunguzi",
-      "description": "Leta mali za kudumu kutoka kwenye kigezo cha Excel cha salio la ufunguzi. Hakuna jarida litakalowekwa — takwimu zinadhaniwa tayari zipo kwenye madaftari yako.",
+      "description": "Leta mali za kudumu kutoka kwenye kigezo cha Excel cha salio la ufunguzi. Kwa kawaida hakuna jarida litakalowekwa — takwimu zinadhaniwa tayari zipo kwenye madaftari yako.",
       "downloadTemplate": "Pakua Kigezo",
       "downloading": "Inapakua...",
       "uploadInstructions": "Pakia kigezo kilichojazwa. Safu zenye namba ya serial iliyopo tayari chini ya bidhaa hiyo hiyo zitarukwa, hivyo kupakia tena faili lililorekebishwa ni salama.",
+      "postJournal": "Weka jarida la ubadilishaji mtaji kwa upakiaji huu",
+      "postJournalHelp": "Chagua hii tu iwapo mali hizi hazijawahi kurekodiwa kwenye madaftari yako kabisa. Jarida moja huwekwa kwa kila kategoria, likikopesha daftari utakalochagua hapa chini kwa gharama halisi (uchakavu uliokusanywa hadi sasa hukopeshwa moja kwa moja kwenye Daftari la Uchakavu Uliokusanywa la kila kategoria badala yake).",
       "selectFile": "Chagua Faili la Excel",
       "removeFile": "Ondoa Faili",
       "uploadAndImport": "Pakia na Leta",

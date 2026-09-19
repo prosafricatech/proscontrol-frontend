@@ -54,6 +54,12 @@ function PurchaseBillPDF({ bill, organization }) {
         </View>
 
         <View style={{ ...pdfStyles.tableRow, marginBottom: 10, marginTop: 5 }}>
+          {bill.due_date && (
+            <View style={{ ...pdfStyles.table, flex: 0.5 }}>
+              <Text style={{ ...pdfStyles.minInfo, color: mainColor }}>Due Date:</Text>
+              <Text style={{ ...pdfStyles.minInfo }}>{readableDate(bill.due_date)}</Text>
+            </View>
+          )}
           {bill.internal_reference && (
             <View style={{ ...pdfStyles.table, flex: 0.5 }}>
               <Text style={{ ...pdfStyles.minInfo, color: mainColor }}>Internal Reference:</Text>

@@ -66,6 +66,14 @@ function PurchaseBillOnScreenPreview({ bill, organization }: { bill: any; organi
           </Typography>
           <Typography variant='body1'>{readableDate(bill.transaction_date)}</Typography>
         </Grid>
+        {bill.due_date && (
+          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+            <Typography variant='subtitle2' color='text.secondary' gutterBottom>
+              Due Date
+            </Typography>
+            <Typography variant='body1'>{readableDate(bill.due_date)}</Typography>
+          </Grid>
+        )}
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <Typography variant='subtitle2' color='text.secondary' gutterBottom>
             Supplier

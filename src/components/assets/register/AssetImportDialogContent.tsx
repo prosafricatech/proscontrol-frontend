@@ -5,9 +5,11 @@ import {
   Alert,
   Box,
   Button,
+  Checkbox,
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControlLabel,
   Grid,
   LinearProgress,
   Stack,
@@ -16,6 +18,7 @@ import {
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSnackbar } from 'notistack';
 import React, { ChangeEvent, useState } from 'react';
+import LedgerSelect from '@/components/accounts/ledgers/forms/LedgerSelect';
 import assetsServices from './assets-services';
 
 interface AssetImportDialogContentProps {
@@ -28,6 +31,8 @@ const AssetImportDialogContent: React.FC<AssetImportDialogContentProps> = ({ onC
   const dictionary = useDictionary();
   const [file, setFile] = useState<File | null>(null);
   const [result, setResult] = useState<any>(null);
+  const [postJournal, setPostJournal] = useState(false);
+  const [creditLedgerId, setCreditLedgerId] = useState<number | null>(null);
 
   const downloadTemplate = useMutation({
     mutationFn: assetsServices.downloadImportTemplate,
@@ -46,6 +51,10 @@ const AssetImportDialogContent: React.FC<AssetImportDialogContentProps> = ({ onC
     mutationFn: (selectedFile: File) => {
       const formData = new FormData();
       formData.append('assets_excel', selectedFile);
+      formData.append('post_journal', postJournal ? '1' : '0');
+      if (postJournal && creditLedgerId) {
+        formData.append('credit_ledger_id', String(creditLedgerId));
+      }
       return assetsServices.bulkImport(formData);
     },
     onSuccess: (response: any) => {
@@ -84,6 +93,24 @@ const AssetImportDialogContent: React.FC<AssetImportDialogContentProps> = ({ onC
 
           <Alert severity="info">{dictionary.register.import.uploadInstructions}</Alert>
 
+          <Box>
+            <FormControlLabel
+              control={<Checkbox checked={postJournal} onChange={(e) => setPostJournal(e.target.checked)} />}
+              label={dictionary.register.import.postJournal}
+            />
+            <Typography variant="caption" color="text.secondary" display="block">
+              {dictionary.register.import.postJournalHelp}
+            </Typography>
+            {postJournal && (
+              <Box mt={1}>
+                <LedgerSelect
+                  label={dictionary.register.form.labels.creditLedger}
+                  onChange={(newValue: any) => setCreditLedgerId(newValue && !Array.isArray(newValue) ? newValue.id : null)}
+                />
+              </Box>
+            )}
+          </Box>
+
           {file ? (
             <Stack direction="row" spacing={2} alignItems="center">
               <Typography variant="body2">{file.name}</Typography>
@@ -95,7 +122,7 @@ const AssetImportDialogContent: React.FC<AssetImportDialogContentProps> = ({ onC
                 size="small"
                 startIcon={<UploadOutlined />}
                 onClick={() => importAssets.mutate(file)}
-                disabled={importAssets.isPending}
+                disabled={importAssets.isPending || (postJournal && !creditLedgerId)}
               >
                 {importAssets.isPending ? dictionary.register.import.importing : dictionary.register.import.uploadAndImport}
               </Button>

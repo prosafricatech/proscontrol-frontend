@@ -3,7 +3,8 @@
 import JumboListToolbar from '@jumbo/components/JumboList/components/JumboListToolbar';
 import JumboRqList from '@jumbo/components/JumboReactQuery/JumboRqList';
 import JumboSearch from '@jumbo/components/JumboSearch';
-import { Card, Grid, LinearProgress, MenuItem, TextField, Typography } from '@mui/material';
+import { Autocomplete, Card, Grid, LinearProgress, MenuItem, TextField, Typography, useMediaQuery } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import React, { createContext, useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
@@ -17,6 +18,7 @@ import ProductsSelectProvider from '@/components/productAndServices/products/Pro
 import { EmployeesProvider } from '@/components/humanResources/employees/EmployeesProvider';
 import productCategoryServices from '@/components/productAndServices/productCategories/productCategoryServices';
 import storeServices from '@/components/procurement/stores/store-services';
+import StoreSelector from '@/components/procurement/stores/StoreSelector';
 import assetsServices from './assets-services';
 import AssetRegisterListItem from './AssetRegisterListItem';
 import AssetRegisterActionTail from './AssetRegisterActionTail';
@@ -28,6 +30,8 @@ const AssetRegister = () => {
   const { organizationHasSubscribed, checkOrganizationPermission } = useJumboAuth();
   const [mounted, setMounted] = useState(false);
   const dictionary = useDictionary();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   const [queryOptions, setQueryOptions] = useState({
     queryKey: 'assets',
@@ -50,7 +54,17 @@ const AssetRegister = () => {
     setMounted(true);
   }, []);
 
-  const renderItem = React.useCallback((asset: any) => <AssetRegisterListItem asset={asset} />, []);
+  const renderItem = React.useCallback((asset: any, view?: 'list' | 'grid' | 'table') => <AssetRegisterListItem asset={asset} view={view} />, []);
+
+  const tableHeader = [
+    dictionary.register.list.labels.code,
+    dictionary.register.list.labels.asset,
+    dictionary.register.list.labels.category,
+    dictionary.register.list.labels.location,
+    dictionary.register.list.labels.netBookValue,
+    dictionary.register.list.labels.status,
+    dictionary.register.list.labels.actions,
+  ];
 
   const handleFilterChange = React.useCallback((key: string, value: string) => {
     setQueryOptions((state) => ({
@@ -104,6 +118,8 @@ const AssetRegister = () => {
               itemsPerPage={10}
               itemsPerPageOptions={[5, 8, 10, 15, 20]}
               renderItem={renderItem}
+              view={isMobile ? 'list' : 'table'}
+              tableHeader={tableHeader}
               componentElement={'div'}
               wrapperSx={{ flex: 1, display: 'flex', flexDirection: 'column' }}
               toolbar={
@@ -112,34 +128,25 @@ const AssetRegister = () => {
                   action={
                     <Grid container columnSpacing={1} rowSpacing={1} justifyContent="flex-end">
                       <Grid size={{ xs: 12, sm: 4, lg: 2.5 }}>
-                        <TextField
-                          select
-                          fullWidth
+                        <Autocomplete
                           size="small"
-                          label={dictionary.register.list.labels.category}
-                          value={queryOptions.queryParams.product_category_id}
-                          onChange={(e) => handleFilterChange('product_category_id', e.target.value)}
-                        >
-                          <MenuItem value="all">{dictionary.register.list.labels.allCategories}</MenuItem>
-                          {(productCategories || []).map((category: any) => (
-                            <MenuItem key={category.id} value={category.id}>{category.name}</MenuItem>
-                          ))}
-                        </TextField>
+                          options={productCategories || []}
+                          getOptionLabel={(option: any) => option.name}
+                          isOptionEqualToValue={(option: any, value: any) => option.id === value.id}
+                          value={(productCategories || []).find((c: any) => c.id === queryOptions.queryParams.product_category_id) || null}
+                          onChange={(_, newValue: any) => handleFilterChange('product_category_id', newValue ? newValue.id : 'all')}
+                          renderInput={(params) => (
+                            <TextField {...params} label={dictionary.register.list.labels.category} />
+                          )}
+                        />
                       </Grid>
                       <Grid size={{ xs: 12, sm: 4, lg: 2 }}>
-                        <TextField
-                          select
-                          fullWidth
-                          size="small"
+                        <StoreSelector
                           label={dictionary.register.list.labels.store}
-                          value={queryOptions.queryParams.store_id}
-                          onChange={(e) => handleFilterChange('store_id', e.target.value)}
-                        >
-                          <MenuItem value="all">{dictionary.register.list.labels.allStores}</MenuItem>
-                          {(stores || []).map((store: any) => (
-                            <MenuItem key={store.id} value={store.id}>{store.name}</MenuItem>
-                          ))}
-                        </TextField>
+                          defaultValue={null}
+                          value={(stores || []).find((s: any) => s.id === queryOptions.queryParams.store_id) || null}
+                          onChange={(newValue: any) => handleFilterChange('store_id', newValue && !Array.isArray(newValue) ? newValue.id : 'all')}
+                        />
                       </Grid>
                       <Grid size={{ xs: 12, sm: 4, lg: 2 }}>
                         <TextField

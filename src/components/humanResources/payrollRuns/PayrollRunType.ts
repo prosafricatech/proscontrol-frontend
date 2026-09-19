@@ -72,6 +72,13 @@ export interface PayrollRunType {
     label?: string;
     remarks?: string;
     approval_date?: string;
+    // Eager-loaded by PayrollRunController (approvals.approval_chain_level.role) —
+    // the level's own title (e.g. "Checked", "Verified") and the role that
+    // held it, independent of the run's *current* chain configuration.
+    approval_chain_level?: {
+      label?: string;
+      role?: { id?: number; name?: string };
+    };
     creator?: {
       id?: number;
       name?: string;

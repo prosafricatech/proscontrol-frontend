@@ -3,7 +3,8 @@
 import JumboListToolbar from '@jumbo/components/JumboList/components/JumboListToolbar';
 import JumboRqList from '@jumbo/components/JumboReactQuery/JumboRqList';
 import JumboSearch from '@jumbo/components/JumboSearch';
-import { Card, LinearProgress, Stack, Typography } from '@mui/material';
+import { Card, LinearProgress, Stack, Typography, useMediaQuery } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import React, { createContext, useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
@@ -25,6 +26,8 @@ const AssetGlMappings = () => {
   const { organizationHasSubscribed, checkOrganizationPermission } = useJumboAuth();
   const [mounted, setMounted] = useState(false);
   const dictionary = useDictionary();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   const [queryOptions, setQueryOptions] = useState({
     queryKey: 'assetGlMappings',
@@ -42,9 +45,18 @@ const AssetGlMappings = () => {
     setMounted(true);
   }, []);
 
-  const renderItem = React.useCallback((mapping: any) => {
-    return <AssetGlMappingListItem mapping={mapping} />;
+  const renderItem = React.useCallback((mapping: any, view?: 'list' | 'grid' | 'table') => {
+    return <AssetGlMappingListItem mapping={mapping} view={view} />;
   }, []);
+
+  const tableHeader = [
+    dictionary.glMappings.list.labels.category,
+    dictionary.glMappings.list.labels.assetLedger,
+    dictionary.glMappings.list.labels.accumulatedDepreciationLedger,
+    dictionary.glMappings.list.labels.depreciationExpenseLedger,
+    dictionary.glMappings.list.labels.disposalGainLossLedger,
+    dictionary.glMappings.list.labels.actions,
+  ];
 
   const handleOnChange = React.useCallback((keyword: string) => {
     setQueryOptions((state) => ({
@@ -82,6 +94,8 @@ const AssetGlMappings = () => {
           itemsPerPage={10}
           itemsPerPageOptions={[5, 8, 10, 15, 20]}
           renderItem={renderItem}
+          view={isMobile ? 'list' : 'table'}
+          tableHeader={tableHeader}
           componentElement={'div'}
           wrapperSx={{ flex: 1, display: 'flex', flexDirection: 'column' }}
           toolbar={

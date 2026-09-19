@@ -45,6 +45,11 @@ interface ReceiptItem {
   item_form_ledger_currency_id?: number;
   amount: number;
   description: string;
+  // Traceability-only link to the Customer Invoice this item settles/relates
+  // to, mirroring PaymentItem's Bill/Purchase Order link.
+  relatable_type?: 'invoice' | null;
+  relatable_id?: number | null;
+  relatableNo?: string;
 }
 
 interface Ledger {
@@ -346,6 +351,8 @@ function ReceiptFormDialogContent({
         item_form_ledger_currency_id: item.item_form_ledger_currency_id,
         amount: item.amount,
         description: item.description,
+        relatable_type: item.relatable_type || undefined,
+        relatable_id: item.relatable_id || undefined,
       })),
     };
     await saveReceipt.mutate(updatedData);

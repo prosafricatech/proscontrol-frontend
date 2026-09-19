@@ -27,6 +27,7 @@ export interface PurchaseBill {
   id: number;
   invoiceNo: string;
   transaction_date: string;
+  due_date?: string | null;
   internal_reference?: string;
   supplier_reference?: string;
   narration?: string;

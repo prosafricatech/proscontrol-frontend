@@ -2,7 +2,8 @@
 
 import JumboListToolbar from '@jumbo/components/JumboList/components/JumboListToolbar';
 import JumboRqList from '@jumbo/components/JumboReactQuery/JumboRqList';
-import { Card, Grid, MenuItem, TextField, Typography } from '@mui/material';
+import { Card, Grid, MenuItem, TextField, Typography, useMediaQuery } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import dayjs from 'dayjs';
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
@@ -20,6 +21,8 @@ const DepreciationRuns = () => {
   const { organizationHasSubscribed, checkOrganizationPermission, authOrganization } = useJumboAuth();
   const [mounted, setMounted] = useState(false);
   const dictionary = useDictionary();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   const [queryOptions, setQueryOptions] = useState({
     queryKey: 'depreciationRuns',
@@ -45,7 +48,16 @@ const DepreciationRuns = () => {
     setMounted(true);
   }, []);
 
-  const renderItem = React.useCallback((run: any) => <DepreciationRunListItem run={run} />, []);
+  const renderItem = React.useCallback((run: any, view?: 'list' | 'grid' | 'table') => <DepreciationRunListItem run={run} view={view} />, []);
+
+  const tableHeader = [
+    dictionary.depreciationRuns.list.labels.period,
+    dictionary.depreciationRuns.list.labels.assetsCount,
+    dictionary.depreciationRuns.list.labels.totalDepreciation,
+    dictionary.depreciationRuns.list.labels.status,
+    dictionary.depreciationRuns.list.labels.postedBy,
+    dictionary.depreciationRuns.list.labels.actions,
+  ];
 
   const handleYearChange = React.useCallback((year: string) => {
     setQueryOptions((state) => ({
@@ -78,6 +90,8 @@ const DepreciationRuns = () => {
         itemsPerPage={10}
         itemsPerPageOptions={[5, 8, 10, 15, 20]}
         renderItem={renderItem}
+        view={isMobile ? 'list' : 'table'}
+        tableHeader={tableHeader}
         componentElement={'div'}
         wrapperSx={{ flex: 1, display: 'flex', flexDirection: 'column' }}
         toolbar={

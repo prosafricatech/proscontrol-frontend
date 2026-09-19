@@ -65,6 +65,8 @@
         "category": "Category",
         "store": "Store",
         "custodian": "Custodian",
+        "costCenter": "Cost Center",
+        "location": "Store / Cost Center",
         "status": "Status",
         "netBookValue": "Net Book Value",
         "actions": "Actions",
@@ -130,6 +132,7 @@
       "methods": {
         "straight_line": "Straight Line",
         "reducing_balance": "Reducing Balance",
+        "fixed_percentage": "Fixed Percentage on Cost",
         "none": "None"
       },
       "help": {
@@ -152,7 +155,7 @@
           "acquisitionDate": { "required": "Acquisition date is required" },
           "acquisitionCost": { "required": "Acquisition cost is required", "positive": "Acquisition cost must be greater than 0" },
           "salvageValue": { "lessThan": "Salvage value must be less than acquisition cost" },
-          "accumulatedDepreciationBf": { "lessThan": "Accumulated depreciation must be less than acquisition cost" },
+          "accumulatedDepreciationBf": { "max": "Accumulated depreciation cannot exceed acquisition cost" },
           "depreciationMethod": { "required": "Depreciation method is required" },
           "usefulLifeMonths": { "required": "Useful life is required for straight line depreciation" },
           "depreciationRate": { "required": "Depreciation rate is required for reducing balance depreciation" },
@@ -175,10 +178,12 @@
     },
     "import": {
       "title": "Import Opening Balances",
-      "description": "Import fixed assets from an Excel opening-balance template. No journals are posted — figures are assumed to already sit in your ledgers.",
+      "description": "Import fixed assets from an Excel opening-balance template. By default no journals are posted — figures are assumed to already sit in your ledgers.",
       "downloadTemplate": "Download Template",
       "downloading": "Downloading...",
       "uploadInstructions": "Upload the filled template. Rows with an existing serial number under the same product are skipped, so re-uploading a corrected file is safe.",
+      "postJournal": "Post a capitalization journal for this upload",
+      "postJournalHelp": "Only tick this if these assets have never been recorded in your books at all. One journal is posted per category, crediting the ledger you choose below for the net cost (accumulated depreciation to date is credited straight to each category's own Accumulated Depreciation Ledger instead).",
       "selectFile": "Select Excel File",
       "removeFile": "Remove File",
       "uploadAndImport": "Upload & Import",

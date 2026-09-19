@@ -116,6 +116,13 @@ financialReportsServices.creditors = async (params) => {
   return data;
 }
 
+financialReportsServices.dueInvoicesSummary = async (params) => {
+  const { data } = await axios.get(`/api/financialReports/dueInvoicesSummary`, {
+    params
+  })
+  return data;
+}
+
 financialReportsServices.apArAging = async (params) => {
   const { data } = await axios.get(`/api/financialReports/apArAging`, {
     params

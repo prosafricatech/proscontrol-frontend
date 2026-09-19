@@ -61,9 +61,9 @@ const ApArAgingOnScreen = ({ reportData, authOrganization }) => {
   return (
     <Box sx={{ marginTop: 3 }}>
       <Typography variant='caption' color='text.secondary' sx={{ mb: 1, display: 'block' }}>
-        Aged from each transaction&apos;s date assuming a flat 30-day term — this
-        organization doesn&apos;t track a due date on every document type that can
-        post to these ledgers.
+        Aged from each transaction&apos;s date assuming a flat 30-day term,
+        since due dates aren&apos;t captured for every transaction type that
+        can post to these ledgers.
       </Typography>
       <TableContainer component={TablePaper}>
         <Table size='small'>

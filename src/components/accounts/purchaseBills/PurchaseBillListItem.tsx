@@ -16,6 +16,10 @@ function PurchaseBillListItem({ purchaseBill }: { purchaseBill: PurchaseBill }) 
       : paidAmount > 0
         ? 'partial'
         : 'unpaid';
+  const isOverdue =
+    paymentStatus !== 'paid' &&
+    !!purchaseBill.due_date &&
+    new Date(purchaseBill.due_date).getTime() < Date.now();
 
   return (
     <Grid
@@ -39,6 +43,19 @@ function PurchaseBillListItem({ purchaseBill }: { purchaseBill: PurchaseBill }) 
                 {readableDate(purchaseBill.transaction_date)}
               </Typography>
             </Tooltip>
+          }
+          secondary={
+            purchaseBill.due_date ? (
+              <Tooltip title={isOverdue ? 'Overdue' : 'Due Date'}>
+                <Typography
+                  variant='caption'
+                  color={isOverdue ? 'error' : 'gray'}
+                  component='span'
+                >
+                  Due {readableDate(purchaseBill.due_date)}
+                </Typography>
+              </Tooltip>
+            ) : null
           }
         />
       </Grid>

@@ -371,6 +371,13 @@ export const ApprovalsTab = ({
                     : approvalStatus === 'approved'
                       ? 'success'
                       : 'info';
+              // The level's own title (e.g. "Checked", "Verified") — prefer
+              // the historical approval_chain_level eager-loaded onto the
+              // approval itself over a fresh lookup against the run's
+              // *current* chain, which may have since been edited. Was
+              // previously read as chainLevel?.name/level_name, fields that
+              // don't exist on ApprovalChainLevel (only .label does), so it
+              // silently rendered blank.
               const chainLevel = payrollRun?.approval_chain?.levels?.find(
                 (level) =>
                   Number(level.id) ===
@@ -378,6 +385,19 @@ export const ApprovalsTab = ({
                     approval.chain_level_id || approval.approval_chain_level_id
                   )
               );
+              // Combines the decision (e.g. "Approved") with the role that
+              // held that chain level (e.g. "Finance Manager") — the label
+              // alone is often the same generic word at every level ("Approved"
+              // by HR, then "Approved" by Finance Manager, then Director), so
+              // the role is what actually distinguishes which level this was.
+              // Mirrors PayrollRunApproval::getStatusLabelAttribute() (backend
+              // accessor, not sent over the API) built client-side instead.
+              const levelLabel = [
+                approval.label || approval.approval_chain_level?.label,
+                approval.approval_chain_level?.role?.name || chainLevel?.role?.name,
+              ]
+                .filter(Boolean)
+                .join(' by ');
 
               return (
                 <Grid
@@ -414,17 +434,14 @@ export const ApprovalsTab = ({
                   </Grid>
 
                   <Grid size={{ xs: 12, md: 4, lg: 4 }}>
-                    <Tooltip title='Level'>
-                      <Typography variant='body2' color='text.secondary'>
-                        {chainLevel?.name || chainLevel?.level_name || ''}
-                      </Typography>
+                    <Tooltip title={approval.status || 'Pending'}>
+                      <Chip
+                        size='small'
+                        label={levelLabel || approval.status || 'Pending'}
+                        color={chipColor as any}
+                        sx={{ textTransform: 'capitalize' }}
+                      />
                     </Tooltip>
-                    <Chip
-                      size='small'
-                      label={approval.status || 'Pending'}
-                      color={chipColor as any}
-                      sx={{ textTransform: 'capitalize' }}
-                    />
                     {approval.remarks && (
                       <Typography variant='caption' sx={{ ml: 1 }}>
                         {approval.remarks}

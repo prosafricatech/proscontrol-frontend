@@ -38,7 +38,7 @@ import CommaSeparatedField from '@/shared/Inputs/CommaSeparatedField';
 import { sanitizedNumber } from '@/app/helpers/input-sanitization-helpers';
 import assetsServices from './assets-services';
 
-const METHODS = ['straight_line', 'reducing_balance', 'none'];
+const METHODS = ['straight_line', 'reducing_balance', 'fixed_percentage', 'none'];
 
 // Click-to-show help, matching the info-icon pattern used on Payroll forms —
 // better than hover for touch devices, and keeps the help text out of the
@@ -146,7 +146,7 @@ const AssetFormDialogContent: React.FC<AssetFormDialogContentProps> = ({
       }),
     depreciation_rate: yup.number().nullable().transform((v, o) => (o === '' ? null : v))
       .when('depreciation_method', {
-        is: 'reducing_balance',
+        is: (m: string) => m === 'reducing_balance' || m === 'fixed_percentage',
         then: (schema) => schema.required(dictionary.register.form.errors.validation.depreciationRate.required).positive(),
       }),
     depreciation_start_date: yup.string().nullable()
@@ -155,7 +155,7 @@ const AssetFormDialogContent: React.FC<AssetFormDialogContentProps> = ({
         then: (schema) => schema.required(dictionary.register.form.errors.validation.depreciationStartDate.required),
       }),
     accumulated_depreciation_bf: yup.number().nullable().transform((v, o) => (o === '' ? 0 : v))
-      .lessThan(yup.ref('acquisition_cost'), dictionary.register.form.errors.validation.accumulatedDepreciationBf.lessThan),
+      .max(yup.ref('acquisition_cost'), dictionary.register.form.errors.validation.accumulatedDepreciationBf.max),
     current_store_id: yup.number().nullable(),
     current_custodian_id: yup.number().nullable(),
     cost_center_id: yup.number().nullable(),
@@ -381,7 +381,7 @@ const AssetFormDialogContent: React.FC<AssetFormDialogContentProps> = ({
               />
             </Grid>
           )}
-          {method === 'reducing_balance' && (
+          {(method === 'reducing_balance' || method === 'fixed_percentage') && (
             <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth

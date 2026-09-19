@@ -393,6 +393,8 @@ const JumboList = React.forwardRef<
                 '& .MuiTableCell-root': {
                   border: 1,
                   borderColor: 'divider',
+                  whiteSpace: 'normal',
+                  wordBreak: 'break-word',
                 },
               }}
             >
@@ -400,7 +402,7 @@ const JumboList = React.forwardRef<
                 <TableRow>
                   {tableHeader.length > 0 &&
                     tableHeader.map((itm: string, i: number) => (
-                      <TableCell sx={{ width: '25%' }} key={i}>
+                      <TableCell sx={{ width: `${100 / tableHeader.length}%` }} key={i}>
                         <Typography>{itm}</Typography>
                       </TableCell>
                     ))}

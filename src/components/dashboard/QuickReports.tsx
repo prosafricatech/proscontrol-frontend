@@ -18,6 +18,7 @@ import {
   FeedOutlined,
   ListAltOutlined,
   Money,
+  QueryStatsOutlined,
   RequestQuoteOutlined,
   SummarizeOutlined,
   ViewTimelineOutlined,
@@ -40,6 +41,9 @@ import StockReport from '../procurement/stores/[store_id]/storeStock/StockReport
 
 const DebtorCreditorReport = lazy(
   () => import('../accounts/reports/debtorCreditor/DebtorCreditorReport')
+);
+const ApArAgingReport = lazy(
+  () => import('../accounts/reports/agingReport/ApArAgingReport')
 );
 const CashierReport = lazy(
   () => import('../accounts/reports/cashierReport/CashierReport')
@@ -81,6 +85,7 @@ function QuickReports() {
   const [stockMovementDialogOpen, setStockMovementDialogOpen] = useState(false);
   const [debtorsCreditorsDialogOpen, setDebtorsCreditorsDialogOpen] =
     useState(false);
+  const [apArAgingDialogOpen, setApArAgingDialogOpen] = useState(false);
   const [openSalesAndCashSummary, setOpenSalesAndCashSummary] = useState(false);
   const [openSalesManifest, setOpenSalesManifest] = useState(false);
   const [openDippingReport, setOpenDippingReport] = useState(false);
@@ -103,6 +108,7 @@ function QuickReports() {
     setOpenDippingReport(false);
     setOpenSalesAndCashSummary(false);
     setDebtorsCreditorsDialogOpen(false);
+    setApArAgingDialogOpen(false);
     setOpenCashierReport(false);
     setStockReportDialogOpen(false);
     setItemMovementDialogOpen(false);
@@ -126,7 +132,8 @@ function QuickReports() {
           openCashierReport ||
           openLeaveBalancesReport ||
           openStaffLoanReport ||
-          openPayrollComponentsSummary
+          openPayrollComponentsSummary ||
+          apArAgingDialogOpen
             ? 'lg'
             : fuelVouchersDialogOpen
               ? 'xl'
@@ -145,7 +152,8 @@ function QuickReports() {
           fuelVouchersDialogOpen ||
           openLeaveBalancesReport ||
           openStaffLoanReport ||
-          openPayrollComponentsSummary
+          openPayrollComponentsSummary ||
+          apArAgingDialogOpen
         }
       >
         {openSalesAndCashSummary && (
@@ -157,6 +165,9 @@ function QuickReports() {
           <DebtorCreditorReport
             setOpenDebtorsCreditorsDialog={setDebtorsCreditorsDialogOpen}
           />
+        )}
+        {apArAgingDialogOpen && (
+          <ApArAgingReport setOpenDialog={setApArAgingDialogOpen} />
         )}
         {openCashierReport && (
           <LedgerSelectProvider>
@@ -212,6 +223,7 @@ function QuickReports() {
 
         {(debtorsCreditorsDialogOpen ||
           openDippingReport ||
+          apArAgingDialogOpen ||
           (fuelVouchersDialogOpen && !belowLargeScreen)) && (
           <DialogActions className={css.hiddenOnPrint}>
             <Button
@@ -393,6 +405,24 @@ function QuickReports() {
                 >
                   <Money sx={{ fontSize: '40px' }} />
                   <Typography>Debtors & Creditors</Typography>
+                </Grid>
+              )}
+            {organizationHasSubscribed(MODULES.ACCOUNTS_AND_FINANCE) &&
+              checkOrganizationPermission(PERMISSIONS.ACCOUNTS_REPORTS) && (
+                <Grid
+                  size={{ xs: 6, md: 2, lg: 1.5 }}
+                  p={1}
+                  textAlign={'center'}
+                  sx={{
+                    cursor: 'pointer',
+                    '&:hover': {
+                      bgcolor: 'action.hover',
+                    },
+                  }}
+                  onClick={() => handleOpenDialog(setApArAgingDialogOpen)}
+                >
+                  <QueryStatsOutlined sx={{ fontSize: '40px' }} />
+                  <Typography>A/P & A/R Aging</Typography>
                 </Grid>
               )}
             {organizationHasSubscribed(MODULES.FUEL_STATION) && (

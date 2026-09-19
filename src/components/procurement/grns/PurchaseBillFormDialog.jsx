@@ -43,6 +43,7 @@ import purchaseServices from '../purchases/purchase-services';
 
 const validationSchema = yup.object({
   transaction_date: yup.string().required('Bill date is required'),
+  due_date: yup.string().nullable(),
   internal_reference: yup.string().max(20, 'Max 20 characters').nullable(),
   supplier_reference: yup.string().max(20, 'Max 20 characters').nullable(),
   vat_percentage: yup
@@ -145,6 +146,7 @@ const PurchaseBillFormDialog = ({ grn, order, setOpenDialog }) => {
       supplier_reference: '',
       narration: '',
       transaction_date: transactionDate.toISOString(),
+      due_date: null,
       vat_percentage: orgVatPercentage || '',
       adjustments: [],
       items: [],
@@ -356,7 +358,7 @@ const PurchaseBillFormDialog = ({ grn, order, setOpenDialog }) => {
           <Stack spacing={1.5}>
             <SectionHeader icon={<ReceiptLongOutlined fontSize='small' color='action' />} title='Bill Details' />
             <Grid container columnSpacing={1.5} rowSpacing={1.5}>
-              <Grid size={{ xs: 12, sm: 4 }}>
+              <Grid size={{ xs: 12, sm: 3 }}>
                 <Controller
                   name='transaction_date'
                   control={control}
@@ -379,7 +381,31 @@ const PurchaseBillFormDialog = ({ grn, order, setOpenDialog }) => {
                   )}
                 />
               </Grid>
-              <Grid size={{ xs: 6, sm: 4 }}>
+              <Grid size={{ xs: 12, sm: 3 }}>
+                <Controller
+                  name='due_date'
+                  control={control}
+                  render={({ field }) => (
+                    <DateTimePicker
+                      label='Due Date'
+                      value={field.value ? dayjs(field.value) : null}
+                      minDate={dayjs(getValues('transaction_date'))}
+                      onChange={(newValue) =>
+                        field.onChange(newValue ? newValue.toISOString() : null)
+                      }
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          size: 'small',
+                          error: !!errors.due_date,
+                          helperText: errors.due_date?.message,
+                        },
+                      }}
+                    />
+                  )}
+                />
+              </Grid>
+              <Grid size={{ xs: 6, sm: 3 }}>
                 <TextField
                   fullWidth
                   label='Internal Ref.'
@@ -390,7 +416,7 @@ const PurchaseBillFormDialog = ({ grn, order, setOpenDialog }) => {
                   {...register('internal_reference')}
                 />
               </Grid>
-              <Grid size={{ xs: 6, sm: 4 }}>
+              <Grid size={{ xs: 6, sm: 3 }}>
                 <TextField
                   fullWidth
                   label='Supplier Ref.'

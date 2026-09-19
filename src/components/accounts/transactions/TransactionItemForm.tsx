@@ -1,5 +1,8 @@
 import { sanitizedNumber } from '@/app/helpers/input-sanitization-helpers';
 import BillPicker, { BillOption } from '@/components/shared/pickers/BillPicker';
+import InvoicePicker, {
+  InvoiceOption,
+} from '@/components/shared/pickers/InvoicePicker';
 import PurchaseOrderPicker, {
   PurchaseOrderOption,
 } from '@/components/shared/pickers/PurchaseOrderPicker';
@@ -30,8 +33,9 @@ import QuickAddLedger from '../ledgers/forms/QuickAddLedger';
 import { Ledger } from '../ledgers/LedgerType';
 
 // Traceability-only link from a payment item to a Bill or Purchase Order it
-// settles/relates to. Only meaningful for Payments (isPayment).
-type ItemRelatableType = 'purchase' | 'bill';
+// settles/relates to (isPayment), or from a receipt item to a Customer
+// Invoice it settles/relates to (isReceipt).
+type ItemRelatableType = 'purchase' | 'bill' | 'invoice';
 
 type TransactionItem = {
   debit_ledger_id?: number;
@@ -41,13 +45,17 @@ type TransactionItem = {
   description: string;
   relatable_type?: ItemRelatableType | null;
   relatable_id?: number | null;
-  relatable?: PurchaseOrderOption | BillOption | null;
+  relatable?: PurchaseOrderOption | BillOption | InvoiceOption | null;
   relatableNo?: string;
 };
 
-const allRelatableTypeOptions: { value: ItemRelatableType; label: string }[] = [
+const paymentRelatableTypeOptions: { value: ItemRelatableType; label: string }[] = [
   { value: 'purchase', label: 'Purchase Order' },
   { value: 'bill', label: 'Bill' },
+];
+
+const receiptRelatableTypeOptions: { value: ItemRelatableType; label: string }[] = [
+  { value: 'invoice', label: 'Invoice' },
 ];
 
 type TransactionItemFormProps = {
@@ -80,7 +88,7 @@ type FormValues = {
   description: string;
   relatable_type?: ItemRelatableType | null;
   relatable_id?: number | null;
-  relatable?: PurchaseOrderOption | BillOption | null;
+  relatable?: PurchaseOrderOption | BillOption | InvoiceOption | null;
 };
 
 const TransactionItemForm: React.FC<TransactionItemFormProps> = ({
@@ -109,14 +117,14 @@ const TransactionItemForm: React.FC<TransactionItemFormProps> = ({
   // Orders/GRNs before paying them — where it applies, it's the
   // authoritative "amount owed" record, so linking a payment straight to
   // the order instead would bypass its own paid/unpaid tracking; where it
-  // doesn't apply, "Bill" isn't a real option at all.
-  const relatableTypeOptions = useMemo(
-    () =>
-      allRelatableTypeOptions.filter((opt) =>
-        deferGrnBilling ? opt.value !== 'purchase' : opt.value !== 'bill'
-      ),
-    [deferGrnBilling]
-  );
+  // doesn't apply, "Bill" isn't a real option at all. Receipts have no such
+  // duality — "Invoice" is the only relatable concept on that side.
+  const relatableTypeOptions = useMemo(() => {
+    if (isReceipt) return receiptRelatableTypeOptions;
+    return paymentRelatableTypeOptions.filter((opt) =>
+      deferGrnBilling ? opt.value !== 'purchase' : opt.value !== 'bill'
+    );
+  }, [deferGrnBilling, isReceipt]);
   const [openLedgerQuickAdd, setOpenLedgerQuickAdd] = useState(false);
   const [ledgerType, setLedgerType] = useState<'debit' | 'credit'>('credit');
   const [addedLedger, setAddedLedger] = useState<Ledger | null>(null);
@@ -170,13 +178,19 @@ const TransactionItemForm: React.FC<TransactionItemFormProps> = ({
         'Amount should not exceed unapproved amount of selected relatable',
         function (value) {
           const relatable = this.parent?.relatable as
-            PurchaseOrderOption | BillOption | null | undefined;
+            PurchaseOrderOption | BillOption | InvoiceOption | null | undefined;
 
           if (!relatable?.id || value == null) {
             return true;
           }
 
-          const maxAmount = Number(relatable.unapproved_amount ?? 0);
+          // Invoices (Receipts) have no "approved" concept — cap against
+          // what's still unpaid instead.
+          const maxAmount = Number(
+            (relatable as BillOption | PurchaseOrderOption).unapproved_amount ??
+              (relatable as InvoiceOption).unpaid_amount ??
+              0
+          );
 
           if (Number(value) <= maxAmount) {
             return true;
@@ -415,7 +429,7 @@ const TransactionItemForm: React.FC<TransactionItemFormProps> = ({
       <Grid container spacing={1} marginTop={0.5}>
         {/* Debit Ledger Field */}
         {(isPayment || isTransfer) && (
-          <Grid size={{ xs: 12, md: 4 }}>
+          <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
             <Div sx={{ mt: 1 }}>
               <LedgerSelect
                 label={
@@ -475,7 +489,7 @@ const TransactionItemForm: React.FC<TransactionItemFormProps> = ({
 
         {/* Credit Ledger Field */}
         {isReceipt && (
-          <Grid size={{ xs: 12, md: 4 }}>
+          <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
             <Div sx={{ mt: 1 }}>
               <LedgerSelect
                 label={isReceipt ? 'From (Credit)' : 'Credit'}
@@ -519,10 +533,11 @@ const TransactionItemForm: React.FC<TransactionItemFormProps> = ({
           </Grid>
         )}
 
-        {/* Traceability-only link to a Bill/Purchase Order this item relates to */}
-        {isPayment && (
+        {/* Traceability-only link to a Bill/Purchase Order (Payments) or
+            Customer Invoice (Receipts) this item relates to */}
+        {(isPayment || isReceipt) && (
           <>
-            <Grid size={{ xs: 12, md: 4 }}>
+            <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
               <Div sx={{ mt: 1 }}>
                 <Autocomplete
                   options={relatableTypeOptions}
@@ -552,7 +567,7 @@ const TransactionItemForm: React.FC<TransactionItemFormProps> = ({
               </Div>
             </Grid>
             {watch('relatable_type') === 'purchase' && (
-              <Grid size={{ xs: 12, md: 4 }}>
+              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
                 <Div sx={{ mt: 1 }}>
                   <PurchaseOrderPicker
                     value={watch('relatable') as PurchaseOrderOption | null}
@@ -567,7 +582,7 @@ const TransactionItemForm: React.FC<TransactionItemFormProps> = ({
               </Grid>
             )}
             {watch('relatable_type') === 'bill' && (
-              <Grid size={{ xs: 12, md: 4 }}>
+              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
                 <Div sx={{ mt: 1 }}>
                   <BillPicker
                     value={watch('relatable') as BillOption | null}
@@ -584,10 +599,28 @@ const TransactionItemForm: React.FC<TransactionItemFormProps> = ({
                 </Div>
               </Grid>
             )}
+            {watch('relatable_type') === 'invoice' && (
+              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
+                <Div sx={{ mt: 1 }}>
+                  <InvoicePicker
+                    value={watch('relatable') as InvoiceOption | null}
+                    stakeholder={
+                      (watch('credit_ledger') as Ledger | undefined)
+                        ?.stakeholders?.[0] ?? null
+                    }
+                    currencyId={selectedCurrencyId ?? null}
+                    onChange={(newValue) => {
+                      setValue('relatable', newValue);
+                      setValue('relatable_id', newValue?.id ?? null);
+                    }}
+                  />
+                </Div>
+              </Grid>
+            )}
           </>
         )}
 
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
           <Div sx={{ mt: 1 }}>
             <TextField
               size='small'
@@ -606,7 +639,7 @@ const TransactionItemForm: React.FC<TransactionItemFormProps> = ({
           </Div>
         </Grid>
 
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
           <Div sx={{ mt: 1 }}>
             <TextField
               label='Amount'

@@ -27,7 +27,7 @@ interface AssetGlMappingFormDialogContentProps {
   productCategories: any[];
 }
 
-const METHODS = ['straight_line', 'reducing_balance', 'none'];
+const METHODS = ['straight_line', 'reducing_balance', 'fixed_percentage', 'none'];
 
 const AssetGlMappingFormDialogContent: React.FC<AssetGlMappingFormDialogContentProps> = ({
   onClose,
