@@ -5,6 +5,7 @@ import { MODULES } from '@/utilities/constants/modules';
 import { PERMISSIONS } from '@/utilities/constants/permissions';
 import { faMoneyBill1 } from '@fortawesome/free-regular-svg-icons';
 import {
+  faClockRotateLeft,
   faCubes,
   faReceipt,
   faTableCells,
@@ -35,6 +36,7 @@ import {
 import React, { lazy, useState } from 'react';
 import DippingReport from '../fuelStation/reports/dippingReport/DippingReport';
 import FuelVouchersReport from '../fuelStation/reports/FuelVouchersReport/FuelVouchersReport';
+import ShiftsSummaryReport from '../fuelStation/reports/shiftsSummaryReport/ShiftsSummaryReport';
 import StockMovement from '../procurement/stores/[store_id]/reports/stockMovement/StockMovement';
 import ItemMovement from '../procurement/stores/[store_id]/storeStock/ItemMovement';
 import StockReport from '../procurement/stores/[store_id]/storeStock/StockReport';
@@ -90,6 +92,7 @@ function QuickReports() {
   const [openSalesManifest, setOpenSalesManifest] = useState(false);
   const [openDippingReport, setOpenDippingReport] = useState(false);
   const [fuelVouchersDialogOpen, setFuelVouchersDialogOpen] = useState(false);
+  const [openShiftsSummaryReport, setOpenShiftsSummaryReport] = useState(false);
   const [openLeaveBalancesReport, setOpenLeaveBalancesReport] = useState(false);
   const [openStaffLoanReport, setOpenStaffLoanReport] = useState(false);
   const [openPayrollComponentsSummary, setOpenPayrollComponentsSummary] = useState(false);
@@ -118,6 +121,7 @@ function QuickReports() {
     setOpenLeaveBalancesReport(false);
     setOpenStaffLoanReport(false);
     setOpenPayrollComponentsSummary(false);
+    setOpenShiftsSummaryReport(false);
   };
 
   return (
@@ -135,7 +139,7 @@ function QuickReports() {
           openPayrollComponentsSummary ||
           apArAgingDialogOpen
             ? 'lg'
-            : fuelVouchersDialogOpen
+            : fuelVouchersDialogOpen || openShiftsSummaryReport
               ? 'xl'
               : 'md'
         }
@@ -153,7 +157,8 @@ function QuickReports() {
           openLeaveBalancesReport ||
           openStaffLoanReport ||
           openPayrollComponentsSummary ||
-          apArAgingDialogOpen
+          apArAgingDialogOpen ||
+          openShiftsSummaryReport
         }
       >
         {openSalesAndCashSummary && (
@@ -220,10 +225,14 @@ function QuickReports() {
         {openPayrollComponentsSummary && (
           <PayrollSalaryComponentsDashboard onClose={() => setOpenPayrollComponentsSummary(false)} />
         )}
+        {openShiftsSummaryReport && (
+          <ShiftsSummaryReport closeDialog={setOpenShiftsSummaryReport} />
+        )}
 
         {(debtorsCreditorsDialogOpen ||
           openDippingReport ||
           apArAgingDialogOpen ||
+          openShiftsSummaryReport ||
           (fuelVouchersDialogOpen && !belowLargeScreen)) && (
           <DialogActions className={css.hiddenOnPrint}>
             <Button
@@ -446,6 +455,27 @@ function QuickReports() {
                 <Typography>FV Report</Typography>
               </Grid>
             )}
+            {organizationHasSubscribed(MODULES.FUEL_STATION) && (
+                <Grid
+                  size={{ xs: 6, md: 2, lg: 1.5 }}
+                  p={1}
+                  textAlign={'center'}
+                  sx={{
+                    cursor: 'pointer',
+                    '&:hover': {
+                      bgcolor: 'action.hover',
+                    },
+                  }}
+                  onClick={() => handleOpenDialog(setOpenShiftsSummaryReport)}
+                >
+                  <FontAwesomeIcon
+                    size='lg'
+                    icon={faClockRotateLeft}
+                    style={{ fontSize: '48px' }}
+                  />
+                  <Typography>Shifts Summary Report</Typography>
+                </Grid>
+              )}
             {organizationHasSubscribed(MODULES.HUMAN_RESOURCES) &&
               checkOrganizationPermission(PERMISSIONS.PAYROLL_READ) && (
                 <Grid

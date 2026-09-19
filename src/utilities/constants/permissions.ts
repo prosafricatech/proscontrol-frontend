@@ -119,6 +119,7 @@ export const PERMISSIONS = {
   FUEL_STATIONS_DELETE: 'FuelStations:Delete',
   FUEL_STATIONS_READ: 'FuelStations:Read',
   FUEL_STATIONS_UPDATE: 'FuelStations:Update',
+  FUEL_STATIONS_REPORTS: 'FuelStations:Reports',
 
   // Procurement & Supply
   INVENTORY_CONSUMPTIONS_BACKDATE: 'InventoryConsumptions:BackDate',

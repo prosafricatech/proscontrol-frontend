@@ -7,6 +7,7 @@ import {
   faReceipt,
   faTableCells,
   faChartColumn,
+  faClockRotateLeft,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import JumboCardQuick from '@jumbo/components/JumboCardQuick/JumboCardQuick';
@@ -24,6 +25,7 @@ import { useSearchParams } from 'next/navigation';
 import DippingReport from './dippingReport/DippingReport';
 import FuelVouchersReport from './FuelVouchersReport/FuelVouchersReport';
 import StockSalesSummaryReport from './stockSalesSummaryReport/StockSalesSummaryReport';
+import ShiftsSummaryReport from './shiftsSummaryReport/ShiftsSummaryReport';
 
 interface ReportProps {
   closeDialog: () => void;
@@ -59,6 +61,8 @@ const FuelStationReports: React.FC = () => {
       openReport(FuelVouchersReport);
     } else if (reportParam === 'stock-sales-summary-report') {
       openReport(StockSalesSummaryReport);
+    } else if (reportParam === 'shifts-summary-report') {
+      openReport(ShiftsSummaryReport);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mounted, searchParams]);
@@ -147,6 +151,24 @@ const FuelStationReports: React.FC = () => {
                 style={{ fontSize: '48px' }}
               />
               <Typography mt={1}>Fuel Stock & Sales Summary</Typography>
+            </Grid>
+
+            {/* Shifts Summary Report */}
+            <Grid
+              sx={{
+                cursor: 'pointer',
+                '&:hover': { bgcolor: 'action.hover' },
+              }}
+              size={{ xs: 6, md: 3, lg: 2 }}
+              p={2}
+              onClick={() => openReport(ShiftsSummaryReport)}
+            >
+              <FontAwesomeIcon
+                size='lg'
+                icon={faClockRotateLeft}
+                style={{ fontSize: '48px' }}
+              />
+              <Typography mt={1}>Shifts Summary Report</Typography>
             </Grid>
           </Grid>
         </JumboCardQuick>

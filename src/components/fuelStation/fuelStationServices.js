@@ -67,6 +67,34 @@ fuelStationServices.stockSalesSummaryReport = async (params) => {
     return data;
 }
 
+fuelStationServices.shiftsSummaryReport = async (params) => {
+    const { data } = await axios.get(`/api/fuelStations/stations/shiftsSummaryReport`, {
+        params,
+        paramsSerializer: (params) => {
+            const searchParams = new URLSearchParams();
+
+            Object.keys(params).forEach(key => {
+                const value = params[key];
+                if (Array.isArray(value)) {
+                    value.forEach(item => searchParams.append(`${key}[]`, item));
+                } else if (value !== null && value !== undefined && value !== '') {
+                    searchParams.append(key, value);
+                }
+            });
+
+            return searchParams.toString();
+        }
+    })
+    return data;
+}
+
+fuelStationServices.shiftsSummaryReportExcel = async (params) => {
+    const { data } = await axios.post(`/api/fuelStations/stations/shiftsSummaryReportExcel`, params, {
+        responseType: 'blob',
+    })
+    return data;
+}
+
 fuelStationServices.getUserStations = async ({ queryKey }) => {
     const { userId } = queryKey[1];
     const { data } = await axios.get(`/api/fuelStations/stations/${userId}/userStations`);
