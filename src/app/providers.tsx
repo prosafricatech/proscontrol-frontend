@@ -12,8 +12,23 @@ import { AuthInitializer } from '@/components/authInitializer/AuthInitializer';
 import { Suspense } from 'react';
 import { CONFIG } from '@/config';
 import { JumboAuthProvider } from './providers/JumboAuthProvider';
+import dayjs from 'dayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+
+// AdapterDayjs's import above registers dayjs's localizedFormat plugin, which seeds
+// dayjs.Ls.en.formats with 12-hour (h:mm A) time tokens. Every MUI X time/date-time
+// picker in the app defaults its `ampm` prop from whether that locale's LT format
+// contains an A/a token (utils.is12HourCycleInCurrentLocale()), so overriding just the
+// time-bearing tokens here — not the date-only L/LL ones — switches every picker in the
+// app to 24-hour display without needing `ampm={false}` on each one individually.
+dayjs.Ls.en.formats = {
+  ...dayjs.Ls.en.formats,
+  LT: 'HH:mm',
+  LTS: 'HH:mm:ss',
+  LLL: 'MMMM D, YYYY HH:mm',
+  LLLL: 'dddd, MMMM D, YYYY HH:mm',
+};
 import { BackdropSpinner } from '@/shared/ProgressIndicators/BackdropSpinner';
 import { SpinnerProvider } from '@/shared/ProgressIndicators/SpinnerContext';
 import { VFDProvider } from '@/components/vfd/VFDProvider';
