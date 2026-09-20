@@ -162,6 +162,24 @@ const ShiftsSummaryReportOnScreen = ({
     }
   );
 
+  const shiftDetailTotals = shiftDetail.reduce(
+    (acc, row) => {
+      acc.total_fuel_value += row.total_fuel_value || 0;
+      acc.credit_sales += row.credit_sales || 0;
+      acc.cash_expected += row.cash_expected || 0;
+      acc.cash_collected += row.cash_collected || 0;
+      acc.short_over += row.short_over || 0;
+      return acc;
+    },
+    {
+      total_fuel_value: 0,
+      credit_sales: 0,
+      cash_expected: 0,
+      cash_collected: 0,
+      short_over: 0,
+    }
+  );
+
   const shortOverColor = (value: number) => {
     if (Math.abs(value) < 0.01) return 'text.primary';
     return value < 0 ? 'error.main' : 'success.main';
@@ -208,7 +226,13 @@ const ShiftsSummaryReportOnScreen = ({
         Fuel Sold by Product
       </Typography>
       <TableContainer component={Paper} sx={{ mb: 3, overflowX: 'auto' }}>
-        <Table size='small'>
+        <Table
+          size='small'
+          sx={{
+            minWidth: 500 + products.length * 320,
+            '& .MuiTableCell-root': { whiteSpace: 'nowrap', px: 2 },
+          }}
+        >
           <TableHead>
             <TableRow style={{ backgroundColor: mainColor }}>
               <TableCell
@@ -329,7 +353,10 @@ const ShiftsSummaryReportOnScreen = ({
         Cash &amp; Credit Summary
       </Typography>
       <TableContainer component={Paper} sx={{ mb: 3, overflowX: 'auto' }}>
-        <Table size='small'>
+        <Table
+          size='small'
+          sx={{ minWidth: 1100, '& .MuiTableCell-root': { whiteSpace: 'nowrap', px: 2 } }}
+        >
           <TableHead>
             <TableRow style={{ backgroundColor: mainColor }}>
               <TableCell sx={{ color: contrastText, fontWeight: 'bold' }}>
@@ -442,7 +469,11 @@ const ShiftsSummaryReportOnScreen = ({
         component={Paper}
         sx={{ mb: 3, overflowX: 'auto', maxHeight: 520 }}
       >
-        <Table size='small' stickyHeader>
+        <Table
+          size='small'
+          stickyHeader
+          sx={{ minWidth: 1200, '& .MuiTableCell-root': { whiteSpace: 'nowrap', px: 2 } }}
+        >
           <TableHead>
             <TableRow style={{ backgroundColor: mainColor }}>
               <TableCell sx={{ color: contrastText, fontWeight: 'bold', backgroundColor: mainColor }}>
@@ -531,6 +562,30 @@ const ShiftsSummaryReportOnScreen = ({
                 <TableCell colSpan={10} align='center'>
                   No data available
                 </TableCell>
+              </TableRow>
+            )}
+
+            {shiftDetail.length > 0 && (
+              <TableRow sx={{ bgcolor: mainColor }}>
+                <TableCell sx={{ color: contrastText, fontWeight: 'bold' }} colSpan={4}>
+                  TOTAL
+                </TableCell>
+                <TableCell align='right' sx={{ color: contrastText, fontWeight: 'bold' }}>
+                  {formatNumber(shiftDetailTotals.total_fuel_value)}
+                </TableCell>
+                <TableCell align='right' sx={{ color: contrastText, fontWeight: 'bold' }}>
+                  {formatNumber(shiftDetailTotals.credit_sales)}
+                </TableCell>
+                <TableCell align='right' sx={{ color: contrastText, fontWeight: 'bold' }}>
+                  {formatNumber(shiftDetailTotals.cash_expected)}
+                </TableCell>
+                <TableCell align='right' sx={{ color: contrastText, fontWeight: 'bold' }}>
+                  {formatNumber(shiftDetailTotals.cash_collected)}
+                </TableCell>
+                <TableCell align='right' sx={{ color: contrastText, fontWeight: 'bold' }}>
+                  {formatNumber(shiftDetailTotals.short_over)}
+                </TableCell>
+                <TableCell />
               </TableRow>
             )}
           </TableBody>
