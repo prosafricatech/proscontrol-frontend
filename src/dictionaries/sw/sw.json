@@ -74,7 +74,7 @@
       "prosAfricans": "ProsAfricans",
       "invitations": "Mialiko",
       "organizations": "Mashirika",
-      
+
       "hrDashboard": "Dashibodi",
       "employees": "Waajiriwa",
       "orgChart": "Muundo wa Shirika",
@@ -107,7 +107,7 @@
       "assetBookings": "Uhifadhi"
     }
   },
-  
+
   "commons": {
     "email": "Barua Pepe",
     "password": "Nenosiri",
@@ -129,7 +129,7 @@
     "yes": "Ndio",
     "no": "Hapana",
     "save": "Tunza",
-    "cancel":"Ghairi"
+    "cancel": "Ghairi"
   },
 
   "branding": {
@@ -346,14 +346,57 @@
   "rqList": {
     "jumboSearch": "Tafuta",
     "pagination": {
-        "first": "Nenda kwenye ukurasa wa kwanza",
-        "last": "Nenda kwenye ukurasa wa mwisho",
-        "previous": "Ukurasa uliopita",
-        "next": "Ukurasa unaofuata",
-        "page": "Nenda kwenye ukurasa {page}",
-        "ellipsis": "Kurasa zaidi"
+      "first": "Nenda kwenye ukurasa wa kwanza",
+      "last": "Nenda kwenye ukurasa wa mwisho",
+      "previous": "Ukurasa uliopita",
+      "next": "Ukurasa unaofuata",
+      "page": "Nenda kwenye ukurasa {page}",
+      "ellipsis": "Kurasa zaidi"
     },
     "dataRetrieving": "Inapakia..."
+  },
+
+  "auth": {
+    "welcome": "Karibu",
+    "portalName": "Lango la usaidizi la ProsControl",
+    "leftPanelDescription": "Ingia kwa akaunti yako ya prosERP, au endelea kama mgeni ili kupata usaidizi kutoka kwa timu yetu ya msaada.",
+    "prosERP": "prosERP",
+    "guest": "Mgeni",
+    "signIn": "Ingia",
+    "signInToContinue": "Ingia ili kuendelea",
+    "useProsERPCredentials": "Tumia vitambulisho vyako vya prosERP. Profaili yako inasawazishwa kiotomatiki.",
+    "guestAccountInfo": "Umeunda akaunti ya mgeni? Ingia hapa.",
+    "emailAddress": "Barua Pepe",
+    "emailPlaceholder": "wewe@mfano.com",
+    "password": "Nenosiri",
+    "passwordPlaceholder": "••••••••",
+    "dontHaveAccount": "Huna akaunti?",
+    "createOne": "Unda moja",
+    "createGuestAccount": "Unda akaunti ya mgeni",
+    "noProsERPAccount": "Hakuna akaunti ya prosERP inayohitajika",
+    "fullName": "Jina Kamili",
+    "fullNamePlaceholder": "Jane Doe",
+    "phoneOptional": "Simu (si lazima)",
+    "phonePlaceholder": "+255 ...",
+    "confirmPassword": "Thibitisha",
+    "createAccount": "Unda akaunti",
+    "alreadyHaveAccount": "Tayari una akaunti?",
+    "signInLink": "Ingia",
+    "accountLogin": "Kuingia kwa Akaunti",
+    "errors": {
+      "emailRequired": "Barua pepe inahitajika",
+      "emailInvalid": "Tafadhali weka barua pepe sahihi",
+      "passwordRequired": "Nenosiri linahitajika",
+      "passwordLength": "Nenosiri lazima liwe na herufi 8 au zaidi",
+      "passwordMismatch": "Manenosiri hayafanani",
+      "fullNameRequired": "Jina kamili linahitajika"
+    },
+    "messages": {
+      "loginError": "Barua pepe au nenosiri uliyoweka sio sahihi",
+      "success": "Umefanikiwa kuingia! Unaelekezwa...",
+      "accountCreated": "Akaunti imeundwa kwa mafanikio! Tafadhali ingia.",
+      "guestLoginError": "Kuingia kwa mgeni kumeshindikana. Tafadhali jaribu tena."
+    }
   },
 
   "signin": {

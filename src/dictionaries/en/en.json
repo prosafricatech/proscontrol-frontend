@@ -127,9 +127,9 @@
     "yes": "Yes",
     "no": "No",
     "save": "Save",
-    "cancel":"Cancel"
+    "cancel": "Cancel"
   },
-  
+
   "branding": {
     "tagline": "Simplified Management and Control"
   },
@@ -338,14 +338,57 @@
   "rqList": {
     "jumboSearch": "Search",
     "pagination": {
-        "first": "Go to first page",
-        "last": "Go to last page",
-        "previous": "Previous page",
-        "next": "Next page",
-        "page": "Go to page {page}",
-        "ellipsis": "More pages"
+      "first": "Go to first page",
+      "last": "Go to last page",
+      "previous": "Previous page",
+      "next": "Next page",
+      "page": "Go to page {page}",
+      "ellipsis": "More pages"
     },
     "dataRetrieving": "Retrieving..."
+  },
+
+  "auth": {
+    "welcome": "Welcome",
+    "portalName": "ProsControl support portal",
+    "leftPanelDescription": "Sign in with your prosERP account, or continue as a guest to get help from our support team.",
+    "prosERP": "prosERP",
+    "guest": "Guest",
+    "signIn": "Sign In",
+    "signInToContinue": "Sign in to continue",
+    "useProsERPCredentials": "Use your prosERP credentials. Your profile is synced automatically.",
+    "guestAccountInfo": "Created a guest account? Sign in in here.",
+    "emailAddress": "Email Address",
+    "emailPlaceholder": "you@example.com",
+    "password": "Password",
+    "passwordPlaceholder": "••••••••",
+    "dontHaveAccount": "Don't have an account?",
+    "createOne": "Create one",
+    "createGuestAccount": "Create a guest account",
+    "noProsERPAccount": "No prosERP account needed",
+    "fullName": "Full Name",
+    "fullNamePlaceholder": "Jane Doe",
+    "phoneOptional": "Phone (optional)",
+    "phonePlaceholder": "+255 ...",
+    "confirmPassword": "Confirm",
+    "createAccount": "Create account",
+    "alreadyHaveAccount": "Already have an account?",
+    "signInLink": "Sign in",
+    "accountLogin": "Account Login",
+    "errors": {
+      "emailRequired": "Email is required",
+      "emailInvalid": "Please enter a valid email address",
+      "passwordRequired": "Password is required",
+      "passwordLength": "Password must be at least 8 characters",
+      "passwordMismatch": "Passwords do not match",
+      "fullNameRequired": "Full name is required"
+    },
+    "messages": {
+      "loginError": "The email or password you entered is incorrect",
+      "success": "Login successful! Redirecting...",
+      "accountCreated": "Account created successfully! Please sign in.",
+      "guestLoginError": "Guest login failed. Please try again."
+    }
   },
 
   "signin": {

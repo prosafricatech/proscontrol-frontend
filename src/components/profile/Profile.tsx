@@ -41,9 +41,9 @@ import React, { ReactNode, useEffect, useMemo, useState } from 'react';
 import humanResourcesServices from '../humanResources/humanResourcesServices';
 import MyHr from '../humanResources/myHr/MyHr';
 import MyHrImprestAccounts from '../humanResources/myHr/imprestAccountsTab/MyHrImprestAccounts';
-import organizationServices from '../organizations/organizationServices';
 import ChangePasswordForm from './ChangePasswordForm';
 import UserPhotoUpload from './UserPhotoUpload';
+import organizationServices from '../organizations/organizationServices';
 
 function TabPanel({
   children,
