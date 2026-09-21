@@ -1,36 +1,49 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# ProsControl Support Portal
 
-## Getting Started
+This repository includes a standalone support portal built into the existing Next.js app without the Jumbo shell. The portal is isolated behind the locale route group at [src/app/[lang]/(support)/support](src/app/[lang]/(support)/support).
 
-First, run the development server:
+## Included features
+
+- Customer support dashboard and ticket detail flow
+- Staff dashboard, queue, and ticket detail flow
+- Support layout with a sidebar and top-level navigation
+- Locale-aware support labels in the existing dictionary system
+- Mock ticket data and stub API routes for local prototyping
+
+## Local development
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open the portal in the browser at:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- /en-US/support
+- /en-US/support/customer
+- /en-US/support/staff
+- /en-US/support/staff/queue
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+## Route structure
 
-## Learn More
+- [src/app/[lang]/(support)/support](src/app/[lang]/(support)/support) — support entry and redirect logic
+- [src/app/[lang]/(support)/support/customer](src/app/[lang]/(support)/support/customer) — customer ticket list and thread views
+- [src/app/[lang]/(support)/support/staff](src/app/[lang]/(support)/support/staff) — staff dashboard and queue views
+- [src/components/supportLayout](src/components/supportLayout) — reusable support UI components
+- [src/lib/support/mockData.ts](src/lib/support/mockData.ts) — mock ticket data and helpers
+- [src/app/api/support](src/app/api/support) — stub endpoints for the portal frontend
 
-To learn more about Next.js, take a look at the following resources:
+## Backend integration
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The portal currently uses in-memory mock data so it runs without a backend. To connect it to a real support backend:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+1. Replace the mock helpers in [src/lib/support/mockData.ts](src/lib/support/mockData.ts) with real API calls or database access.
+2. Update the handlers under [src/app/api/support](src/app/api/support) to call your backend service.
+3. Keep the response format consistent with JSON objects such as { data: ... } and { success: true }.
+4. Add authentication and role checks where needed for customer and staff-only access.
 
-## Deploy on Vercel
+## Notes
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+- The support portal intentionally avoids the Jumbo app shell to match the requirement for a standalone support experience.
+- All support-facing strings are driven by the dictionary namespace under support in the locale files.
+- The route group and data layer are designed to be replaced with a real service without disturbing the UI structure.

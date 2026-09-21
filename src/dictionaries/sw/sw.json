@@ -356,49 +356,6 @@
     "dataRetrieving": "Inapakia..."
   },
 
-  "auth": {
-    "welcome": "Karibu",
-    "portalName": "Lango la usaidizi la ProsControl",
-    "leftPanelDescription": "Ingia kwa akaunti yako ya prosERP, au endelea kama mgeni ili kupata usaidizi kutoka kwa timu yetu ya msaada.",
-    "prosERP": "prosERP",
-    "guest": "Mgeni",
-    "signIn": "Ingia",
-    "signInToContinue": "Ingia ili kuendelea",
-    "useProsERPCredentials": "Tumia vitambulisho vyako vya prosERP. Profaili yako inasawazishwa kiotomatiki.",
-    "guestAccountInfo": "Umeunda akaunti ya mgeni? Ingia hapa.",
-    "emailAddress": "Barua Pepe",
-    "emailPlaceholder": "wewe@mfano.com",
-    "password": "Nenosiri",
-    "passwordPlaceholder": "••••••••",
-    "dontHaveAccount": "Huna akaunti?",
-    "createOne": "Unda moja",
-    "createGuestAccount": "Unda akaunti ya mgeni",
-    "noProsERPAccount": "Hakuna akaunti ya prosERP inayohitajika",
-    "fullName": "Jina Kamili",
-    "fullNamePlaceholder": "Jane Doe",
-    "phoneOptional": "Simu (si lazima)",
-    "phonePlaceholder": "+255 ...",
-    "confirmPassword": "Thibitisha",
-    "createAccount": "Unda akaunti",
-    "alreadyHaveAccount": "Tayari una akaunti?",
-    "signInLink": "Ingia",
-    "accountLogin": "Kuingia kwa Akaunti",
-    "errors": {
-      "emailRequired": "Barua pepe inahitajika",
-      "emailInvalid": "Tafadhali weka barua pepe sahihi",
-      "passwordRequired": "Nenosiri linahitajika",
-      "passwordLength": "Nenosiri lazima liwe na herufi 8 au zaidi",
-      "passwordMismatch": "Manenosiri hayafanani",
-      "fullNameRequired": "Jina kamili linahitajika"
-    },
-    "messages": {
-      "loginError": "Barua pepe au nenosiri uliyoweka sio sahihi",
-      "success": "Umefanikiwa kuingia! Unaelekezwa...",
-      "accountCreated": "Akaunti imeundwa kwa mafanikio! Tafadhali ingia.",
-      "guestLoginError": "Kuingia kwa mgeni kumeshindikana. Tafadhali jaribu tena."
-    }
-  },
-
   "signin": {
     "pageTitle": "Ingia kwenye Akaunti Yako",
     "header": "Karibu",
@@ -447,6 +404,178 @@
         "loginError": "Barua pepe au nenosiri uliyoweka sio sahihi",
         "success": "Umefanikiwa kuingia! Unaelekezwa..."
       }
+    }
+  },
+
+  "auth": {
+    "welcome": "Karibu",
+    "portalName": "Lango la usaidizi la ProsControl",
+    "leftPanelDescription": "Ingia kwa akaunti yako ya prosERP, au endelea kama mgeni ili kupata usaidizi kutoka kwa timu yetu ya msaada.",
+    "prosERP": "prosERP",
+    "guest": "Mgeni",
+    "signIn": "Ingia",
+    "signInToContinue": "Ingia ili kuendelea",
+    "useProsERPCredentials": "Tumia vitambulisho vyako vya prosERP. Profaili yako inasawazishwa kiotomatiki.",
+    "guestAccountInfo": "Umeunda akaunti ya mgeni? Ingia hapa.",
+    "emailAddress": "Barua Pepe",
+    "emailPlaceholder": "wewe@mfano.com",
+    "password": "Nenosiri",
+    "passwordPlaceholder": "••••••••",
+    "dontHaveAccount": "Huna akaunti?",
+    "createOne": "Unda moja",
+    "createGuestAccount": "Unda akaunti ya mgeni",
+    "noProsERPAccount": "Hakuna akaunti ya prosERP inayohitajika",
+    "fullName": "Jina Kamili",
+    "fullNamePlaceholder": "Jane Doe",
+    "phoneOptional": "Simu (si lazima)",
+    "phonePlaceholder": "+255 ...",
+    "confirmPassword": "Thibitisha",
+    "createAccount": "Unda akaunti",
+    "alreadyHaveAccount": "Tayari una akaunti?",
+    "signInLink": "Ingia",
+    "accountLogin": "Kuingia kwa Akaunti",
+    "errors": {
+      "emailRequired": "Barua pepe inahitajika",
+      "emailInvalid": "Tafadhali weka barua pepe sahihi",
+      "passwordRequired": "Nenosiri linahitajika",
+      "passwordLength": "Nenosiri lazima liwe na herufi 8 au zaidi",
+      "passwordMismatch": "Manenosiri hayafanani",
+      "fullNameRequired": "Jina kamili linahitajika"
+    },
+    "messages": {
+      "loginError": "Barua pepe au nenosiri uliyoweka sio sahihi",
+      "success": "Umefanikiwa kuingia! Unaelekezwa...",
+      "accountCreated": "Akaunti imeundwa kwa mafanikio! Tafadhali ingia.",
+      "guestLoginError": "Kuingia kwa mgeni kumeshindikana. Tafadhali jaribu tena."
+    }
+  },
+
+  "support": {
+    "appName": "ProsControl",
+    "sidebar": {
+      "dashboard": "Dashibodi",
+      "queue": "Foleni",
+      "allTickets": "Tiketi Zote",
+      "myTickets": "Tiketi Zangu",
+      "staff": "Mfanyakazi",
+      "prosERP": "prosERP",
+      "logout": "Ondoka"
+    },
+    "customer": {
+      "myTickets": "Tiketi Zangu",
+      "subtitle": "Fuatilia na uendelee mazungumzo yako ya usaidizi.",
+      "newTicket": "Tiketi Mpya",
+      "tabs": {
+        "open": "Wazi",
+        "closed": "Imefungwa",
+        "all": "Zote"
+      },
+      "emptyState": {
+        "noOpenTickets": "Hakuna tiketi wazi",
+        "noClosedTickets": "Hakuna tiketi zilizofungwa",
+        "noTickets": "Hakuna tiketi bado",
+        "description": "Unda tiketi ili kupata usaidizi kutoka kwa timu yetu ya msaada.",
+        "createButton": "Tiketi Mpya"
+      },
+      "modal": {
+        "title": "Tiketi mpya ya usaidizi",
+        "subjectLabel": "Unahitaji usaidizi wa nini?",
+        "subjectPlaceholder": "mf. Haiwezi kutoa ripoti ya mishahara",
+        "organizationLabel": "Shirika (si lazima)",
+        "organizationPlaceholder": "Shirika linalohusiana na hili",
+        "descriptionLabel": "Eleza tatizo",
+        "descriptionPlaceholder": "Ongeza maelezo yoyote yatakayosaidia timu yetu kuelewa tatizo...",
+        "cancel": "Ghairi",
+        "submit": "Wasilisha tiketi"
+      },
+      "card": {
+        "handledBy": "Inashughulikiwa na",
+        "updated": "imesasishwa"
+      }
+    },
+    "staff": {
+      "dashboard": {
+        "title": "Dashibodi ya Wafanyakazi",
+        "subtitle": "Mzigo wa kazi kwa muhtasari.",
+        "stats": {
+          "total": "Jumla",
+          "new": "Mpya",
+          "active": "Inayoendelea",
+          "closed": "Imefungwa",
+          "unassigned": "Haijapewa"
+        },
+        "charts": {
+          "ticketsByStatus": "Tiketi kwa hali",
+          "newTicketsLast7Days": "Tiketi mpya - siku 7 zilizopita"
+        },
+        "days": {
+          "tue": "Jumanne",
+          "wed": "Jumatano",
+          "thu": "Alhamisi",
+          "fri": "Ijumaa",
+          "sat": "Jumamosi",
+          "sun": "Jumapili",
+          "mon": "Jumatatu"
+        }
+      },
+      "queue": {
+        "title": "Foleni ya Wafanyakazi",
+        "subtitle": "Chukua, shughulikia, na funga tiketi za wateja.",
+        "newTicket": "Tiketi Mpya",
+        "filters": {
+          "all": "Zote",
+          "new": "Mpya",
+          "active": "Inayoendelea",
+          "mine": "Zangu",
+          "closed": "Imefungwa"
+        },
+        "close": "Funga",
+        "card": {
+          "handledBy": "Inashughulikiwa na",
+          "updated": "imesasishwa"
+        },
+        "modal": {
+          "title": "Tiketi mpya kwa niaba ya mteja",
+          "customerLabel": "Mteja",
+          "customerPlaceholder": "Chagua mteja",
+          "organizationLabel": "Shirika (si lazima)",
+          "organizationPlaceholder": "Shirika linalohusiana na hili",
+          "descriptionLabel": "Maelezo",
+          "descriptionPlaceholder": "Eleza tatizo...",
+          "cancel": "Ghairi",
+          "create": "Unda tiketi"
+        }
+      },
+      "ticketDetail": {
+        "back": "Nyuma",
+        "request": "OMBI",
+        "typeMessage": "Andika ujumbe...",
+        "details": "Maelezo",
+        "status": "HALI",
+        "statusSubmitted": "Imewasilishwa",
+        "statusInProgress": "Inaendelea",
+        "statusResolved": "Imetatuliwa",
+        "people": "WATU",
+        "requester": "Mwombaji",
+        "handledBy": "Inashughulikiwa na",
+        "you": "wewe",
+        "ticketInfo": "TAARIFA YA TIKETI",
+        "actions": "VITENDO",
+        "closeTicket": "Funga tiketi",
+        "reassignTo": "Panga upya kwa...",
+        "go": "Nenda",
+        "reassignmentHistory": "HISTORIA YA MABADILIKO",
+        "firstAssignment": "Ugawaji wa kwanza",
+        "reassigned": "Imepangwa upya",
+        "unassigned": "Haijapewa",
+        "customer": "Mteja"
+      }
+    },
+    "status": {
+      "active": "inayoendelea",
+      "new": "mpya",
+      "closed": "imefungwa",
+      "open": "wazi"
     }
   }
 }

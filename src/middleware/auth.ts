@@ -61,7 +61,7 @@ export async function anonymousMiddleware(request: NextRequest) {
   }
 
   if (token) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    return NextResponse.redirect(new URL('/support', request.url));
   }
 
   return NextResponse.next();

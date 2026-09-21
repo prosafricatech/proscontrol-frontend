@@ -348,49 +348,6 @@
     "dataRetrieving": "Retrieving..."
   },
 
-  "auth": {
-    "welcome": "Welcome",
-    "portalName": "ProsControl support portal",
-    "leftPanelDescription": "Sign in with your prosERP account, or continue as a guest to get help from our support team.",
-    "prosERP": "prosERP",
-    "guest": "Guest",
-    "signIn": "Sign In",
-    "signInToContinue": "Sign in to continue",
-    "useProsERPCredentials": "Use your prosERP credentials. Your profile is synced automatically.",
-    "guestAccountInfo": "Created a guest account? Sign in in here.",
-    "emailAddress": "Email Address",
-    "emailPlaceholder": "you@example.com",
-    "password": "Password",
-    "passwordPlaceholder": "••••••••",
-    "dontHaveAccount": "Don't have an account?",
-    "createOne": "Create one",
-    "createGuestAccount": "Create a guest account",
-    "noProsERPAccount": "No prosERP account needed",
-    "fullName": "Full Name",
-    "fullNamePlaceholder": "Jane Doe",
-    "phoneOptional": "Phone (optional)",
-    "phonePlaceholder": "+255 ...",
-    "confirmPassword": "Confirm",
-    "createAccount": "Create account",
-    "alreadyHaveAccount": "Already have an account?",
-    "signInLink": "Sign in",
-    "accountLogin": "Account Login",
-    "errors": {
-      "emailRequired": "Email is required",
-      "emailInvalid": "Please enter a valid email address",
-      "passwordRequired": "Password is required",
-      "passwordLength": "Password must be at least 8 characters",
-      "passwordMismatch": "Passwords do not match",
-      "fullNameRequired": "Full name is required"
-    },
-    "messages": {
-      "loginError": "The email or password you entered is incorrect",
-      "success": "Login successful! Redirecting...",
-      "accountCreated": "Account created successfully! Please sign in.",
-      "guestLoginError": "Guest login failed. Please try again."
-    }
-  },
-
   "signin": {
     "pageTitle": "Sign In to Your Account",
     "header": "Welcome",
@@ -439,6 +396,178 @@
         "loginError": "The email or password you entered is incorrect",
         "success": "Login successful! Redirecting..."
       }
+    }
+  },
+
+  "auth": {
+    "welcome": "Welcome",
+    "portalName": "ProsControl support portal",
+    "leftPanelDescription": "Sign in with your prosERP account, or continue as a guest to get help from our support team.",
+    "prosERP": "prosERP",
+    "guest": "Guest",
+    "signIn": "Sign In",
+    "signInToContinue": "Sign in to continue",
+    "useProsERPCredentials": "Use your prosERP credentials. Your profile is synced automatically.",
+    "guestAccountInfo": "Created a guest account? Sign in in here.",
+    "emailAddress": "Email Address",
+    "emailPlaceholder": "you@example.com",
+    "password": "Password",
+    "passwordPlaceholder": "••••••••",
+    "dontHaveAccount": "Don't have an account?",
+    "createOne": "Create one",
+    "createGuestAccount": "Create a guest account",
+    "noProsERPAccount": "No prosERP account needed",
+    "fullName": "Full Name",
+    "fullNamePlaceholder": "Jane Doe",
+    "phoneOptional": "Phone (optional)",
+    "phonePlaceholder": "+255 ...",
+    "confirmPassword": "Confirm",
+    "createAccount": "Create account",
+    "alreadyHaveAccount": "Already have an account?",
+    "signInLink": "Sign in",
+    "accountLogin": "Account Login",
+    "errors": {
+      "emailRequired": "Email is required",
+      "emailInvalid": "Please enter a valid email address",
+      "passwordRequired": "Password is required",
+      "passwordLength": "Password must be at least 8 characters",
+      "passwordMismatch": "Passwords do not match",
+      "fullNameRequired": "Full name is required"
+    },
+    "messages": {
+      "loginError": "The email or password you entered is incorrect",
+      "success": "Login successful! Redirecting...",
+      "accountCreated": "Account created successfully! Please sign in.",
+      "guestLoginError": "Guest login failed. Please try again."
+    }
+  },
+
+  "support": {
+    "appName": "ProsControl",
+    "sidebar": {
+      "dashboard": "Dashboard",
+      "queue": "Queue",
+      "allTickets": "All Tickets",
+      "myTickets": "My Tickets",
+      "staff": "Staff",
+      "prosERP": "prosERP",
+      "logout": "Logout"
+    },
+    "customer": {
+      "myTickets": "My Tickets",
+      "subtitle": "Track and continue your support conversations.",
+      "newTicket": "New Ticket",
+      "tabs": {
+        "open": "Open",
+        "closed": "Closed",
+        "all": "All"
+      },
+      "emptyState": {
+        "noOpenTickets": "No open tickets",
+        "noClosedTickets": "No closed tickets",
+        "noTickets": "No tickets yet",
+        "description": "Create a ticket to get help from our support team.",
+        "createButton": "New Ticket"
+      },
+      "modal": {
+        "title": "New support ticket",
+        "subjectLabel": "What do you need help with?",
+        "subjectPlaceholder": "e.g. Cannot generate payroll report",
+        "organizationLabel": "Organization (optional)",
+        "organizationPlaceholder": "The organization this relates to",
+        "descriptionLabel": "Describe the problem",
+        "descriptionPlaceholder": "Add any details that will help our team understand the issue...",
+        "cancel": "Cancel",
+        "submit": "Submit ticket"
+      },
+      "card": {
+        "handledBy": "Handled by",
+        "updated": "updated"
+      }
+    },
+    "staff": {
+      "dashboard": {
+        "title": "Staff Dashboard",
+        "subtitle": "Workload at a glance.",
+        "stats": {
+          "total": "Total",
+          "new": "New",
+          "active": "Active",
+          "closed": "Closed",
+          "unassigned": "Unassigned"
+        },
+        "charts": {
+          "ticketsByStatus": "Tickets by status",
+          "newTicketsLast7Days": "New tickets - last 7 days"
+        },
+        "days": {
+          "tue": "Tue",
+          "wed": "Wed",
+          "thu": "Thu",
+          "fri": "Fri",
+          "sat": "Sat",
+          "sun": "Sun",
+          "mon": "Mon"
+        }
+      },
+      "queue": {
+        "title": "Staff Queue",
+        "subtitle": "Pick up, handle, and close customer tickets.",
+        "newTicket": "New Ticket",
+        "filters": {
+          "all": "All",
+          "new": "New",
+          "active": "Active",
+          "mine": "Mine",
+          "closed": "Closed"
+        },
+        "close": "Close",
+        "card": {
+          "handledBy": "Handled by",
+          "updated": "updated"
+        },
+        "modal": {
+          "title": "New ticket on behalf of customer",
+          "customerLabel": "Customer",
+          "customerPlaceholder": "Select a customer",
+          "organizationLabel": "Organization (optional)",
+          "organizationPlaceholder": "The organization this relates to",
+          "descriptionLabel": "Description",
+          "descriptionPlaceholder": "Describe the issue...",
+          "cancel": "Cancel",
+          "create": "Create ticket"
+        }
+      },
+      "ticketDetail": {
+        "back": "Back",
+        "request": "REQUEST",
+        "typeMessage": "Type a message...",
+        "details": "Details",
+        "status": "STATUS",
+        "statusSubmitted": "Submitted",
+        "statusInProgress": "In progress",
+        "statusResolved": "Resolved",
+        "people": "PEOPLE",
+        "requester": "Requester",
+        "handledBy": "Handled by",
+        "you": "you",
+        "ticketInfo": "TICKET INFO",
+        "actions": "ACTIONS",
+        "closeTicket": "Close ticket",
+        "reassignTo": "Reassign to...",
+        "go": "Go",
+        "reassignmentHistory": "REASSIGNMENT HISTORY",
+        "firstAssignment": "First assignment",
+        "reassigned": "Reassigned",
+        "unassigned": "Unassigned",
+        "customer": "Customer"
+      }
+    },
+    "status": {
+      "active": "active",
+      "new": "new",
+      "closed": "closed",
+      "open": "open"
     }
   }
 }

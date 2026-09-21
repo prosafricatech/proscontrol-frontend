@@ -1,0 +1,135 @@
+'use client';
+
+import {
+  AccessTime as TimeIcon,
+  Add as AddIcon,
+  CheckCircleOutline as CheckIcon,
+  Inbox as InboxIcon,
+  Layers as LayersIcon,
+  Person as PersonIcon,
+} from '@mui/icons-material';
+import { Box, Button, Typography } from '@mui/material';
+import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useDictionary } from '@/app/[lang]/contexts/DictionaryContext';
+import { useLanguage } from '@/app/[lang]/contexts/LanguageContext';
+import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
+import { SupportLayout } from '@/components/supportLayout/SupportLayout';
+import { NewTicketOnBehalfModal } from '@/components/supportLayout/NewTicketOnBehalfModal';
+import { StatCard } from '@/components/supportLayout/StatCard';
+import { TicketCard } from '@/components/supportLayout/TicketCard';
+import type { Ticket } from '@/lib/support/mockData';
+
+export default function StaffQueuePage() {
+  const dictionary = useDictionary();
+  const router = useRouter();
+  const lang = useLanguage();
+  const { authData } = useJumboAuth();
+  const t = dictionary.support?.staff?.queue;
+  const [filter, setFilter] = useState<'all' | 'new' | 'active' | 'mine' | 'closed'>('all');
+  const [modalOpen, setModalOpen] = useState(false);
+  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const currentUser = authData?.authUser?.user;
+  const currentUserName = currentUser?.name || '';
+  const currentUserId = currentUser?.id || '';
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetch('/api/support/tickets', { cache: 'no-store' });
+        const payload = await res.json();
+        setTickets(payload?.data || []);
+      } catch (error) {
+        setTickets([]);
+      }
+    };
+    load();
+  }, []);
+
+  const stats = useMemo(() => ({
+    all: tickets.length,
+    new: tickets.filter((ticket) => ticket.status === 'new').length,
+    active: tickets.filter((ticket) => ticket.status === 'active').length,
+    mine: tickets.filter((ticket) => ticket.handledBy === currentUserName || ticket.handledById === currentUserId).length,
+    closed: tickets.filter((ticket) => ticket.status === 'closed').length,
+  }), [tickets]);
+
+  const filteredTickets = useMemo(() => {
+    if (filter === 'new') return tickets.filter((ticket) => ticket.status === 'new');
+    if (filter === 'active') return tickets.filter((ticket) => ticket.status === 'active');
+    if (filter === 'mine') return tickets.filter((ticket) => ticket.handledBy === currentUserName || ticket.handledById === currentUserId);
+    if (filter === 'closed') return tickets.filter((ticket) => ticket.status === 'closed');
+    return tickets;
+  }, [filter, tickets, currentUserName, currentUserId]);
+
+  return (
+    <SupportLayout userRole="staff" userName={currentUserName || 'Staff'} userRoleLabel="Staff">
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3, gap: 2 }}>
+        <Box>
+          <Typography sx={{ fontSize: '1.75rem', fontWeight: 700, color: '#0f172a', mb: 0.5 }}>
+            {t?.title || 'Staff Queue'}
+          </Typography>
+          <Typography sx={{ color: '#64748b', fontSize: '0.95rem' }}>
+            {t?.subtitle || 'Pick up, handle, and close customer tickets.'}
+          </Typography>
+        </Box>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => setModalOpen(true)}
+          sx={{
+            background: 'linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)',
+            borderRadius: '8px',
+            px: 2.5,
+            py: 1.2,
+            textTransform: 'none',
+            fontWeight: 600,
+            boxShadow: '0 4px 12px rgba(37, 99, 235, 0.25)',
+          }}
+        >
+          {t?.newTicket || 'New Ticket'}
+        </Button>
+      </Box>
+
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(5, 1fr)' }, gap: 2, mb: 3 }}>
+        <StatCard label={t?.filters?.all || 'All'} value={stats.all} icon={<LayersIcon sx={{ fontSize: 18 }} />} selected={filter === 'all'} onClick={() => setFilter('all')} />
+        <StatCard label={t?.filters?.new || 'New'} value={stats.new} icon={<InboxIcon sx={{ fontSize: 18 }} />} iconBg="#dbeafe" iconColor="#2563eb" selected={filter === 'new'} onClick={() => setFilter('new')} />
+        <StatCard label={t?.filters?.active || 'Active'} value={stats.active} icon={<TimeIcon sx={{ fontSize: 18 }} />} iconBg="#dcfce7" iconColor="#16a34a" selected={filter === 'active'} onClick={() => setFilter('active')} />
+        <StatCard label={t?.filters?.mine || 'Mine'} value={stats.mine} icon={<PersonIcon sx={{ fontSize: 18 }} />} iconBg="#ede9fe" iconColor="#7c3aed" selected={filter === 'mine'} onClick={() => setFilter('mine')} />
+        <StatCard label={t?.filters?.closed || 'Closed'} value={stats.closed} icon={<CheckIcon sx={{ fontSize: 18 }} />} selected={filter === 'closed'} onClick={() => setFilter('closed')} />
+      </Box>
+
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {filteredTickets.map((ticket) => (
+          <TicketCard
+            key={ticket.id}
+            ticket={ticket}
+            onClick={() => router.push(`/${lang}/support/staff/tickets/${ticket.id}`)}
+            onClose={async () => {
+              await fetch(`/api/support/tickets/${ticket.id}/close`, { method: 'POST' });
+              const res = await fetch('/api/support/tickets', { cache: 'no-store' });
+              const payload = await res.json();
+              setTickets(payload?.data || []);
+            }}
+            showCloseAction
+          />
+        ))}
+      </Box>
+
+      <NewTicketOnBehalfModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onSubmit={async (payload) => {
+          await fetch('/api/support/tickets/on-behalf', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+          const res = await fetch('/api/support/tickets', { cache: 'no-store' });
+          const data = await res.json();
+          setTickets(data?.data || []);
+        }}
+      />
+    </SupportLayout>
+  );
+}

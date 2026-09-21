@@ -127,7 +127,7 @@ const ProsControlAuth = () => {
         email: signInData.email,
         password: signInData.password,
         redirect: false,
-        callbackUrl: `/${lang}/dashboard`,
+        callbackUrl: `/${lang}/support`,
       });
 
       if (signInResponse?.error) {
@@ -141,11 +141,10 @@ const ProsControlAuth = () => {
         throw new Error('Failed to retrieve session');
       }
 
-      let targetUrl = `/${lang}/dashboard`;
+      let targetUrl = `/${lang}/support`;
       const extendedSession = session as ExtendedSession;
 
       if (!extendedSession.organization_id) {
-        targetUrl = `/${lang}/organizations`;
         setAuthValues(
           {
             authUser: {

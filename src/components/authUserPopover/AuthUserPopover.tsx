@@ -6,7 +6,6 @@ import { useJumboTheme } from '@jumbo/components/JumboTheme/hooks';
 import { Div } from '@jumbo/shared';
 import LogoutIcon from '@mui/icons-material/Logout';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
-import RepeatOutlinedIcon from '@mui/icons-material/RepeatOutlined';
 import {
   Avatar,
   Button,
@@ -85,14 +84,7 @@ export const AuthUserPopover: React.FC<AuthUserPopoverProps> = ({
     })();
   }, [lang, resetAuth]);
 
-  const switchOrganization = React.useCallback(() => {
-    router.push(`/${lang}/organizations`);
-  }, [router, lang]);
-
   const user: User | undefined = authData?.authUser?.user;
-  const organization: Organization | undefined = authOrganization?.organization;
-
-  const mainColor = authOrganization?.organization?.settings?.main_color || '';
 
   React.useEffect(() => {
     if (isLoading || user || hasTriggeredAutoLogout.current) {
@@ -117,7 +109,7 @@ export const AuthUserPopover: React.FC<AuthUserPopoverProps> = ({
             sx={{
               boxShadow: 23,
               cursor: 'pointer',
-              border: `4px solid ${mainColor}`,
+              border: '4px solid #e2e8f0',
             }}
           />
         }
@@ -137,8 +129,8 @@ export const AuthUserPopover: React.FC<AuthUserPopoverProps> = ({
               width: 60,
               height: 60,
               mb: 2,
-              borderColor: 'green',
-              border: `4px solid ${mainColor}`,
+              borderColor: '#e2e8f0',
+              border: '4px solid #e2e8f0',
             }}
           />
           <Typography noWrap variant='h5'>
@@ -148,64 +140,12 @@ export const AuthUserPopover: React.FC<AuthUserPopoverProps> = ({
             {user?.email}
           </Typography>
 
-          <Stack direction='row' alignItems='center' spacing={1} mt={1}>
-            {organization?.id ? (
-              <Chip
-                label={organization?.name}
-                size='small'
-                color='primary'
-                variant='outlined'
-                clickable
-                onClick={() => {
-                  router.push(
-                    `/${lang}/organizations/profile/${organization.id}`
-                  );
-                }}
-                sx={{
-                  cursor: 'pointer',
-                  '&:hover': {
-                    backgroundColor: 'rgba(56, 13, 250, 0.1)',
-                  },
-                }}
-              />
-            ) : (
-              <Typography
-                variant='body2'
-                color='warning.main'
-                onClick={switchOrganization}
-                sx={{
-                  cursor: 'pointer',
-                  textDecoration: 'underline',
-                  '&:hover': {
-                    opacity: 0.8,
-                  },
-                }}
-              >
-                No organization selected. Click here to select one.
-              </Typography>
-            )}
-          </Stack>
         </Div>
 
         <Divider />
 
         <nav>
           <List disablePadding sx={{ pb: 1 }}>
-            <ListItemButton onClick={() => router.push(`/${lang}/profile`)}>
-              <ListItemIcon sx={{ minWidth: 36 }}>
-                <PersonOutlineIcon />
-              </ListItemIcon>
-              <ListItemText primary='Profile' sx={{ my: 0 }} />
-            </ListItemButton>
-            <ListItemButton onClick={switchOrganization}>
-              <ListItemIcon sx={{ minWidth: 36 }}>
-                <RepeatOutlinedIcon />
-              </ListItemIcon>
-              <ListItemText
-                primary={dictionary.commons.switchOrganization}
-                sx={{ my: 0 }}
-              />
-            </ListItemButton>
             <ListItemButton onClick={() => setOpenLogoutDialog(true)}>
               <ListItemIcon sx={{ minWidth: 36 }}>
                 <LogoutIcon />
