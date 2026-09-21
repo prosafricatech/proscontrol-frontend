@@ -153,7 +153,7 @@ const ProsControlAuth = () => {
                 name: session.user.name || '',
                 email: session.user.email || '',
                 is_admin: (session.user as any).is_admin || false,
-                is_staff: true,
+                is_staff: (session.user as any).is_staff || false,
                 email_verified_at: (session.user as any).email_verified_at,
                 organization_roles: (session.user as any).organization_roles,
                 photo_path: (session.user as any).photo_path,

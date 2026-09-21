@@ -44,7 +44,7 @@ const authOptions = {
             name: data.user.name,
             email: data.user.email,
             email_verified_at: data.user.email_verified_at,
-            is_staff: true,
+            is_staff: data.user.is_staff,
             permissions: data.permissions || data.user.permissions || [],
             token: data.token,
             organization_id: undefined,
