@@ -1,7 +1,7 @@
-import NextAuth from 'next-auth';
-import CredentialsProvider from 'next-auth/providers/credentials';
 import axios from '@/lib/services/config';
 import { getForwardedRequestHeadersFromHeaders } from '@/lib/utils/apiUtils';
+import NextAuth from 'next-auth';
+import CredentialsProvider from 'next-auth/providers/credentials';
 
 const authOptions = {
   providers: [
@@ -22,23 +22,33 @@ const authOptions = {
             headers: forwardedHeaders,
           });
 
-          const { data } = await axiosInstance.post('/login', credentials, {
-            validateStatus: (status) => status < 500,
-          });
+          const { data: response } = await axiosInstance.post(
+            '/auth/login',
+            {
+              identifier: credentials.email,
+              password: credentials.password,
+            },
+            {
+              validateStatus: (status) => status < 500,
+            }
+          );
 
-          if (!data?.authUser?.user?.id) {
+          const data = response?.data;
+
+          if (!data?.user?.id || !data?.token) {
             throw new Error('Invalid login credentials');
           }
 
           return {
-            id: data.authUser.user.id,
-            name: data.authUser.user.name,
-            email: data.authUser.user.email,
-            email_verified_at: data.authUser.user.email_verified_at,
-            permissions: data?.authUser?.permissions || [],
+            id: data.user.id,
+            name: data.user.name,
+            email: data.user.email,
+            email_verified_at: data.user.email_verified_at,
+            is_staff: true,
+            permissions: data.permissions || data.user.permissions || [],
             token: data.token,
-            organization_id: data.authOrganization?.organization?.id,
-            organization_name: data.authOrganization?.organization?.name,
+            organization_id: undefined,
+            organization_name: undefined,
           };
         } catch (error) {
           console.error('Login failed:', error.response?.data || error.message);
@@ -48,41 +58,45 @@ const authOptions = {
     }),
   ],
 
-callbacks: {
-  async jwt({ token, user, trigger, session }) {
-    if (trigger === 'update' && session) {
-      if (session.accessToken) token.accessToken = session.accessToken;
-      if (session.organization_id) token.organization_id = session.organization_id;
-      if (session.organization_name) token.organization_name = session.organization_name;
-    }
-    if (user) {
-      token.accessToken = user.token;
-      token.organization_id = user.organization_id;
-      token.organization_name = user.organization_name;
-      token.permissions = user.permissions;
+  callbacks: {
+    async jwt({ token, user, trigger, session }) {
+      if (trigger === 'update' && session) {
+        if (session.accessToken) token.accessToken = session.accessToken;
+        if (session.organization_id)
+          token.organization_id = session.organization_id;
+        if (session.organization_name)
+          token.organization_name = session.organization_name;
+      }
+      if (user) {
+        token.accessToken = user.token;
+        token.organization_id = user.organization_id;
+        token.organization_name = user.organization_name;
+        token.permissions = user.permissions;
 
-      token.id = user.id;
-      token.name = user.name;
-      token.email = user.email;
-      token.email_verified_at = user.email_verified_at;
-    }
-    return token;
+        token.id = user.id;
+        token.name = user.name;
+        token.email = user.email;
+        token.email_verified_at = user.email_verified_at;
+        token.is_staff = user.is_staff;
+      }
+      return token;
+    },
+
+    async session({ session, token }) {
+      session.user = {
+        id: token.id,
+        name: token.name,
+        email: token.email,
+        email_verified_at: token.email_verified_at | null,
+        is_staff: token.is_staff === true,
+      };
+      session.organization_id = token.organization_id;
+      session.organization_name = token.organization_name;
+      session.permissions = token.permissions;
+
+      return session;
+    },
   },
-
-  async session({ session, token }) {
-    session.user = {
-      id: token.id,
-      name: token.name,
-      email: token.email,
-      email_verified_at: token.email_verified_at | null,
-    };
-    session.organization_id = token.organization_id;
-    session.organization_name = token.organization_name;
-    session.permissions = token.permissions;
-
-    return session;
-  },
-},
 
   session: { strategy: 'jwt', maxAge: 24 * 60 * 60 },
   pages: { signIn: '/login' },

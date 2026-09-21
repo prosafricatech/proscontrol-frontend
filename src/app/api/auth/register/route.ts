@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { encode, JWT } from 'next-auth/jwt';
-import { getForwardedRequestHeaders, handleJsonResponse } from '@/lib/utils/apiUtils';
+import { getForwardedRequestHeaders } from '@/lib/utils/apiUtils';
 
 const API_BASE = process.env.API_BASE_URL;
 
@@ -25,10 +25,16 @@ export async function POST(req: NextRequest) {
     geo: 'geo' in req && typeof (req as any).geo === 'object' ? (req as any).geo : undefined,
   });
 
-  const res = await fetch(`${API_BASE}/register`, {
+  const res = await fetch(`${API_BASE}/auth/register`, {
     method: 'POST',
     headers,
-    body: JSON.stringify(body),
+    body: JSON.stringify({
+      name: body.name ?? body.fullName,
+      email: body.email,
+      phone: body.phone,
+      password: body.password,
+      password_confirmation: body.password_confirmation ?? body.confirmPassword ?? body.password,
+    }),
   });
 
   const data = await res.json();
@@ -40,15 +46,14 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // ✅ create session if backend returns auth data
-  if (data?.token && data?.authUser?.user) {
+  if (data?.data?.token && data?.data?.user) {
     const jwtPayload: JWT = {
       user: {
-        id: data.authUser.user.id,
-        name: data.authUser.user.name,
-        email: data.authUser.user.email,
+        id: data.data.user.id,
+        name: data.data.user.name,
+        email: data.data.user.email,
       },
-      accessToken: data.token,
+      accessToken: data.data.token,
       iat: Math.floor(Date.now() / 1000),
       exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24, // 24h
     };
@@ -60,9 +65,7 @@ export async function POST(req: NextRequest) {
 
     const response = NextResponse.json({
       message: 'User registered successfully',
-      data: {
-        authUser: data.authUser,
-      },
+      authUser: { user: data.data.user, permissions: [] },
     });
 
     // Clear existing session cookies
@@ -92,5 +95,5 @@ export async function POST(req: NextRequest) {
     return response;
   }
 
-  return handleJsonResponse(res);
+  return NextResponse.json(data, { status: res.status });
 }

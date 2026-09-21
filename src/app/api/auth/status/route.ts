@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const url = `${API_BASE}/getuser`;
+    const url = `${API_BASE}/auth/me`;
     
     const res = await fetch(url, {
       method: 'GET',
@@ -38,12 +38,13 @@ export async function GET(req: NextRequest) {
 
     const data = await res.json();
 
-    const isVerified = !!data?.authUser?.user?.email_verified_at;
+    const user = data?.data?.user;
+    const isVerified = !!user?.email_verified_at;
 
     return Response.json({
       authenticated: true,
       verified: isVerified,
-      user: data?.authUser?.user || null,
+      user: user || null,
     });
   } catch (error: any) {
     

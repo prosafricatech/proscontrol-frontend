@@ -22,6 +22,7 @@ interface AuthUser {
     name: string;
     email: string;
     is_admin: boolean;
+    is_staff: boolean;
     email_verified_at?: any;
     organization_roles?: Array<{ name: string }>;
     photo_path?: string | null;
@@ -300,11 +301,14 @@ export const JumboAuthProvider = ({
             name: response.authUser.user.name,
             email: response.authUser.user.email,
             is_admin: response.authUser.user.is_admin,
+            is_staff: response.authUser.user.is_staff,
             organization_roles: response.authUser.user.organization_roles,
             photo_path: response.authUser.user.photo_path,
           },
           permissions: response.authUser.permissions || [],
         };
+
+        console.log('[ProsControl] permissions loaded:', authUser.permissions);
 
         setAuthValues(
           {
@@ -475,7 +479,10 @@ export const JumboAuthProvider = ({
   const checkPermission = useCallback(
     (permissions: string | string[], mustHaveAll = false) => {
       const authPermissions = authData.authUser?.permissions;
-      if (!authPermissions) return false;
+      if (!authPermissions) {
+        console.log('[ProsControl] permission check: no permissions loaded');
+        return false;
+      }
 
       const permissionsArray = Array.isArray(permissions)
         ? permissions
@@ -486,9 +493,18 @@ export const JumboAuthProvider = ({
             authPermission.toLowerCase() === permission.toLowerCase()
         );
 
-      return mustHaveAll
+      const result = mustHaveAll
         ? permissionsArray.every(check)
         : permissionsArray.some(check);
+
+      console.log('[ProsControl] permission check:', {
+        available: authPermissions,
+        requested: permissionsArray,
+        mustHaveAll,
+        result,
+      });
+
+      return result;
     },
     [authData.authUser]
   );

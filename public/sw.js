@@ -1,5 +1,5 @@
 // CACHE VERSIONING AND UPDATE LOGIC
-const CACHE_VERSION = 'v1789973838107'; // Increment this to force update
+const CACHE_VERSION = 'v1789982413495'; // Increment this to force update
 self.addEventListener('install', event => {
 	self.skipWaiting();
 });

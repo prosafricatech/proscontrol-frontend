@@ -153,6 +153,7 @@ const ProsControlAuth = () => {
                 name: session.user.name || '',
                 email: session.user.email || '',
                 is_admin: (session.user as any).is_admin || false,
+                is_staff: true,
                 email_verified_at: (session.user as any).email_verified_at,
                 organization_roles: (session.user as any).organization_roles,
                 photo_path: (session.user as any).photo_path,
@@ -272,7 +273,7 @@ const ProsControlAuth = () => {
 
     setLoading(true);
     try {
-      const response = await fetch('/api/auth/guest/register', {
+      const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -285,7 +286,7 @@ const ProsControlAuth = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to create account');
+        throw new Error(errorData.error || errorData.message || 'Failed to create account');
       }
 
       enqueueSnackbar(

@@ -1,35 +1,37 @@
 import 'next-auth';
 
 declare module 'next-auth' {
-
   interface User {
     authUser?: {
-    fcmTokens: string[] | null;
-     user?: {
+      fcmTokens: string[] | null;
+      user?: {
         id: number;
         email: string;
         name: string;
         phone: string;
         is_admin: boolean;
-        roles: {
-          id: number;
-          name: string;
-        }[] | null;
+        is_staff: boolean;
+        roles:
+          | {
+              id: number;
+              name: string;
+            }[]
+          | null;
         organization_roles: {
           id: number;
           name: string;
         }[];
       };
       permissions: string[];
-    }
+    };
     authOrganization: {
-      organization : Record<string, any>;
+      organization: Record<string, any>;
       costCenters?: {
-        'id': number;
-        'name': string;
-        'type': string;
-        "status": string;
-        "description"?: string;
+        id: number;
+        name: string;
+        type: string;
+        status: string;
+        description?: string;
       }[];
       stores: Record<string, any>[];
       permissions: string[];
@@ -43,5 +45,4 @@ declare module 'next-auth' {
     expires: string;
     error: string;
   }
-
 }

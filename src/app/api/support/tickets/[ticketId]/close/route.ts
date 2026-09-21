@@ -1,13 +1,15 @@
-import { NextResponse } from 'next/server';
-import { closeTicketById } from '@/lib/support/mockData';
+import { NextRequest, NextResponse } from 'next/server';
+import { backendData, normalizeTicket, requestBackend } from '@/lib/support/backend';
 
-export async function POST(_request: Request, { params }: { params: Promise<{ ticketId: string }> }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ ticketId: string }> }) {
   const { ticketId } = await params;
-  const ticket = closeTicketById(ticketId);
+  const result = await requestBackend(request, `/tickets/${ticketId}/close`, { method: 'POST' });
 
-  if (!ticket) {
-    return NextResponse.json({ error: 'Ticket not found' }, { status: 404 });
-  }
+  if (result instanceof NextResponse) return result;
 
-  return NextResponse.json({ data: ticket, success: true });
+  const ticket = backendData(result.payload)?.ticket;
+  return NextResponse.json(
+    result.response.ok ? { data: normalizeTicket(ticket), success: true } : result.payload,
+    { status: result.response.status },
+  );
 }

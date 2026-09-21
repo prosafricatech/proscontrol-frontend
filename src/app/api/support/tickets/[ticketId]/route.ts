@@ -1,13 +1,15 @@
-import { NextResponse } from 'next/server';
-import { getSupportTicketById } from '@/lib/support/mockData';
+import { NextRequest, NextResponse } from 'next/server';
+import { backendData, normalizeTicket, requestBackend } from '@/lib/support/backend';
 
-export async function GET(_request: Request, { params }: { params: Promise<{ ticketId: string }> }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ ticketId: string }> }) {
   const { ticketId } = await params;
-  const ticket = getSupportTicketById(ticketId);
+  const result = await requestBackend(request, `/tickets/${ticketId}`);
 
-  if (!ticket) {
-    return NextResponse.json({ error: 'Ticket not found' }, { status: 404 });
-  }
+  if (result instanceof NextResponse) return result;
 
-  return NextResponse.json({ data: ticket });
+  const ticket = backendData(result.payload)?.ticket;
+  return NextResponse.json(
+    result.response.ok ? { data: normalizeTicket(ticket) } : result.payload,
+    { status: result.response.status },
+  );
 }

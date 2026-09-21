@@ -1,7 +1,13 @@
-import { NextResponse } from 'next/server';
-import { getSupportTickets } from '@/lib/support/mockData';
+import { NextRequest, NextResponse } from 'next/server';
+import { requestBackend, ticketList } from '@/lib/support/backend';
 
-export async function GET() {
-  const tickets = getSupportTickets().filter((ticket) => ticket.customerEmail === 'john.customer@proscontrol.com' || ticket.customerName === 'John Customer');
-  return NextResponse.json({ data: tickets });
+export async function GET(request: NextRequest) {
+  const result = await requestBackend(request, '/tickets?mine_only=1');
+
+  if (result instanceof NextResponse) return result;
+
+  return NextResponse.json(
+    result.response.ok ? { data: ticketList(result.payload) } : result.payload,
+    { status: result.response.status },
+  );
 }
