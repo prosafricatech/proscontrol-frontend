@@ -31,7 +31,6 @@ dayjs.Ls.en.formats = {
 };
 import { BackdropSpinner } from '@/shared/ProgressIndicators/BackdropSpinner';
 import { SpinnerProvider } from '@/shared/ProgressIndicators/SpinnerContext';
-import { VFDProvider } from '@/components/vfd/VFDProvider';
 import { HighchartsProvider } from './providers/HighchartsProvider';
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -46,8 +45,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <SessionProvider>
       <AppSnackbar>
-        <VFDProvider>
-         <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
           <QueryClientProvider client={queryClient}>
             <JumboAuthProvider>
               <AppRouterCacheProvider>
@@ -72,7 +70,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
             </JumboAuthProvider>
           </QueryClientProvider>
         </LocalizationProvider>
-        </VFDProvider>
       </AppSnackbar>
     </SessionProvider>
   );

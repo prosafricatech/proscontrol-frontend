@@ -92,7 +92,7 @@ export const AuthUserPopover: React.FC<AuthUserPopoverProps> = ({
   const user: User | undefined = authData?.authUser?.user;
   const organization: Organization | undefined = authOrganization?.organization;
 
-  const mainColor = authOrganization?.organization?.settings.main_color || '';
+  const mainColor = authOrganization?.organization?.settings?.main_color || '';
 
   React.useEffect(() => {
     if (isLoading || user || hasTriggeredAutoLogout.current) {
