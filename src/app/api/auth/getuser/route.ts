@@ -1,7 +1,7 @@
-import { getAuthHeaders, handleJsonResponse } from '@/lib/utils/apiUtils';
-import { NextRequest } from 'next/server';
+import { getAuthHeaders } from '@/lib/utils/apiUtils';
+import { NextRequest, NextResponse } from 'next/server';
 
-const API_BASE = process.env.API_BASE_URL
+const API_BASE = process.env.API_BASE_URL;
 
 export async function GET(req: NextRequest) {
   const { headers, response } = await getAuthHeaders(req);
@@ -10,7 +10,24 @@ export async function GET(req: NextRequest) {
   const res = await fetch(`${API_BASE}/auth/me`, {
     headers,
     credentials: 'include',
+    cache: 'no-store',
   });
 
-  return handleJsonResponse(res);
+  const payload = await res.json();
+  const user = payload?.data?.user;
+
+  if (!res.ok || !user) {
+    return NextResponse.json(payload, { status: res.status });
+  }
+
+  return NextResponse.json(
+    {
+      authUser: {
+        user,
+        permissions: user.permissions || [],
+      },
+      authOrganization: null,
+    },
+    { status: res.status },
+  );
 }
