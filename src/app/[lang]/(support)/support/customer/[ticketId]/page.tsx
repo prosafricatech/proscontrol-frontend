@@ -10,6 +10,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useDictionary } from '@/app/[lang]/contexts/DictionaryContext';
 import { useLanguage } from '@/app/[lang]/contexts/LanguageContext';
+import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import { SupportLayout } from '@/components/supportLayout/SupportLayout';
 import { StatusBadge } from '@/components/supportLayout/StatusBadge';
 import { MessageBubble } from '@/components/supportLayout/MessageBubble';
@@ -20,6 +21,8 @@ export default function CustomerTicketDetailPage() {
   const router = useRouter();
   const dictionary = useDictionary();
   const lang = useLanguage();
+  const { authData } = useJumboAuth();
+  const authUser = authData?.authUser?.user;
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [message, setMessage] = useState('');
 
@@ -34,7 +37,7 @@ export default function CustomerTicketDetailPage() {
 
   if (!ticket) {
     return (
-      <SupportLayout userRole="customer" userName="John Customer" userRoleLabel="prosERP">
+      <SupportLayout userRole="customer" userName={authUser?.name || 'Customer'} userRoleLabel="prosERP">
         <Box sx={{ p: 4, bgcolor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
           <Typography sx={{ color: '#475569' }}>Loading ticket...</Typography>
         </Box>
@@ -44,11 +47,12 @@ export default function CustomerTicketDetailPage() {
 
   const handleSend = async () => {
     if (!message.trim()) return;
-    await fetch(`/api/support/tickets/${ticket.id}/messages`, {
+    const sendResponse = await fetch(`/api/support/tickets/${ticket.id}/messages`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ body: message, senderId: 'cust-1', senderName: 'John Customer' }),
+      body: JSON.stringify({ body: message, senderId: authUser?.id, senderName: authUser?.name }),
     });
+    if (!sendResponse.ok) return;
     const response = await fetch(`/api/support/tickets/${params.ticketId}`, { cache: 'no-store' });
     const payload = await response.json();
     setTicket(payload?.data || null);
@@ -56,7 +60,7 @@ export default function CustomerTicketDetailPage() {
   };
 
   return (
-    <SupportLayout userRole="customer" userName="John Customer" userRoleLabel="prosERP">
+    <SupportLayout userRole="customer" userName={authUser?.name || 'Customer'} userRoleLabel="prosERP">
       <Box sx={{ display: 'grid', gap: 3 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <IconButton aria-label={dictionary.support?.common?.back || 'Back'} onClick={() => router.back()} sx={{ color: '#64748b' }}>

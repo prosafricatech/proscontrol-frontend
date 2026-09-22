@@ -36,7 +36,11 @@ const authOptions = {
           const data = response?.data;
 
           if (!data?.user?.id || !data?.token) {
-            throw new Error('Invalid login credentials');
+            console.error('[ProsControl] backend login rejected:', {
+              status: response?.code,
+              message: response?.message,
+            });
+            throw new Error(response?.message || 'Invalid login credentials');
           }
 
           return {

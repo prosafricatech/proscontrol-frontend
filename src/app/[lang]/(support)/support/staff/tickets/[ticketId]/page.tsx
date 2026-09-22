@@ -240,8 +240,6 @@ export default function StaffTicketDetailPage() {
                   sx={{ flex: 1, borderRadius: '8px', fontSize: '0.875rem', '& .MuiOutlinedInput-notchedOutline': { borderColor: '#e2e8f0' } }}
                   renderValue={() => reassignTo || <Typography sx={{ color: '#94a3b8', fontSize: '0.875rem' }}>{t?.reassignTo || 'Reassign to...'}</Typography>}
                 >
-                  <MenuItem value="Lilian M.">Lilian M.</MenuItem>
-                  <MenuItem value="Daniel K.">Daniel K.</MenuItem>
                   <MenuItem value={currentUserName}>{currentUserName}</MenuItem>
                 </Select>
                 <Button
@@ -251,7 +249,7 @@ export default function StaffTicketDetailPage() {
                     await fetch(`/api/support/tickets/${ticket.id}/reassign`, {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ owner: reassignTo }),
+                      body: JSON.stringify({ to_user_id: currentUserId }),
                     });
                     const response = await fetch(`/api/support/tickets/${ticket.id}`, { cache: 'no-store' });
                     const payload = await response.json();
