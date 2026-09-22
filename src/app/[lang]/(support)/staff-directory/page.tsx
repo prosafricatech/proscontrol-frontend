@@ -1,5 +1,5 @@
-import SupportWorkspacePage from '@/components/supportLayout/SupportWorkspacePage';
+import InteractiveSupportWorkspacePage from '@/components/supportLayout/InteractiveSupportWorkspacePage';
 
 export default function StaffDirectoryPage() {
-  return <SupportWorkspacePage view="staff" />;
+  return <InteractiveSupportWorkspacePage view="staff" />;
 }

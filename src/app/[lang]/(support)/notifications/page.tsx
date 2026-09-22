@@ -1,5 +1,5 @@
-import SupportWorkspacePage from '@/components/supportLayout/SupportWorkspacePage';
+import InteractiveSupportWorkspacePage from '@/components/supportLayout/InteractiveSupportWorkspacePage';
 
 export default function NotificationsPage() {
-  return <SupportWorkspacePage view="notifications" />;
+  return <InteractiveSupportWorkspacePage view="notifications" />;
 }

@@ -1,5 +1,5 @@
-import SupportWorkspacePage from '@/components/supportLayout/SupportWorkspacePage';
+import InteractiveSupportWorkspacePage from '@/components/supportLayout/InteractiveSupportWorkspacePage';
 
 export default function ActivityLogsPage() {
-  return <SupportWorkspacePage view="activity" />;
+  return <InteractiveSupportWorkspacePage view="activity" />;
 }

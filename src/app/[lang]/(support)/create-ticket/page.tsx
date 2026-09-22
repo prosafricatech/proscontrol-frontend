@@ -1,5 +1,5 @@
-import SupportWorkspacePage from '@/components/supportLayout/SupportWorkspacePage';
+import InteractiveSupportWorkspacePage from '@/components/supportLayout/InteractiveSupportWorkspacePage';
 
 export default function CreateTicketPage() {
-  return <SupportWorkspacePage view="create" />;
+  return <InteractiveSupportWorkspacePage view="create" />;
 }

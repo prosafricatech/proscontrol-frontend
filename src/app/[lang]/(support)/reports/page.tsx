@@ -1,5 +1,5 @@
-import SupportWorkspacePage from '@/components/supportLayout/SupportWorkspacePage';
+import InteractiveSupportWorkspacePage from '@/components/supportLayout/InteractiveSupportWorkspacePage';
 
 export default function ReportsPage() {
-  return <SupportWorkspacePage view="reports" />;
+  return <InteractiveSupportWorkspacePage view="reports" />;
 }
