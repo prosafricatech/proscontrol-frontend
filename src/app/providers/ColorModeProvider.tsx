@@ -53,6 +53,12 @@ function resolveInitialMode(): ColorMode {
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
+// The template theme gives h1–h6 a fixed dark colour (#37373C), which is
+// unreadable on dark backgrounds; in dark mode they follow the text colour.
+const darkHeadingTypography = Object.fromEntries(
+  (['h1', 'h2', 'h3', 'h4', 'h5', 'h6'] as const).map((variant) => [variant, { color: darkPalette.text.primary }]),
+);
+
 export function ColorModeProvider({ children }: { children: ReactNode }) {
   // null until mounted: the server can't know the mode, and the init script has
   // already set the <html> attribute so CSS-token styles don't flash meanwhile.
@@ -84,7 +90,7 @@ export function ColorModeProvider({ children }: { children: ReactNode }) {
   // switches and checkboxes match the rest of the support UI.
   const themeFor = useCallback(
     (outerTheme: Theme) => createTheme(outerTheme, mode === 'dark'
-      ? { palette: { ...darkPalette, primary: { main: '#3b82f6', contrastText: '#ffffff' } } }
+      ? { palette: { ...darkPalette, primary: { main: '#3b82f6', contrastText: '#ffffff' } }, typography: darkHeadingTypography }
       : { palette: { primary: { main: '#2563eb', contrastText: '#ffffff' } } }),
     [mode],
   );

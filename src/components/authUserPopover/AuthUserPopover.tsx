@@ -2,7 +2,6 @@
 
 import { useLanguage } from '@/app/[lang]/contexts/LanguageContext';
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
-import { useJumboTheme } from '@jumbo/components/JumboTheme/hooks';
 import { Div } from '@jumbo/shared';
 import LogoutIcon from '@mui/icons-material/Logout';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
@@ -21,7 +20,6 @@ import {
   ListItemIcon,
   ListItemText,
   Stack,
-  ThemeProvider,
   Typography,
 } from '@mui/material';
 import { signOut } from 'next-auth/react';
@@ -61,7 +59,6 @@ export const AuthUserPopover: React.FC<AuthUserPopoverProps> = ({
 }) => {
   const router = useRouter();
   const lang = useLanguage();
-  const { theme } = useJumboTheme();
   const authContext = useJumboAuth();
 
   const [openLogoutDialog, setOpenLogoutDialog] =
@@ -99,19 +96,28 @@ export const AuthUserPopover: React.FC<AuthUserPopoverProps> = ({
     return null;
   }
 
+  // Shown when there's no photo, or when the photo fails to load.
+  const initial = (user.name || user.email || '?').trim().charAt(0).toUpperCase();
+  const avatarColors = { bgcolor: '#2563eb', color: '#ffffff', fontWeight: 700 };
+
+  // No ThemeProvider here: the menu follows the app's current light/dark theme.
   return (
-    <ThemeProvider theme={theme}>
+    <>
       <JumboDdPopover
         triggerButton={
           <Avatar
             src={user?.photo_path || undefined}
+            alt={user?.name}
             sizes='small'
             sx={{
+              ...avatarColors,
               boxShadow: 23,
               cursor: 'pointer',
-              border: '4px solid #e2e8f0',
+              border: '4px solid var(--pc-border)',
             }}
-          />
+          >
+            {initial}
+          </Avatar>
         }
         sx={{ ml: 3 }}
       >
@@ -125,14 +131,18 @@ export const AuthUserPopover: React.FC<AuthUserPopoverProps> = ({
         >
           <Avatar
             src={user?.photo_path || undefined}
+            alt={user?.name}
             sx={{
+              ...avatarColors,
               width: 60,
               height: 60,
               mb: 2,
-              borderColor: '#e2e8f0',
-              border: '4px solid #e2e8f0',
+              fontSize: '1.6rem',
+              border: '4px solid var(--pc-border)',
             }}
-          />
+          >
+            {initial}
+          </Avatar>
           <Typography noWrap variant='h5'>
             {user?.name}
           </Typography>
@@ -185,6 +195,6 @@ export const AuthUserPopover: React.FC<AuthUserPopoverProps> = ({
           </Button>
         </DialogActions>
       </Dialog>
-    </ThemeProvider>
+    </>
   );
 };
