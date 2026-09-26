@@ -2,37 +2,40 @@
 
 import {
   ArrowBack as BackIcon,
-  AttachFile as AttachIcon,
   CheckCircle as CheckIcon,
   Description as DescriptionIcon,
   Email as EmailIcon,
   History as HistoryIcon,
   InfoOutlined as InfoIcon,
   Person as PersonIcon,
+  PlayArrow as ActivateIcon,
   Schedule as ScheduleIcon,
-  Send as SendIcon,
 } from '@mui/icons-material';
 import {
-  Avatar,
+  Alert,
   Box,
   Button,
   Card,
   CardContent,
   Divider,
   IconButton,
-  MenuItem,
-  Select,
   TextField,
   Typography,
 } from '@mui/material';
 import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useDictionary } from '@/app/[lang]/contexts/DictionaryContext';
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import { SupportLayout } from '@/components/supportLayout/SupportLayout';
 import { StatusBadge } from '@/components/supportLayout/StatusBadge';
 import { MessageBubble } from '@/components/supportLayout/MessageBubble';
-import type { Ticket } from '@/lib/support/mockData';
+import { MessageComposer } from '@/components/supportLayout/MessageComposer';
+import { useTicketThread } from '@/lib/support/useTicketThread';
+
+const formatMessageTime = (value: string) =>
+  value ? new Date(value).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : '';
+
+const sectionLabelSx = { fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', letterSpacing: 0.5 };
 
 export default function StaffTicketDetailPage() {
   const params = useParams<{ ticketId: string }>();
@@ -40,46 +43,49 @@ export default function StaffTicketDetailPage() {
   const dictionary = useDictionary();
   const { authData } = useJumboAuth();
   const t = dictionary.support?.staff?.ticketDetail;
-  const [ticket, setTicket] = useState<Ticket | null>(null);
-  const [message, setMessage] = useState('');
-  const [reassignTo, setReassignTo] = useState('');
   const currentUser = authData?.authUser?.user;
   const currentUserName = currentUser?.name || 'Staff';
-  const currentUserId = currentUser?.id || 'staff-user';
-
-  useEffect(() => {
-    const load = async () => {
-      const response = await fetch(`/api/support/tickets/${params.ticketId}`, { cache: 'no-store' });
-      const payload = await response.json();
-      setTicket(payload?.data || null);
-    };
-    if (params.ticketId) load();
-  }, [params.ticketId]);
+  const currentUserId = currentUser?.id ? String(currentUser.id) : '';
+  const { ticket, messages, reassignments, loadError, pendingAction, sendMessage, activate, close, reassign } =
+    useTicketThread(params.ticketId, currentUserId, true);
+  const [reassignTo, setReassignTo] = useState('');
+  const [reassignReason, setReassignReason] = useState('');
+  const [actionError, setActionError] = useState<string | null>(null);
 
   if (!ticket) {
     return (
       <SupportLayout userRole="staff" userName={currentUserName} userRoleLabel="Staff">
         <Box sx={{ p: 4, bgcolor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-          <Typography sx={{ color: '#475569' }}>Loading ticket...</Typography>
+          <Typography sx={{ color: loadError ? '#dc2626' : '#475569' }}>{loadError || t?.loading || 'Loading ticket...'}</Typography>
         </Box>
       </SupportLayout>
     );
   }
 
-  const requester = { name: ticket.customerName, email: ticket.customerEmail };
+  const isAttending = !!ticket.handledById && ticket.handledById === currentUserId;
+  const busy = pendingAction !== null;
 
-  const handleSend = async () => {
-    if (!message.trim()) return;
-    await fetch(`/api/support/tickets/${ticket.id}/messages`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ body: message, senderId: currentUserId, senderName: currentUserName }),
-    });
-    const response = await fetch(`/api/support/tickets/${params.ticketId}`, { cache: 'no-store' });
-    const payload = await response.json();
-    setTicket(payload?.data || null);
-    setMessage('');
+  const composerDisabledReason =
+    ticket.status === 'new'
+      ? t?.activateToReply || 'Activate this ticket to start the conversation.'
+      : ticket.status === 'closed'
+        ? t?.ticketClosedStaff || 'This ticket is closed.'
+        : !isAttending
+          ? t?.onlyAttendingCanReply || 'Only the staff member handling this ticket can reply.'
+          : null;
+
+  const runAction = async (action: () => Promise<{ ok: true } | { ok: false; error: string }>) => {
+    setActionError(null);
+    const result = await action();
+    if (!result.ok) setActionError(result.error);
+    return result.ok;
   };
+
+  const statusSteps = [
+    { label: t?.statusSubmitted || 'Submitted', done: true, current: ticket.status === 'new' },
+    { label: t?.statusInProgress || 'In progress', done: ticket.status !== 'new', current: ticket.status === 'active' },
+    { label: t?.statusResolved || 'Resolved', done: ticket.status === 'closed', current: ticket.status === 'closed' },
+  ];
 
   return (
     <SupportLayout userRole="staff" userName={currentUserName} userRoleLabel="Staff">
@@ -100,50 +106,36 @@ export default function StaffTicketDetailPage() {
 
           <Card sx={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: 'none', mb: 3 }}>
             <CardContent sx={{ p: 2.5 }}>
-              <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', letterSpacing: 0.5, mb: 1 }}>
+              <Typography sx={{ ...sectionLabelSx, mb: 1 }}>
                 {t?.request || 'REQUEST'}
               </Typography>
-              <Typography sx={{ color: '#0f172a', fontSize: '0.95rem' }}>
+              <Typography sx={{ color: '#0f172a', fontSize: '0.95rem', whiteSpace: 'pre-wrap' }}>
                 {ticket.description}
               </Typography>
             </CardContent>
           </Card>
 
           <Box sx={{ mb: 3, minHeight: 300 }}>
-            {ticket.messages.map((msg) => (
+            {messages.map((msg) => (
               <MessageBubble
                 key={msg.id}
                 senderName={msg.senderName}
                 body={msg.body}
-                createdAt={new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                type={msg.type}
+                attachments={msg.attachments}
+                read={!!msg.readAt}
+                createdAt={formatMessageTime(msg.createdAt)}
                 align={msg.senderId === currentUserId ? 'right' : 'left'}
               />
             ))}
           </Box>
 
-          <Box sx={{ border: '1px solid #e2e8f0', borderRadius: '12px', p: 1.5, display: 'flex', alignItems: 'flex-end', gap: 1, bgcolor: '#ffffff' }}>
-            <IconButton size="small" aria-label={dictionary.support?.common?.attach || 'Attach'} sx={{ color: '#64748b', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
-              <AttachIcon fontSize="small" />
-            </IconButton>
-            <TextField
-              fullWidth
-              multiline
-              maxRows={4}
-              value={message}
-              onChange={(event) => setMessage(event.target.value)}
-              placeholder={t?.typeMessage || 'Type a message...'}
-              variant="standard"
-              InputProps={{ disableUnderline: true }}
-              sx={{ '& .MuiInputBase-input': { fontSize: '0.95rem' } }}
-            />
-            <IconButton
-              aria-label={dictionary.support?.common?.send || 'Send'}
-              onClick={handleSend}
-              sx={{ bgcolor: '#0f172a', color: 'white', borderRadius: '8px', '&:hover': { bgcolor: '#1e293b' } }}
-            >
-              <SendIcon fontSize="small" />
-            </IconButton>
-          </Box>
+          <MessageComposer
+            onSend={sendMessage}
+            sending={pendingAction === 'send'}
+            disabledReason={composerDisabledReason}
+            placeholder={t?.typeMessage}
+          />
         </Box>
 
         <Card sx={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: 'none', height: 'fit-content', position: 'sticky', top: 88 }}>
@@ -156,15 +148,11 @@ export default function StaffTicketDetailPage() {
             <Box sx={{ mb: 2.5 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8, mb: 1.5 }}>
                 <ScheduleIcon sx={{ fontSize: 14, color: '#94a3b8' }} />
-                <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', letterSpacing: 0.5 }}>{t?.status || 'STATUS'}</Typography>
+                <Typography sx={sectionLabelSx}>{t?.status || 'STATUS'}</Typography>
               </Box>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                {[
-                  { label: t?.statusSubmitted || 'Submitted', done: true },
-                  { label: t?.statusInProgress || 'In progress', done: true, current: true },
-                  { label: t?.statusResolved || 'Resolved', done: false },
-                ].map((step, index) => (
-                  <Box key={`${step.label}-${index}`} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                {statusSteps.map((step) => (
+                  <Box key={step.label} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: step.done ? '#3b82f6' : '#e2e8f0' }} />
                     <Typography sx={{ fontSize: '0.875rem', color: step.done ? '#0f172a' : '#94a3b8', fontWeight: step.current ? 600 : 400 }}>
                       {step.label}
@@ -179,12 +167,15 @@ export default function StaffTicketDetailPage() {
             <Box sx={{ mb: 2.5 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8, mb: 1.5 }}>
                 <PersonIcon sx={{ fontSize: 14, color: '#94a3b8' }} />
-                <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', letterSpacing: 0.5 }}>{t?.people || 'PEOPLE'}</Typography>
+                <Typography sx={sectionLabelSx}>{t?.people || 'PEOPLE'}</Typography>
               </Box>
               <Typography sx={{ fontSize: '0.8rem', color: '#94a3b8', mb: 0.3 }}>{t?.requester || 'Requester'}</Typography>
-              <Typography sx={{ fontSize: '0.9rem', color: '#0f172a', fontWeight: 600, mb: 1.5 }}>{requester.name}</Typography>
+              <Typography sx={{ fontSize: '0.9rem', color: '#0f172a', fontWeight: 600, mb: 1.5 }}>{ticket.customerName}</Typography>
               <Typography sx={{ fontSize: '0.8rem', color: '#94a3b8', mb: 0.3 }}>{t?.handledBy || 'Handled by'}</Typography>
-              <Typography sx={{ fontSize: '0.9rem', color: '#0f172a', fontWeight: 600 }}>{ticket.handledBy || 'Unassigned'} ({t?.you || 'you'})</Typography>
+              <Typography sx={{ fontSize: '0.9rem', color: '#0f172a', fontWeight: 600 }}>
+                {ticket.handledBy || t?.unassigned || 'Unassigned'}
+                {isAttending ? ` (${t?.you || 'you'})` : ''}
+              </Typography>
             </Box>
 
             <Divider sx={{ my: 2 }} />
@@ -192,17 +183,25 @@ export default function StaffTicketDetailPage() {
             <Box sx={{ mb: 2.5 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8, mb: 1.5 }}>
                 <InfoIcon sx={{ fontSize: 14, color: '#94a3b8' }} />
-                <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', letterSpacing: 0.5 }}>{t?.ticketInfo || 'TICKET INFO'}</Typography>
+                <Typography sx={sectionLabelSx}>{t?.ticketInfo || 'TICKET INFO'}</Typography>
               </Box>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <DescriptionIcon sx={{ fontSize: 16, color: '#64748b' }} />
-                  <Typography sx={{ fontSize: '0.875rem', color: '#0f172a' }}>{ticket.id}</Typography>
+                  <Typography sx={{ fontSize: '0.875rem', color: '#0f172a' }}>#{ticket.id}</Typography>
                 </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <EmailIcon sx={{ fontSize: 16, color: '#64748b' }} />
-                  <Typography sx={{ fontSize: '0.875rem', color: '#0f172a', wordBreak: 'break-all' }}>{requester.email}</Typography>
-                </Box>
+                {ticket.customerEmail && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <EmailIcon sx={{ fontSize: 16, color: '#64748b' }} />
+                    <Typography sx={{ fontSize: '0.875rem', color: '#0f172a', wordBreak: 'break-all' }}>{ticket.customerEmail}</Typography>
+                  </Box>
+                )}
+                {ticket.organizationName && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <InfoIcon sx={{ fontSize: 16, color: '#64748b' }} />
+                    <Typography sx={{ fontSize: '0.875rem', color: '#0f172a' }}>{ticket.organizationName}</Typography>
+                  </Box>
+                )}
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <ScheduleIcon sx={{ fontSize: 16, color: '#64748b' }} />
                   <Typography sx={{ fontSize: '0.875rem', color: '#0f172a' }}>{new Date(ticket.createdAt).toLocaleString()}</Typography>
@@ -210,70 +209,102 @@ export default function StaffTicketDetailPage() {
               </Box>
             </Box>
 
-            <Divider sx={{ my: 2 }} />
+            {ticket.status !== 'closed' && (
+              <>
+                <Divider sx={{ my: 2 }} />
 
-            <Box sx={{ mb: 2.5 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8, mb: 1.5 }}>
-                <PersonIcon sx={{ fontSize: 14, color: '#94a3b8' }} />
-                <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', letterSpacing: 0.5 }}>{t?.actions || 'ACTIONS'}</Typography>
-              </Box>
-              <Button
-                fullWidth
-                variant="contained"
-                startIcon={<CheckIcon />}
-                onClick={async () => {
-                  await fetch(`/api/support/tickets/${ticket.id}/close`, { method: 'POST' });
-                  const response = await fetch(`/api/support/tickets/${ticket.id}`, { cache: 'no-store' });
-                  const payload = await response.json();
-                  setTicket(payload?.data || null);
-                }}
-                sx={{ bgcolor: '#ef4444', borderRadius: '8px', textTransform: 'none', fontWeight: 600, py: 1.2, mb: 1.5, '&:hover': { bgcolor: '#dc2626' } }}
-              >
-                {t?.closeTicket || 'Close ticket'}
-              </Button>
-              <Box sx={{ display: 'flex', gap: 1 }}>
-                <Select
-                  value={reassignTo}
-                  onChange={(event) => setReassignTo(event.target.value)}
-                  displayEmpty
-                  size="small"
-                  sx={{ flex: 1, borderRadius: '8px', fontSize: '0.875rem', '& .MuiOutlinedInput-notchedOutline': { borderColor: '#e2e8f0' } }}
-                  renderValue={() => reassignTo || <Typography sx={{ color: '#94a3b8', fontSize: '0.875rem' }}>{t?.reassignTo || 'Reassign to...'}</Typography>}
-                >
-                  <MenuItem value={currentUserName}>{currentUserName}</MenuItem>
-                </Select>
-                <Button
-                  variant="outlined"
-                  onClick={async () => {
-                    if (!reassignTo) return;
-                    await fetch(`/api/support/tickets/${ticket.id}/reassign`, {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ to_user_id: currentUserId }),
-                    });
-                    const response = await fetch(`/api/support/tickets/${ticket.id}`, { cache: 'no-store' });
-                    const payload = await response.json();
-                    setTicket(payload?.data || null);
-                  }}
-                  sx={{ borderRadius: '8px', textTransform: 'none', fontWeight: 600, borderColor: '#e2e8f0', color: '#475569' }}
-                >
-                  {t?.go || 'Go'}
-                </Button>
-              </Box>
-            </Box>
+                <Box sx={{ mb: 2.5 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8, mb: 1.5 }}>
+                    <PersonIcon sx={{ fontSize: 14, color: '#94a3b8' }} />
+                    <Typography sx={sectionLabelSx}>{t?.actions || 'ACTIONS'}</Typography>
+                  </Box>
+
+                  {actionError && (
+                    <Alert severity="error" onClose={() => setActionError(null)} sx={{ mb: 1.5, borderRadius: '8px' }}>
+                      {actionError}
+                    </Alert>
+                  )}
+
+                  {ticket.status === 'new' && (
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      startIcon={<ActivateIcon />}
+                      disabled={busy}
+                      onClick={() => runAction(activate)}
+                      sx={{ bgcolor: '#2563eb', borderRadius: '8px', textTransform: 'none', fontWeight: 600, py: 1.2, '&:hover': { bgcolor: '#1d4ed8' } }}
+                    >
+                      {t?.activateTicket || 'Pick up & activate'}
+                    </Button>
+                  )}
+
+                  {ticket.status === 'active' && isAttending && (
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      startIcon={<CheckIcon />}
+                      disabled={busy}
+                      onClick={() => runAction(close)}
+                      sx={{ bgcolor: '#ef4444', borderRadius: '8px', textTransform: 'none', fontWeight: 600, py: 1.2, mb: 1.5, '&:hover': { bgcolor: '#dc2626' } }}
+                    >
+                      {t?.closeTicket || 'Close ticket'}
+                    </Button>
+                  )}
+
+                  {ticket.status === 'active' && (
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                      {/* No staff directory endpoint exists yet, so the target is entered by user ID. */}
+                      <TextField
+                        size="small"
+                        type="number"
+                        label={t?.reassignToUserId || 'Reassign to staff user ID'}
+                        value={reassignTo}
+                        onChange={(event) => setReassignTo(event.target.value)}
+                      />
+                      <TextField
+                        size="small"
+                        label={t?.reassignReason || 'Reason (optional)'}
+                        value={reassignReason}
+                        onChange={(event) => setReassignReason(event.target.value)}
+                        inputProps={{ maxLength: 255 }}
+                      />
+                      <Button
+                        variant="outlined"
+                        disabled={busy || !reassignTo}
+                        onClick={async () => {
+                          const ok = await runAction(() => reassign(reassignTo, reassignReason));
+                          if (ok) {
+                            setReassignTo('');
+                            setReassignReason('');
+                          }
+                        }}
+                        sx={{ borderRadius: '8px', textTransform: 'none', fontWeight: 600, borderColor: '#e2e8f0', color: '#475569' }}
+                      >
+                        {t?.reassign || 'Reassign'}
+                      </Button>
+                    </Box>
+                  )}
+                </Box>
+              </>
+            )}
 
             <Divider sx={{ my: 2 }} />
 
             <Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8, mb: 1.5 }}>
                 <HistoryIcon sx={{ fontSize: 14, color: '#94a3b8' }} />
-                <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', letterSpacing: 0.5 }}>{t?.reassignmentHistory || 'REASSIGNMENT HISTORY'}</Typography>
+                <Typography sx={sectionLabelSx}>{t?.reassignmentHistory || 'REASSIGNMENT HISTORY'}</Typography>
               </Box>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                {ticket.reassignmentHistory.map((event, index) => (
+                {reassignments.length === 0 && (
+                  <Typography sx={{ fontSize: '0.85rem', color: '#94a3b8' }}>—</Typography>
+                )}
+                {reassignments.map((event, index) => (
                   <Box key={`${event.at}-${index}`}>
-                    <Typography sx={{ fontSize: '0.85rem', color: '#0f172a', fontWeight: 500 }}>{event.from} → {event.to}</Typography>
-                    <Typography sx={{ fontSize: '0.8rem', color: '#94a3b8' }}>{event.note}</Typography>
+                    <Typography sx={{ fontSize: '0.85rem', color: '#0f172a', fontWeight: 500 }}>
+                      {event.from ? `${event.from} → ${event.to}` : `${t?.firstAssignment || 'First assignment'}: ${event.to}`}
+                    </Typography>
+                    {event.note && <Typography sx={{ fontSize: '0.8rem', color: '#94a3b8' }}>{event.note}</Typography>}
                     <Typography sx={{ fontSize: '0.75rem', color: '#cbd5e1' }}>{new Date(event.at).toLocaleString()}</Typography>
                   </Box>
                 ))}

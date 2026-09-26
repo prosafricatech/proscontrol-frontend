@@ -8,8 +8,8 @@ import {
   Layers as LayersIcon,
   Person as PersonIcon,
 } from '@mui/icons-material';
-import { Box, Button, Typography } from '@mui/material';
-import { useEffect, useMemo, useState } from 'react';
+import { Alert, Box, Button, Typography } from '@mui/material';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDictionary } from '@/app/[lang]/contexts/DictionaryContext';
 import { useLanguage } from '@/app/[lang]/contexts/LanguageContext';
@@ -29,38 +29,57 @@ export default function StaffQueuePage() {
   const [filter, setFilter] = useState<'all' | 'new' | 'active' | 'mine' | 'closed'>('all');
   const [modalOpen, setModalOpen] = useState(false);
   const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [pendingTicketId, setPendingTicketId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const currentUser = authData?.authUser?.user;
   const currentUserName = currentUser?.name || '';
-  const currentUserId = currentUser?.id || '';
+  const currentUserId = currentUser?.id ? String(currentUser.id) : '';
+
+  const loadTickets = useCallback(async () => {
+    try {
+      const res = await fetch('/api/support/tickets', { cache: 'no-store' });
+      const payload = await res.json();
+      setTickets(res.ok ? payload?.data || [] : []);
+    } catch (error) {
+      setTickets([]);
+    }
+  }, []);
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        const res = await fetch('/api/support/tickets', { cache: 'no-store' });
-        const payload = await res.json();
-        setTickets(payload?.data || []);
-      } catch (error) {
-        setTickets([]);
+    loadTickets();
+  }, [loadTickets]);
+
+  const runTicketAction = async (ticketId: string, action: 'activate' | 'close') => {
+    setPendingTicketId(ticketId);
+    setActionError(null);
+    try {
+      const res = await fetch(`/api/support/tickets/${ticketId}/${action}`, { method: 'POST' });
+      if (!res.ok) {
+        const payload = await res.json().catch(() => null);
+        const fieldError = payload?.data && typeof payload.data === 'object' ? Object.values(payload.data).flat()[0] : null;
+        setActionError((fieldError as string) || payload?.message || `Unable to ${action} ticket.`);
       }
-    };
-    load();
-  }, []);
+      await loadTickets();
+    } finally {
+      setPendingTicketId(null);
+    }
+  };
 
   const stats = useMemo(() => ({
     all: tickets.length,
     new: tickets.filter((ticket) => ticket.status === 'new').length,
     active: tickets.filter((ticket) => ticket.status === 'active').length,
-    mine: tickets.filter((ticket) => ticket.handledBy === currentUserName || ticket.handledById === currentUserId).length,
+    mine: tickets.filter((ticket) => ticket.handledById === currentUserId).length,
     closed: tickets.filter((ticket) => ticket.status === 'closed').length,
-  }), [tickets]);
+  }), [tickets, currentUserId]);
 
   const filteredTickets = useMemo(() => {
     if (filter === 'new') return tickets.filter((ticket) => ticket.status === 'new');
     if (filter === 'active') return tickets.filter((ticket) => ticket.status === 'active');
-    if (filter === 'mine') return tickets.filter((ticket) => ticket.handledBy === currentUserName || ticket.handledById === currentUserId);
+    if (filter === 'mine') return tickets.filter((ticket) => ticket.handledById === currentUserId);
     if (filter === 'closed') return tickets.filter((ticket) => ticket.status === 'closed');
     return tickets;
-  }, [filter, tickets, currentUserName, currentUserId]);
+  }, [filter, tickets, currentUserId]);
 
   return (
     <SupportLayout userRole="staff" userName={currentUserName || 'Staff'} userRoleLabel="Staff">
@@ -99,21 +118,31 @@ export default function StaffQueuePage() {
         <StatCard label={t?.filters?.closed || 'Closed'} value={stats.closed} icon={<CheckIcon sx={{ fontSize: 18 }} />} selected={filter === 'closed'} onClick={() => setFilter('closed')} />
       </Box>
 
+      {actionError && (
+        <Alert severity="error" onClose={() => setActionError(null)} sx={{ mb: 2, borderRadius: '8px' }}>
+          {actionError}
+        </Alert>
+      )}
+
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {filteredTickets.map((ticket) => (
-          <TicketCard
-            key={ticket.id}
-            ticket={ticket}
-            onClick={() => router.push(`/${lang}/support/staff/tickets/${ticket.id}`)}
-            onClose={async () => {
-              await fetch(`/api/support/tickets/${ticket.id}/close`, { method: 'POST' });
-              const res = await fetch('/api/support/tickets', { cache: 'no-store' });
-              const payload = await res.json();
-              setTickets(payload?.data || []);
-            }}
-            showCloseAction
-          />
-        ))}
+        {filteredTickets.map((ticket) => {
+          const disabled = pendingTicketId === ticket.id;
+          const action =
+            ticket.status === 'new'
+              ? { label: t?.activate || 'Activate', tone: 'primary' as const, disabled, onClick: () => runTicketAction(ticket.id, 'activate') }
+              : ticket.status === 'active' && ticket.handledById === currentUserId
+                ? { label: t?.close || 'Close', tone: 'danger' as const, disabled, onClick: () => runTicketAction(ticket.id, 'close') }
+                : null;
+
+          return (
+            <TicketCard
+              key={ticket.id}
+              ticket={ticket}
+              onClick={() => router.push(`/${lang}/support/staff/tickets/${ticket.id}`)}
+              action={action}
+            />
+          );
+        })}
       </Box>
 
       <NewTicketOnBehalfModal
@@ -125,9 +154,7 @@ export default function StaffQueuePage() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
           });
-          const res = await fetch('/api/support/tickets', { cache: 'no-store' });
-          const data = await res.json();
-          setTickets(data?.data || []);
+          await loadTickets();
         }}
       />
     </SupportLayout>

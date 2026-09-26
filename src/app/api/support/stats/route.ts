@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requestBackend, ticketList } from '@/lib/support/backend';
+import { normalizeTicket, requestAllPages } from '@/lib/support/backend';
 
 export async function GET(request: NextRequest) {
-  const result = await requestBackend(request, '/tickets');
+  const result = await requestAllPages(request, '/tickets');
 
   if (result instanceof NextResponse) return result;
-  if (!result.response.ok) return NextResponse.json(result.payload, { status: result.response.status });
+  if (!result.ok) return NextResponse.json(result.payload, { status: result.response.status });
 
-  const tickets = ticketList(result.payload);
+  const tickets = result.items.map(normalizeTicket);
   return NextResponse.json({
     data: {
       total: tickets.length,

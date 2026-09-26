@@ -560,7 +560,17 @@
         "firstAssignment": "First assignment",
         "reassigned": "Reassigned",
         "unassigned": "Unassigned",
-        "customer": "Customer"
+        "customer": "Customer",
+        "loading": "Loading ticket...",
+        "waitingForStaff": "Waiting for a support agent to pick up your ticket. You can chat once it is active.",
+        "ticketClosed": "This ticket is closed. Create a new ticket if you need more help.",
+        "ticketClosedStaff": "This ticket is closed.",
+        "activateToReply": "Activate this ticket to start the conversation.",
+        "onlyAttendingCanReply": "Only the staff member handling this ticket can reply.",
+        "activateTicket": "Pick up & activate",
+        "reassignToUserId": "Reassign to staff user ID",
+        "reassignReason": "Reason (optional)",
+        "reassign": "Reassign"
       }
     },
     "status": {

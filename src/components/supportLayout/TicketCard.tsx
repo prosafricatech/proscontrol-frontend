@@ -5,16 +5,22 @@ import { Box, Button, Card, CardContent, Typography } from '@mui/material';
 import { StatusBadge } from '@/components/supportLayout/StatusBadge';
 import type { Ticket } from '@/lib/support/mockData';
 
+interface TicketCardAction {
+  label: string;
+  onClick: () => void;
+  tone?: 'primary' | 'danger';
+  disabled?: boolean;
+}
+
 interface TicketCardProps {
   ticket: Ticket;
   onClick?: () => void;
-  onClose?: () => void;
-  showCloseAction?: boolean;
+  action?: TicketCardAction | null;
   className?: string;
   sx?: SxProps<Theme>;
 }
 
-export const TicketCard = ({ ticket, onClick, onClose, showCloseAction = false, className, sx }: TicketCardProps) => {
+export const TicketCard = ({ ticket, onClick, action, className, sx }: TicketCardProps) => {
   return (
     <Card
       className={className}
@@ -45,15 +51,16 @@ export const TicketCard = ({ ticket, onClick, onClose, showCloseAction = false, 
             Handled by {ticket.handledBy || 'Unassigned'} · updated {new Date(ticket.updatedAt).toLocaleDateString()}
           </Typography>
         </Box>
-        {showCloseAction && (
+        {action && (
           <Button
             variant="contained"
+            disabled={action.disabled}
             onClick={(event) => {
               event.stopPropagation();
-              if (onClose) onClose();
+              action.onClick();
             }}
             sx={{
-              bgcolor: '#ef4444',
+              bgcolor: action.tone === 'danger' ? '#ef4444' : '#2563eb',
               borderRadius: '8px',
               textTransform: 'none',
               fontWeight: 600,
@@ -61,10 +68,10 @@ export const TicketCard = ({ ticket, onClick, onClose, showCloseAction = false, 
               py: 0.8,
               fontSize: '0.85rem',
               flexShrink: 0,
-              '&:hover': { bgcolor: '#dc2626' },
+              '&:hover': { bgcolor: action.tone === 'danger' ? '#dc2626' : '#1d4ed8' },
             }}
           >
-            Close
+            {action.label}
           </Button>
         )}
       </CardContent>

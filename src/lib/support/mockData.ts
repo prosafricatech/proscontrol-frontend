@@ -2,12 +2,22 @@
 
 export type TicketStatus = 'new' | 'active' | 'closed';
 
+export interface TicketAttachment {
+  id?: string;
+  name: string;
+  url: string;
+  mimeType?: string;
+  size?: number;
+}
+
 export interface TicketMessage {
   id: string;
   senderId: string;
   senderName: string;
   body: string;
-  attachments?: { name: string; url: string }[];
+  type?: 'message' | 'system';
+  readAt?: string | null;
+  attachments?: TicketAttachment[];
   createdAt: string;
 }
 
@@ -23,10 +33,12 @@ export interface Ticket {
   subject: string;
   description: string;
   status: TicketStatus;
+  customerId?: string;
   customerName: string;
   customerEmail: string;
   handledBy?: string;
   handledById?: string;
+  closedAt?: string | null;
   createdAt: string;
   updatedAt: string;
   organizationId?: string;

@@ -91,7 +91,7 @@ const authOptions = {
         id: token.id,
         name: token.name,
         email: token.email,
-        email_verified_at: token.email_verified_at | null,
+        email_verified_at: token.email_verified_at ?? null,
         is_staff: token.is_staff === true,
       };
       session.organization_id = token.organization_id;

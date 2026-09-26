@@ -568,7 +568,17 @@
         "firstAssignment": "Ugawaji wa kwanza",
         "reassigned": "Imepangwa upya",
         "unassigned": "Haijapewa",
-        "customer": "Mteja"
+        "customer": "Mteja",
+        "loading": "Inapakia tiketi...",
+        "waitingForStaff": "Inasubiri wakala wa msaada kuchukua tiketi yako. Utaweza kuzungumza itakapokuwa hai.",
+        "ticketClosed": "Tiketi hii imefungwa. Fungua tiketi mpya ikiwa unahitaji msaada zaidi.",
+        "ticketClosedStaff": "Tiketi hii imefungwa.",
+        "activateToReply": "Washa tiketi hii ili kuanza mazungumzo.",
+        "onlyAttendingCanReply": "Ni mhudumu anayeshughulikia tiketi hii pekee anayeweza kujibu.",
+        "activateTicket": "Chukua na uwashe",
+        "reassignToUserId": "Panga upya kwa kitambulisho cha mhudumu",
+        "reassignReason": "Sababu (si lazima)",
+        "reassign": "Panga upya"
       }
     },
     "status": {
