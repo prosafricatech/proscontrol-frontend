@@ -1,16 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { backendData, normalizeTicket, requestAllPages, requestBackend } from '@/lib/support/backend';
+import { backendData, normalizeTicket, requestBackend } from '@/lib/support/backend';
+import { listTickets } from './_list';
 
 export async function GET(request: NextRequest) {
-  const query = request.nextUrl.searchParams;
-  query.delete('page');
-  const queryString = query.toString();
-  const result = await requestAllPages(request, `/tickets${queryString ? `?${queryString}` : ''}`);
-
-  if (result instanceof NextResponse) return result;
-  if (!result.ok) return NextResponse.json(result.payload, { status: result.response.status });
-
-  return NextResponse.json({ data: result.items.map(normalizeTicket) });
+  return listTickets(request);
 }
 
 export async function POST(request: NextRequest) {

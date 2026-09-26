@@ -47,7 +47,7 @@ export default function StaffTicketDetailPage() {
   const currentUser = authData?.authUser?.user;
   const currentUserName = currentUser?.name || 'Staff';
   const currentUserId = currentUser?.id ? String(currentUser.id) : '';
-  const { ticket, messages, reassignments, loadError, pendingAction, sendMessage, activate, close, reassign } =
+  const { ticket, messages, reassignments, loadError, pendingAction, notifyActivity, sendMessage, activate, close, reassign } =
     useTicketThread(params.ticketId, currentUserId, true);
   const [reassignTo, setReassignTo] = useState('');
   const [reassignReason, setReassignReason] = useState('');
@@ -140,6 +140,7 @@ export default function StaffTicketDetailPage() {
               sending={pendingAction === 'send'}
               disabledReason={composerDisabledReason}
               placeholder={t?.typeMessage}
+              onActivity={notifyActivity}
             />
           </Box>
         </Box>

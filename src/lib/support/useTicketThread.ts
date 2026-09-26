@@ -4,7 +4,13 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReassignmentEvent, Ticket, TicketMessage } from '@/lib/support/mockData';
 
 // v1 backend has no push channel, so the thread is polled (see API contract).
-const POLL_INTERVAL_MS = 5000;
+// Messages are checked quickly while a conversation is lively and back off
+// step by step when it goes quiet; any activity snaps back to the first step.
+const MESSAGE_POLL_STEPS_MS = [5000, 10000, 15000, 30000];
+// The ticket itself (status, assignee) changes rarely.
+const TICKET_POLL_MS = 30000;
+// Recent typing keeps polling at the fastest step instead of backing off.
+const ACTIVITY_WINDOW_MS = 15000;
 
 type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -36,11 +42,18 @@ export function useTicketThread(ticketId: string | undefined, currentUserId: str
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const messagesRef = useRef<TicketMessage[]>([]);
   const markReadAttempted = useRef(new Set<string>());
+  const ticketStatusRef = useRef<Ticket['status'] | null>(null);
+  const lastTicketFetchAt = useRef(0);
+  const pollStep = useRef(0);
+  const lastActivityAt = useRef(0);
+  const wakePolling = useRef<() => void>(() => undefined);
 
   messagesRef.current = messages;
+  ticketStatusRef.current = ticket?.status ?? null;
 
   const fetchTicket = useCallback(async () => {
     if (!ticketId) return;
+    lastTicketFetchAt.current = Date.now();
     const response = await fetch(`/api/support/tickets/${ticketId}`, { cache: 'no-store' });
     const payload = await response.json().catch(() => null);
 
@@ -53,17 +66,20 @@ export function useTicketThread(ticketId: string | undefined, currentUserId: str
     setTicket(payload?.data ?? null);
   }, [ticketId]);
 
-  const fetchMessages = useCallback(async (onlyNew: boolean) => {
-    if (!ticketId) return;
+  /** Returns how many new messages arrived from the other participant. */
+  const fetchMessages = useCallback(async (onlyNew: boolean): Promise<number> => {
+    if (!ticketId) return 0;
     const lastId = messagesRef.current.at(-1)?.id;
     const query = onlyNew && lastId ? `?after_id=${lastId}` : '';
     const response = await fetch(`/api/support/tickets/${ticketId}/messages${query}`, { cache: 'no-store' });
-    if (!response.ok) return;
+    if (!response.ok) return 0;
 
     const payload = await response.json().catch(() => null);
     const incoming: TicketMessage[] = payload?.data ?? [];
     setMessages((current) => (onlyNew ? mergeMessages(current, incoming) : mergeMessages([], incoming)));
-  }, [ticketId]);
+
+    return incoming.filter((message) => message.senderId !== currentUserId).length;
+  }, [ticketId, currentUserId]);
 
   const fetchReassignments = useCallback(async () => {
     if (!ticketId || !isStaff) return;
@@ -81,14 +97,67 @@ export function useTicketThread(ticketId: string | undefined, currentUserId: str
     fetchMessages(false);
     fetchReassignments();
 
-    const interval = window.setInterval(() => {
-      if (document.visibilityState !== 'visible') return;
-      fetchTicket();
-      fetchMessages(true);
-    }, POLL_INTERVAL_MS);
+    let cancelled = false;
+    let timer: number | undefined;
 
-    return () => window.clearInterval(interval);
+    const schedule = () => {
+      window.clearTimeout(timer);
+      const hidden = document.visibilityState !== 'visible';
+      const delay = hidden ? MESSAGE_POLL_STEPS_MS.at(-1)! : MESSAGE_POLL_STEPS_MS[pollStep.current];
+      timer = window.setTimeout(tick, delay);
+    };
+
+    const tick = async () => {
+      if (cancelled) return;
+      // Closed is final (no reopening), so nothing more can arrive.
+      if (ticketStatusRef.current === 'closed') return;
+
+      if (document.visibilityState === 'visible') {
+        const newFromOthers = await fetchMessages(true).catch(() => 0);
+        if (newFromOthers > 0) {
+          pollStep.current = 0;
+          fetchTicket();
+        } else {
+          if (Date.now() - lastActivityAt.current >= ACTIVITY_WINDOW_MS) {
+            pollStep.current = Math.min(pollStep.current + 1, MESSAGE_POLL_STEPS_MS.length - 1);
+          }
+          if (Date.now() - lastTicketFetchAt.current >= TICKET_POLL_MS) await fetchTicket().catch(() => undefined);
+        }
+      }
+
+      if (!cancelled) schedule();
+    };
+
+    wakePolling.current = () => {
+      if (cancelled || ticketStatusRef.current === 'closed') return;
+      pollStep.current = 0;
+      window.clearTimeout(timer);
+      tick();
+    };
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') wakePolling.current();
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    schedule();
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      wakePolling.current = () => undefined;
+    };
   }, [ticketId, fetchTicket, fetchMessages, fetchReassignments]);
+
+  /**
+   * Call on user activity (typing): if polling has backed off, check right away
+   * and return to the fastest interval.
+   */
+  const notifyActivity = useCallback(() => {
+    lastActivityAt.current = Date.now();
+    if (pollStep.current > 0) wakePolling.current();
+  }, []);
 
   // Mark incoming messages read. Only the recipient may do this: the customer
   // for staff messages, the attending staff member for customer messages.
@@ -155,6 +224,7 @@ export function useTicketThread(ticketId: string | undefined, currentUserId: str
       if (!response.ok) return { ok: false, error: errorMessage(payload, 'Unable to send message.') };
 
       if (payload?.data) setMessages((current) => mergeMessages(current, [payload.data]));
+      pollStep.current = 0;
 
       return { ok: true };
     } catch {
@@ -185,6 +255,7 @@ export function useTicketThread(ticketId: string | undefined, currentUserId: str
     reassignments,
     loadError,
     pendingAction,
+    notifyActivity,
     sendMessage,
     activate,
     close,

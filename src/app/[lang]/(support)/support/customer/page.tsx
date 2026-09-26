@@ -3,14 +3,15 @@
 import { Add as AddIcon, ChatBubbleOutline as ChatIcon } from '@mui/icons-material';
 import { Box, Button, Skeleton, Typography } from '@mui/material';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useDictionary } from '@/app/[lang]/contexts/DictionaryContext';
 import { useLanguage } from '@/app/[lang]/contexts/LanguageContext';
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import { SupportLayout } from '@/components/supportLayout/SupportLayout';
 import { NewTicketModal } from '@/components/supportLayout/NewTicketModal';
 import { TicketCard } from '@/components/supportLayout/TicketCard';
-import type { Ticket } from '@/lib/support/mockData';
+import { TicketPagination } from '@/components/supportLayout/TicketPagination';
+import { usePaginatedTickets } from '@/lib/support/usePaginatedTickets';
 
 type TabValue = 'open' | 'closed' | 'all';
 
@@ -21,34 +22,13 @@ export default function CustomerTicketsPage() {
   const { authData } = useJumboAuth();
   const [tab, setTab] = useState<TabValue>('open');
   const [modalOpen, setModalOpen] = useState(false);
-  const [tickets, setTickets] = useState<Ticket[]>([]);
-  const [loading, setLoading] = useState(true);
+  // "open" = new + active, merged by the list route.
+  const { tickets: filteredTickets, meta, setPage, loading, reload } = usePaginatedTickets('/api/support/tickets/mine', {
+    status: tab === 'all' ? undefined : tab,
+  });
 
   const authUser = authData?.authUser?.user;
   const activeOrganization = authData?.authOrganization?.organization;
-
-  useEffect(() => {
-    const fetchTickets = async () => {
-      setLoading(true);
-      try {
-        const res = await fetch('/api/support/tickets/mine', { cache: 'no-store' });
-        const payload = await res.json();
-        setTickets(payload?.data || []);
-      } catch (error) {
-        setTickets([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTickets();
-  }, []);
-
-  const filteredTickets = useMemo(() => {
-    if (tab === 'open') return tickets.filter((ticket) => ticket.status !== 'closed');
-    if (tab === 'closed') return tickets.filter((ticket) => ticket.status === 'closed');
-    return tickets;
-  }, [tickets, tab]);
 
   return (
     <SupportLayout
@@ -162,6 +142,7 @@ export default function CustomerTicketsPage() {
               onClick={() => router.push(`/${lang}/support/customer/${ticket.id}`)}
             />
           ))}
+          <TicketPagination meta={meta} onPageChange={setPage} />
         </Box>
       )}
 
@@ -186,9 +167,7 @@ export default function CustomerTicketsPage() {
               customerEmail: authUser?.email || 'customer@proscontrol.com',
             }),
           });
-          const res = await fetch('/api/support/tickets/mine', { cache: 'no-store' });
-          const payload = await res.json();
-          setTickets(payload?.data || []);
+          await reload();
         }}
       />
     </SupportLayout>

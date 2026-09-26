@@ -13,9 +13,11 @@ interface MessageComposerProps {
   sending?: boolean;
   disabledReason?: string | null;
   placeholder?: string;
+  /** Called while the user types (e.g. to speed up polling). */
+  onActivity?: () => void;
 }
 
-export const MessageComposer = ({ onSend, sending = false, disabledReason, placeholder }: MessageComposerProps) => {
+export const MessageComposer = ({ onSend, sending = false, disabledReason, placeholder, onActivity }: MessageComposerProps) => {
   const dictionary = useDictionary();
   const common = dictionary.support?.common;
   const fileInput = useRef<HTMLInputElement>(null);
@@ -97,7 +99,10 @@ export const MessageComposer = ({ onSend, sending = false, disabledReason, place
           multiline
           maxRows={4}
           value={body}
-          onChange={(event) => setBody(event.target.value)}
+          onChange={(event) => {
+            setBody(event.target.value);
+            onActivity?.();
+          }}
           onKeyDown={(event) => {
             if (event.key === 'Enter' && !event.shiftKey) {
               event.preventDefault();

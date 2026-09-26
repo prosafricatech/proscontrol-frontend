@@ -9,40 +9,19 @@ import {
 } from '@mui/icons-material';
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 import { Box, Card, CardContent, Typography } from '@mui/material';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useDictionary } from '@/app/[lang]/contexts/DictionaryContext';
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import { SupportLayout } from '@/components/supportLayout/SupportLayout';
 import { StatCard } from '@/components/supportLayout/StatCard';
-import type { Ticket } from '@/lib/support/mockData';
+import { useSupportStats } from '@/lib/support/useSupportStats';
 
 export default function StaffDashboardPage() {
   const dictionary = useDictionary();
   const { authData } = useJumboAuth();
   const t = dictionary.support?.staff?.dashboard;
-  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const { stats } = useSupportStats();
   const authUser = authData?.authUser?.user;
-
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const res = await fetch('/api/support/tickets', { cache: 'no-store' });
-        const payload = await res.json();
-        setTickets(res.ok && Array.isArray(payload?.data) ? payload.data : []);
-      } catch (error) {
-        setTickets([]);
-      }
-    };
-    load();
-  }, []);
-
-  const stats = useMemo(() => ({
-    total: tickets.length,
-    new: tickets.filter((ticket) => ticket.status === 'new').length,
-    active: tickets.filter((ticket) => ticket.status === 'active').length,
-    closed: tickets.filter((ticket) => ticket.status === 'closed').length,
-    unassigned: tickets.filter((ticket) => !ticket.handledById).length,
-  }), [tickets]);
 
   const statusData = [
     { name: 'New', value: stats.new, color: '#3b82f6' },
@@ -65,13 +44,13 @@ export default function StaffDashboardPage() {
 
       return {
         day: t?.days?.[key] || key.charAt(0).toUpperCase() + key.slice(1),
-        value: tickets.filter((ticket) => {
-          const created = new Date(ticket.createdAt);
+        value: stats.recentCreatedAt.filter((createdAt) => {
+          const created = new Date(createdAt);
           return created >= start && created < end;
         }).length,
       };
     });
-  }, [tickets, t]);
+  }, [stats.recentCreatedAt, t]);
 
   return (
     <SupportLayout userRole="staff" userName={authUser?.name || 'Staff'} userRoleLabel="Staff">

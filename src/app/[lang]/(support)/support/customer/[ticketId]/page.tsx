@@ -23,7 +23,7 @@ export default function CustomerTicketDetailPage() {
   const authUser = authData?.authUser?.user;
   const currentUserId = authUser?.id ? String(authUser.id) : '';
   const t = dictionary.support?.staff?.ticketDetail;
-  const { ticket, messages, loadError, pendingAction, sendMessage } = useTicketThread(params.ticketId, currentUserId, false);
+  const { ticket, messages, loadError, pendingAction, notifyActivity, sendMessage } = useTicketThread(params.ticketId, currentUserId, false);
 
   if (!ticket) {
     return (
@@ -90,6 +90,7 @@ export default function CustomerTicketDetailPage() {
             sending={pendingAction === 'send'}
             disabledReason={composerDisabledReason}
             placeholder={t?.typeMessage}
+            onActivity={notifyActivity}
           />
         </Box>
       </Box>

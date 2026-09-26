@@ -167,6 +167,29 @@ export async function requestAllPages(request: NextRequest, path: string) {
   return { ok: true as const, items };
 }
 
+export type PageMeta = { current_page: number; last_page: number; per_page: number; total: number };
+
+/**
+ * One page of a paginated backend list (`data: { items, meta }`). Returns the
+ * failed result instead when the call fails, so the caller can relay it.
+ */
+export async function requestPage(request: NextRequest, path: string, page = 1) {
+  const separator = path.includes('?') ? '&' : '?';
+  const result = await requestBackend(request, `${path}${separator}page=${page}`);
+  if (result instanceof NextResponse) return result;
+  if (!result.response.ok) return { ok: false as const, ...result };
+
+  const data = backendData(result.payload);
+  const meta: PageMeta = {
+    current_page: Number(data?.meta?.current_page ?? page),
+    last_page: Number(data?.meta?.last_page ?? 1),
+    per_page: Number(data?.meta?.per_page ?? 15),
+    total: Number(data?.meta?.total ?? 0),
+  };
+
+  return { ok: true as const, items: Array.isArray(data?.items) ? data.items : [], meta };
+}
+
 export function backendData(payload: any) {
   return payload?.data ?? null;
 }

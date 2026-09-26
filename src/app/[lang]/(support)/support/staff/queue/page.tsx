@@ -9,7 +9,7 @@ import {
   Person as PersonIcon,
 } from '@mui/icons-material';
 import { Alert, Box, Button, Typography } from '@mui/material';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDictionary } from '@/app/[lang]/contexts/DictionaryContext';
 import { useLanguage } from '@/app/[lang]/contexts/LanguageContext';
@@ -18,7 +18,19 @@ import { SupportLayout } from '@/components/supportLayout/SupportLayout';
 import { NewTicketOnBehalfModal } from '@/components/supportLayout/NewTicketOnBehalfModal';
 import { StatCard } from '@/components/supportLayout/StatCard';
 import { TicketCard } from '@/components/supportLayout/TicketCard';
-import type { Ticket } from '@/lib/support/mockData';
+import { TicketPagination } from '@/components/supportLayout/TicketPagination';
+import { usePaginatedTickets } from '@/lib/support/usePaginatedTickets';
+import { useSupportStats } from '@/lib/support/useSupportStats';
+
+type QueueFilter = 'all' | 'new' | 'active' | 'mine' | 'closed';
+
+const FILTER_QUERIES: Record<QueueFilter, Record<string, string>> = {
+  all: {},
+  new: { status: 'new' },
+  active: { status: 'active' },
+  mine: { mine_only: '1' },
+  closed: { status: 'closed' },
+};
 
 export default function StaffQueuePage() {
   const dictionary = useDictionary();
@@ -26,28 +38,17 @@ export default function StaffQueuePage() {
   const lang = useLanguage();
   const { authData } = useJumboAuth();
   const t = dictionary.support?.staff?.queue;
-  const [filter, setFilter] = useState<'all' | 'new' | 'active' | 'mine' | 'closed'>('all');
+  const [filter, setFilter] = useState<QueueFilter>('all');
   const [modalOpen, setModalOpen] = useState(false);
-  const [tickets, setTickets] = useState<Ticket[]>([]);
   const [pendingTicketId, setPendingTicketId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const currentUser = authData?.authUser?.user;
   const currentUserName = currentUser?.name || '';
   const currentUserId = currentUser?.id ? String(currentUser.id) : '';
 
-  const loadTickets = useCallback(async () => {
-    try {
-      const res = await fetch('/api/support/tickets', { cache: 'no-store' });
-      const payload = await res.json();
-      setTickets(res.ok ? payload?.data || [] : []);
-    } catch (error) {
-      setTickets([]);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadTickets();
-  }, [loadTickets]);
+  const { tickets: filteredTickets, meta, setPage, reload: reloadTickets } = usePaginatedTickets('/api/support/tickets', FILTER_QUERIES[filter]);
+  const { stats: supportStats, reload: reloadStats } = useSupportStats();
+  const loadTickets = () => Promise.all([reloadTickets(), reloadStats()]);
 
   const runTicketAction = async (ticketId: string, action: 'activate' | 'close') => {
     setPendingTicketId(ticketId);
@@ -65,21 +66,13 @@ export default function StaffQueuePage() {
     }
   };
 
-  const stats = useMemo(() => ({
-    all: tickets.length,
-    new: tickets.filter((ticket) => ticket.status === 'new').length,
-    active: tickets.filter((ticket) => ticket.status === 'active').length,
-    mine: tickets.filter((ticket) => ticket.handledById === currentUserId).length,
-    closed: tickets.filter((ticket) => ticket.status === 'closed').length,
-  }), [tickets, currentUserId]);
-
-  const filteredTickets = useMemo(() => {
-    if (filter === 'new') return tickets.filter((ticket) => ticket.status === 'new');
-    if (filter === 'active') return tickets.filter((ticket) => ticket.status === 'active');
-    if (filter === 'mine') return tickets.filter((ticket) => ticket.handledById === currentUserId);
-    if (filter === 'closed') return tickets.filter((ticket) => ticket.status === 'closed');
-    return tickets;
-  }, [filter, tickets, currentUserId]);
+  const stats = {
+    all: supportStats.total,
+    new: supportStats.new,
+    active: supportStats.active,
+    mine: supportStats.mine,
+    closed: supportStats.closed,
+  };
 
   return (
     <SupportLayout userRole="staff" userName={currentUserName || 'Staff'} userRoleLabel="Staff">
@@ -144,6 +137,7 @@ export default function StaffQueuePage() {
           );
         })}
       </Box>
+      <TicketPagination meta={meta} onPageChange={setPage} />
 
       <NewTicketOnBehalfModal
         open={modalOpen}
