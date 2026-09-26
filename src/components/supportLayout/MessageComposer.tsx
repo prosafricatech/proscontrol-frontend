@@ -2,8 +2,9 @@
 
 import { AttachFile as AttachIcon, Close as RemoveIcon, Send as SendIcon } from '@mui/icons-material';
 import { Alert, Box, Chip, CircularProgress, IconButton, TextField, Typography } from '@mui/material';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useDictionary } from '@/app/[lang]/contexts/DictionaryContext';
+import { FOCUS_REPLY_EVENT, setUnsentDraft } from '@/lib/support/shortcuts';
 
 // Mirrors the backend rule on attachments.* (max:10240 KB).
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
@@ -15,15 +16,33 @@ interface MessageComposerProps {
   placeholder?: string;
   /** Called while the user types (e.g. to speed up polling). */
   onActivity?: () => void;
+  /** Reports whether there's unsent text or files (e.g. to block Esc-to-leave). */
+  onDraftChange?: (hasDraft: boolean) => void;
 }
 
-export const MessageComposer = ({ onSend, sending = false, disabledReason, placeholder, onActivity }: MessageComposerProps) => {
+export const MessageComposer = ({ onSend, sending = false, disabledReason, placeholder, onActivity, onDraftChange }: MessageComposerProps) => {
   const dictionary = useDictionary();
   const common = dictionary.support?.common;
   const fileInput = useRef<HTMLInputElement>(null);
+  const textInput = useRef<HTMLTextAreaElement>(null);
   const [body, setBody] = useState('');
   const [files, setFiles] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const hasDraft = body.trim().length > 0 || files.length > 0;
+
+  useEffect(() => {
+    onDraftChange?.(hasDraft);
+    setUnsentDraft(hasDraft);
+  }, [hasDraft, onDraftChange]);
+
+  useEffect(() => () => setUnsentDraft(false), []);
+
+  // "r" shortcut: focus the reply box.
+  useEffect(() => {
+    const focusReply = () => textInput.current?.focus();
+    window.addEventListener(FOCUS_REPLY_EVENT, focusReply);
+    return () => window.removeEventListener(FOCUS_REPLY_EVENT, focusReply);
+  }, []);
 
   if (disabledReason) {
     return (
@@ -108,9 +127,15 @@ export const MessageComposer = ({ onSend, sending = false, disabledReason, place
               event.preventDefault();
               handleSend();
             }
+            // With a draft, Esc only leaves the text box; it never navigates away.
+            if (event.key === 'Escape' && hasDraft) {
+              event.preventDefault();
+              (event.target as HTMLElement).blur();
+            }
           }}
           placeholder={placeholder || 'Type a message...'}
           variant="standard"
+          inputRef={textInput}
           InputProps={{ disableUnderline: true }}
           sx={{ '& .MuiInputBase-input': { fontSize: '0.95rem' } }}
         />

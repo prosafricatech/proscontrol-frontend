@@ -25,6 +25,7 @@ import {
 import { useParams, useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useDictionary } from '@/app/[lang]/contexts/DictionaryContext';
+import { useLanguage } from '@/app/[lang]/contexts/LanguageContext';
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import { SupportLayout } from '@/components/supportLayout/SupportLayout';
 import { StatusBadge } from '@/components/supportLayout/StatusBadge';
@@ -32,6 +33,8 @@ import { MessageBubble } from '@/components/supportLayout/MessageBubble';
 import { MessageComposer } from '@/components/supportLayout/MessageComposer';
 import { CHAT_COLUMN_HEIGHT, ChatScrollArea } from '@/components/supportLayout/ChatScrollArea';
 import { useTicketThread } from '@/lib/support/useTicketThread';
+import { useEscapeToLeave } from '@/lib/support/useEscapeToLeave';
+import { canGoBackInApp } from '@/lib/support/inAppNavigation';
 
 const formatMessageTime = (value: string) =>
   value ? new Date(value).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : '';
@@ -49,6 +52,11 @@ export default function StaffTicketDetailPage() {
   const currentUserId = currentUser?.id ? String(currentUser.id) : '';
   const { ticket, messages, reassignments, loadError, pendingAction, notifyActivity, sendMessage, activate, close, reassign } =
     useTicketThread(params.ticketId, currentUserId, true);
+  const lang = useLanguage();
+  const [hasDraft, setHasDraft] = useState(false);
+  // Same as the back arrow; goes to the list when the ticket was opened directly.
+  const goBack = () => (canGoBackInApp() ? router.back() : router.push(`/${lang}/support/staff/tickets`));
+  useEscapeToLeave(!hasDraft, goBack);
   const [reassignTo, setReassignTo] = useState('');
   const [reassignReason, setReassignReason] = useState('');
   const [actionError, setActionError] = useState<string | null>(null);
@@ -95,7 +103,7 @@ export default function StaffTicketDetailPage() {
         <Box sx={{ display: 'flex', flexDirection: 'column', height: CHAT_COLUMN_HEIGHT, minHeight: 480 }}>
           <Box sx={{ flexShrink: 0 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-              <IconButton onClick={() => router.back()} aria-label={t?.back || 'Back'} sx={{ color: 'var(--pc-text-3)' }}>
+              <IconButton onClick={goBack} aria-label={t?.back || 'Back'} sx={{ color: 'var(--pc-text-3)' }}>
                 <BackIcon />
               </IconButton>
               <Typography sx={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--pc-text)' }}>
@@ -141,6 +149,7 @@ export default function StaffTicketDetailPage() {
               disabledReason={composerDisabledReason}
               placeholder={t?.typeMessage}
               onActivity={notifyActivity}
+              onDraftChange={setHasDraft}
             />
           </Box>
         </Box>

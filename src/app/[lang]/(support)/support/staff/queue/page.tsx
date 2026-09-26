@@ -9,8 +9,8 @@ import {
   Person as PersonIcon,
 } from '@mui/icons-material';
 import { Alert, Box, Button, Typography } from '@mui/material';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useDictionary } from '@/app/[lang]/contexts/DictionaryContext';
 import { useLanguage } from '@/app/[lang]/contexts/LanguageContext';
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
@@ -38,7 +38,14 @@ export default function StaffQueuePage() {
   const lang = useLanguage();
   const { authData } = useJumboAuth();
   const t = dictionary.support?.staff?.queue;
+  const searchParams = useSearchParams();
+  const filterParam = searchParams.get('filter');
   const [filter, setFilter] = useState<QueueFilter>('all');
+
+  // ?filter=new|active|mine|closed (used by the "g n" / "g m" shortcuts).
+  useEffect(() => {
+    if (filterParam && filterParam in FILTER_QUERIES) setFilter(filterParam as QueueFilter);
+  }, [filterParam]);
   const [modalOpen, setModalOpen] = useState(false);
   const [pendingTicketId, setPendingTicketId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);

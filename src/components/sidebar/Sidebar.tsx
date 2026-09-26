@@ -28,6 +28,8 @@ import {
 } from '@mui/icons-material';
 import { useRouter, usePathname } from 'next/navigation';
 import { useDictionary } from '@/app/[lang]/contexts/DictionaryContext';
+import { Kbd, useKeyboardShortcuts } from '@/components/supportLayout/KeyboardShortcuts';
+import { Keyboard as KeyboardIcon } from '@mui/icons-material';
 import { useLanguage } from '@/app/[lang]/contexts/LanguageContext';
 
 export const SIDEBAR_WIDTH = 260;
@@ -53,6 +55,7 @@ export const Sidebar = ({
   const lang = useLanguage();
   const router = useRouter();
   const pathname = usePathname();
+  const { openHelp } = useKeyboardShortcuts();
 
   const t = dictionary.support?.sidebar;
 
@@ -232,6 +235,16 @@ export const Sidebar = ({
         })}
       </List>
 
+      <Box sx={{ px: 1.5, pb: 2, flexShrink: 0 }}>
+        <ListItemButton
+          onClick={openHelp}
+          sx={{ borderRadius: '10px', py: 1, px: 1.5, color: 'var(--pc-text-3)', '&:hover': { bgcolor: 'var(--pc-bg)' } }}
+        >
+          <KeyboardIcon sx={{ fontSize: 20, mr: 1.5 }} />
+          <Typography sx={{ flex: 1, fontSize: '0.85rem', fontWeight: 500 }}>Keyboard shortcuts</Typography>
+          <Kbd>?</Kbd>
+        </ListItemButton>
+      </Box>
     </Box>
   );
 };

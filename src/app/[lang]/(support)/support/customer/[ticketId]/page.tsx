@@ -3,7 +3,9 @@
 import { ArrowBack as BackIcon } from '@mui/icons-material';
 import { Box, Card, CardContent, IconButton, Typography } from '@mui/material';
 import { useParams, useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { useDictionary } from '@/app/[lang]/contexts/DictionaryContext';
+import { useLanguage } from '@/app/[lang]/contexts/LanguageContext';
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import { SupportLayout } from '@/components/supportLayout/SupportLayout';
 import { StatusBadge } from '@/components/supportLayout/StatusBadge';
@@ -11,6 +13,8 @@ import { MessageBubble } from '@/components/supportLayout/MessageBubble';
 import { MessageComposer } from '@/components/supportLayout/MessageComposer';
 import { CHAT_COLUMN_HEIGHT, ChatScrollArea } from '@/components/supportLayout/ChatScrollArea';
 import { useTicketThread } from '@/lib/support/useTicketThread';
+import { useEscapeToLeave } from '@/lib/support/useEscapeToLeave';
+import { canGoBackInApp } from '@/lib/support/inAppNavigation';
 
 const formatMessageTime = (value: string) =>
   value ? new Date(value).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : '';
@@ -24,6 +28,11 @@ export default function CustomerTicketDetailPage() {
   const currentUserId = authUser?.id ? String(authUser.id) : '';
   const t = dictionary.support?.staff?.ticketDetail;
   const { ticket, messages, loadError, pendingAction, notifyActivity, sendMessage } = useTicketThread(params.ticketId, currentUserId, false);
+  const lang = useLanguage();
+  const [hasDraft, setHasDraft] = useState(false);
+  // Same as the back arrow; goes to the list when the ticket was opened directly.
+  const goBack = () => (canGoBackInApp() ? router.back() : router.push(`/${lang}/support/customer`));
+  useEscapeToLeave(!hasDraft, goBack);
 
   if (!ticket) {
     return (
@@ -48,7 +57,7 @@ export default function CustomerTicketDetailPage() {
     <SupportLayout userRole="customer" userName={authUser?.name || 'Customer'} userRoleLabel="prosERP">
       <Box sx={{ display: 'flex', flexDirection: 'column', height: CHAT_COLUMN_HEIGHT, minHeight: 480, maxWidth: 1100 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2, flexShrink: 0 }}>
-          <IconButton aria-label={dictionary.support?.common?.back || 'Back'} onClick={() => router.back()} sx={{ color: 'var(--pc-text-3)' }}>
+          <IconButton aria-label={dictionary.support?.common?.back || 'Back'} onClick={goBack} sx={{ color: 'var(--pc-text-3)' }}>
             <BackIcon />
           </IconButton>
           <Typography sx={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--pc-text)' }}>{ticket.subject}</Typography>
@@ -91,6 +100,7 @@ export default function CustomerTicketDetailPage() {
             disabledReason={composerDisabledReason}
             placeholder={t?.typeMessage}
             onActivity={notifyActivity}
+            onDraftChange={setHasDraft}
           />
         </Box>
       </Box>
