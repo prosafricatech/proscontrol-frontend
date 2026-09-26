@@ -1,12 +1,12 @@
 'use client';
 
 import React from 'react';
-import { Box, IconButton, Badge, Typography } from '@mui/material';
-import { NotificationsNone as BellIcon } from '@mui/icons-material';
+import { Box } from '@mui/material';
 import { Sidebar, SIDEBAR_WIDTH, SupportRole } from '../sidebar/Sidebar';
 import { AuthUserPopover } from '@/components/authUserPopover/AuthUserPopover';
 import { useDictionary } from '@/app/[lang]/contexts/DictionaryContext';
 import { ColorModeToggle } from '@/components/colorMode/ColorModeToggle';
+import { NotificationBell } from './NotificationBell';
 
 interface SupportLayoutProps {
   children: React.ReactNode;
@@ -60,7 +60,8 @@ export const SupportLayout = ({
           }}
         >
           <Box sx={{ flex: 1 }} />
-          <ColorModeToggle sx={{ mr: 1.5 }} />
+          <NotificationBell />
+          <ColorModeToggle sx={{ mx: 1.5 }} />
           <AuthUserPopover dictionary={dictionary as any} />
         </Box>
 
