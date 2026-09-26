@@ -1,16 +1,7 @@
-import SignupForm from '@/components/signupForm/SignupForm';
-import { Div } from '@jumbo/shared';
+import { GuestSignup } from '@/components/auth/prosControl/GuestSignup';
+
+export const dynamic = 'force-dynamic';
 
 export default function Signup() {
-  return (
-    <Div
-      sx={{
-        maxWidth: '100%',
-        margin: 'auto',
-        p: 1,
-      }}
-    >
-      <SignupForm />
-    </Div>
-  );
+  return <GuestSignup />;
 }

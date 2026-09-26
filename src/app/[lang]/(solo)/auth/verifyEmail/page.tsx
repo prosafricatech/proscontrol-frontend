@@ -1,10 +1,7 @@
-export const dynamic = "force-dynamic";
-import EmailVerificationNotice from "@/components/emailVerification/EmailVerificationNotice";
+import { PendingVerification } from '@/components/auth/prosControl/PendingVerification';
 
-function page() {
-  return (
-    <EmailVerificationNotice/>
-  )
+export const dynamic = 'force-dynamic';
+
+export default function VerifyEmailPage() {
+  return <PendingVerification />;
 }
-
-export default page
