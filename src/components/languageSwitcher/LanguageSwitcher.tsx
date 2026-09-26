@@ -3,28 +3,14 @@
 import { Check as CheckIcon, Translate as LanguageIcon } from '@mui/icons-material';
 import { Box, Button, ListItemIcon, ListItemText, Menu, MenuItem, Tooltip } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material/styles';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { useLanguage } from '@/app/[lang]/contexts/LanguageContext';
-import { LOCALE_COOKIE, SUPPORTED_LOCALES, isSupportedLocale } from '@/config/locales';
+import { SUPPORTED_LOCALES, isSupportedLocale } from '@/config/locales';
+import { rememberLocale, useSwitchLocale } from '@/lib/i18n/useSwitchLocale';
 import { useT } from '@/lib/i18n/useT';
 
-const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365;
-
-function rememberLocale(code: string) {
-  document.cookie = `${LOCALE_COOKIE}=${code}; path=/; max-age=${ONE_YEAR_SECONDS}; samesite=lax`;
-}
-
-/**
- * Switches the UI language by swapping the locale segment of the current URL
- * (/en-US/... ↔ /sw-TZ/...) and remembers the choice in a cookie, which the
- * locale middleware uses for URLs that don't include a locale.
- */
+/** EN / SW button with a menu of the supported languages. */
 export const LanguageSwitcher = ({ sx }: { sx?: SxProps<Theme> }) => {
-  const lang = useLanguage();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const router = useRouter();
+  const { lang, switchTo: switchLocale } = useSwitchLocale();
   const t = useT();
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
   const current = SUPPORTED_LOCALES.find((locale) => locale.code === lang) ?? SUPPORTED_LOCALES[0];
@@ -36,13 +22,7 @@ export const LanguageSwitcher = ({ sx }: { sx?: SxProps<Theme> }) => {
 
   const switchTo = (code: string) => {
     setAnchor(null);
-    if (code === lang) return;
-    rememberLocale(code);
-    const rest = pathname.replace(/^\/[a-z]{2}-[A-Z]{2}(?=\/|$)/, '');
-    const query = searchParams.toString();
-    // Full navigation: the root layout loads the dictionary on the server.
-    router.replace(`/${code}${rest}${query ? `?${query}` : ''}`);
-    router.refresh();
+    switchLocale(code);
   };
 
   const label = t('portal.language.change', 'Change language');

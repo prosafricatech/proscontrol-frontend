@@ -4,6 +4,7 @@ export type ShortcutAction =
   | { type: 'navigate'; path: string }
   | { type: 'help' }
   | { type: 'toggle-theme' }
+  | { type: 'toggle-language' }
   | { type: 'focus-reply' };
 
 export type ShortcutDefinition = {
@@ -24,6 +25,7 @@ export const SHORTCUTS: ShortcutDefinition[] = [
   { id: 'help', keys: '?', description: 'Show keyboard shortcuts', group: 'General', roles: BOTH, action: { type: 'help' } },
   { id: 'create', keys: 'c', description: 'Create a new ticket', group: 'General', roles: BOTH, action: { type: 'navigate', path: '/create-ticket' } },
   { id: 'theme', keys: 't', description: 'Switch light / dark mode', group: 'General', roles: BOTH, action: { type: 'toggle-theme' } },
+  { id: 'language', keys: 'l', description: 'Switch language (English / Kiswahili)', group: 'General', roles: BOTH, action: { type: 'toggle-language' } },
 
   { id: 'dashboard', keys: 'g h', description: 'Dashboard', group: 'Go to', roles: ['staff'], action: { type: 'navigate', path: '/support/staff' } },
   { id: 'queue', keys: 'g q', description: 'Queue', group: 'Go to', roles: ['staff'], action: { type: 'navigate', path: '/support/staff/queue' } },

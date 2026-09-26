@@ -16,6 +16,7 @@ import {
   type ShortcutDefinition,
 } from '@/lib/support/shortcuts';
 import { useT } from '@/lib/i18n/useT';
+import { useSwitchLocale } from '@/lib/i18n/useSwitchLocale';
 
 // Time allowed between "g" and the second key of a sequence.
 const SEQUENCE_TIMEOUT_MS = 1500;
@@ -83,6 +84,7 @@ export function KeyboardShortcutsProvider({ children }: { children: ReactNode })
   const router = useRouter();
   const lang = useLanguage();
   const { toggleMode } = useColorMode();
+  const { switchToNext: switchLanguage } = useSwitchLocale();
   const { enqueueSnackbar } = useSnackbar();
   const { authData } = useJumboAuth();
   const role = authData?.authUser?.user?.is_staff === true ? 'staff' : 'customer';
@@ -97,14 +99,16 @@ export function KeyboardShortcutsProvider({ children }: { children: ReactNode })
     if (action.type === 'help') setHelpOpen(true);
     if (action.type === 'toggle-theme') toggleMode();
     if (action.type === 'focus-reply') window.dispatchEvent(new Event(FOCUS_REPLY_EVENT));
-    if (action.type === 'navigate') {
+    if (action.type === 'navigate' || action.type === 'toggle-language') {
+      // Both reload the page, which would discard an unsent message.
       if (hasUnsentDraft()) {
         enqueueSnackbar(t('portal.shortcuts.draftBlocked', 'Send or clear your message before leaving this conversation.'), { variant: 'info' });
         return;
       }
-      router.push(`/${lang}${action.path}`);
     }
-  }, [enqueueSnackbar, lang, router, t, toggleMode]);
+    if (action.type === 'toggle-language') switchLanguage();
+    if (action.type === 'navigate') router.push(`/${lang}${action.path}`);
+  }, [enqueueSnackbar, lang, router, switchLanguage, t, toggleMode]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {

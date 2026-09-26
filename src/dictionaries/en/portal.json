@@ -197,6 +197,7 @@
       "help": "Show keyboard shortcuts",
       "create": "Create a new ticket",
       "theme": "Switch light / dark mode",
+      "language": "Switch language (English / Kiswahili)",
       "dashboard": "Dashboard",
       "queue": "Queue",
       "newTickets": "New tickets waiting",
