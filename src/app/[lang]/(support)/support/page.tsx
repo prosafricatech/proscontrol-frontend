@@ -59,7 +59,7 @@ export default function SupportRedirectPage() {
     >
       <CircularProgress sx={{ color: 'var(--pc-accent)' }} />
       <Typography sx={{ color: 'var(--pc-text-3)', fontSize: '0.9rem' }}>
-        {dictionary?.support?.loading || 'Redirecting to your support portal...'}
+        {dictionary?.portal?.redirecting || 'Redirecting to your support portal...'}
       </Typography>
     </Box>
   );

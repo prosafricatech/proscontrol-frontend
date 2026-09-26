@@ -3,8 +3,8 @@
 import { AttachFile as AttachIcon, Close as RemoveIcon, Send as SendIcon } from '@mui/icons-material';
 import { Alert, Box, Chip, CircularProgress, IconButton, TextField, Typography } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
-import { useDictionary } from '@/app/[lang]/contexts/DictionaryContext';
 import { FOCUS_REPLY_EVENT, setUnsentDraft } from '@/lib/support/shortcuts';
+import { useT } from '@/lib/i18n/useT';
 
 // Mirrors the backend rule on attachments.* (max:10240 KB).
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
@@ -21,8 +21,7 @@ interface MessageComposerProps {
 }
 
 export const MessageComposer = ({ onSend, sending = false, disabledReason, placeholder, onActivity, onDraftChange }: MessageComposerProps) => {
-  const dictionary = useDictionary();
-  const common = dictionary.support?.common;
+  const t = useT();
   const fileInput = useRef<HTMLInputElement>(null);
   const textInput = useRef<HTMLTextAreaElement>(null);
   const [body, setBody] = useState('');
@@ -56,7 +55,7 @@ export const MessageComposer = ({ onSend, sending = false, disabledReason, place
     if (!selected) return;
     const accepted = Array.from(selected).filter((file) => file.size <= MAX_FILE_BYTES);
     if (accepted.length < selected.length) {
-      setError(common?.fileTooLarge || 'Files larger than 10 MB were skipped.');
+      setError(t('portal.chat.fileTooLarge', 'Files larger than 10 MB were skipped.'));
     }
     setFiles((current) => [...current, ...accepted]);
   };
@@ -106,7 +105,7 @@ export const MessageComposer = ({ onSend, sending = false, disabledReason, place
         />
         <IconButton
           size="small"
-          aria-label={common?.attach || 'Attach'}
+          aria-label={t('portal.chat.attach', 'Attach')}
           onClick={() => fileInput.current?.click()}
           disabled={sending}
           sx={{ color: 'var(--pc-text-3)', border: '1px solid var(--pc-border)', borderRadius: '8px' }}
@@ -133,14 +132,14 @@ export const MessageComposer = ({ onSend, sending = false, disabledReason, place
               (event.target as HTMLElement).blur();
             }
           }}
-          placeholder={placeholder || 'Type a message...'}
+          placeholder={placeholder || t('portal.chat.typeMessage', 'Type a message...')}
           variant="standard"
           inputRef={textInput}
           InputProps={{ disableUnderline: true }}
           sx={{ '& .MuiInputBase-input': { fontSize: '0.95rem' } }}
         />
         <IconButton
-          aria-label={common?.send || 'Send'}
+          aria-label={t('portal.chat.send', 'Send')}
           onClick={handleSend}
           disabled={sending || !body.trim()}
           sx={{ bgcolor: 'var(--pc-inverse-bg)', color: 'white', borderRadius: '8px', '&:hover': { bgcolor: 'var(--pc-inverse-bg-hover)' }, '&.Mui-disabled': { bgcolor: 'var(--pc-border-strong)', color: 'white' } }}

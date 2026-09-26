@@ -4,6 +4,7 @@ import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { Box, IconButton, InputAdornment, TextField, Typography } from '@mui/material';
 import type { TextFieldProps } from '@mui/material';
 import { useState, type ReactNode } from 'react';
+import { useT } from '@/lib/i18n/useT';
 
 type AuthFieldProps = Omit<TextFieldProps, 'label' | 'variant'> & {
   label: string;
@@ -17,6 +18,7 @@ type AuthFieldProps = Omit<TextFieldProps, 'label' | 'variant'> & {
  */
 export const AuthField = ({ label, icon, optionalLabel, type, id, ...props }: AuthFieldProps) => {
   const [revealed, setRevealed] = useState(false);
+  const t = useT();
   const isPassword = type === 'password';
   const fieldId = id ?? `auth-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
 
@@ -51,7 +53,7 @@ export const AuthField = ({ label, icon, optionalLabel, type, id, ...props }: Au
                 onClick={() => setRevealed((value) => !value)}
                 edge="end"
                 size="small"
-                aria-label={revealed ? 'Hide password' : 'Show password'}
+                aria-label={revealed ? t('portal.auth.hidePassword', 'Hide password') : t('portal.auth.showPassword', 'Show password')}
                 sx={{ color: 'var(--pc-text-4)' }}
               >
                 {revealed ? <Visibility fontSize="small" /> : <VisibilityOff fontSize="small" />}

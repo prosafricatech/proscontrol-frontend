@@ -7,6 +7,7 @@ import { AuthUserPopover } from '@/components/authUserPopover/AuthUserPopover';
 import { useDictionary } from '@/app/[lang]/contexts/DictionaryContext';
 import { ColorModeToggle } from '@/components/colorMode/ColorModeToggle';
 import { NotificationBell } from './NotificationBell';
+import { LanguageSwitcher } from '@/components/languageSwitcher/LanguageSwitcher';
 
 interface SupportLayoutProps {
   children: React.ReactNode;
@@ -61,6 +62,7 @@ export const SupportLayout = ({
         >
           <Box sx={{ flex: 1 }} />
           <NotificationBell />
+          <LanguageSwitcher sx={{ ml: 1.5 }} />
           <ColorModeToggle sx={{ mx: 1.5 }} />
           <AuthUserPopover dictionary={dictionary as any} />
         </Box>

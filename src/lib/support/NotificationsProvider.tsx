@@ -6,8 +6,9 @@ import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 export type SupportNotification = {
   id: string;
   kind: 'new_ticket' | 'assigned' | 'activated' | 'closed' | 'messages';
-  title: string;
-  detail: string;
+  actorName: string | null;
+  count: string | null;
+  subject: string;
   at: string;
   ticketId: string;
 };
@@ -134,16 +135,4 @@ export function useSupportNotifications() {
   const context = useContext(NotificationsContext);
   if (!context) throw new Error('useSupportNotifications must be used inside NotificationsProvider');
   return context;
-}
-
-export function timeAgo(value: string) {
-  const time = Date.parse(value);
-  if (!Number.isFinite(time)) return '';
-  const minutes = Math.round((Date.now() - time) / 60000);
-  if (minutes < 1) return 'just now';
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.round(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.round(hours / 24);
-  return days === 1 ? 'yesterday' : `${days}d ago`;
 }

@@ -29,6 +29,7 @@ import {
 import { useRouter, usePathname } from 'next/navigation';
 import { useDictionary } from '@/app/[lang]/contexts/DictionaryContext';
 import { Kbd, useKeyboardShortcuts } from '@/components/supportLayout/KeyboardShortcuts';
+import { useT } from '@/lib/i18n/useT';
 import { Keyboard as KeyboardIcon } from '@mui/icons-material';
 import { useLanguage } from '@/app/[lang]/contexts/LanguageContext';
 
@@ -58,6 +59,7 @@ export const Sidebar = ({
   const { openHelp } = useKeyboardShortcuts();
 
   const t = dictionary.support?.sidebar;
+  const tr = useT();
 
   /* ------------------------------------------------------------------ */
   /* Menu items — differ by role                                         */
@@ -84,15 +86,15 @@ export const Sidebar = ({
             icon: <LayersIcon sx={{ fontSize: 20 }} />,
             href: `/${lang}/support/staff/tickets`,
           },
-          { key: 'createTicket', label: 'Create Ticket', icon: <CreateTicketIcon sx={{ fontSize: 20 }} />, href: `/${lang}/create-ticket` },
-          { key: 'staffDirectory', label: 'Staff Directory', icon: <DirectoryIcon sx={{ fontSize: 20 }} />, href: `/${lang}/staff-directory` },
-          { key: 'customerProfile', label: 'Customer Profile', icon: <CustomerIcon sx={{ fontSize: 20 }} />, href: `/${lang}/customer-profile` },
-          { key: 'knowledgeBase', label: 'Knowledge Base', icon: <KnowledgeIcon sx={{ fontSize: 20 }} />, href: `/${lang}/knowledge-base` },
-          { key: 'reports', label: 'Reports', icon: <ReportsIcon sx={{ fontSize: 20 }} />, href: `/${lang}/reports` },
-          { key: 'activityLogs', label: 'Activity Logs', icon: <ActivityIcon sx={{ fontSize: 20 }} />, href: `/${lang}/activity-logs` },
-          { key: 'notifications', label: 'Notifications', icon: <NotificationsIcon sx={{ fontSize: 20 }} />, href: `/${lang}/notifications` },
-          { key: 'savedReplies', label: 'Saved Replies', icon: <RepliesIcon sx={{ fontSize: 20 }} />, href: `/${lang}/saved-replies` },
-          { key: 'settings', label: 'Settings', icon: <SettingsIcon sx={{ fontSize: 20 }} />, href: `/${lang}/settings` },
+          { key: 'createTicket', label: tr('portal.nav.createTicket', 'Create Ticket'), icon: <CreateTicketIcon sx={{ fontSize: 20 }} />, href: `/${lang}/create-ticket` },
+          { key: 'staffDirectory', label: tr('portal.nav.staffDirectory', 'Staff Directory'), icon: <DirectoryIcon sx={{ fontSize: 20 }} />, href: `/${lang}/staff-directory` },
+          { key: 'customerProfile', label: tr('portal.nav.customerProfile', 'Customer Profile'), icon: <CustomerIcon sx={{ fontSize: 20 }} />, href: `/${lang}/customer-profile` },
+          { key: 'knowledgeBase', label: tr('portal.nav.knowledgeBase', 'Knowledge Base'), icon: <KnowledgeIcon sx={{ fontSize: 20 }} />, href: `/${lang}/knowledge-base` },
+          { key: 'reports', label: tr('portal.nav.reports', 'Reports'), icon: <ReportsIcon sx={{ fontSize: 20 }} />, href: `/${lang}/reports` },
+          { key: 'activityLogs', label: tr('portal.nav.activityLogs', 'Activity Logs'), icon: <ActivityIcon sx={{ fontSize: 20 }} />, href: `/${lang}/activity-logs` },
+          { key: 'notifications', label: tr('portal.nav.notifications', 'Notifications'), icon: <NotificationsIcon sx={{ fontSize: 20 }} />, href: `/${lang}/notifications` },
+          { key: 'savedReplies', label: tr('portal.nav.savedReplies', 'Saved Replies'), icon: <RepliesIcon sx={{ fontSize: 20 }} />, href: `/${lang}/saved-replies` },
+          { key: 'settings', label: tr('portal.nav.settings', 'Settings'), icon: <SettingsIcon sx={{ fontSize: 20 }} />, href: `/${lang}/settings` },
         ]
       : [
           {
@@ -102,8 +104,8 @@ export const Sidebar = ({
             href: `/${lang}/support/customer`,
             exact: true,
           },
-          { key: 'createTicket', label: 'Create Ticket', icon: <CreateTicketIcon sx={{ fontSize: 20 }} />, href: `/${lang}/create-ticket` },
-          { key: 'notifications', label: 'Notifications', icon: <NotificationsIcon sx={{ fontSize: 20 }} />, href: `/${lang}/notifications` },
+          { key: 'createTicket', label: tr('portal.nav.createTicket', 'Create Ticket'), icon: <CreateTicketIcon sx={{ fontSize: 20 }} />, href: `/${lang}/create-ticket` },
+          { key: 'notifications', label: tr('portal.nav.notifications', 'Notifications'), icon: <NotificationsIcon sx={{ fontSize: 20 }} />, href: `/${lang}/notifications` },
         ];
 
   /* ------------------------------------------------------------------ */
@@ -241,7 +243,7 @@ export const Sidebar = ({
           sx={{ borderRadius: '10px', py: 1, px: 1.5, color: 'var(--pc-text-3)', '&:hover': { bgcolor: 'var(--pc-bg)' } }}
         >
           <KeyboardIcon sx={{ fontSize: 20, mr: 1.5 }} />
-          <Typography sx={{ flex: 1, fontSize: '0.85rem', fontWeight: 500 }}>Keyboard shortcuts</Typography>
+          <Typography sx={{ flex: 1, fontSize: '0.85rem', fontWeight: 500 }}>{tr('portal.shortcuts.title', 'Keyboard shortcuts')}</Typography>
           <Kbd>?</Kbd>
         </ListItemButton>
       </Box>

@@ -4,6 +4,7 @@ import { SupportAgent as BrandIcon } from '@mui/icons-material';
 import { Box, Card, Typography } from '@mui/material';
 import type { ReactNode } from 'react';
 import { ColorModeToggle } from '@/components/colorMode/ColorModeToggle';
+import { LanguageSwitcher } from '@/components/languageSwitcher/LanguageSwitcher';
 
 export interface AuthHighlight {
   icon: ReactNode;
@@ -118,7 +119,10 @@ export const AuthShell = ({ title, subtitle, highlights = [], children }: AuthSh
           position: 'relative',
         }}
       >
-        <ColorModeToggle sx={{ position: 'absolute', top: { xs: 12, md: 20 }, right: { xs: 12, md: 20 } }} />
+        <Box sx={{ position: 'absolute', top: { xs: 12, md: 20 }, right: { xs: 12, md: 20 }, display: 'flex', gap: 1 }}>
+          <LanguageSwitcher />
+          <ColorModeToggle />
+        </Box>
         {children}
       </Box>
     </Card>

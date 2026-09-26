@@ -15,18 +15,20 @@ import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import { SupportLayout } from '@/components/supportLayout/SupportLayout';
 import { StatCard } from '@/components/supportLayout/StatCard';
 import { useSupportStats } from '@/lib/support/useSupportStats';
+import { useT } from '@/lib/i18n/useT';
 
 export default function StaffDashboardPage() {
   const dictionary = useDictionary();
   const { authData } = useJumboAuth();
   const t = dictionary.support?.staff?.dashboard;
+  const tr = useT();
   const { stats } = useSupportStats();
   const authUser = authData?.authUser?.user;
 
   const statusData = [
-    { name: 'New', value: stats.new, color: '#3b82f6' },
-    { name: 'Active', value: stats.active, color: '#22c55e' },
-    { name: 'Closed', value: stats.closed, color: '#94a3b8' },
+    { name: t?.stats?.new || 'New', value: stats.new, color: '#3b82f6' },
+    { name: t?.stats?.active || 'Active', value: stats.active, color: '#22c55e' },
+    { name: t?.stats?.closed || 'Closed', value: stats.closed, color: '#94a3b8' },
   ];
 
   // Tickets created on each of the last 7 days (local time), oldest first.
@@ -53,7 +55,7 @@ export default function StaffDashboardPage() {
   }, [stats.recentCreatedAt, t]);
 
   return (
-    <SupportLayout userRole="staff" userName={authUser?.name || 'Staff'} userRoleLabel="Staff">
+    <SupportLayout userRole="staff" userName={authUser?.name || tr('portal.common.staff', 'Staff')} userRoleLabel={tr('portal.common.staff', 'Staff')}>
       <Box sx={{ mb: 3 }}>
         <Typography sx={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--pc-text)', mb: 0.5 }}>
           {t?.title || 'Staff Dashboard'}

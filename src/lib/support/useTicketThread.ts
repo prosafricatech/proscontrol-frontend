@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReassignmentEvent, Ticket, TicketMessage } from '@/lib/support/mockData';
+import { useT } from '@/lib/i18n/useT';
 
 // v1 backend has no push channel, so the thread is polled (see API contract).
 // Messages are checked quickly while a conversation is lively and back off
@@ -35,6 +36,7 @@ function mergeMessages(existing: TicketMessage[], incoming: TicketMessage[]): Ti
 }
 
 export function useTicketThread(ticketId: string | undefined, currentUserId: string, isStaff: boolean) {
+  const t = useT();
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [messages, setMessages] = useState<TicketMessage[]>([]);
   const [reassignments, setReassignments] = useState<ReassignmentEvent[]>([]);
@@ -58,13 +60,13 @@ export function useTicketThread(ticketId: string | undefined, currentUserId: str
     const payload = await response.json().catch(() => null);
 
     if (!response.ok) {
-      setLoadError(errorMessage(payload, 'Unable to load this ticket.'));
+      setLoadError(errorMessage(payload, t('portal.chat.loadFailed', 'Unable to load this ticket.')));
       return;
     }
 
     setLoadError(null);
     setTicket(payload?.data ?? null);
-  }, [ticketId]);
+  }, [ticketId, t]);
 
   /** Returns how many new messages arrived from the other participant. */
   const fetchMessages = useCallback(async (onlyNew: boolean): Promise<number> => {
@@ -210,7 +212,7 @@ export function useTicketThread(ticketId: string | undefined, currentUserId: str
   }, [ticketId, fetchReassignments, fetchMessages]);
 
   const sendMessage = useCallback(async (body: string, files: File[]): Promise<ActionResult> => {
-    if (!ticketId) return { ok: false, error: 'Unable to send message.' };
+    if (!ticketId) return { ok: false, error: t('portal.chat.sendFailed', 'Unable to send message.') };
 
     const formData = new FormData();
     formData.append('body', body);
@@ -221,33 +223,33 @@ export function useTicketThread(ticketId: string | undefined, currentUserId: str
       const response = await fetch(`/api/support/tickets/${ticketId}/messages`, { method: 'POST', body: formData });
       const payload = await response.json().catch(() => null);
 
-      if (!response.ok) return { ok: false, error: errorMessage(payload, 'Unable to send message.') };
+      if (!response.ok) return { ok: false, error: errorMessage(payload, t('portal.chat.sendFailed', 'Unable to send message.')) };
 
       if (payload?.data) setMessages((current) => mergeMessages(current, [payload.data]));
       pollStep.current = 0;
 
       return { ok: true };
     } catch {
-      return { ok: false, error: 'Unable to send message.' };
+      return { ok: false, error: t('portal.chat.sendFailed', 'Unable to send message.') };
     } finally {
       setPendingAction(null);
     }
-  }, [ticketId]);
+  }, [ticketId, t]);
 
   const activate = useCallback(
-    () => runTicketAction('activate', {}, 'Unable to activate this ticket.'),
-    [runTicketAction],
+    () => runTicketAction('activate', {}, t('portal.chat.activateFailed', 'Unable to activate this ticket.')),
+    [runTicketAction, t],
   );
 
   const close = useCallback(
-    () => runTicketAction('close', {}, 'Unable to close this ticket.'),
-    [runTicketAction],
+    () => runTicketAction('close', {}, t('portal.chat.closeFailed', 'Unable to close this ticket.')),
+    [runTicketAction, t],
   );
 
   const reassign = useCallback((toUserId: string, reason?: string) => runTicketAction('reassign', {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ to_user_id: Number(toUserId), reason: reason || undefined }),
-  }, 'Unable to reassign this ticket.'), [runTicketAction]);
+  }, t('portal.chat.reassignFailed', 'Unable to reassign this ticket.')), [runTicketAction, t]);
 
   return {
     ticket,

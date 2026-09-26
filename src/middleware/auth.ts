@@ -91,13 +91,19 @@ export async function anonymousMiddleware(request: NextRequest) {
   }
 
   if (token) {
-    return NextResponse.redirect(new URL('/support', request.url));
+    return NextResponse.redirect(new URL(`${localePrefix(pathname)}/support`, request.url));
   }
 
   return NextResponse.next();
 }
 
 // --- Helpers ---
+/** "/sw-TZ" for /sw-TZ/..., so redirects keep the page language; "" otherwise. */
+function localePrefix(pathname: string) {
+  const match = pathname.match(/^\/([a-z]{2}-[A-Z]{2})(?=\/|$)/);
+  return match ? `/${match[1]}` : '';
+}
+
 function createAuthRedirect(request: NextRequest, error?: string) {
   const callbackPath = request.nextUrl.pathname;
 
@@ -105,7 +111,7 @@ function createAuthRedirect(request: NextRequest, error?: string) {
     return NextResponse.next();
   }
 
-  const url = new URL('/auth/signin', request.url);
+  const url = new URL(`${localePrefix(callbackPath)}/auth/signin`, request.url);
   url.searchParams.set('callbackUrl', callbackPath);
   if (error) url.searchParams.set('error', error);
   return NextResponse.redirect(url);

@@ -7,6 +7,8 @@ export type ShortcutAction =
   | { type: 'focus-reply' };
 
 export type ShortcutDefinition = {
+  /** Dictionary key: portal.shortcuts.items.<id> */
+  id: string;
   /** One key ("c") or a "g"-prefixed sequence ("g q"). */
   keys: string;
   description: string;
@@ -19,28 +21,28 @@ export type ShortcutDefinition = {
 const BOTH: ShortcutRole[] = ['staff', 'customer'];
 
 export const SHORTCUTS: ShortcutDefinition[] = [
-  { keys: '?', description: 'Show keyboard shortcuts', group: 'General', roles: BOTH, action: { type: 'help' } },
-  { keys: 'c', description: 'Create a new ticket', group: 'General', roles: BOTH, action: { type: 'navigate', path: '/create-ticket' } },
-  { keys: 't', description: 'Switch light / dark mode', group: 'General', roles: BOTH, action: { type: 'toggle-theme' } },
+  { id: 'help', keys: '?', description: 'Show keyboard shortcuts', group: 'General', roles: BOTH, action: { type: 'help' } },
+  { id: 'create', keys: 'c', description: 'Create a new ticket', group: 'General', roles: BOTH, action: { type: 'navigate', path: '/create-ticket' } },
+  { id: 'theme', keys: 't', description: 'Switch light / dark mode', group: 'General', roles: BOTH, action: { type: 'toggle-theme' } },
 
-  { keys: 'g h', description: 'Dashboard', group: 'Go to', roles: ['staff'], action: { type: 'navigate', path: '/support/staff' } },
-  { keys: 'g q', description: 'Queue', group: 'Go to', roles: ['staff'], action: { type: 'navigate', path: '/support/staff/queue' } },
-  { keys: 'g n', description: 'New tickets waiting', group: 'Go to', roles: ['staff'], action: { type: 'navigate', path: '/support/staff/queue?filter=new' } },
-  { keys: 'g m', description: 'Tickets assigned to me', group: 'Go to', roles: ['staff'], action: { type: 'navigate', path: '/support/staff/queue?filter=mine' } },
-  { keys: 'g a', description: 'All tickets', group: 'Go to', roles: ['staff'], action: { type: 'navigate', path: '/support/staff/tickets' } },
-  { keys: 'g r', description: 'Reports', group: 'Go to', roles: ['staff'], action: { type: 'navigate', path: '/reports' } },
-  { keys: 'g s', description: 'Settings', group: 'Go to', roles: ['staff'], action: { type: 'navigate', path: '/settings' } },
-  { keys: 'g h', description: 'My tickets', group: 'Go to', roles: ['customer'], action: { type: 'navigate', path: '/support/customer' } },
-  { keys: 'g i', description: 'Notifications', group: 'Go to', roles: BOTH, action: { type: 'navigate', path: '/notifications' } },
+  { id: 'dashboard', keys: 'g h', description: 'Dashboard', group: 'Go to', roles: ['staff'], action: { type: 'navigate', path: '/support/staff' } },
+  { id: 'queue', keys: 'g q', description: 'Queue', group: 'Go to', roles: ['staff'], action: { type: 'navigate', path: '/support/staff/queue' } },
+  { id: 'newTickets', keys: 'g n', description: 'New tickets waiting', group: 'Go to', roles: ['staff'], action: { type: 'navigate', path: '/support/staff/queue?filter=new' } },
+  { id: 'mine', keys: 'g m', description: 'Tickets assigned to me', group: 'Go to', roles: ['staff'], action: { type: 'navigate', path: '/support/staff/queue?filter=mine' } },
+  { id: 'allTickets', keys: 'g a', description: 'All tickets', group: 'Go to', roles: ['staff'], action: { type: 'navigate', path: '/support/staff/tickets' } },
+  { id: 'reports', keys: 'g r', description: 'Reports', group: 'Go to', roles: ['staff'], action: { type: 'navigate', path: '/reports' } },
+  { id: 'settings', keys: 'g s', description: 'Settings', group: 'Go to', roles: ['staff'], action: { type: 'navigate', path: '/settings' } },
+  { id: 'myTickets', keys: 'g h', description: 'My tickets', group: 'Go to', roles: ['customer'], action: { type: 'navigate', path: '/support/customer' } },
+  { id: 'notifications', keys: 'g i', description: 'Notifications', group: 'Go to', roles: BOTH, action: { type: 'navigate', path: '/notifications' } },
 
-  { keys: 'r', description: 'Focus the reply box', group: 'In a conversation', roles: BOTH, action: { type: 'focus-reply' } },
+  { id: 'focusReply', keys: 'r', description: 'Focus the reply box', group: 'In a conversation', roles: BOTH, action: { type: 'focus-reply' } },
 ];
 
 /** Shown in the help list only; handled by the chat pages themselves. */
-export const CONVERSATION_KEY_HINTS: { keys: string; description: string }[] = [
-  { keys: 'Enter', description: 'Send message' },
-  { keys: 'Shift Enter', description: 'New line' },
-  { keys: 'Esc', description: 'Leave the conversation (kept while you have an unsent draft)' },
+export const CONVERSATION_KEY_HINTS: { id: string; keys: string; description: string }[] = [
+  { id: 'send', keys: 'Enter', description: 'Send message' },
+  { id: 'newLine', keys: 'Shift Enter', description: 'New line' },
+  { id: 'leave', keys: 'Esc', description: 'Leave the conversation (kept while you have an unsent draft)' },
 ];
 
 export const FOCUS_REPLY_EVENT = 'pc:focus-reply';

@@ -7,11 +7,18 @@ const EVENT_WINDOW_MS = 14 * DAY_MS;
 // Max tickets inspected for unread messages / assignment per request.
 const MAX_TICKETS = 10;
 
+/**
+ * Facts only (no sentences): the browser builds the text in the user's
+ * language from `kind` + these fields.
+ */
 export type SupportNotification = {
   id: string;
   kind: 'new_ticket' | 'assigned' | 'activated' | 'closed' | 'messages';
-  title: string;
-  detail: string;
+  /** Who did it: message sender, assigning/handling staff, or the customer (new tickets). */
+  actorName: string | null;
+  /** Unread message count; "15+" when the newest page is all unread. */
+  count: string | null;
+  subject: string;
   at: string;
   ticketId: string;
 };
@@ -52,15 +59,13 @@ async function unreadMessages(request: NextRequest, ticketId: number, meId: numb
 }
 
 function messagesNotification(ticket: BackendTicket, unread: NonNullable<Awaited<ReturnType<typeof unreadMessages>>>): SupportNotification {
-  const count = unread.capped ? `${unread.count}+` : String(unread.count);
-  const sender = unread.latest?.sender?.name ?? 'Someone';
-
   return {
     // Includes the newest unread id, so a later message re-notifies after "mark as read".
     id: `messages:${ticket.id}:${unread.latest?.id}`,
     kind: 'messages',
-    title: `${count} new message${unread.count === 1 && !unread.capped ? '' : 's'} from ${sender}`,
-    detail: ticket.subject ?? `Ticket #${ticket.id}`,
+    actorName: unread.latest?.sender?.name ?? null,
+    count: unread.capped ? `${unread.count}+` : String(unread.count),
+    subject: ticket.subject ?? `#${ticket.id}`,
     at: unread.latest?.sent_at ?? unread.latest?.created_at ?? ticket.updated_at ?? '',
     ticketId: String(ticket.id),
   };
@@ -93,8 +98,9 @@ export async function GET(request: NextRequest) {
       items.push({
         id: `new_ticket:${ticket.id}`,
         kind: 'new_ticket',
-        title: 'New ticket waiting',
-        detail: `${ticket.subject ?? `Ticket #${ticket.id}`} · ${ticket.user?.name ?? 'Customer'}`,
+        actorName: ticket.user?.name ?? null,
+        count: null,
+        subject: ticket.subject ?? `#${ticket.id}`,
         at: ticket.created_at ?? '',
         ticketId: String(ticket.id),
       });
@@ -114,8 +120,9 @@ export async function GET(request: NextRequest) {
         items.push({
           id: `assigned:${ticket.id}:${latest.id ?? latest.created_at}`,
           kind: 'assigned',
-          title: `Ticket assigned to you by ${latest.reassigned_by?.name ?? 'a colleague'}`,
-          detail: ticket.subject ?? `Ticket #${ticket.id}`,
+          actorName: latest.reassigned_by?.name ?? null,
+          count: null,
+          subject: ticket.subject ?? `#${ticket.id}`,
           at: latest.created_at,
           ticketId: String(ticket.id),
         });
@@ -138,8 +145,9 @@ export async function GET(request: NextRequest) {
           // Includes the handler, so a reassignment shows up as a new notification.
           id: `activated:${ticket.id}:${ticket.attended_by.id}`,
           kind: 'activated',
-          title: `${ticket.attended_by.name ?? 'Support'} is now handling your ticket`,
-          detail: ticket.subject ?? `Ticket #${ticket.id}`,
+          actorName: ticket.attended_by.name ?? null,
+          count: null,
+          subject: ticket.subject ?? `#${ticket.id}`,
           at: ticket.updated_at ?? '',
           ticketId: String(ticket.id),
         });
@@ -153,8 +161,9 @@ export async function GET(request: NextRequest) {
       items.push({
         id: `closed:${ticket.id}`,
         kind: 'closed',
-        title: 'Your ticket was closed',
-        detail: ticket.subject ?? `Ticket #${ticket.id}`,
+        actorName: ticket.attended_by?.name ?? null,
+        count: null,
+        subject: ticket.subject ?? `#${ticket.id}`,
         at: ticket.closed_at ?? '',
         ticketId: String(ticket.id),
       });

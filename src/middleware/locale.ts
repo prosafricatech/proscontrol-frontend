@@ -1,6 +1,7 @@
 import { activeLocale } from '@/proxy';
 import Negotiator from 'negotiator';
 import { NextRequest } from 'next/server';
+import { DEFAULT_LOCALE, isSupportedLocale, LOCALE_COOKIE, localeFromAcceptLanguage } from '@/config/locales';
 
 let headers = { 'accept-language': 'en-US,en;q=0.5' };
 let languages = new Negotiator({ headers }).languages();
@@ -32,9 +33,14 @@ export function prefixLocale(request: NextRequest) {
     return null;
   }
 
-  //redirect with default locale
+  // No locale in the URL: the user's saved choice, then the browser language, then English.
+  const saved = request.cookies.get(LOCALE_COOKIE)?.value;
+  const locale = isSupportedLocale(saved)
+    ? saved
+    : localeFromAcceptLanguage(request.headers.get('accept-language')) ?? DEFAULT_LOCALE;
+
   const url = request.nextUrl.clone();
-  url.pathname = `/${defaultLocale}${pathname}`;
+  url.pathname = `/${locale}${pathname === '/' ? '' : pathname}`;
 
   return url;
 }

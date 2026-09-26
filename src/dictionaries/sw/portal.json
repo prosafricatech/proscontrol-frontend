@@ -1,0 +1,260 @@
+{
+  "staffDirectory": {
+    "title": "Orodha ya Wahudumu",
+    "subtitle": "Tafuta wenzako, angalia upatikanaji wao, na gawa kazi kwa uhakika.",
+    "invite": "Alika mhudumu",
+    "search": "Tafuta mhudumu",
+    "role": {
+      "specialist": "Mtaalamu wa Msaada",
+      "senior": "Mtaalamu Mkuu wa Msaada"
+    },
+    "available": "Anapatikana",
+    "busy": "Ana shughuli"
+  },
+  "customerProfile": {
+    "title": "Wasifu wa Mteja",
+    "subtitle": "Kagua taarifa za mawasiliano na historia kamili ya tiketi za mteja.",
+    "edit": "Hariri wasifu",
+    "customer": "Mteja",
+    "since": "Mteja tangu Septemba 2026",
+    "history": "Historia ya tiketi",
+    "noTickets": "Hakuna tiketi zilizopatikana kwa mteja huyu."
+  },
+  "common": {
+    "filter": "Chuja",
+    "saveChanges": "Hifadhi mabadiliko",
+    "title": "Kichwa",
+    "justNow": "Sasa hivi",
+    "copy": "Nakili",
+    "staff": "Mhudumu",
+    "customer": "Mteja",
+    "cancel": "Ghairi",
+    "unassigned": "Haijapewa",
+    "close": "Funga"
+  },
+  "createTicket": {
+    "subjectRequired": "Kichwa cha tiketi kinahitajika.",
+    "descriptionRequired": "Tafadhali eleza tatizo.",
+    "failed": "Imeshindikana kufungua tiketi. Tafadhali jaribu tena.",
+    "staffNote": "Tiketi unazofungua hapa zinafunguliwa chini ya akaunti yako mwenyewe.",
+    "title": "Fungua Tiketi",
+    "subtitle": "Eleza tatizo lako na timu yetu ya msaada italishughulikia.",
+    "details": "Maelezo ya tiketi",
+    "subject": "Kichwa",
+    "organization": "Taasisi (si lazima)",
+    "organizationHelp": "Taasisi ya prosERP ambayo tatizo hili linaihusu, ikiwa ipo.",
+    "description": "Maelezo",
+    "descriptionHelp": "Eleza hatua ulizochukua, ujumbe wa hitilafu, na ulichotarajia kitokee.",
+    "creating": "Inafungua…",
+    "submit": "Fungua tiketi"
+  },
+  "settings": {
+    "title": "Mipangilio ya Mfumo",
+    "subtitle": "Sanidi arifa na jinsi eneo la kazi linavyofanya kazi.",
+    "notifications": "Arifa",
+    "emailAlerts": "Arifa za barua pepe kwa tiketi mpya",
+    "reassignmentAlerts": "Arifa za kupangwa upya",
+    "dailySummary": "Muhtasari wa kila siku wa timu",
+    "general": "Mipangilio ya jumla",
+    "defaultPriority": "Kipaumbele cha msingi",
+    "priority": {
+      "low": "Chini",
+      "normal": "Kawaida",
+      "high": "Juu"
+    },
+    "defaultView": "Mwonekano wa msingi wa tiketi",
+    "view": {
+      "assigned": "Nilizopewa mimi",
+      "all": "Tiketi zote"
+    },
+    "requireReason": "Lazimisha sababu ya kupanga upya",
+    "api": "Miunganisho ya API",
+    "apiBaseUrl": "URL ya msingi ya API ya ProsERP",
+    "apiKey": "Ufunguo wa API",
+    "apiKeyPlaceholder": "Utahifadhiwa na backend baadaye",
+    "secretsNote": "Siri zinapaswa kuhifadhiwa na kusimbwa na backend, kamwe si kwenye hifadhi ya kivinjari."
+  },
+  "knowledge": {
+    "title": "Hazina ya Maarifa",
+    "subtitle": "Unda suluhisho zinazoweza kutumika tena ambazo wahudumu wanaweza kuziunganisha kwenye tiketi.",
+    "newArticle": "Makala mpya",
+    "category": "Kundi",
+    "body": "Maudhui ya makala",
+    "save": "Hifadhi makala",
+    "count": "Makala {count}",
+    "search": "Tafuta makala",
+    "views": "Imetazamwa mara {count}"
+  },
+  "activity": {
+    "title": "Kumbukumbu za Shughuli",
+    "subtitle": "Kagua vitendo vya kiutawala katika eneo la kazi la msaada.",
+    "filter": "Chuja kumbukumbu",
+    "recent": "Shughuli za karibuni",
+    "systemEvent": "Tukio la ukaguzi wa mfumo · leo",
+    "samples": {
+      "reassigned": "Tiketi imepangwa upya · TCK-1001 → Lilian M.",
+      "closed": "Tiketi imefungwa · TCK-1003",
+      "article": "Makala imesasishwa · Mwongozo wa kusawazisha stoo",
+      "settings": "Mipangilio imebadilishwa · Arifa za barua pepe"
+    }
+  },
+  "notifications": {
+    "title": "Kituo cha Arifa",
+    "subtitle": "Taarifa za tiketi na ujumbe mpya. Kufungua mazungumzo kunaondoa arifa zake za ujumbe.",
+    "markAllRead": "Weka zote zimesomwa",
+    "allCount": "Zote {count}",
+    "unreadCount": "Hazijasomwa {count}",
+    "loading": "Inapakia arifa…",
+    "empty": "Bado hakuna arifa. Taarifa za tiketi zako zitaonekana hapa.",
+    "bellUnread": "Arifa ({count} hazijasomwa)",
+    "bell": "Arifa",
+    "markAllAsRead": "Weka zote zimesomwa",
+    "viewAll": "Tazama arifa zote",
+    "caughtUp": "Hakuna arifa mpya.",
+    "someone": "Mtu fulani",
+    "kinds": {
+      "messageOne": "Ujumbe 1 mpya kutoka kwa {actor}",
+      "messageMany": "Jumbe {count} mpya kutoka kwa {actor}",
+      "newTicket": "Tiketi mpya kutoka kwa {actor}",
+      "assigned": "Umepewa tiketi na {actor}",
+      "activated": "{actor} sasa anashughulikia tiketi yako",
+      "closed": "Tiketi yako imefungwa"
+    }
+  },
+  "replies": {
+    "title": "Majibu Yaliyohifadhiwa",
+    "subtitle": "Simamia majibu yanayotumika tena ili kuwajibu wateja kwa haraka.",
+    "new": "Jibu jipya",
+    "library": "Maktaba ya majibu",
+    "edit": "Hariri jibu",
+    "shortcut": "Njia fupi",
+    "response": "Jibu",
+    "save": "Hifadhi jibu"
+  },
+  "queue": {
+    "activate": "Washa",
+    "activateFailed": "Imeshindikana kuwasha tiketi.",
+    "closeFailed": "Imeshindikana kufunga tiketi."
+  },
+  "allTickets": {
+    "title": "Tiketi Zote",
+    "subtitle": "Kagua na simamia kila tiketi ya msaada wa wateja.",
+    "empty": "Hakuna tiketi zilizopatikana"
+  },
+  "ticketForm": {
+    "subjectRequired": "Kichwa kinahitajika",
+    "descriptionRequired": "Maelezo yanahitajika",
+    "subject": "Kichwa",
+    "organization": "Taasisi",
+    "noOrganizations": "Hakuna taasisi zinazopatikana",
+    "description": "Maelezo",
+    "customerNameRequired": "Jina la mteja linahitajika",
+    "emailInvalid": "Weka barua pepe sahihi",
+    "onBehalfTitle": "Tiketi mpya kwa niaba ya mteja",
+    "customerName": "Jina la mteja",
+    "customerEmail": "Barua pepe ya mteja (si lazima)"
+  },
+  "ticketCard": {
+    "meta": "Inashughulikiwa na {handler} · imesasishwa {date}"
+  },
+  "pagination": {
+    "range": "{from}–{to} kati ya {total}"
+  },
+  "chat": {
+    "fileTooLarge": "Faili kubwa kuliko MB 10 zimerukwa.",
+    "attach": "Ambatisha",
+    "send": "Tuma",
+    "typeMessage": "Andika ujumbe...",
+    "loadFailed": "Imeshindikana kupakia tiketi hii.",
+    "sendFailed": "Imeshindikana kutuma ujumbe.",
+    "activateFailed": "Imeshindikana kuwasha tiketi hii.",
+    "closeFailed": "Imeshindikana kufunga tiketi hii.",
+    "reassignFailed": "Imeshindikana kupanga upya tiketi hii."
+  },
+  "logout": {
+    "title": "Thibitisha Kutoka",
+    "question": "Una uhakika unataka kutoka?"
+  },
+  "auth": {
+    "hidePassword": "Ficha nenosiri",
+    "showPassword": "Onyesha nenosiri"
+  },
+  "redirecting": "Inakupeleka kwenye tovuti ya msaada...",
+  "nav": {
+    "createTicket": "Fungua Tiketi",
+    "staffDirectory": "Orodha ya Wahudumu",
+    "customerProfile": "Wasifu wa Mteja",
+    "knowledgeBase": "Hazina ya Maarifa",
+    "reports": "Ripoti",
+    "activityLogs": "Kumbukumbu za Shughuli",
+    "notifications": "Arifa",
+    "savedReplies": "Majibu Yaliyohifadhiwa",
+    "settings": "Mipangilio"
+  },
+  "shortcuts": {
+    "title": "Njia za mkato za kibodi",
+    "items": {
+      "help": "Onyesha njia za mkato",
+      "create": "Fungua tiketi mpya",
+      "theme": "Badilisha hali ya mwanga / giza",
+      "dashboard": "Dashibodi",
+      "queue": "Foleni",
+      "newTickets": "Tiketi mpya zinazosubiri",
+      "mine": "Tiketi nilizopewa",
+      "allTickets": "Tiketi zote",
+      "reports": "Ripoti",
+      "settings": "Mipangilio",
+      "myTickets": "Tiketi zangu",
+      "notifications": "Arifa",
+      "focusReply": "Nenda kwenye kisanduku cha kujibu",
+      "send": "Tuma ujumbe",
+      "newLine": "Mstari mpya",
+      "leave": "Toka kwenye mazungumzo (haitoki ukiwa na ujumbe ambao haujatumwa)"
+    },
+    "groups": {
+      "general": "Jumla",
+      "goTo": "Nenda kwa",
+      "conversation": "Kwenye mazungumzo"
+    },
+    "then": "kisha",
+    "draftBlocked": "Tuma au futa ujumbe wako kabla ya kutoka kwenye mazungumzo haya.",
+    "footerBefore": "Njia za mkato hazifanyi kazi unapoandika kwenye sehemu ya maandishi. Bonyeza",
+    "footerAfter": "kufunga orodha hii."
+  },
+  "reports": {
+    "duration": {
+      "minutes": "dak {m}",
+      "hoursMinutes": "saa {h} dak {m}",
+      "daysHours": "siku {d} saa {h}"
+    },
+    "loadFailed": "Imeshindikana kupakia ripoti.",
+    "title": "Ripoti za Tiketi",
+    "subtitle": "Fuatilia wingi wa tiketi, kasi ya kushughulikia, na muda wa kutatua.",
+    "lastDays": "Siku {count} zilizopita",
+    "opened": "Zilizofunguliwa",
+    "closed": "Zilizofungwa",
+    "avgResolution": "Wastani wa muda wa kutatua",
+    "createdToClosed": "Kufunguliwa → kufungwa",
+    "medianResolution": "Muda wa kati wa kutatua",
+    "medianHint": "Nusu ya tiketi hufungwa haraka zaidi",
+    "backlog": "Tiketi zilizo wazi",
+    "backlogHint": "Mpya + hai kwa sasa",
+    "volume": "Wingi wa tiketi",
+    "closedByStaff": "Zilizofungwa kwa kila mhudumu",
+    "noneClosed": "Hakuna tiketi zilizofungwa katika kipindi hiki.",
+    "about": "Kuhusu takwimu hizi",
+    "noteSla": "Ufuatiliaji wa SLA bado haupatikani: hakuna lengo la muda wa kujibu/kutatua lililowekwa.",
+    "noteLookback": "Idadi ya zilizofungwa inajumuisha tiketi zilizofunguliwa katika siku {days} zilizopita.",
+    "noteTruncated": "Wingi mkubwa sana: tiketi za karibuni tu ndizo zimehesabiwa."
+  },
+  "time": {
+    "justNow": "sasa hivi",
+    "minutesAgo": "dakika {count} zilizopita",
+    "hoursAgo": "saa {count} zilizopita",
+    "yesterday": "jana",
+    "daysAgo": "siku {count} zilizopita"
+  },
+  "language": {
+    "change": "Badilisha lugha"
+  }
+}

@@ -7,7 +7,7 @@ interface LocaleDictionary {
 
 const dictionaries: LocaleDictionary = {
   'en-US': async () => {
-    const [main, organizations,measurementUnits,currencies,stakeholders,filesShelf,userManagement,productCategories,stores,products,assets,assetBookings] = await Promise.all([
+    const [main, organizations,measurementUnits,currencies,stakeholders,filesShelf,userManagement,productCategories,stores,products,assets,assetBookings,portal] = await Promise.all([
       import('@/dictionaries/en/en.json').then(m => m.default),
       import('@/dictionaries/en/organizations/organizations.json').then(m => m.default),
       import('@/dictionaries/en/measurementUnits/measurementUnits.json').then(m => m.default),
@@ -19,7 +19,8 @@ const dictionaries: LocaleDictionary = {
       import('@/dictionaries/en/product/stores/stores.json').then(m =>m.default),
       import('@/dictionaries/en/product/products.json').then(m =>m.default),
       import('@/dictionaries/en/assets/assets.json').then(m =>m.default),
-      import('@/dictionaries/en/assetBookings/assetBookings.json').then(m =>m.default)
+      import('@/dictionaries/en/assetBookings/assetBookings.json').then(m =>m.default),
+      import('@/dictionaries/en/portal.json').then(m => m.default)
     ]);
     return {
       ...main,
@@ -33,12 +34,12 @@ const dictionaries: LocaleDictionary = {
       stores,
       products,
       ...assets,
-      ...assetBookings
-
+      ...assetBookings,
+      portal,
     };
   },
   'sw-TZ': async () => {
-    const [main, organizations,measurementUnits,currencies,stakeholders,filesShelf,userManagement,productCategories,stores,products,assets,assetBookings] = await Promise.all([
+    const [main, organizations,measurementUnits,currencies,stakeholders,filesShelf,userManagement,productCategories,stores,products,assets,assetBookings,portal] = await Promise.all([
       import('@/dictionaries/sw/sw.json').then(m => m.default),
       import('@/dictionaries/sw/organizations/organizations.json').then(m => m.default),
       import('@/dictionaries/sw/measurementUnits/measurementUnits.json').then(m => m.default),
@@ -50,7 +51,8 @@ const dictionaries: LocaleDictionary = {
       import('@/dictionaries/sw/product/stores/stores.json').then(m =>m.default),
       import('@/dictionaries/sw/product/products.json').then(m =>m.default),
       import('@/dictionaries/sw/assets/assets.json').then(m =>m.default),
-      import('@/dictionaries/sw/assetBookings/assetBookings.json').then(m =>m.default)
+      import('@/dictionaries/sw/assetBookings/assetBookings.json').then(m =>m.default),
+      import('@/dictionaries/sw/portal.json').then(m => m.default)
     ]);
     return {
       ...main,
@@ -64,7 +66,8 @@ const dictionaries: LocaleDictionary = {
       stores,
       products,
       ...assets,
-      ...assetBookings
+      ...assetBookings,
+      portal,
     };
   },
 

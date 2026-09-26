@@ -33,11 +33,9 @@ import { MessageBubble } from '@/components/supportLayout/MessageBubble';
 import { MessageComposer } from '@/components/supportLayout/MessageComposer';
 import { CHAT_COLUMN_HEIGHT, ChatScrollArea } from '@/components/supportLayout/ChatScrollArea';
 import { useTicketThread } from '@/lib/support/useTicketThread';
+import { useFormatDate, useT } from '@/lib/i18n/useT';
 import { useEscapeToLeave } from '@/lib/support/useEscapeToLeave';
 import { canGoBackInApp } from '@/lib/support/inAppNavigation';
-
-const formatMessageTime = (value: string) =>
-  value ? new Date(value).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : '';
 
 const sectionLabelSx = { fontSize: '0.75rem', fontWeight: 700, color: 'var(--pc-text-4)', letterSpacing: 0.5 };
 
@@ -47,8 +45,11 @@ export default function StaffTicketDetailPage() {
   const dictionary = useDictionary();
   const { authData } = useJumboAuth();
   const t = dictionary.support?.staff?.ticketDetail;
+  const tr = useT();
+  const formatDate = useFormatDate();
+  const formatMessageTime = (value: string) => formatDate(value);
   const currentUser = authData?.authUser?.user;
-  const currentUserName = currentUser?.name || 'Staff';
+  const currentUserName = currentUser?.name || tr('portal.common.staff', 'Staff');
   const currentUserId = currentUser?.id ? String(currentUser.id) : '';
   const { ticket, messages, reassignments, loadError, pendingAction, notifyActivity, sendMessage, activate, close, reassign } =
     useTicketThread(params.ticketId, currentUserId, true);
@@ -63,7 +64,7 @@ export default function StaffTicketDetailPage() {
 
   if (!ticket) {
     return (
-      <SupportLayout userRole="staff" userName={currentUserName} userRoleLabel="Staff">
+      <SupportLayout userRole="staff" userName={currentUserName} userRoleLabel={tr('portal.common.staff', 'Staff')}>
         <Box sx={{ p: 4, bgcolor: 'var(--pc-surface)', borderRadius: '12px', border: '1px solid var(--pc-border)' }}>
           <Typography sx={{ color: loadError ? 'var(--pc-danger)' : 'var(--pc-text-2)' }}>{loadError || t?.loading || 'Loading ticket...'}</Typography>
         </Box>
@@ -98,7 +99,7 @@ export default function StaffTicketDetailPage() {
   ];
 
   return (
-    <SupportLayout userRole="staff" userName={currentUserName} userRoleLabel="Staff">
+    <SupportLayout userRole="staff" userName={currentUserName} userRoleLabel={tr('portal.common.staff', 'Staff')}>
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '1fr 380px' }, gap: 3, alignItems: 'start' }}>
         <Box sx={{ display: 'flex', flexDirection: 'column', height: CHAT_COLUMN_HEIGHT, minHeight: 480 }}>
           <Box sx={{ flexShrink: 0 }}>
@@ -112,7 +113,7 @@ export default function StaffTicketDetailPage() {
               <StatusBadge status={ticket.status} />
             </Box>
             <Typography sx={{ fontSize: '0.85rem', color: 'var(--pc-text-4)', mb: 2, ml: 6 }}>
-              {new Date(ticket.createdAt).toLocaleString()}
+              {formatDate(ticket.createdAt)}
             </Typography>
           </Box>
 
@@ -220,7 +221,7 @@ export default function StaffTicketDetailPage() {
                 )}
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <ScheduleIcon sx={{ fontSize: 16, color: 'var(--pc-text-3)' }} />
-                  <Typography sx={{ fontSize: '0.875rem', color: 'var(--pc-text)' }}>{new Date(ticket.createdAt).toLocaleString()}</Typography>
+                  <Typography sx={{ fontSize: '0.875rem', color: 'var(--pc-text)' }}>{formatDate(ticket.createdAt)}</Typography>
                 </Box>
               </Box>
             </Box>
@@ -321,7 +322,7 @@ export default function StaffTicketDetailPage() {
                       {event.from ? `${event.from} → ${event.to}` : `${t?.firstAssignment || 'First assignment'}: ${event.to}`}
                     </Typography>
                     {event.note && <Typography sx={{ fontSize: '0.8rem', color: 'var(--pc-text-4)' }}>{event.note}</Typography>}
-                    <Typography sx={{ fontSize: '0.75rem', color: 'var(--pc-text-4)' }}>{new Date(event.at).toLocaleString()}</Typography>
+                    <Typography sx={{ fontSize: '0.75rem', color: 'var(--pc-text-4)' }}>{formatDate(event.at)}</Typography>
                   </Box>
                 ))}
               </Box>

@@ -15,6 +15,7 @@ import {
   SHORTCUTS,
   type ShortcutDefinition,
 } from '@/lib/support/shortcuts';
+import { useT } from '@/lib/i18n/useT';
 
 // Time allowed between "g" and the second key of a sequence.
 const SEQUENCE_TIMEOUT_MS = 1500;
@@ -53,6 +54,7 @@ export const Kbd = ({ children }: { children: ReactNode }) => (
 );
 
 const KeyCombo = ({ keys }: { keys: string }) => {
+  const t = useT();
   const parts = keys.split(' ');
   const isSequence = parts[0] === 'g' && parts.length === 2;
 
@@ -62,7 +64,7 @@ const KeyCombo = ({ keys }: { keys: string }) => {
         <Box key={`${part}-${index}`} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
           {index > 0 && (
             <Typography component="span" sx={{ color: 'var(--pc-text-4)', fontSize: '0.75rem' }}>
-              {isSequence ? 'then' : '+'}
+              {isSequence ? t('portal.shortcuts.then', 'then') : '+'}
             </Typography>
           )}
           <Kbd>{part}</Kbd>
@@ -85,6 +87,7 @@ export function KeyboardShortcutsProvider({ children }: { children: ReactNode })
   const { authData } = useJumboAuth();
   const role = authData?.authUser?.user?.is_staff === true ? 'staff' : 'customer';
   const [helpOpen, setHelpOpen] = useState(false);
+  const t = useT();
   const pendingSequenceAt = useRef(0);
 
   const shortcuts = useMemo(() => SHORTCUTS.filter((shortcut) => shortcut.roles.includes(role)), [role]);
@@ -96,12 +99,12 @@ export function KeyboardShortcutsProvider({ children }: { children: ReactNode })
     if (action.type === 'focus-reply') window.dispatchEvent(new Event(FOCUS_REPLY_EVENT));
     if (action.type === 'navigate') {
       if (hasUnsentDraft()) {
-        enqueueSnackbar('Send or clear your message before leaving this conversation.', { variant: 'info' });
+        enqueueSnackbar(t('portal.shortcuts.draftBlocked', 'Send or clear your message before leaving this conversation.'), { variant: 'info' });
         return;
       }
       router.push(`/${lang}${action.path}`);
     }
-  }, [enqueueSnackbar, lang, router, toggleMode]);
+  }, [enqueueSnackbar, lang, router, t, toggleMode]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -144,12 +147,14 @@ export function KeyboardShortcutsProvider({ children }: { children: ReactNode })
   const openHelp = useCallback(() => setHelpOpen(true), []);
   const contextValue = useMemo(() => ({ openHelp }), [openHelp]);
 
+  const groupKeys = { General: 'general', 'Go to': 'goTo', 'In a conversation': 'conversation' } as const;
   const groups = (['General', 'Go to', 'In a conversation'] as const).map((group) => ({
     group,
+    label: t(`portal.shortcuts.groups.${groupKeys[group]}`, group),
     items: [
-      ...shortcuts.filter((shortcut) => shortcut.group === group).map(({ keys, description }) => ({ keys, description })),
+      ...shortcuts.filter((shortcut) => shortcut.group === group),
       ...(group === 'In a conversation' ? CONVERSATION_KEY_HINTS : []),
-    ],
+    ].map(({ id, keys, description }) => ({ keys, description: t(`portal.shortcuts.items.${id}`, description) })),
   }));
 
   return (
@@ -164,16 +169,16 @@ export function KeyboardShortcutsProvider({ children }: { children: ReactNode })
         slotProps={{ paper: { sx: { borderRadius: '16px', bgcolor: 'var(--pc-surface)', backgroundImage: 'none', border: '1px solid var(--pc-border)' } } }}
       >
         <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: 'var(--pc-text)', fontWeight: 700 }}>
-          Keyboard shortcuts
-          <IconButton aria-label="Close" onClick={() => setHelpOpen(false)} size="small" sx={{ color: 'var(--pc-text-3)' }}>
+          {t('portal.shortcuts.title', 'Keyboard shortcuts')}
+          <IconButton aria-label={t('portal.common.close', 'Close')} onClick={() => setHelpOpen(false)} size="small" sx={{ color: 'var(--pc-text-3)' }}>
             <CloseIcon fontSize="small" />
           </IconButton>
         </DialogTitle>
         <DialogContent sx={{ pb: 3 }}>
-          {groups.map(({ group, items }) => (
+          {groups.map(({ group, label, items }) => (
             <Box key={group} sx={{ mb: 2.5 }}>
               <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, letterSpacing: 0.5, color: 'var(--pc-text-4)', textTransform: 'uppercase', mb: 1 }}>
-                {group}
+                {label}
               </Typography>
               {items.map((item) => (
                 <Box
@@ -187,7 +192,7 @@ export function KeyboardShortcutsProvider({ children }: { children: ReactNode })
             </Box>
           ))}
           <Typography sx={{ color: 'var(--pc-text-3)', fontSize: '0.8rem' }}>
-            Shortcuts don&apos;t work while you&apos;re typing in a field. Press <Kbd>Esc</Kbd> to close this list.
+            {t('portal.shortcuts.footerBefore', 'Shortcuts don\'t work while you\'re typing in a field. Press')} <Kbd>Esc</Kbd> {t('portal.shortcuts.footerAfter', 'to close this list.')}
           </Typography>
         </DialogContent>
       </Dialog>

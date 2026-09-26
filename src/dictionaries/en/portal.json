@@ -1,0 +1,260 @@
+{
+  "staffDirectory": {
+    "title": "Staff Directory",
+    "subtitle": "Find teammates, check availability, and assign work confidently.",
+    "invite": "Invite staff",
+    "search": "Search staff",
+    "role": {
+      "specialist": "Support Specialist",
+      "senior": "Senior Support Specialist"
+    },
+    "available": "Available",
+    "busy": "Busy"
+  },
+  "customerProfile": {
+    "title": "Customer Profile",
+    "subtitle": "Review contact details and the customer's complete ticket history.",
+    "edit": "Edit profile",
+    "customer": "Customer",
+    "since": "Customer since September 2026",
+    "history": "Ticket history",
+    "noTickets": "No tickets found for this customer."
+  },
+  "common": {
+    "filter": "Filter",
+    "saveChanges": "Save changes",
+    "title": "Title",
+    "justNow": "Just now",
+    "copy": "Copy",
+    "staff": "Staff",
+    "customer": "Customer",
+    "cancel": "Cancel",
+    "unassigned": "Unassigned",
+    "close": "Close"
+  },
+  "createTicket": {
+    "subjectRequired": "Subject is required.",
+    "descriptionRequired": "Please describe the issue.",
+    "failed": "Could not create the ticket. Please try again.",
+    "staffNote": "Tickets you create here are opened under your own account.",
+    "title": "Create Ticket",
+    "subtitle": "Describe your issue and our support team will pick it up.",
+    "details": "Ticket details",
+    "subject": "Subject",
+    "organization": "Organization (optional)",
+    "organizationHelp": "The prosERP organization this issue relates to, if any.",
+    "description": "Description",
+    "descriptionHelp": "Include steps, error messages and what you expected to happen.",
+    "creating": "Creating…",
+    "submit": "Create ticket"
+  },
+  "settings": {
+    "title": "System Settings",
+    "subtitle": "Configure notifications and workspace behavior.",
+    "notifications": "Notifications",
+    "emailAlerts": "Email alerts for new tickets",
+    "reassignmentAlerts": "Reassignment alerts",
+    "dailySummary": "Daily team summary",
+    "general": "General behavior",
+    "defaultPriority": "Default priority",
+    "priority": {
+      "low": "Low",
+      "normal": "Normal",
+      "high": "High"
+    },
+    "defaultView": "Default ticket view",
+    "view": {
+      "assigned": "Assigned to me",
+      "all": "All tickets"
+    },
+    "requireReason": "Require reassignment reason",
+    "api": "API integrations",
+    "apiBaseUrl": "ProsERP API base URL",
+    "apiKey": "API key",
+    "apiKeyPlaceholder": "Stored by backend later",
+    "secretsNote": "Secrets should be stored and encrypted by the backend, never in browser storage."
+  },
+  "knowledge": {
+    "title": "Knowledge Base",
+    "subtitle": "Create reusable solutions that agents can link from tickets.",
+    "newArticle": "New article",
+    "category": "Category",
+    "body": "Article body",
+    "save": "Save article",
+    "count": "{count} articles",
+    "search": "Search articles",
+    "views": "{count} views"
+  },
+  "activity": {
+    "title": "Activity Logs",
+    "subtitle": "Audit administrative actions across the support workspace.",
+    "filter": "Filter logs",
+    "recent": "Recent activity",
+    "systemEvent": "System audit event · today",
+    "samples": {
+      "reassigned": "Ticket reassigned · TCK-1001 → Lilian M.",
+      "closed": "Ticket closed · TCK-1003",
+      "article": "Article updated · Stock sync guide",
+      "settings": "Settings changed · Email alerts"
+    }
+  },
+  "notifications": {
+    "title": "Notification Center",
+    "subtitle": "Ticket updates and new messages. Opening a conversation clears its message alerts.",
+    "markAllRead": "Mark all read",
+    "allCount": "All {count}",
+    "unreadCount": "Unread {count}",
+    "loading": "Loading notifications…",
+    "empty": "No notifications yet. Updates on your tickets will appear here.",
+    "bellUnread": "Notifications ({count} unread)",
+    "bell": "Notifications",
+    "markAllAsRead": "Mark all as read",
+    "viewAll": "View all notifications",
+    "caughtUp": "You're all caught up.",
+    "someone": "Someone",
+    "kinds": {
+      "messageOne": "1 new message from {actor}",
+      "messageMany": "{count} new messages from {actor}",
+      "newTicket": "New ticket from {actor}",
+      "assigned": "Ticket assigned to you by {actor}",
+      "activated": "{actor} is now handling your ticket",
+      "closed": "Your ticket was closed"
+    }
+  },
+  "replies": {
+    "title": "Saved Replies",
+    "subtitle": "Manage reusable responses for faster customer communication.",
+    "new": "New reply",
+    "library": "Reply library",
+    "edit": "Edit reply",
+    "shortcut": "Shortcut",
+    "response": "Response",
+    "save": "Save reply"
+  },
+  "queue": {
+    "activate": "Activate",
+    "activateFailed": "Unable to activate the ticket.",
+    "closeFailed": "Unable to close the ticket."
+  },
+  "allTickets": {
+    "title": "All Tickets",
+    "subtitle": "Review and manage every customer support ticket.",
+    "empty": "No tickets found"
+  },
+  "ticketForm": {
+    "subjectRequired": "Subject is required",
+    "descriptionRequired": "Description is required",
+    "subject": "Subject",
+    "organization": "Organization",
+    "noOrganizations": "No organizations available",
+    "description": "Description",
+    "customerNameRequired": "Customer name is required",
+    "emailInvalid": "Enter a valid email",
+    "onBehalfTitle": "New ticket on behalf of customer",
+    "customerName": "Customer name",
+    "customerEmail": "Customer email (optional)"
+  },
+  "ticketCard": {
+    "meta": "Handled by {handler} · updated {date}"
+  },
+  "pagination": {
+    "range": "{from}–{to} of {total}"
+  },
+  "chat": {
+    "fileTooLarge": "Files larger than 10 MB were skipped.",
+    "attach": "Attach",
+    "send": "Send",
+    "typeMessage": "Type a message...",
+    "loadFailed": "Unable to load this ticket.",
+    "sendFailed": "Unable to send message.",
+    "activateFailed": "Unable to activate this ticket.",
+    "closeFailed": "Unable to close this ticket.",
+    "reassignFailed": "Unable to reassign this ticket."
+  },
+  "logout": {
+    "title": "Confirm Logout",
+    "question": "Are you sure you want to logout?"
+  },
+  "auth": {
+    "hidePassword": "Hide password",
+    "showPassword": "Show password"
+  },
+  "redirecting": "Redirecting to your support portal...",
+  "nav": {
+    "createTicket": "Create Ticket",
+    "staffDirectory": "Staff Directory",
+    "customerProfile": "Customer Profile",
+    "knowledgeBase": "Knowledge Base",
+    "reports": "Reports",
+    "activityLogs": "Activity Logs",
+    "notifications": "Notifications",
+    "savedReplies": "Saved Replies",
+    "settings": "Settings"
+  },
+  "shortcuts": {
+    "title": "Keyboard shortcuts",
+    "items": {
+      "help": "Show keyboard shortcuts",
+      "create": "Create a new ticket",
+      "theme": "Switch light / dark mode",
+      "dashboard": "Dashboard",
+      "queue": "Queue",
+      "newTickets": "New tickets waiting",
+      "mine": "Tickets assigned to me",
+      "allTickets": "All tickets",
+      "reports": "Reports",
+      "settings": "Settings",
+      "myTickets": "My tickets",
+      "notifications": "Notifications",
+      "focusReply": "Focus the reply box",
+      "send": "Send message",
+      "newLine": "New line",
+      "leave": "Leave the conversation (kept while you have an unsent draft)"
+    },
+    "groups": {
+      "general": "General",
+      "goTo": "Go to",
+      "conversation": "In a conversation"
+    },
+    "then": "then",
+    "draftBlocked": "Send or clear your message before leaving this conversation.",
+    "footerBefore": "Shortcuts don't work while you're typing in a field. Press",
+    "footerAfter": "to close this list."
+  },
+  "reports": {
+    "duration": {
+      "minutes": "{m}m",
+      "hoursMinutes": "{h}h {m}m",
+      "daysHours": "{d}d {h}h"
+    },
+    "loadFailed": "Unable to load reports.",
+    "title": "Ticket Reports",
+    "subtitle": "Track volume, throughput, and resolution speed.",
+    "lastDays": "Last {count} days",
+    "opened": "Opened",
+    "closed": "Closed",
+    "avgResolution": "Avg. resolution",
+    "createdToClosed": "Created → closed",
+    "medianResolution": "Median resolution",
+    "medianHint": "Half of tickets close faster",
+    "backlog": "Open backlog",
+    "backlogHint": "New + active right now",
+    "volume": "Ticket volume",
+    "closedByStaff": "Closed by staff",
+    "noneClosed": "No tickets closed in this period.",
+    "about": "About these numbers",
+    "noteSla": "SLA tracking isn't available yet: no response/resolution target has been defined.",
+    "noteLookback": "Closed counts include tickets created in the last {days} days.",
+    "noteTruncated": "Very high volume: only the most recent tickets were counted."
+  },
+  "time": {
+    "justNow": "just now",
+    "minutesAgo": "{count}m ago",
+    "hoursAgo": "{count}h ago",
+    "yesterday": "yesterday",
+    "daysAgo": "{count}d ago"
+  },
+  "language": {
+    "change": "Change language"
+  }
+}

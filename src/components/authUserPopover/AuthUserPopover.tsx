@@ -26,6 +26,7 @@ import { signOut } from 'next-auth/react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import React from 'react';
+import { useT } from '@/lib/i18n/useT';
 
 const JumboDdPopover = dynamic(
   () => import('@jumbo/components').then((mod) => mod.JumboDdPopover),
@@ -60,6 +61,7 @@ export const AuthUserPopover: React.FC<AuthUserPopoverProps> = ({
   const router = useRouter();
   const lang = useLanguage();
   const authContext = useJumboAuth();
+  const t = useT();
 
   const [openLogoutDialog, setOpenLogoutDialog] =
     React.useState<boolean>(false);
@@ -174,15 +176,15 @@ export const AuthUserPopover: React.FC<AuthUserPopoverProps> = ({
         open={openLogoutDialog}
         onClose={() => setOpenLogoutDialog(false)}
       >
-        <DialogTitle>Confirm Logout</DialogTitle>
+        <DialogTitle>{t('portal.logout.title', 'Confirm Logout')}</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to logout?
+            {t('portal.logout.question', 'Are you sure you want to logout?')}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenLogoutDialog(false)} variant='text'>
-            Cancel
+            {t('portal.common.cancel', 'Cancel')}
           </Button>
           <Button
             onClick={() => {
@@ -191,7 +193,7 @@ export const AuthUserPopover: React.FC<AuthUserPopoverProps> = ({
             }}
             variant='text'
           >
-            Logout
+            {dictionary.commons.logout}
           </Button>
         </DialogActions>
       </Dialog>

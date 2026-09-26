@@ -2,6 +2,7 @@
 
 import { Box, Pagination, Typography } from '@mui/material';
 import type { TicketPageMeta } from '@/lib/support/usePaginatedTickets';
+import { useT } from '@/lib/i18n/useT';
 
 interface TicketPaginationProps {
   meta: TicketPageMeta;
@@ -9,6 +10,7 @@ interface TicketPaginationProps {
 }
 
 export const TicketPagination = ({ meta, onPageChange }: TicketPaginationProps) => {
+  const t = useT();
   if (meta.total === 0) return null;
 
   const from = (meta.current_page - 1) * meta.per_page + 1;
@@ -17,7 +19,7 @@ export const TicketPagination = ({ meta, onPageChange }: TicketPaginationProps) 
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, mt: 3, flexWrap: 'wrap' }}>
       <Typography sx={{ color: 'var(--pc-text-3)', fontSize: '0.875rem' }}>
-        {from}–{to} of {meta.total}
+        {t('portal.pagination.range', '{from}–{to} of {total}', { from, to, total: meta.total })}
       </Typography>
       {meta.last_page > 1 && (
         <Pagination

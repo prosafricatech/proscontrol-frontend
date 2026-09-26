@@ -21,6 +21,7 @@ import { TicketCard } from '@/components/supportLayout/TicketCard';
 import { TicketPagination } from '@/components/supportLayout/TicketPagination';
 import { usePaginatedTickets } from '@/lib/support/usePaginatedTickets';
 import { useSupportStats } from '@/lib/support/useSupportStats';
+import { useT } from '@/lib/i18n/useT';
 
 type QueueFilter = 'all' | 'new' | 'active' | 'mine' | 'closed';
 
@@ -38,6 +39,7 @@ export default function StaffQueuePage() {
   const lang = useLanguage();
   const { authData } = useJumboAuth();
   const t = dictionary.support?.staff?.queue;
+  const tr = useT();
   const searchParams = useSearchParams();
   const filterParam = searchParams.get('filter');
   const [filter, setFilter] = useState<QueueFilter>('all');
@@ -65,7 +67,7 @@ export default function StaffQueuePage() {
       if (!res.ok) {
         const payload = await res.json().catch(() => null);
         const fieldError = payload?.data && typeof payload.data === 'object' ? Object.values(payload.data).flat()[0] : null;
-        setActionError((fieldError as string) || payload?.message || `Unable to ${action} ticket.`);
+        setActionError((fieldError as string) || payload?.message || (action === 'activate' ? tr('portal.queue.activateFailed', 'Unable to activate the ticket.') : tr('portal.queue.closeFailed', 'Unable to close the ticket.')));
       }
       await loadTickets();
     } finally {
@@ -82,7 +84,7 @@ export default function StaffQueuePage() {
   };
 
   return (
-    <SupportLayout userRole="staff" userName={currentUserName || 'Staff'} userRoleLabel="Staff">
+    <SupportLayout userRole="staff" userName={currentUserName || tr('portal.common.staff', 'Staff')} userRoleLabel={tr('portal.common.staff', 'Staff')}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3, gap: 2 }}>
         <Box>
           <Typography sx={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--pc-text)', mb: 0.5 }}>
@@ -129,7 +131,7 @@ export default function StaffQueuePage() {
           const disabled = pendingTicketId === ticket.id;
           const action =
             ticket.status === 'new'
-              ? { label: t?.activate || 'Activate', tone: 'primary' as const, disabled, onClick: () => runTicketAction(ticket.id, 'activate') }
+              ? { label: tr('portal.queue.activate', 'Activate'), tone: 'primary' as const, disabled, onClick: () => runTicketAction(ticket.id, 'activate') }
               : ticket.status === 'active' && ticket.handledById === currentUserId
                 ? { label: t?.close || 'Close', tone: 'danger' as const, disabled, onClick: () => runTicketAction(ticket.id, 'close') }
                 : null;

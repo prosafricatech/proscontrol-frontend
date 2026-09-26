@@ -7,13 +7,17 @@ import { useState } from 'react';
 import { useLanguage } from '@/app/[lang]/contexts/LanguageContext';
 import { useSupportNotifications } from '@/lib/support/NotificationsProvider';
 import { NotificationList } from './NotificationList';
+import { useT } from '@/lib/i18n/useT';
 
 export const NotificationBell = () => {
   const { unreadCount, refresh, markAllRead } = useSupportNotifications();
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
   const router = useRouter();
   const lang = useLanguage();
-  const label = unreadCount > 0 ? `Notifications (${unreadCount} unread)` : 'Notifications';
+  const t = useT();
+  const label = unreadCount > 0
+    ? t('portal.notifications.bellUnread', 'Notifications ({count} unread, { count: unreadCount })')
+    : t('portal.notifications.bell', 'Notifications');
 
   return (
     <>
@@ -48,9 +52,9 @@ export const NotificationBell = () => {
         slotProps={{ paper: { sx: { width: 380, maxWidth: 'calc(100vw - 32px)', mt: 1, borderRadius: '12px', border: '1px solid var(--pc-border)', bgcolor: 'var(--pc-surface)', backgroundImage: 'none' } } }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2, py: 1.5, borderBottom: '1px solid var(--pc-border)' }}>
-          <Typography sx={{ fontWeight: 700, color: 'var(--pc-text)' }}>Notifications</Typography>
+          <Typography sx={{ fontWeight: 700, color: 'var(--pc-text)' }}>{t('portal.notifications.bell', 'Notifications')}</Typography>
           <Button size="small" onClick={markAllRead} disabled={unreadCount === 0} sx={{ textTransform: 'none' }}>
-            Mark all as read
+            {t('portal.notifications.markAllAsRead', 'Mark all as read')}
           </Button>
         </Box>
         <Box sx={{ maxHeight: 420, overflowY: 'auto' }}>
@@ -64,7 +68,7 @@ export const NotificationBell = () => {
           }}
           sx={{ textTransform: 'none', py: 1.2, borderRadius: 0 }}
         >
-          View all notifications
+          {t('portal.notifications.viewAll', 'View all notifications')}
         </Button>
       </Popover>
     </>

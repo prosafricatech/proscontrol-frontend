@@ -3,10 +3,11 @@
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, InputLabel, MenuItem, Select, TextField } from '@mui/material';
 import { Controller, Resolver, useForm } from 'react-hook-form';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import * as yup from 'yup';
 import { useDictionary } from '@/app/[lang]/contexts/DictionaryContext';
+import { useT } from '@/lib/i18n/useT';
 import organizationServices from '@/components/organizations/organizationServices';
 import { Organization } from '@/types/auth-types';
 
@@ -23,14 +24,14 @@ interface FormValues {
   description: string;
 }
 
-const schema = yup.object({
-  subject: yup.string().required('Subject is required'),
-  description: yup.string().required('Description is required'),
-  organizationId: yup.string().optional().nullable(),
-});
-
 export const NewTicketModal = ({ open, onClose, defaultOrganizationId, onSubmit }: NewTicketModalProps) => {
   const dictionary = useDictionary();
+  const t = useT();
+  const schema = useMemo(() => yup.object({
+    subject: yup.string().required(t('portal.ticketForm.subjectRequired', 'Subject is required')),
+    description: yup.string().required(t('portal.ticketForm.descriptionRequired', 'Description is required')),
+    organizationId: yup.string().optional().nullable(),
+  }), [t]);
   const { data: orgResponse, isLoading: orgsLoading } = useQuery({
     queryKey: ['support-organizations'],
     queryFn: organizationServices.getOptions,
@@ -96,7 +97,7 @@ export const NewTicketModal = ({ open, onClose, defaultOrganizationId, onSubmit 
         <form id="new-ticket-form" onSubmit={handleSubmit(submitHandler)}>
           <FormControl fullWidth sx={{ mb: 2.5 }}>
             <TextField
-              label={dictionary.support?.common?.subject || 'Subject'}
+              label={t('portal.ticketForm.subject', 'Subject')}
               {...register('subject')}
               error={!!errors.subject}
               helperText={errors.subject?.message}
@@ -106,7 +107,7 @@ export const NewTicketModal = ({ open, onClose, defaultOrganizationId, onSubmit 
 
           <FormControl fullWidth sx={{ mb: 2.5 }}>
             <InputLabel id="support-ticket-org-label">
-              {dictionary.support?.common?.organization || 'Organization'}
+              {t('portal.ticketForm.organization', 'Organization')}
             </InputLabel>
             <Controller
               name="organizationId"
@@ -115,7 +116,7 @@ export const NewTicketModal = ({ open, onClose, defaultOrganizationId, onSubmit 
                 <Select
                   {...field}
                   labelId="support-ticket-org-label"
-                  label={dictionary.support?.common?.organization || 'Organization'}
+                  label={t('portal.ticketForm.organization', 'Organization')}
                   value={field.value || ''}
                   onChange={(event) => field.onChange(event.target.value)}
                   disabled={orgsLoading || organizations.length === 0}
@@ -123,7 +124,7 @@ export const NewTicketModal = ({ open, onClose, defaultOrganizationId, onSubmit 
                 >
                   {organizations.length === 0 ? (
                     <MenuItem value="" disabled>
-                      {dictionary.support?.common?.organization || 'No organizations available'}
+                      {t('portal.ticketForm.noOrganizations', 'No organizations available')}
                     </MenuItem>
                   ) : (
                     organizations.map((organization: Organization) => (
@@ -139,7 +140,7 @@ export const NewTicketModal = ({ open, onClose, defaultOrganizationId, onSubmit 
 
           <FormControl fullWidth>
             <TextField
-              label={dictionary.support?.common?.description || 'Description'}
+              label={t('portal.ticketForm.description', 'Description')}
               {...register('description')}
               multiline
               minRows={4}
@@ -152,7 +153,7 @@ export const NewTicketModal = ({ open, onClose, defaultOrganizationId, onSubmit 
       </DialogContent>
       <DialogActions sx={{ px: 3, py: 2 }}>
         <Button variant="outlined" onClick={onClose} sx={{ borderRadius: '8px', px: 2, textTransform: 'none', borderColor: 'var(--pc-border)', color: 'var(--pc-text-2)' }}>
-          {dictionary.support?.common?.cancel || 'Cancel'}
+          {t('portal.common.cancel', 'Cancel')}
         </Button>
         <Button type="submit" form="new-ticket-form" variant="contained" sx={{ backgroundColor: 'var(--pc-inverse-bg)', borderRadius: '8px', px: 2.5, textTransform: 'none', '&:hover': { backgroundColor: 'var(--pc-inverse-bg-hover)' } }}>
           {dictionary.support?.customer?.modal?.submit || 'Submit ticket'}

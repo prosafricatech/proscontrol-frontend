@@ -12,6 +12,7 @@ import { NewTicketModal } from '@/components/supportLayout/NewTicketModal';
 import { TicketCard } from '@/components/supportLayout/TicketCard';
 import { TicketPagination } from '@/components/supportLayout/TicketPagination';
 import { usePaginatedTickets } from '@/lib/support/usePaginatedTickets';
+import { useT } from '@/lib/i18n/useT';
 
 type TabValue = 'open' | 'closed' | 'all';
 
@@ -27,13 +28,14 @@ export default function CustomerTicketsPage() {
     status: tab === 'all' ? undefined : tab,
   });
 
+  const t = useT();
   const authUser = authData?.authUser?.user;
   const activeOrganization = authData?.authOrganization?.organization;
 
   return (
     <SupportLayout
       userRole="customer"
-      userName={authUser?.name || 'Customer'}
+      userName={authUser?.name || t('portal.common.customer', 'Customer')}
       userRoleLabel={activeOrganization?.name || 'prosERP'}
     >
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3, gap: 2 }}>

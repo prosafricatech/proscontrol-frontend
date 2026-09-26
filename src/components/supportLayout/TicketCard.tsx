@@ -4,6 +4,7 @@ import type { SxProps, Theme } from '@mui/material/styles';
 import { Box, Button, Card, CardContent, Typography } from '@mui/material';
 import { StatusBadge } from '@/components/supportLayout/StatusBadge';
 import type { Ticket } from '@/lib/support/mockData';
+import { useFormatDate, useT } from '@/lib/i18n/useT';
 
 interface TicketCardAction {
   label: string;
@@ -21,6 +22,8 @@ interface TicketCardProps {
 }
 
 export const TicketCard = ({ ticket, onClick, action, className, sx }: TicketCardProps) => {
+  const t = useT();
+  const formatDate = useFormatDate();
   return (
     <Card
       className={className}
@@ -48,7 +51,10 @@ export const TicketCard = ({ ticket, onClick, action, className, sx }: TicketCar
             {ticket.description}
           </Typography>
           <Typography sx={{ fontSize: '0.8rem', color: 'var(--pc-text-4)' }}>
-            Handled by {ticket.handledBy || 'Unassigned'} · updated {new Date(ticket.updatedAt).toLocaleDateString()}
+            {t('portal.ticketCard.meta', 'Handled by {handler} · updated {date}', {
+              handler: ticket.handledBy || t('portal.common.unassigned', 'Unassigned'),
+              date: formatDate(ticket.updatedAt, { dateStyle: 'medium' }),
+            })}
           </Typography>
         </Box>
         {action && (
