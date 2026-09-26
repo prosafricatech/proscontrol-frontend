@@ -30,6 +30,7 @@ import { SupportLayout } from '@/components/supportLayout/SupportLayout';
 import { StatusBadge } from '@/components/supportLayout/StatusBadge';
 import { MessageBubble } from '@/components/supportLayout/MessageBubble';
 import { MessageComposer } from '@/components/supportLayout/MessageComposer';
+import { CHAT_COLUMN_HEIGHT, ChatScrollArea } from '@/components/supportLayout/ChatScrollArea';
 import { useTicketThread } from '@/lib/support/useTicketThread';
 
 const formatMessageTime = (value: string) =>
@@ -63,6 +64,7 @@ export default function StaffTicketDetailPage() {
   }
 
   const isAttending = !!ticket.handledById && ticket.handledById === currentUserId;
+  const lastMessage = messages.at(-1);
   const busy = pendingAction !== null;
 
   const composerDisabledReason =
@@ -89,33 +91,35 @@ export default function StaffTicketDetailPage() {
 
   return (
     <SupportLayout userRole="staff" userName={currentUserName} userRoleLabel="Staff">
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '1fr 380px' }, gap: 3 }}>
-        <Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
-            <IconButton onClick={() => router.back()} aria-label={t?.back || 'Back'} sx={{ color: 'var(--pc-text-3)' }}>
-              <BackIcon />
-            </IconButton>
-            <Typography sx={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--pc-text)' }}>
-              {ticket.subject}
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '1fr 380px' }, gap: 3, alignItems: 'start' }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', height: CHAT_COLUMN_HEIGHT, minHeight: 480 }}>
+          <Box sx={{ flexShrink: 0 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <IconButton onClick={() => router.back()} aria-label={t?.back || 'Back'} sx={{ color: 'var(--pc-text-3)' }}>
+                <BackIcon />
+              </IconButton>
+              <Typography sx={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--pc-text)' }}>
+                {ticket.subject}
+              </Typography>
+              <StatusBadge status={ticket.status} />
+            </Box>
+            <Typography sx={{ fontSize: '0.85rem', color: 'var(--pc-text-4)', mb: 2, ml: 6 }}>
+              {new Date(ticket.createdAt).toLocaleString()}
             </Typography>
-            <StatusBadge status={ticket.status} />
           </Box>
-          <Typography sx={{ fontSize: '0.85rem', color: 'var(--pc-text-4)', mb: 2, ml: 6 }}>
-            {new Date(ticket.createdAt).toLocaleString()}
-          </Typography>
 
-          <Card sx={{ borderRadius: '12px', border: '1px solid var(--pc-border)', boxShadow: 'none', mb: 3 }}>
-            <CardContent sx={{ p: 2.5 }}>
-              <Typography sx={{ ...sectionLabelSx, mb: 1 }}>
-                {t?.request || 'REQUEST'}
-              </Typography>
-              <Typography sx={{ color: 'var(--pc-text)', fontSize: '0.95rem', whiteSpace: 'pre-wrap' }}>
-                {ticket.description}
-              </Typography>
-            </CardContent>
-          </Card>
+          <ChatScrollArea scrollKey={lastMessage?.id ?? ''} forceScroll={lastMessage?.senderId === currentUserId}>
+            <Card sx={{ borderRadius: '12px', border: '1px solid var(--pc-border)', boxShadow: 'none', mb: 3 }}>
+              <CardContent sx={{ p: 2.5 }}>
+                <Typography sx={{ ...sectionLabelSx, mb: 1 }}>
+                  {t?.request || 'REQUEST'}
+                </Typography>
+                <Typography sx={{ color: 'var(--pc-text)', fontSize: '0.95rem', whiteSpace: 'pre-wrap' }}>
+                  {ticket.description}
+                </Typography>
+              </CardContent>
+            </Card>
 
-          <Box sx={{ mb: 3, minHeight: 300 }}>
             {messages.map((msg) => (
               <MessageBubble
                 key={msg.id}
@@ -128,17 +132,19 @@ export default function StaffTicketDetailPage() {
                 align={msg.senderId === currentUserId ? 'right' : 'left'}
               />
             ))}
-          </Box>
+          </ChatScrollArea>
 
-          <MessageComposer
-            onSend={sendMessage}
-            sending={pendingAction === 'send'}
-            disabledReason={composerDisabledReason}
-            placeholder={t?.typeMessage}
-          />
+          <Box sx={{ flexShrink: 0, pt: 2 }}>
+            <MessageComposer
+              onSend={sendMessage}
+              sending={pendingAction === 'send'}
+              disabledReason={composerDisabledReason}
+              placeholder={t?.typeMessage}
+            />
+          </Box>
         </Box>
 
-        <Card sx={{ borderRadius: '12px', border: '1px solid var(--pc-border)', boxShadow: 'none', height: 'fit-content', position: 'sticky', top: 88 }}>
+        <Card sx={{ borderRadius: '12px', border: '1px solid var(--pc-border)', boxShadow: 'none', height: 'fit-content', maxHeight: { lg: CHAT_COLUMN_HEIGHT.md }, overflowY: 'auto', position: { lg: 'sticky' }, top: 96 }}>
           <CardContent sx={{ p: 2.5 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
               <Typography sx={{ fontWeight: 700, color: 'var(--pc-text)' }}>{t?.details || 'Details'}</Typography>
