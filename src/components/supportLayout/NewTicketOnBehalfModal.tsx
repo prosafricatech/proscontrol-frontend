@@ -43,10 +43,10 @@ export const NewTicketOnBehalfModal = ({ open, onClose, onSubmit }: NewTicketOnB
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm" PaperProps={{ sx: { borderRadius: '16px' } }}>
-      <DialogTitle sx={{ fontWeight: 700, fontSize: '1.5rem', color: '#0f172a', pb: 1 }}>
+      <DialogTitle sx={{ fontWeight: 700, fontSize: '1.5rem', color: 'var(--pc-text)', pb: 1 }}>
         {dictionary.support?.staff?.ticketDetail?.createOnBehalf || 'New ticket on behalf of customer'}
       </DialogTitle>
-      <DialogContent dividers sx={{ borderColor: '#f1f5f9', px: 3, py: 2.5 }}>
+      <DialogContent dividers sx={{ borderColor: 'var(--pc-surface-2)', px: 3, py: 2.5 }}>
         <form id="staff-new-ticket-form" onSubmit={handleSubmit(submitHandler)}>
           <FormControl fullWidth sx={{ mb: 2.5 }}>
             <TextField
@@ -91,10 +91,10 @@ export const NewTicketOnBehalfModal = ({ open, onClose, onSubmit }: NewTicketOnB
         </form>
       </DialogContent>
       <DialogActions sx={{ px: 3, py: 2 }}>
-        <Button variant="outlined" onClick={onClose} sx={{ borderRadius: '8px', px: 2, textTransform: 'none', borderColor: '#e2e8f0', color: '#475569' }}>
+        <Button variant="outlined" onClick={onClose} sx={{ borderRadius: '8px', px: 2, textTransform: 'none', borderColor: 'var(--pc-border)', color: 'var(--pc-text-2)' }}>
           {dictionary.support?.common?.cancel || 'Cancel'}
         </Button>
-        <Button type="submit" form="staff-new-ticket-form" variant="contained" sx={{ backgroundColor: '#0f172a', borderRadius: '8px', px: 2.5, textTransform: 'none', '&:hover': { backgroundColor: '#1e293b' } }}>
+        <Button type="submit" form="staff-new-ticket-form" variant="contained" sx={{ backgroundColor: 'var(--pc-inverse-bg)', borderRadius: '8px', px: 2.5, textTransform: 'none', '&:hover': { backgroundColor: 'var(--pc-inverse-bg-hover)' } }}>
           {dictionary.support?.staff?.ticketDetail?.createTicket || 'Create ticket'}
         </Button>
       </DialogActions>

@@ -493,6 +493,10 @@
   },
 
   "support": {
+    "colorMode": {
+      "switchToDark": "Badilisha kwenda hali ya giza",
+      "switchToLight": "Badilisha kwenda hali ya mwanga"
+    },
     "appName": "ProsControl",
     "sidebar": {
       "dashboard": "Dashibodi",

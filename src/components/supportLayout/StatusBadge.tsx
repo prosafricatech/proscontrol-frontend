@@ -12,10 +12,10 @@ interface StatusBadgeProps {
 }
 
 const statusStyles: Record<string, { bg: string; color: string }> = {
-  active: { bg: '#dcfce7', color: '#16a34a' },
-  new: { bg: '#dbeafe', color: '#2563eb' },
-  closed: { bg: '#f1f5f9', color: '#64748b' },
-  open: { bg: '#dcfce7', color: '#16a34a' },
+  active: { bg: 'var(--pc-success-soft)', color: 'var(--pc-success)' },
+  new: { bg: 'var(--pc-accent-soft-2)', color: 'var(--pc-accent)' },
+  closed: { bg: 'var(--pc-surface-2)', color: 'var(--pc-text-3)' },
+  open: { bg: 'var(--pc-success-soft)', color: 'var(--pc-success)' },
 };
 
 export const StatusBadge = ({ status, label, className, sx }: StatusBadgeProps) => {

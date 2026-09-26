@@ -3,6 +3,7 @@
 import { SupportAgent as BrandIcon } from '@mui/icons-material';
 import { Box, Card, Typography } from '@mui/material';
 import type { ReactNode } from 'react';
+import { ColorModeToggle } from '@/components/colorMode/ColorModeToggle';
 
 export interface AuthHighlight {
   icon: ReactNode;
@@ -29,7 +30,7 @@ export const AuthShell = ({ title, subtitle, highlights = [], children }: AuthSh
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: '#f0f2f5',
+      background: 'var(--pc-auth-bg)',
       p: { xs: 2, sm: 3, md: 4 },
     }}
   >
@@ -113,9 +114,11 @@ export const AuthShell = ({ title, subtitle, highlights = [], children }: AuthSh
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
-          bgcolor: '#ffffff',
+          bgcolor: 'var(--pc-surface)',
+          position: 'relative',
         }}
       >
+        <ColorModeToggle sx={{ position: 'absolute', top: { xs: 12, md: 20 }, right: { xs: 12, md: 20 } }} />
         {children}
       </Box>
     </Card>

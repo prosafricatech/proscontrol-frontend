@@ -85,10 +85,10 @@ export default function StaffQueuePage() {
     <SupportLayout userRole="staff" userName={currentUserName || 'Staff'} userRoleLabel="Staff">
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3, gap: 2 }}>
         <Box>
-          <Typography sx={{ fontSize: '1.75rem', fontWeight: 700, color: '#0f172a', mb: 0.5 }}>
+          <Typography sx={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--pc-text)', mb: 0.5 }}>
             {t?.title || 'Staff Queue'}
           </Typography>
-          <Typography sx={{ color: '#64748b', fontSize: '0.95rem' }}>
+          <Typography sx={{ color: 'var(--pc-text-3)', fontSize: '0.95rem' }}>
             {t?.subtitle || 'Pick up, handle, and close customer tickets.'}
           </Typography>
         </Box>
@@ -112,9 +112,9 @@ export default function StaffQueuePage() {
 
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(5, 1fr)' }, gap: 2, mb: 3 }}>
         <StatCard label={t?.filters?.all || 'All'} value={stats.all} icon={<LayersIcon sx={{ fontSize: 18 }} />} selected={filter === 'all'} onClick={() => setFilter('all')} />
-        <StatCard label={t?.filters?.new || 'New'} value={stats.new} icon={<InboxIcon sx={{ fontSize: 18 }} />} iconBg="#dbeafe" iconColor="#2563eb" selected={filter === 'new'} onClick={() => setFilter('new')} />
-        <StatCard label={t?.filters?.active || 'Active'} value={stats.active} icon={<TimeIcon sx={{ fontSize: 18 }} />} iconBg="#dcfce7" iconColor="#16a34a" selected={filter === 'active'} onClick={() => setFilter('active')} />
-        <StatCard label={t?.filters?.mine || 'Mine'} value={stats.mine} icon={<PersonIcon sx={{ fontSize: 18 }} />} iconBg="#ede9fe" iconColor="#7c3aed" selected={filter === 'mine'} onClick={() => setFilter('mine')} />
+        <StatCard label={t?.filters?.new || 'New'} value={stats.new} icon={<InboxIcon sx={{ fontSize: 18 }} />} iconBg="var(--pc-accent-soft-2)" iconColor="#2563eb" selected={filter === 'new'} onClick={() => setFilter('new')} />
+        <StatCard label={t?.filters?.active || 'Active'} value={stats.active} icon={<TimeIcon sx={{ fontSize: 18 }} />} iconBg="var(--pc-success-soft)" iconColor="var(--pc-success)" selected={filter === 'active'} onClick={() => setFilter('active')} />
+        <StatCard label={t?.filters?.mine || 'Mine'} value={stats.mine} icon={<PersonIcon sx={{ fontSize: 18 }} />} iconBg="var(--pc-purple-soft)" iconColor="var(--pc-purple)" selected={filter === 'mine'} onClick={() => setFilter('mine')} />
         <StatCard label={t?.filters?.closed || 'Closed'} value={stats.closed} icon={<CheckIcon sx={{ fontSize: 18 }} />} selected={filter === 'closed'} onClick={() => setFilter('closed')} />
       </Box>
 

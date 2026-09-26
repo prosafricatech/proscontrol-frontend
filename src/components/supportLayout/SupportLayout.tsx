@@ -6,6 +6,7 @@ import { NotificationsNone as BellIcon } from '@mui/icons-material';
 import { Sidebar, SIDEBAR_WIDTH, SupportRole } from '../sidebar/Sidebar';
 import { AuthUserPopover } from '@/components/authUserPopover/AuthUserPopover';
 import { useDictionary } from '@/app/[lang]/contexts/DictionaryContext';
+import { ColorModeToggle } from '@/components/colorMode/ColorModeToggle';
 
 interface SupportLayoutProps {
   children: React.ReactNode;
@@ -23,7 +24,7 @@ export const SupportLayout = ({
   const dictionary = useDictionary();
 
   return (
-    <Box sx={{ display: 'flex', width: '100vw', minHeight: '100dvh', bgcolor: '#f8fafc', overflow: 'hidden' }}>
+    <Box sx={{ display: 'flex', width: '100vw', minHeight: '100dvh', bgcolor: 'var(--pc-bg)', overflow: 'hidden' }}>
       {/* Sidebar */}
       <Sidebar
         role={userRole}
@@ -47,8 +48,8 @@ export const SupportLayout = ({
           sx={{
             height: 64,
             flexShrink: 0,
-            bgcolor: '#ffffff',
-            borderBottom: '1px solid #e2e8f0',
+            bgcolor: 'var(--pc-surface)',
+            borderBottom: '1px solid var(--pc-border)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -59,6 +60,7 @@ export const SupportLayout = ({
           }}
         >
           <Box sx={{ flex: 1 }} />
+          <ColorModeToggle sx={{ mr: 1.5 }} />
           <AuthUserPopover dictionary={dictionary as any} />
         </Box>
 

@@ -54,11 +54,11 @@ export default function SupportRedirectPage() {
         alignItems: 'center',
         justifyContent: 'center',
         gap: 2,
-        background: '#f8fafc',
+        background: 'var(--pc-bg)',
       }}
     >
-      <CircularProgress sx={{ color: '#2563eb' }} />
-      <Typography sx={{ color: '#64748b', fontSize: '0.9rem' }}>
+      <CircularProgress sx={{ color: 'var(--pc-accent)' }} />
+      <Typography sx={{ color: 'var(--pc-text-3)', fontSize: '0.9rem' }}>
         {dictionary?.support?.loading || 'Redirecting to your support portal...'}
       </Typography>
     </Box>

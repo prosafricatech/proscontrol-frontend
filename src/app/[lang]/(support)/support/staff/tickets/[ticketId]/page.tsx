@@ -35,7 +35,7 @@ import { useTicketThread } from '@/lib/support/useTicketThread';
 const formatMessageTime = (value: string) =>
   value ? new Date(value).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : '';
 
-const sectionLabelSx = { fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', letterSpacing: 0.5 };
+const sectionLabelSx = { fontSize: '0.75rem', fontWeight: 700, color: 'var(--pc-text-4)', letterSpacing: 0.5 };
 
 export default function StaffTicketDetailPage() {
   const params = useParams<{ ticketId: string }>();
@@ -55,8 +55,8 @@ export default function StaffTicketDetailPage() {
   if (!ticket) {
     return (
       <SupportLayout userRole="staff" userName={currentUserName} userRoleLabel="Staff">
-        <Box sx={{ p: 4, bgcolor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-          <Typography sx={{ color: loadError ? '#dc2626' : '#475569' }}>{loadError || t?.loading || 'Loading ticket...'}</Typography>
+        <Box sx={{ p: 4, bgcolor: 'var(--pc-surface)', borderRadius: '12px', border: '1px solid var(--pc-border)' }}>
+          <Typography sx={{ color: loadError ? 'var(--pc-danger)' : 'var(--pc-text-2)' }}>{loadError || t?.loading || 'Loading ticket...'}</Typography>
         </Box>
       </SupportLayout>
     );
@@ -92,24 +92,24 @@ export default function StaffTicketDetailPage() {
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '1fr 380px' }, gap: 3 }}>
         <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3 }}>
-            <IconButton onClick={() => router.back()} aria-label={t?.back || 'Back'} sx={{ color: '#64748b' }}>
+            <IconButton onClick={() => router.back()} aria-label={t?.back || 'Back'} sx={{ color: 'var(--pc-text-3)' }}>
               <BackIcon />
             </IconButton>
-            <Typography sx={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a' }}>
+            <Typography sx={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--pc-text)' }}>
               {ticket.subject}
             </Typography>
             <StatusBadge status={ticket.status} />
           </Box>
-          <Typography sx={{ fontSize: '0.85rem', color: '#94a3b8', mb: 2, ml: 6 }}>
+          <Typography sx={{ fontSize: '0.85rem', color: 'var(--pc-text-4)', mb: 2, ml: 6 }}>
             {new Date(ticket.createdAt).toLocaleString()}
           </Typography>
 
-          <Card sx={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: 'none', mb: 3 }}>
+          <Card sx={{ borderRadius: '12px', border: '1px solid var(--pc-border)', boxShadow: 'none', mb: 3 }}>
             <CardContent sx={{ p: 2.5 }}>
               <Typography sx={{ ...sectionLabelSx, mb: 1 }}>
                 {t?.request || 'REQUEST'}
               </Typography>
-              <Typography sx={{ color: '#0f172a', fontSize: '0.95rem', whiteSpace: 'pre-wrap' }}>
+              <Typography sx={{ color: 'var(--pc-text)', fontSize: '0.95rem', whiteSpace: 'pre-wrap' }}>
                 {ticket.description}
               </Typography>
             </CardContent>
@@ -138,23 +138,23 @@ export default function StaffTicketDetailPage() {
           />
         </Box>
 
-        <Card sx={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: 'none', height: 'fit-content', position: 'sticky', top: 88 }}>
+        <Card sx={{ borderRadius: '12px', border: '1px solid var(--pc-border)', boxShadow: 'none', height: 'fit-content', position: 'sticky', top: 88 }}>
           <CardContent sx={{ p: 2.5 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography sx={{ fontWeight: 700, color: '#0f172a' }}>{t?.details || 'Details'}</Typography>
+              <Typography sx={{ fontWeight: 700, color: 'var(--pc-text)' }}>{t?.details || 'Details'}</Typography>
               <StatusBadge status={ticket.status} />
             </Box>
 
             <Box sx={{ mb: 2.5 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8, mb: 1.5 }}>
-                <ScheduleIcon sx={{ fontSize: 14, color: '#94a3b8' }} />
+                <ScheduleIcon sx={{ fontSize: 14, color: 'var(--pc-text-4)' }} />
                 <Typography sx={sectionLabelSx}>{t?.status || 'STATUS'}</Typography>
               </Box>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 {statusSteps.map((step) => (
                   <Box key={step.label} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: step.done ? '#3b82f6' : '#e2e8f0' }} />
-                    <Typography sx={{ fontSize: '0.875rem', color: step.done ? '#0f172a' : '#94a3b8', fontWeight: step.current ? 600 : 400 }}>
+                    <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: step.done ? '#3b82f6' : 'var(--pc-border)' }} />
+                    <Typography sx={{ fontSize: '0.875rem', color: step.done ? 'var(--pc-text)' : 'var(--pc-text-4)', fontWeight: step.current ? 600 : 400 }}>
                       {step.label}
                     </Typography>
                   </Box>
@@ -166,13 +166,13 @@ export default function StaffTicketDetailPage() {
 
             <Box sx={{ mb: 2.5 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8, mb: 1.5 }}>
-                <PersonIcon sx={{ fontSize: 14, color: '#94a3b8' }} />
+                <PersonIcon sx={{ fontSize: 14, color: 'var(--pc-text-4)' }} />
                 <Typography sx={sectionLabelSx}>{t?.people || 'PEOPLE'}</Typography>
               </Box>
-              <Typography sx={{ fontSize: '0.8rem', color: '#94a3b8', mb: 0.3 }}>{t?.requester || 'Requester'}</Typography>
-              <Typography sx={{ fontSize: '0.9rem', color: '#0f172a', fontWeight: 600, mb: 1.5 }}>{ticket.customerName}</Typography>
-              <Typography sx={{ fontSize: '0.8rem', color: '#94a3b8', mb: 0.3 }}>{t?.handledBy || 'Handled by'}</Typography>
-              <Typography sx={{ fontSize: '0.9rem', color: '#0f172a', fontWeight: 600 }}>
+              <Typography sx={{ fontSize: '0.8rem', color: 'var(--pc-text-4)', mb: 0.3 }}>{t?.requester || 'Requester'}</Typography>
+              <Typography sx={{ fontSize: '0.9rem', color: 'var(--pc-text)', fontWeight: 600, mb: 1.5 }}>{ticket.customerName}</Typography>
+              <Typography sx={{ fontSize: '0.8rem', color: 'var(--pc-text-4)', mb: 0.3 }}>{t?.handledBy || 'Handled by'}</Typography>
+              <Typography sx={{ fontSize: '0.9rem', color: 'var(--pc-text)', fontWeight: 600 }}>
                 {ticket.handledBy || t?.unassigned || 'Unassigned'}
                 {isAttending ? ` (${t?.you || 'you'})` : ''}
               </Typography>
@@ -182,29 +182,29 @@ export default function StaffTicketDetailPage() {
 
             <Box sx={{ mb: 2.5 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8, mb: 1.5 }}>
-                <InfoIcon sx={{ fontSize: 14, color: '#94a3b8' }} />
+                <InfoIcon sx={{ fontSize: 14, color: 'var(--pc-text-4)' }} />
                 <Typography sx={sectionLabelSx}>{t?.ticketInfo || 'TICKET INFO'}</Typography>
               </Box>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <DescriptionIcon sx={{ fontSize: 16, color: '#64748b' }} />
-                  <Typography sx={{ fontSize: '0.875rem', color: '#0f172a' }}>#{ticket.id}</Typography>
+                  <DescriptionIcon sx={{ fontSize: 16, color: 'var(--pc-text-3)' }} />
+                  <Typography sx={{ fontSize: '0.875rem', color: 'var(--pc-text)' }}>#{ticket.id}</Typography>
                 </Box>
                 {ticket.customerEmail && (
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <EmailIcon sx={{ fontSize: 16, color: '#64748b' }} />
-                    <Typography sx={{ fontSize: '0.875rem', color: '#0f172a', wordBreak: 'break-all' }}>{ticket.customerEmail}</Typography>
+                    <EmailIcon sx={{ fontSize: 16, color: 'var(--pc-text-3)' }} />
+                    <Typography sx={{ fontSize: '0.875rem', color: 'var(--pc-text)', wordBreak: 'break-all' }}>{ticket.customerEmail}</Typography>
                   </Box>
                 )}
                 {ticket.organizationName && (
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <InfoIcon sx={{ fontSize: 16, color: '#64748b' }} />
-                    <Typography sx={{ fontSize: '0.875rem', color: '#0f172a' }}>{ticket.organizationName}</Typography>
+                    <InfoIcon sx={{ fontSize: 16, color: 'var(--pc-text-3)' }} />
+                    <Typography sx={{ fontSize: '0.875rem', color: 'var(--pc-text)' }}>{ticket.organizationName}</Typography>
                   </Box>
                 )}
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <ScheduleIcon sx={{ fontSize: 16, color: '#64748b' }} />
-                  <Typography sx={{ fontSize: '0.875rem', color: '#0f172a' }}>{new Date(ticket.createdAt).toLocaleString()}</Typography>
+                  <ScheduleIcon sx={{ fontSize: 16, color: 'var(--pc-text-3)' }} />
+                  <Typography sx={{ fontSize: '0.875rem', color: 'var(--pc-text)' }}>{new Date(ticket.createdAt).toLocaleString()}</Typography>
                 </Box>
               </Box>
             </Box>
@@ -215,7 +215,7 @@ export default function StaffTicketDetailPage() {
 
                 <Box sx={{ mb: 2.5 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8, mb: 1.5 }}>
-                    <PersonIcon sx={{ fontSize: 14, color: '#94a3b8' }} />
+                    <PersonIcon sx={{ fontSize: 14, color: 'var(--pc-text-4)' }} />
                     <Typography sx={sectionLabelSx}>{t?.actions || 'ACTIONS'}</Typography>
                   </Box>
 
@@ -245,7 +245,7 @@ export default function StaffTicketDetailPage() {
                       startIcon={<CheckIcon />}
                       disabled={busy}
                       onClick={() => runAction(close)}
-                      sx={{ bgcolor: '#ef4444', borderRadius: '8px', textTransform: 'none', fontWeight: 600, py: 1.2, mb: 1.5, '&:hover': { bgcolor: '#dc2626' } }}
+                      sx={{ bgcolor: '#ef4444', borderRadius: '8px', textTransform: 'none', fontWeight: 600, py: 1.2, mb: 1.5, '&:hover': { bgcolor: 'var(--pc-danger)' } }}
                     >
                       {t?.closeTicket || 'Close ticket'}
                     </Button>
@@ -278,7 +278,7 @@ export default function StaffTicketDetailPage() {
                             setReassignReason('');
                           }
                         }}
-                        sx={{ borderRadius: '8px', textTransform: 'none', fontWeight: 600, borderColor: '#e2e8f0', color: '#475569' }}
+                        sx={{ borderRadius: '8px', textTransform: 'none', fontWeight: 600, borderColor: 'var(--pc-border)', color: 'var(--pc-text-2)' }}
                       >
                         {t?.reassign || 'Reassign'}
                       </Button>
@@ -292,20 +292,20 @@ export default function StaffTicketDetailPage() {
 
             <Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8, mb: 1.5 }}>
-                <HistoryIcon sx={{ fontSize: 14, color: '#94a3b8' }} />
+                <HistoryIcon sx={{ fontSize: 14, color: 'var(--pc-text-4)' }} />
                 <Typography sx={sectionLabelSx}>{t?.reassignmentHistory || 'REASSIGNMENT HISTORY'}</Typography>
               </Box>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                 {reassignments.length === 0 && (
-                  <Typography sx={{ fontSize: '0.85rem', color: '#94a3b8' }}>—</Typography>
+                  <Typography sx={{ fontSize: '0.85rem', color: 'var(--pc-text-4)' }}>—</Typography>
                 )}
                 {reassignments.map((event, index) => (
                   <Box key={`${event.at}-${index}`}>
-                    <Typography sx={{ fontSize: '0.85rem', color: '#0f172a', fontWeight: 500 }}>
+                    <Typography sx={{ fontSize: '0.85rem', color: 'var(--pc-text)', fontWeight: 500 }}>
                       {event.from ? `${event.from} → ${event.to}` : `${t?.firstAssignment || 'First assignment'}: ${event.to}`}
                     </Typography>
-                    {event.note && <Typography sx={{ fontSize: '0.8rem', color: '#94a3b8' }}>{event.note}</Typography>}
-                    <Typography sx={{ fontSize: '0.75rem', color: '#cbd5e1' }}>{new Date(event.at).toLocaleString()}</Typography>
+                    {event.note && <Typography sx={{ fontSize: '0.8rem', color: 'var(--pc-text-4)' }}>{event.note}</Typography>}
+                    <Typography sx={{ fontSize: '0.75rem', color: 'var(--pc-text-4)' }}>{new Date(event.at).toLocaleString()}</Typography>
                   </Box>
                 ))}
               </Box>

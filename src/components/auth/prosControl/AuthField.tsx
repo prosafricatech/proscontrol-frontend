@@ -25,11 +25,11 @@ export const AuthField = ({ label, icon, optionalLabel, type, id, ...props }: Au
       <Typography
         component="label"
         htmlFor={fieldId}
-        sx={{ display: 'block', fontWeight: 600, color: '#1e293b', mb: 0.8, fontSize: '0.875rem' }}
+        sx={{ display: 'block', fontWeight: 600, color: 'var(--pc-text)', mb: 0.8, fontSize: '0.875rem' }}
       >
         {label}
         {optionalLabel && (
-          <Box component="span" sx={{ fontWeight: 400, color: '#94a3b8', ml: 0.5 }}>
+          <Box component="span" sx={{ fontWeight: 400, color: 'var(--pc-text-4)', ml: 0.5 }}>
             ({optionalLabel})
           </Box>
         )}
@@ -41,7 +41,7 @@ export const AuthField = ({ label, icon, optionalLabel, type, id, ...props }: Au
         type={isPassword && revealed ? 'text' : type}
         InputProps={{
           startAdornment: icon ? (
-            <InputAdornment position="start" sx={{ color: '#94a3b8', '& svg': { fontSize: 20 } }}>
+            <InputAdornment position="start" sx={{ color: 'var(--pc-text-4)', '& svg': { fontSize: 20 } }}>
               {icon}
             </InputAdornment>
           ) : undefined,
@@ -52,7 +52,7 @@ export const AuthField = ({ label, icon, optionalLabel, type, id, ...props }: Au
                 edge="end"
                 size="small"
                 aria-label={revealed ? 'Hide password' : 'Show password'}
-                sx={{ color: '#94a3b8' }}
+                sx={{ color: 'var(--pc-text-4)' }}
               >
                 {revealed ? <Visibility fontSize="small" /> : <VisibilityOff fontSize="small" />}
               </IconButton>
@@ -63,8 +63,8 @@ export const AuthField = ({ label, icon, optionalLabel, type, id, ...props }: Au
         sx={{
           '& .MuiOutlinedInput-root': {
             borderRadius: '8px',
-            '& fieldset': { borderColor: '#e2e8f0' },
-            '&:hover fieldset': { borderColor: '#cbd5e1' },
+            '& fieldset': { borderColor: 'var(--pc-border)' },
+            '&:hover fieldset': { borderColor: 'var(--pc-border-strong)' },
             '&.Mui-focused fieldset': { borderColor: '#3b82f6', borderWidth: '1.5px' },
           },
           '& .MuiInputBase-input': { py: 1.5, fontSize: '0.95rem' },
@@ -87,11 +87,11 @@ export const authPrimaryButtonSx = {
     background: 'linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%)',
     boxShadow: '0 6px 16px rgba(37, 99, 235, 0.4)',
   },
-  '&.Mui-disabled': { background: '#94a3b8', color: '#ffffff' },
+  '&.Mui-disabled': { background: 'var(--pc-text-4)', color: '#ffffff' },
 } as const;
 
 export const authLinkSx = {
-  color: '#2563eb',
+  color: 'var(--pc-accent)',
   fontWeight: 600,
   cursor: 'pointer',
   background: 'none',

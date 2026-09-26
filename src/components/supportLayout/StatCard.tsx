@@ -20,8 +20,8 @@ export const StatCard = ({
   label,
   value,
   icon,
-  iconBg = '#f1f5f9',
-  iconColor = '#64748b',
+  iconBg = 'var(--pc-surface-2)',
+  iconColor = 'var(--pc-text-3)',
   selected = false,
   onClick,
   sx,
@@ -32,9 +32,9 @@ export const StatCard = ({
       className={className}
       onClick={onClick}
       sx={{
-        bgcolor: selected ? '#eff6ff' : '#ffffff',
+        bgcolor: selected ? 'var(--pc-accent-soft)' : 'var(--pc-surface)',
         border: '1px solid',
-        borderColor: selected ? '#3b82f6' : '#e2e8f0',
+        borderColor: selected ? '#3b82f6' : 'var(--pc-border)',
         borderRadius: '12px',
         p: 2,
         display: 'flex',
@@ -47,7 +47,7 @@ export const StatCard = ({
       }}
     >
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <Typography sx={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 500 }}>
+        <Typography sx={{ fontSize: '0.85rem', color: 'var(--pc-text-3)', fontWeight: 500 }}>
           {label}
         </Typography>
         <Box
@@ -65,7 +65,7 @@ export const StatCard = ({
           {icon}
         </Box>
       </Box>
-      <Typography sx={{ fontSize: '1.75rem', fontWeight: 700, color: '#0f172a', lineHeight: 1 }}>
+      <Typography sx={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--pc-text)', lineHeight: 1 }}>
         {value}
       </Typography>
     </Box>

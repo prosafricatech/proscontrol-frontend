@@ -32,6 +32,7 @@ dayjs.Ls.en.formats = {
 import { BackdropSpinner } from '@/shared/ProgressIndicators/BackdropSpinner';
 import { SpinnerProvider } from '@/shared/ProgressIndicators/SpinnerContext';
 import { HighchartsProvider } from './providers/HighchartsProvider';
+import { ColorModeProvider } from './providers/ColorModeProvider';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient({
@@ -52,6 +53,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
                 <JumboConfigProvider LinkComponent={Link}>
                   <JumboTheme init={CONFIG.THEME}>
                     <CssBaseline />
+                    <ColorModeProvider>
                     <SpinnerProvider>
                       <HighchartsProvider>
                         <JumboDialogProvider>
@@ -64,6 +66,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
                         </JumboDialogProvider>
                       </HighchartsProvider>
                     </SpinnerProvider>
+                    </ColorModeProvider>
                   </JumboTheme>
                 </JumboConfigProvider>
               </AppRouterCacheProvider>

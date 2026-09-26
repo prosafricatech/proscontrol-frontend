@@ -30,21 +30,51 @@ export async function authMiddleware(request: NextRequest) {
     return createAuthRedirect(request);
   }
 
-  const { authenticated, verified } = await statusRes.json();
+  const { authenticated, verified, user } = await statusRes.json();
 
   if (!authenticated) {
     return createAuthRedirect(request);
   }
 
+  const lang = pathname.split('/')[1] || 'en-US';
+
   if (!verified) {
-    const lang = pathname.split('/')[1] || 'en-US';
     const url = request.nextUrl.clone();
     url.pathname = `/${lang}/auth/verifyEmail`;
     url.searchParams.set('callbackUrl', pathname);
     return NextResponse.redirect(url);
   }
 
+  // `user` comes live from the backend (/auth/me), so this can't be spoofed
+  // client-side. Only an explicit `is_staff: true` counts as staff.
+  if (isStaffOnlyPath(pathname) && user?.is_staff !== true) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/${lang}/support/customer`;
+    url.search = '';
+    return NextResponse.redirect(url);
+  }
+
   return NextResponse.next();
+}
+
+const STAFF_ONLY_PREFIXES = [
+  '/support/staff',
+  '/staff-directory',
+  '/customer-profile',
+  '/settings',
+  '/knowledge-base',
+  '/reports',
+  '/activity-logs',
+  '/saved-replies',
+];
+
+/** `pathname` is locale-prefixed, e.g. /en-US/support/staff/queue. */
+function isStaffOnlyPath(pathname: string) {
+  const withoutLocale = pathname.replace(/^\/[a-z]{2}-[A-Z]{2}(?=\/|$)/, '') || '/';
+
+  return STAFF_ONLY_PREFIXES.some(
+    (prefix) => withoutLocale === prefix || withoutLocale.startsWith(`${prefix}/`),
+  );
 }
 
 export async function anonymousMiddleware(request: NextRequest) {

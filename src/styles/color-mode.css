@@ -1,0 +1,83 @@
+/*
+ * ProsControl colour tokens. Components reference these instead of hex values
+ * so light/dark switch by changing one attribute on <html> (data-pc-theme),
+ * which the inline script in the root layout sets before first paint.
+ */
+:root,
+html[data-pc-theme='light'] {
+  color-scheme: light;
+  --pc-bg: #f8fafc;
+  --pc-auth-bg: #f0f2f5;
+  --pc-surface: #ffffff;
+  --pc-surface-2: #f1f5f9;
+  --pc-border: #e2e8f0;
+  --pc-border-strong: #cbd5e1;
+  --pc-text: #0f172a;
+  --pc-text-2: #475569;
+  --pc-text-3: #64748b;
+  --pc-text-4: #94a3b8;
+  --pc-accent: #2563eb;
+  --pc-accent-soft: #eff6ff;
+  --pc-accent-soft-2: #dbeafe;
+  --pc-accent-softer: #f8fbff;
+  --pc-accent-text: #1e3a8a;
+  --pc-inverse-bg: #0f172a;
+  --pc-inverse-bg-hover: #1e293b;
+  --pc-success: #16a34a;
+  --pc-success-strong: #15803d;
+  --pc-success-soft: #dcfce7;
+  --pc-warning: #b45309;
+  --pc-warning-2: #d97706;
+  --pc-warning-soft: #fef3c7;
+  --pc-purple: #7c3aed;
+  --pc-purple-soft: #ede9fe;
+  --pc-danger: #dc2626;
+}
+
+html[data-pc-theme='dark'] {
+  color-scheme: dark;
+  --pc-bg: #0b1120;
+  --pc-auth-bg: #0b1120;
+  --pc-surface: #111a2e;
+  --pc-surface-2: #1e293b;
+  --pc-border: #243044;
+  --pc-border-strong: #3b4a63;
+  --pc-text: #f1f5f9;
+  --pc-text-2: #cbd5e1;
+  --pc-text-3: #94a3b8;
+  --pc-text-4: #7c8aa0;
+  --pc-accent: #60a5fa;
+  --pc-accent-soft: rgba(59, 130, 246, 0.16);
+  --pc-accent-soft-2: rgba(59, 130, 246, 0.26);
+  --pc-accent-softer: rgba(59, 130, 246, 0.08);
+  --pc-accent-text: #bfdbfe;
+  --pc-inverse-bg: #3b82f6;
+  --pc-inverse-bg-hover: #2563eb;
+  --pc-success: #4ade80;
+  --pc-success-strong: #4ade80;
+  --pc-success-soft: rgba(34, 197, 94, 0.16);
+  --pc-warning: #fbbf24;
+  --pc-warning-2: #fbbf24;
+  --pc-warning-soft: rgba(245, 158, 11, 0.16);
+  --pc-purple: #a78bfa;
+  --pc-purple-soft: rgba(139, 92, 246, 0.2);
+  --pc-danger: #f87171;
+}
+
+html[data-pc-theme] body {
+  background-color: var(--pc-bg);
+  color: var(--pc-text);
+}
+
+/* Recharts draws with SVG attributes, which can't use var(); CSS wins over them. */
+html[data-pc-theme='dark'] .recharts-cartesian-grid line {
+  stroke: var(--pc-border);
+}
+html[data-pc-theme='dark'] .recharts-cartesian-axis-tick-value {
+  fill: var(--pc-text-3);
+}
+html[data-pc-theme='dark'] .recharts-default-tooltip {
+  background-color: var(--pc-surface) !important;
+  border-color: var(--pc-border) !important;
+  color: var(--pc-text);
+}

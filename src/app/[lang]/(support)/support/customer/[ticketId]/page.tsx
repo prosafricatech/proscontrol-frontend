@@ -29,8 +29,8 @@ export default function CustomerTicketDetailPage() {
   if (!ticket) {
     return (
       <SupportLayout userRole="customer" userName={authUser?.name || 'Customer'} userRoleLabel="prosERP">
-        <Box sx={{ p: 4, bgcolor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-          <Typography sx={{ color: loadError ? '#dc2626' : '#475569' }}>{loadError || t?.loading || 'Loading ticket...'}</Typography>
+        <Box sx={{ p: 4, bgcolor: 'var(--pc-surface)', borderRadius: '12px', border: '1px solid var(--pc-border)' }}>
+          <Typography sx={{ color: loadError ? 'var(--pc-danger)' : 'var(--pc-text-2)' }}>{loadError || t?.loading || 'Loading ticket...'}</Typography>
         </Box>
       </SupportLayout>
     );
@@ -47,21 +47,21 @@ export default function CustomerTicketDetailPage() {
     <SupportLayout userRole="customer" userName={authUser?.name || 'Customer'} userRoleLabel="prosERP">
       <Box sx={{ display: 'grid', gap: 3 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <IconButton aria-label={dictionary.support?.common?.back || 'Back'} onClick={() => router.back()} sx={{ color: '#64748b' }}>
+          <IconButton aria-label={dictionary.support?.common?.back || 'Back'} onClick={() => router.back()} sx={{ color: 'var(--pc-text-3)' }}>
             <BackIcon />
           </IconButton>
-          <Typography sx={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f172a' }}>{ticket.subject}</Typography>
+          <Typography sx={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--pc-text)' }}>{ticket.subject}</Typography>
           <StatusBadge status={ticket.status} />
         </Box>
 
-        <Card sx={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: 'none' }}>
+        <Card sx={{ borderRadius: '12px', border: '1px solid var(--pc-border)', boxShadow: 'none' }}>
           <CardContent sx={{ p: 2.5 }}>
-            <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', letterSpacing: 0.5, mb: 1 }}>
+            <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--pc-text-4)', letterSpacing: 0.5, mb: 1 }}>
               {dictionary.support?.common?.request || 'REQUEST'}
             </Typography>
-            <Typography sx={{ color: '#0f172a', fontSize: '0.95rem', whiteSpace: 'pre-wrap' }}>{ticket.description}</Typography>
+            <Typography sx={{ color: 'var(--pc-text)', fontSize: '0.95rem', whiteSpace: 'pre-wrap' }}>{ticket.description}</Typography>
             {ticket.handledBy && (
-              <Typography sx={{ color: '#64748b', fontSize: '0.85rem', mt: 1.5 }}>
+              <Typography sx={{ color: 'var(--pc-text-3)', fontSize: '0.85rem', mt: 1.5 }}>
                 {t?.handledBy || 'Handled by'} {ticket.handledBy}
               </Typography>
             )}
@@ -90,7 +90,7 @@ export default function CustomerTicketDetailPage() {
           placeholder={t?.typeMessage}
         />
 
-        <Button variant="outlined" onClick={() => router.push(`/${lang}/support/customer`)} sx={{ width: 'fit-content', borderRadius: '8px', textTransform: 'none', borderColor: '#e2e8f0', color: '#475569' }}>
+        <Button variant="outlined" onClick={() => router.push(`/${lang}/support/customer`)} sx={{ width: 'fit-content', borderRadius: '8px', textTransform: 'none', borderColor: 'var(--pc-border)', color: 'var(--pc-text-2)' }}>
           {dictionary.support?.common?.back || 'Back'}
         </Button>
       </Box>

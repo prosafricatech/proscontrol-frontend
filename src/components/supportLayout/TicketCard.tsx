@@ -27,7 +27,7 @@ export const TicketCard = ({ ticket, onClick, action, className, sx }: TicketCar
       onClick={onClick}
       sx={{
         borderRadius: '12px',
-        border: '1px solid #e2e8f0',
+        border: '1px solid var(--pc-border)',
         boxShadow: 'none',
         cursor: onClick ? 'pointer' : 'default',
         transition: 'all 0.2s ease',
@@ -39,15 +39,15 @@ export const TicketCard = ({ ticket, onClick, action, className, sx }: TicketCar
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, flexWrap: 'wrap' }}>
             <StatusBadge status={ticket.status} />
-            <Typography sx={{ fontSize: '0.85rem', color: '#64748b' }}>{ticket.customerEmail}</Typography>
+            <Typography sx={{ fontSize: '0.85rem', color: 'var(--pc-text-3)' }}>{ticket.customerEmail}</Typography>
           </Box>
-          <Typography sx={{ fontSize: '1.1rem', fontWeight: 600, color: '#0f172a', mb: 0.5 }}>
+          <Typography sx={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--pc-text)', mb: 0.5 }}>
             {ticket.subject}
           </Typography>
-          <Typography sx={{ fontSize: '0.9rem', color: '#64748b', mb: 1.5 }}>
+          <Typography sx={{ fontSize: '0.9rem', color: 'var(--pc-text-3)', mb: 1.5 }}>
             {ticket.description}
           </Typography>
-          <Typography sx={{ fontSize: '0.8rem', color: '#94a3b8' }}>
+          <Typography sx={{ fontSize: '0.8rem', color: 'var(--pc-text-4)' }}>
             Handled by {ticket.handledBy || 'Unassigned'} · updated {new Date(ticket.updatedAt).toLocaleDateString()}
           </Typography>
         </Box>
@@ -68,7 +68,7 @@ export const TicketCard = ({ ticket, onClick, action, className, sx }: TicketCar
               py: 0.8,
               fontSize: '0.85rem',
               flexShrink: 0,
-              '&:hover': { bgcolor: action.tone === 'danger' ? '#dc2626' : '#1d4ed8' },
+              '&:hover': { bgcolor: action.tone === 'danger' ? 'var(--pc-danger)' : '#1d4ed8' },
             }}
           >
             {action.label}

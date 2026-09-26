@@ -83,10 +83,10 @@ const ProsControlAuth = () => {
       highlights={authHighlights(dictionary)}
     >
       <Box component="form" onSubmit={handleSignIn} noValidate>
-        <Typography variant="h5" sx={{ fontWeight: 700, color: '#1e293b', mb: 0.5 }}>
+        <Typography variant="h5" sx={{ fontWeight: 700, color: 'var(--pc-text)', mb: 0.5 }}>
           {t?.accountLogin || 'Sign in'}
         </Typography>
-        <Typography variant="body2" sx={{ color: '#64748b', mb: 3 }}>
+        <Typography variant="body2" sx={{ color: 'var(--pc-text-3)', mb: 3 }}>
           {t?.oneLoginHint || 'Use your prosERP account or your ProsControl guest account.'}
         </Typography>
 
@@ -127,7 +127,7 @@ const ProsControlAuth = () => {
             {busy ? <CircularProgress size={22} sx={{ color: 'white' }} /> : t?.signIn || 'Sign in'}
           </Button>
 
-          <Typography variant="body2" align="center" sx={{ color: '#64748b', pt: 1 }}>
+          <Typography variant="body2" align="center" sx={{ color: 'var(--pc-text-3)', pt: 1 }}>
             {t?.dontHaveAccount || "Don't have a prosERP account?"}{' '}
             <Box component={Link} href={`/${lang}/auth/signup`} sx={{ ...authLinkSx, textDecoration: 'none' }}>
               {t?.createGuestAccountLink || 'Create a guest account'}

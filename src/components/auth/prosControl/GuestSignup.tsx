@@ -119,10 +119,10 @@ export const GuestSignup = () => {
         />
       ) : (
         <Box component="form" onSubmit={handleSubmit} noValidate>
-          <Typography variant="h5" sx={{ fontWeight: 700, color: '#1e293b', mb: 0.5 }}>
+          <Typography variant="h5" sx={{ fontWeight: 700, color: 'var(--pc-text)', mb: 0.5 }}>
             {t?.createGuestAccount || 'Create a guest account'}
           </Typography>
-          <Typography variant="body2" sx={{ color: '#64748b', mb: 2.5 }}>
+          <Typography variant="body2" sx={{ color: 'var(--pc-text-3)', mb: 2.5 }}>
             {t?.noProsERPAccount || 'No prosERP account needed.'}
           </Typography>
 
@@ -131,15 +131,15 @@ export const GuestSignup = () => {
               display: 'flex',
               gap: 1,
               alignItems: 'flex-start',
-              bgcolor: '#eff6ff',
-              border: '1px solid #dbeafe',
+              bgcolor: 'var(--pc-accent-soft)',
+              border: '1px solid var(--pc-accent-soft-2)',
               borderRadius: '8px',
               p: 1.5,
               mb: 2.5,
             }}
           >
-            <InfoIcon sx={{ fontSize: 18, color: '#2563eb', mt: '1px' }} />
-            <Typography sx={{ fontSize: '0.85rem', color: '#1e3a8a' }}>
+            <InfoIcon sx={{ fontSize: 18, color: 'var(--pc-accent)', mt: '1px' }} />
+            <Typography sx={{ fontSize: '0.85rem', color: 'var(--pc-accent-text)' }}>
               {t?.prosErpUsersNote || 'Already use prosERP? You don’t need to sign up — sign in with your prosERP email and password.'}{' '}
               <Box component={Link} href={`/${lang}/auth/signin`} sx={{ ...authLinkSx, textDecoration: 'none' }}>
                 {t?.signInLink || 'Sign in'}
@@ -216,7 +216,7 @@ export const GuestSignup = () => {
               {submitting ? <CircularProgress size={22} sx={{ color: 'white' }} /> : t?.createAccount || 'Create account'}
             </Button>
 
-            <Typography variant="body2" align="center" sx={{ color: '#64748b' }}>
+            <Typography variant="body2" align="center" sx={{ color: 'var(--pc-text-3)' }}>
               {t?.alreadyHaveAccount || 'Already have an account?'}{' '}
               <Box component={Link} href={`/${lang}/auth/signin`} sx={{ ...authLinkSx, textDecoration: 'none' }}>
                 {t?.signInLink || 'Sign in'}

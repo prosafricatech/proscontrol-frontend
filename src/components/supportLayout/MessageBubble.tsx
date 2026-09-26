@@ -39,7 +39,7 @@ export const MessageBubble = ({
   if (type === 'system') {
     return (
       <Box className={className} sx={{ my: 2, display: 'flex', justifyContent: 'center', ...sx }}>
-        <Typography sx={{ fontSize: '0.8rem', color: '#64748b', bgcolor: '#f1f5f9', px: 1.5, py: 0.5, borderRadius: '999px' }}>
+        <Typography sx={{ fontSize: '0.8rem', color: 'var(--pc-text-3)', bgcolor: 'var(--pc-surface-2)', px: 1.5, py: 0.5, borderRadius: '999px' }}>
           {body} · {createdAt}
         </Typography>
       </Box>
@@ -60,14 +60,14 @@ export const MessageBubble = ({
         }}
       >
         {!isRight && (
-          <Avatar sx={{ width: 28, height: 28, bgcolor: '#cbd5e1', color: '#0f172a', fontSize: '0.7rem' }}>
+          <Avatar sx={{ width: 28, height: 28, bgcolor: 'var(--pc-border-strong)', color: 'var(--pc-text)', fontSize: '0.7rem' }}>
             {initial}
           </Avatar>
         )}
-        <Typography sx={{ fontSize: '0.78rem', color: '#94a3b8' }}>
+        <Typography sx={{ fontSize: '0.78rem', color: 'var(--pc-text-4)' }}>
           {senderName} · {createdAt}
         </Typography>
-        {isRight && read && <ReadIcon sx={{ fontSize: 14, color: '#2563eb' }} />}
+        {isRight && read && <ReadIcon sx={{ fontSize: 14, color: 'var(--pc-accent)' }} />}
         {isRight && (
           <Avatar sx={{ width: 28, height: 28, bgcolor: '#2563eb', color: '#fff', fontSize: '0.7rem' }}>
             {initial}
@@ -81,9 +81,9 @@ export const MessageBubble = ({
             px: 2,
             py: 1.2,
             borderRadius: isRight ? '12px 12px 2px 12px' : '12px 12px 12px 2px',
-            bgcolor: isRight ? '#2563eb' : '#ffffff',
-            color: isRight ? '#ffffff' : '#0f172a',
-            border: isRight ? 'none' : '1px solid #e2e8f0',
+            bgcolor: isRight ? '#2563eb' : 'var(--pc-surface)',
+            color: isRight ? '#ffffff' : 'var(--pc-text)',
+            border: isRight ? 'none' : '1px solid var(--pc-border)',
             boxShadow: isRight ? '0 4px 12px rgba(37,99,235,0.2)' : 'none',
             whiteSpace: 'pre-wrap',
             wordBreak: 'break-word',
@@ -99,7 +99,7 @@ export const MessageBubble = ({
                   target="_blank"
                   rel="noopener"
                   underline="hover"
-                  sx={{ display: 'flex', alignItems: 'center', gap: 0.5, fontSize: '0.85rem', color: isRight ? '#dbeafe' : '#2563eb' }}
+                  sx={{ display: 'flex', alignItems: 'center', gap: 0.5, fontSize: '0.85rem', color: isRight ? '#dbeafe' : 'var(--pc-accent)' }}
                 >
                   <AttachIcon sx={{ fontSize: 14 }} />
                   {attachment.name}

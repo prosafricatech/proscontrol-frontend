@@ -43,18 +43,18 @@ export default function StaffTicketsPage() {
   return (
     <SupportLayout userRole="staff" userName={currentUser?.name || 'Staff'} userRoleLabel="Staff">
       <Box sx={{ mb: 3 }}>
-        <Typography sx={{ fontSize: '1.75rem', fontWeight: 700, color: '#0f172a', mb: 0.5 }}>
+        <Typography sx={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--pc-text)', mb: 0.5 }}>
           {title}
         </Typography>
-        <Typography sx={{ color: '#64748b', fontSize: '0.95rem' }}>
+        <Typography sx={{ color: 'var(--pc-text-3)', fontSize: '0.95rem' }}>
           {subtitle}
         </Typography>
       </Box>
 
       {sortedTickets.length === 0 ? (
-        <Box sx={{ minHeight: 280, border: '1px dashed #cbd5e1', borderRadius: '12px', bgcolor: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-          <LayersIcon sx={{ color: '#94a3b8', fontSize: 32 }} />
-          <Typography sx={{ color: '#475569', fontWeight: 600 }}>No tickets found</Typography>
+        <Box sx={{ minHeight: 280, border: '1px dashed var(--pc-border-strong)', borderRadius: '12px', bgcolor: 'var(--pc-surface)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+          <LayersIcon sx={{ color: 'var(--pc-text-4)', fontSize: 32 }} />
+          <Typography sx={{ color: 'var(--pc-text-2)', fontWeight: 600 }}>No tickets found</Typography>
         </Box>
       ) : (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>

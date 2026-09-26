@@ -58,10 +58,10 @@ export default function CustomerTicketsPage() {
     >
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3, gap: 2 }}>
         <Box>
-          <Typography sx={{ fontSize: '1.75rem', fontWeight: 700, color: '#0f172a', mb: 0.5 }}>
+          <Typography sx={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--pc-text)', mb: 0.5 }}>
             {dictionary.support?.customer?.myTickets || 'My Tickets'}
           </Typography>
-          <Typography sx={{ color: '#64748b', fontSize: '0.95rem' }}>
+          <Typography sx={{ color: 'var(--pc-text-3)', fontSize: '0.95rem' }}>
             {dictionary.support?.customer?.subtitle || 'Track and continue your support conversations.'}
           </Typography>
         </Box>
@@ -84,7 +84,7 @@ export default function CustomerTicketsPage() {
         </Button>
       </Box>
 
-      <Box sx={{ bgcolor: '#f1f5f9', borderRadius: '10px', p: '4px', display: 'inline-flex', mb: 3 }}>
+      <Box sx={{ bgcolor: 'var(--pc-surface-2)', borderRadius: '10px', p: '4px', display: 'inline-flex', mb: 3 }}>
         {(['open', 'closed', 'all'] as TabValue[]).map((value) => (
           <Button
             key={value}
@@ -96,11 +96,11 @@ export default function CustomerTicketsPage() {
               textTransform: 'none',
               fontWeight: 600,
               fontSize: '0.875rem',
-              bgcolor: tab === value ? '#ffffff' : 'transparent',
-              color: tab === value ? '#0f172a' : '#64748b',
+              bgcolor: tab === value ? 'var(--pc-surface)' : 'transparent',
+              color: tab === value ? 'var(--pc-text)' : 'var(--pc-text-3)',
               boxShadow: tab === value ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
               minWidth: 80,
-              '&:hover': { bgcolor: tab === value ? '#ffffff' : 'rgba(255,255,255,0.5)' },
+              '&:hover': { bgcolor: tab === value ? 'var(--pc-surface)' : 'rgba(255,255,255,0.5)' },
             }}
           >
             {dictionary.support?.customer?.tabs?.[value] || value}
@@ -113,28 +113,28 @@ export default function CustomerTicketsPage() {
       ) : filteredTickets.length === 0 ? (
         <Box
           sx={{
-            border: '2px dashed #e2e8f0',
+            border: '2px dashed var(--pc-border)',
             borderRadius: '16px',
             p: 6,
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            bgcolor: '#ffffff',
+            bgcolor: 'var(--pc-surface)',
             minHeight: 320,
           }}
         >
-          <Box sx={{ width: 64, height: 64, borderRadius: '16px', bgcolor: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2 }}>
-            <ChatIcon sx={{ fontSize: 32, color: '#94a3b8' }} />
+          <Box sx={{ width: 64, height: 64, borderRadius: '16px', bgcolor: 'var(--pc-surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2 }}>
+            <ChatIcon sx={{ fontSize: 32, color: 'var(--pc-text-4)' }} />
           </Box>
-          <Typography sx={{ fontSize: '1.1rem', fontWeight: 600, color: '#0f172a', mb: 0.5 }}>
+          <Typography sx={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--pc-text)', mb: 0.5 }}>
             {tab === 'open'
               ? dictionary.support?.customer?.emptyState?.noOpenTickets || 'No open tickets'
               : tab === 'closed'
                 ? dictionary.support?.customer?.emptyState?.noClosedTickets || 'No closed tickets'
                 : dictionary.support?.customer?.emptyState?.noTickets || 'No tickets yet'}
           </Typography>
-          <Typography sx={{ color: '#64748b', mb: 3, textAlign: 'center' }}>
+          <Typography sx={{ color: 'var(--pc-text-3)', mb: 3, textAlign: 'center' }}>
             {dictionary.support?.customer?.emptyState?.description || 'Create a ticket to get help from our support team.'}
           </Typography>
           <Button

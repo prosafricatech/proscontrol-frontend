@@ -120,8 +120,8 @@ export const Sidebar = ({
       sx={{
         width: SIDEBAR_WIDTH,
         flexShrink: 0,
-        bgcolor: '#ffffff',
-        borderRight: '1px solid #e2e8f0',
+        bgcolor: 'var(--pc-surface)',
+        borderRight: '1px solid var(--pc-border)',
         display: 'flex',
         flexDirection: 'column',
         position: 'fixed',
@@ -166,7 +166,7 @@ export const Sidebar = ({
           sx={{
             fontWeight: 700,
             fontSize: '1.15rem',
-            color: '#0f172a',
+            color: 'var(--pc-text)',
             letterSpacing: '-0.01em',
             lineHeight: 1.2,
           }}
@@ -175,7 +175,7 @@ export const Sidebar = ({
         </Typography>
       </Box>
 
-      <Divider sx={{ borderColor: '#f1f5f9' }} />
+      <Divider sx={{ borderColor: 'var(--pc-surface-2)' }} />
 
       {/* -------------------------------------------------- */
       /* 2. Navigation menu                                   */
@@ -188,7 +188,7 @@ export const Sidebar = ({
           overflowY: 'auto',
           '&::-webkit-scrollbar': { width: 6 },
           '&::-webkit-scrollbar-thumb': {
-            bgcolor: '#e2e8f0',
+            bgcolor: 'var(--pc-border)',
             borderRadius: 3,
           },
           '&::-webkit-scrollbar-track': { bgcolor: 'transparent' },
@@ -206,14 +206,14 @@ export const Sidebar = ({
                 py: 1.2,
                 px: 1.5,
                 minHeight: 44,
-                bgcolor: active ? '#eff6ff' : 'transparent',
-                color: active ? '#2563eb' : '#475569',
+                bgcolor: active ? 'var(--pc-accent-soft)' : 'transparent',
+                color: active ? 'var(--pc-accent)' : 'var(--pc-text-2)',
                 transition: 'background-color 0.15s ease, color 0.15s ease',
                 '&:hover': {
-                  bgcolor: active ? '#eff6ff' : '#f8fafc',
+                  bgcolor: active ? 'var(--pc-accent-soft)' : 'var(--pc-bg)',
                 },
                 '& .MuiListItemIcon-root': {
-                  color: active ? '#2563eb' : '#64748b',
+                  color: active ? 'var(--pc-accent)' : 'var(--pc-text-3)',
                   minWidth: 36,
                 },
               }}

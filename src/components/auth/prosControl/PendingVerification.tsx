@@ -42,7 +42,7 @@ export const PendingVerification = () => {
         />
       ) : (
         <Box>
-          <Typography sx={{ color: '#475569', mb: 2 }}>
+          <Typography sx={{ color: 'var(--pc-text-2)', mb: 2 }}>
             {t?.verify?.noEmail || 'Your account has no email address to verify. Please contact support.'}
           </Typography>
           <Box component="button" type="button" onClick={handleSignOut} sx={authLinkSx}>

@@ -88,12 +88,12 @@ export const VerifyCodeForm = ({ email, onVerified, secondaryAction, codeJustSen
 
   return (
     <Box component="form" onSubmit={handleVerify} noValidate>
-      <Typography variant="h5" sx={{ fontWeight: 700, color: '#1e293b', mb: 0.5 }}>
+      <Typography variant="h5" sx={{ fontWeight: 700, color: 'var(--pc-text)', mb: 0.5 }}>
         {t?.title || 'Check your email'}
       </Typography>
-      <Typography variant="body2" sx={{ color: '#64748b', mb: 3 }}>
+      <Typography variant="body2" sx={{ color: 'var(--pc-text-3)', mb: 3 }}>
         {t?.sentTo || 'We sent a 6-digit code to'}{' '}
-        <Box component="span" sx={{ color: '#1e293b', fontWeight: 600 }}>{email}</Box>.{' '}
+        <Box component="span" sx={{ color: 'var(--pc-text)', fontWeight: 600 }}>{email}</Box>.{' '}
         {t?.expires || 'It expires in 10 minutes.'}
       </Typography>
 
@@ -119,10 +119,10 @@ export const VerifyCodeForm = ({ email, onVerified, secondaryAction, codeJustSen
           {verifying ? <CircularProgress size={22} sx={{ color: 'white' }} /> : t?.verify || 'Verify & continue'}
         </Button>
 
-        <Typography variant="body2" align="center" sx={{ color: '#64748b' }}>
+        <Typography variant="body2" align="center" sx={{ color: 'var(--pc-text-3)' }}>
           {t?.noCode || "Didn't get it?"}{' '}
           {cooldown > 0 ? (
-            <Box component="span" sx={{ color: '#94a3b8' }}>
+            <Box component="span" sx={{ color: 'var(--pc-text-4)' }}>
               {(t?.resendIn || 'Resend in {seconds}s').replace('{seconds}', String(cooldown))}
             </Box>
           ) : (
@@ -134,7 +134,7 @@ export const VerifyCodeForm = ({ email, onVerified, secondaryAction, codeJustSen
 
         {secondaryAction && (
           <Typography variant="body2" align="center">
-            <Box component="button" type="button" onClick={secondaryAction.onClick} sx={{ ...authLinkSx, color: '#64748b', fontWeight: 500 }}>
+            <Box component="button" type="button" onClick={secondaryAction.onClick} sx={{ ...authLinkSx, color: 'var(--pc-text-3)', fontWeight: 500 }}>
               {secondaryAction.label}
             </Box>
           </Typography>

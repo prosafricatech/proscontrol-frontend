@@ -25,8 +25,8 @@ export const MessageComposer = ({ onSend, sending = false, disabledReason, place
 
   if (disabledReason) {
     return (
-      <Box sx={{ border: '1px dashed #cbd5e1', borderRadius: '12px', p: 2, bgcolor: '#f8fafc' }}>
-        <Typography sx={{ color: '#64748b', fontSize: '0.9rem', textAlign: 'center' }}>{disabledReason}</Typography>
+      <Box sx={{ border: '1px dashed var(--pc-border-strong)', borderRadius: '12px', p: 2, bgcolor: 'var(--pc-bg)' }}>
+        <Typography sx={{ color: 'var(--pc-text-3)', fontSize: '0.9rem', textAlign: 'center' }}>{disabledReason}</Typography>
       </Box>
     );
   }
@@ -72,7 +72,7 @@ export const MessageComposer = ({ onSend, sending = false, disabledReason, place
           ))}
         </Box>
       )}
-      <Box sx={{ border: '1px solid #e2e8f0', borderRadius: '12px', p: 1.5, display: 'flex', alignItems: 'flex-end', gap: 1, bgcolor: '#ffffff' }}>
+      <Box sx={{ border: '1px solid var(--pc-border)', borderRadius: '12px', p: 1.5, display: 'flex', alignItems: 'flex-end', gap: 1, bgcolor: 'var(--pc-surface)' }}>
         <input
           ref={fileInput}
           type="file"
@@ -88,7 +88,7 @@ export const MessageComposer = ({ onSend, sending = false, disabledReason, place
           aria-label={common?.attach || 'Attach'}
           onClick={() => fileInput.current?.click()}
           disabled={sending}
-          sx={{ color: '#64748b', border: '1px solid #e2e8f0', borderRadius: '8px' }}
+          sx={{ color: 'var(--pc-text-3)', border: '1px solid var(--pc-border)', borderRadius: '8px' }}
         >
           <AttachIcon fontSize="small" />
         </IconButton>
@@ -113,7 +113,7 @@ export const MessageComposer = ({ onSend, sending = false, disabledReason, place
           aria-label={common?.send || 'Send'}
           onClick={handleSend}
           disabled={sending || !body.trim()}
-          sx={{ bgcolor: '#0f172a', color: 'white', borderRadius: '8px', '&:hover': { bgcolor: '#1e293b' }, '&.Mui-disabled': { bgcolor: '#cbd5e1', color: 'white' } }}
+          sx={{ bgcolor: 'var(--pc-inverse-bg)', color: 'white', borderRadius: '8px', '&:hover': { bgcolor: 'var(--pc-inverse-bg-hover)' }, '&.Mui-disabled': { bgcolor: 'var(--pc-border-strong)', color: 'white' } }}
         >
           {sending ? <CircularProgress size={18} sx={{ color: 'white' }} /> : <SendIcon fontSize="small" />}
         </IconButton>

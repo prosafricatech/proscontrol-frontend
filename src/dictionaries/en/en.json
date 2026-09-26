@@ -485,6 +485,10 @@
   },
 
   "support": {
+    "colorMode": {
+      "switchToDark": "Switch to dark mode",
+      "switchToLight": "Switch to light mode"
+    },
     "appName": "ProsControl",
     "sidebar": {
       "dashboard": "Dashboard",

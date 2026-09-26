@@ -94,24 +94,6 @@ export function saveWorkspaceState(state: WorkspaceState): WorkspaceState {
   return state;
 }
 
-export function createLocalTicket(state: WorkspaceState, input: { subject: string; description: string; customerName?: string; customerEmail?: string; priority?: string; category?: string }): WorkspaceState {
-  const now = new Date().toISOString();
-  const ticket: Ticket = {
-    id: `LOCAL-${Date.now()}`,
-    subject: input.subject,
-    description: input.description,
-    status: 'new',
-    customerName: input.customerName || 'Current customer',
-    customerEmail: input.customerEmail || '',
-    createdAt: now,
-    updatedAt: now,
-    messages: [],
-    reassignmentHistory: [],
-  };
-
-  return saveWorkspaceState({ ...state, tickets: [ticket, ...state.tickets] });
-}
-
 export function markAllNotificationsRead(state: WorkspaceState): WorkspaceState {
   return saveWorkspaceState({ ...state, notifications: state.notifications.map((notification) => ({ ...notification, unread: false })) });
 }
