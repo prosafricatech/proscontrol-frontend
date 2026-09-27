@@ -4,12 +4,10 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, InputLabel, MenuItem, Select, TextField } from '@mui/material';
 import { Controller, Resolver, useForm } from 'react-hook-form';
 import { useEffect, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import * as yup from 'yup';
 import { useDictionary } from '@/app/[lang]/contexts/DictionaryContext';
 import { useT } from '@/lib/i18n/useT';
-import organizationServices from '@/components/organizations/organizationServices';
-import { Organization } from '@/types/auth-types';
+import { useUserOrganizations } from '@/lib/support/useUserOrganizations';
 
 interface NewTicketModalProps {
   open: boolean;
@@ -32,17 +30,8 @@ export const NewTicketModal = ({ open, onClose, defaultOrganizationId, onSubmit 
     description: yup.string().required(t('portal.ticketForm.descriptionRequired', 'Description is required')),
     organizationId: yup.string().optional().nullable(),
   }), [t]);
-  const { data: orgResponse, isLoading: orgsLoading } = useQuery({
-    queryKey: ['support-organizations'],
-    queryFn: organizationServices.getOptions,
-    enabled: open,
-  });
-
-  const organizations = Array.isArray(orgResponse)
-    ? orgResponse
-    : Array.isArray(orgResponse?.data)
-      ? orgResponse.data
-      : [];
+  // The user's prosERP organizations, captured at login ([] for guests).
+  const organizations = useUserOrganizations();
 
   const {
     register,
@@ -59,21 +48,13 @@ export const NewTicketModal = ({ open, onClose, defaultOrganizationId, onSubmit 
   useEffect(() => {
     if (!open) return;
 
-    if (defaultOrganizationId) {
-      setValue('organizationId', String(defaultOrganizationId));
-      return;
-    }
-
-    if (organizations.length === 1) {
-      setValue('organizationId', String(organizations[0].id));
-      return;
-    }
-
-    setValue('organizationId', '');
+    // Preselect only an explicitly given organization; otherwise "not related".
+    const preset = defaultOrganizationId && organizations.some((org) => org.id === String(defaultOrganizationId));
+    setValue('organizationId', preset ? String(defaultOrganizationId) : '');
   }, [open, defaultOrganizationId, organizations, setValue]);
 
   const organizationIdValue = control._formValues?.organizationId;
-  const selectedOrganization = organizations.find((org: Organization) => String(org.id) === String(organizationIdValue));
+  const selectedOrganization = organizations.find((org) => org.id === String(organizationIdValue));
 
   const submitHandler = (values: FormValues) => {
     if (onSubmit) {
@@ -105,8 +86,9 @@ export const NewTicketModal = ({ open, onClose, defaultOrganizationId, onSubmit 
             />
           </FormControl>
 
+          {organizations.length > 0 && (
           <FormControl fullWidth sx={{ mb: 2.5 }}>
-            <InputLabel id="support-ticket-org-label">
+            <InputLabel id="support-ticket-org-label" shrink>
               {t('portal.ticketForm.organization', 'Organization')}
             </InputLabel>
             <Controller
@@ -116,27 +98,26 @@ export const NewTicketModal = ({ open, onClose, defaultOrganizationId, onSubmit 
                 <Select
                   {...field}
                   labelId="support-ticket-org-label"
+                  displayEmpty
+                  notched
                   label={t('portal.ticketForm.organization', 'Organization')}
                   value={field.value || ''}
                   onChange={(event) => field.onChange(event.target.value)}
-                  disabled={orgsLoading || organizations.length === 0}
                   sx={{ borderRadius: '8px' }}
                 >
-                  {organizations.length === 0 ? (
-                    <MenuItem value="" disabled>
-                      {t('portal.ticketForm.noOrganizations', 'No organizations available')}
+                  <MenuItem value="">
+                    <em>{t('portal.ticketForm.notRelated', 'Not related to an organization')}</em>
+                  </MenuItem>
+                  {organizations.map((organization) => (
+                    <MenuItem key={organization.id} value={organization.id}>
+                      {organization.name}
                     </MenuItem>
-                  ) : (
-                    organizations.map((organization: Organization) => (
-                      <MenuItem key={String(organization.id)} value={String(organization.id)}>
-                        {organization.name}
-                      </MenuItem>
-                    ))
-                  )}
+                  ))}
                 </Select>
               )}
             />
           </FormControl>
+          )}
 
           <FormControl fullWidth>
             <TextField

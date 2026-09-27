@@ -153,10 +153,6 @@ export default function CustomerTicketsPage() {
         onClose={() => setModalOpen(false)}
         defaultOrganizationId={activeOrganization?.id ? String(activeOrganization.id) : null}
         onSubmit={async (values) => {
-          const selectedOrganization = activeOrganization && String(activeOrganization.id) === String(values.organizationId)
-            ? activeOrganization
-            : undefined;
-
           await fetch('/api/support/tickets', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -164,7 +160,7 @@ export default function CustomerTicketsPage() {
               subject: values.subject,
               description: values.description,
               organizationId: values.organizationId,
-              organizationName: selectedOrganization?.name || values.organizationName,
+              organizationName: values.organizationName,
               customerName: authUser?.name || 'Customer',
               customerEmail: authUser?.email || 'customer@proscontrol.com',
             }),

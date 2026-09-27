@@ -8,6 +8,7 @@ declare module 'next-auth/jwt' {
       user_id?: string;
       permissions?: string[];
       organization_id?: string;
+      organizations?: { id: string; name: string; autoload: boolean }[];
     }
   }
 

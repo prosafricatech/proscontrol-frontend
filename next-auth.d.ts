@@ -44,5 +44,7 @@ declare module 'next-auth' {
     user: User;
     expires: string;
     error: string;
+    /** prosERP organizations captured at login (see src/lib/support/organizations.ts). */
+    organizations?: { id: string; name: string; autoload: boolean }[];
   }
 }

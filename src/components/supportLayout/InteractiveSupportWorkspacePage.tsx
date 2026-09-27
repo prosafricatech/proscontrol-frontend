@@ -12,6 +12,7 @@ import SupportReports from '@/components/supportLayout/SupportReports';
 import { NotificationList } from '@/components/supportLayout/NotificationList';
 import { useSupportNotifications } from '@/lib/support/NotificationsProvider';
 import { useT } from '@/lib/i18n/useT';
+import { useUserOrganizations } from '@/lib/support/useUserOrganizations';
 import { supportCustomers, supportTickets, type Ticket } from '@/lib/support/mockData';
 import { createArticle, loadWorkspaceState, saveReply, saveSettings, type WorkspaceArticle, type WorkspaceReply, type WorkspaceSettings, type WorkspaceState } from '@/lib/support/workspaceStore';
 
@@ -58,7 +59,8 @@ function CreateTicket() {
   const lang = useLanguage();
   const router = useRouter();
   const isStaff = authData.authUser?.user?.is_staff === true;
-  const [form, setForm] = useState({ subject: '', organizationName: '', description: '' });
+  const organizations = useUserOrganizations();
+  const [form, setForm] = useState({ subject: '', organizationId: '', description: '' });
   const [errors, setErrors] = useState<{ subject?: string; description?: string }>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -82,7 +84,7 @@ function CreateTicket() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           subject: form.subject.trim(),
-          organizationName: form.organizationName.trim() || undefined,
+          organizationName: organizations.find((org) => org.id === form.organizationId)?.name,
           description: form.description.trim(),
         }),
       });
@@ -99,7 +101,7 @@ function CreateTicket() {
       setSubmitting(false);
     }
   };
-  return <><Header title={t('portal.createTicket.title', 'Create Ticket')} subtitle={t('portal.createTicket.subtitle', 'Describe your issue and our support team will pick it up.')} /><Box sx={{ maxWidth: 860 }}><Panel title={t('portal.createTicket.details', 'Ticket details')}><Stack spacing={2}>{formError && <Alert severity="error">{formError}</Alert>}{isStaff && <Alert severity="info">{t('portal.createTicket.staffNote', 'Tickets you create here are opened under your own account.')}</Alert>}<TextField label={t('portal.createTicket.subject', 'Subject')} value={form.subject} onChange={(event) => change('subject', event.target.value)} error={!!errors.subject} helperText={errors.subject} inputProps={{ maxLength: 255 }} fullWidth sx={fieldSx} /><TextField label={t('portal.createTicket.organization', 'Organization (optional)')} value={form.organizationName} onChange={(event) => change('organizationName', event.target.value)} helperText={t('portal.createTicket.organizationHelp', 'The prosERP organization this issue relates to, if any.')} inputProps={{ maxLength: 255 }} fullWidth sx={fieldSx} /><TextField label={t('portal.createTicket.description', 'Description')} value={form.description} onChange={(event) => change('description', event.target.value)} error={!!errors.description} helperText={errors.description || t('portal.createTicket.descriptionHelp', 'Include steps, error messages and what you expected to happen.')} multiline minRows={7} fullWidth sx={fieldSx} /><Box sx={{ display: 'flex', justifyContent: 'flex-end' }}><Button variant="contained" startIcon={<Send />} onClick={submit} disabled={submitting}>{submitting ? t('portal.createTicket.creating', 'Creating…') : t('portal.createTicket.submit', 'Create ticket')}</Button></Box></Stack></Panel></Box></>;
+  return <><Header title={t('portal.createTicket.title', 'Create Ticket')} subtitle={t('portal.createTicket.subtitle', 'Describe your issue and our support team will pick it up.')} /><Box sx={{ maxWidth: 860 }}><Panel title={t('portal.createTicket.details', 'Ticket details')}><Stack spacing={2}>{formError && <Alert severity="error">{formError}</Alert>}{isStaff && <Alert severity="info">{t('portal.createTicket.staffNote', 'Tickets you create here are opened under your own account.')}</Alert>}<TextField label={t('portal.createTicket.subject', 'Subject')} value={form.subject} onChange={(event) => change('subject', event.target.value)} error={!!errors.subject} helperText={errors.subject} inputProps={{ maxLength: 255 }} fullWidth sx={fieldSx} />{organizations.length > 0 && <TextField select SelectProps={{ displayEmpty: true }} InputLabelProps={{ shrink: true }} label={t('portal.createTicket.organization', 'Organization (optional)')} value={form.organizationId} onChange={(event) => change('organizationId', event.target.value)} helperText={t('portal.createTicket.organizationHelp', 'The prosERP organization this issue relates to, if any.')} fullWidth sx={fieldSx}><MenuItem value=""><em>{t('portal.ticketForm.notRelated', 'Not related to an organization')}</em></MenuItem>{organizations.map((org) => <MenuItem key={org.id} value={org.id}>{org.name}</MenuItem>)}</TextField>}<TextField label={t('portal.createTicket.description', 'Description')} value={form.description} onChange={(event) => change('description', event.target.value)} error={!!errors.description} helperText={errors.description || t('portal.createTicket.descriptionHelp', 'Include steps, error messages and what you expected to happen.')} multiline minRows={7} fullWidth sx={fieldSx} /><Box sx={{ display: 'flex', justifyContent: 'flex-end' }}><Button variant="contained" startIcon={<Send />} onClick={submit} disabled={submitting}>{submitting ? t('portal.createTicket.creating', 'Creating…') : t('portal.createTicket.submit', 'Create ticket')}</Button></Box></Stack></Panel></Box></>;
 }
 
 function SettingsPage() {

@@ -152,7 +152,8 @@
     "emailInvalid": "Weka barua pepe sahihi",
     "onBehalfTitle": "Tiketi mpya kwa niaba ya mteja",
     "customerName": "Jina la mteja",
-    "customerEmail": "Barua pepe ya mteja (si lazima)"
+    "customerEmail": "Barua pepe ya mteja (si lazima)",
+    "notRelated": "Haihusiani na taasisi yoyote"
   },
   "ticketCard": {
     "meta": "Inashughulikiwa na {handler} · imesasishwa {date}"

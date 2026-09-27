@@ -152,7 +152,8 @@
     "emailInvalid": "Enter a valid email",
     "onBehalfTitle": "New ticket on behalf of customer",
     "customerName": "Customer name",
-    "customerEmail": "Customer email (optional)"
+    "customerEmail": "Customer email (optional)",
+    "notRelated": "Not related to an organization"
   },
   "ticketCard": {
     "meta": "Handled by {handler} · updated {date}"

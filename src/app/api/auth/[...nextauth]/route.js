@@ -1,6 +1,7 @@
 import axios from '@/lib/services/config';
 import { getForwardedRequestHeadersFromHeaders } from '@/lib/utils/apiUtils';
 import NextAuth from 'next-auth';
+import { toSessionOrganizations } from '@/lib/support/organizations';
 import CredentialsProvider from 'next-auth/providers/credentials';
 
 const authOptions = {
@@ -51,6 +52,8 @@ const authOptions = {
             is_staff: data.user.is_staff,
             permissions: data.permissions || data.user.permissions || [],
             token: data.token,
+            // prosERP organizations from the login response ([] for guests).
+            organizations: toSessionOrganizations(data.organizations),
             organization_id: undefined,
             organization_name: undefined,
           };
@@ -76,6 +79,7 @@ const authOptions = {
         token.organization_id = user.organization_id;
         token.organization_name = user.organization_name;
         token.permissions = user.permissions;
+        token.organizations = user.organizations ?? [];
 
         token.id = user.id;
         token.name = user.name;
@@ -97,6 +101,7 @@ const authOptions = {
       session.organization_id = token.organization_id;
       session.organization_name = token.organization_name;
       session.permissions = token.permissions;
+      session.organizations = token.organizations ?? [];
 
       return session;
     },
