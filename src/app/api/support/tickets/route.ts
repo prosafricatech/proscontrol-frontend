@@ -1,5 +1,9 @@
+import {
+  backendData,
+  normalizeTicket,
+  requestBackend,
+} from '@/lib/support/backend';
 import { NextRequest, NextResponse } from 'next/server';
-import { backendData, normalizeTicket, requestBackend } from '@/lib/support/backend';
 import { listTickets } from './_list';
 
 export async function GET(request: NextRequest) {
@@ -22,7 +26,9 @@ export async function POST(request: NextRequest) {
 
   const ticket = backendData(result.payload)?.ticket;
   return NextResponse.json(
-    result.response.ok ? { data: normalizeTicket(ticket), success: true } : result.payload,
-    { status: result.response.status },
+    result.response.ok
+      ? { data: normalizeTicket(ticket), success: true }
+      : result.payload,
+    { status: result.response.status }
   );
 }

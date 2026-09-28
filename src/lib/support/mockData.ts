@@ -1,72 +1,40 @@
-'use client';
+import type {
+  CustomerSummary,
+  Ticket,
+  TicketMessage,
+  TicketStatus,
+} from './types';
 
-export type TicketStatus = 'new' | 'active' | 'closed';
-
-export interface TicketAttachment {
-  id?: string;
-  name: string;
-  url: string;
-  mimeType?: string;
-  size?: number;
-}
-
-export interface TicketMessage {
-  id: string;
-  senderId: string;
-  senderName: string;
-  body: string;
-  type?: 'message' | 'system';
-  readAt?: string | null;
-  attachments?: TicketAttachment[];
-  createdAt: string;
-}
-
-export interface ReassignmentEvent {
-  from: string;
-  to: string;
-  note: string;
-  at: string;
-}
-
-export interface Ticket {
-  id: string;
-  subject: string;
-  description: string;
-  status: TicketStatus;
-  customerId?: string;
-  customerName: string;
-  customerEmail: string;
-  handledBy?: string;
-  handledById?: string;
-  closedAt?: string | null;
-  createdAt: string;
-  updatedAt: string;
-  organizationId?: string;
-  organizationName?: string;
-  messages: TicketMessage[];
-  reassignmentHistory: ReassignmentEvent[];
-}
-
-export interface CustomerSummary {
-  id: string;
-  name: string;
-  email: string;
-  organization: string;
-}
-
+// Sample data for the demo pages (customer profile) until the backend provides it.
 const defaultDate = '2026-09-21T09:00:00.000Z';
 
 export const supportCustomers: CustomerSummary[] = [
-  { id: 'cust-1', name: 'Willbard Beatus', email: 'willbard@proscontrol.com', organization: 'ProsControl Labs' },
-  { id: 'cust-2', name: 'Grace Mkilima', email: 'grace@proscontrol.com', organization: 'Nairobi HQ' },
-  { id: 'cust-3', name: 'Amina Yusuf', email: 'amina@proscontrol.com', organization: 'Coastal Retail' },
+  {
+    id: 'cust-1',
+    name: 'Willbard Beatus',
+    email: 'willbard@proscontrol.com',
+    organization: 'ProsControl Labs',
+  },
+  {
+    id: 'cust-2',
+    name: 'Grace Mkilima',
+    email: 'grace@proscontrol.com',
+    organization: 'Nairobi HQ',
+  },
+  {
+    id: 'cust-3',
+    name: 'Amina Yusuf',
+    email: 'amina@proscontrol.com',
+    organization: 'Coastal Retail',
+  },
 ];
 
 export const supportTickets: Ticket[] = [
   {
     id: 'TCK-1001',
     subject: 'Unable to sync warehouse stock',
-    description: 'The stock sync job has stopped updating after the last deployment. We need help validating the inventory counts in the procurement module.',
+    description:
+      'The stock sync job has stopped updating after the last deployment. We need help validating the inventory counts in the procurement module.',
     status: 'active',
     customerName: 'Willbard Beatus',
     customerEmail: 'willbard@proscontrol.com',
@@ -92,13 +60,19 @@ export const supportTickets: Ticket[] = [
       },
     ],
     reassignmentHistory: [
-      { from: 'Unassigned', to: 'Lilian M.', note: 'First assignment', at: '2026-09-21T08:00:00.000Z' },
+      {
+        from: 'Unassigned',
+        to: 'Lilian M.',
+        note: 'First assignment',
+        at: '2026-09-21T08:00:00.000Z',
+      },
     ],
   },
   {
     id: 'TCK-1002',
     subject: 'Billing export failed for August',
-    description: 'The finance team cannot download the August billing export and the portal shows a processing error.',
+    description:
+      'The finance team cannot download the August billing export and the portal shows a processing error.',
     status: 'new',
     customerName: 'Grace Mkilima',
     customerEmail: 'grace@proscontrol.com',
@@ -117,13 +91,19 @@ export const supportTickets: Ticket[] = [
       },
     ],
     reassignmentHistory: [
-      { from: 'Unassigned', to: 'Unassigned', note: 'Created', at: defaultDate },
+      {
+        from: 'Unassigned',
+        to: 'Unassigned',
+        note: 'Created',
+        at: defaultDate,
+      },
     ],
   },
   {
     id: 'TCK-1003',
     subject: 'Payment approval not visible to approver',
-    description: 'The direct manager is not seeing the payment approval queue even though the transaction is approved.',
+    description:
+      'The direct manager is not seeing the payment approval queue even though the transaction is approved.',
     status: 'closed',
     customerName: 'Amina Yusuf',
     customerEmail: 'amina@proscontrol.com',
@@ -149,8 +129,18 @@ export const supportTickets: Ticket[] = [
       },
     ],
     reassignmentHistory: [
-      { from: 'Unassigned', to: 'Daniel K.', note: 'First assignment', at: '2026-09-18T13:30:00.000Z' },
-      { from: 'Daniel K.', to: 'Daniel K.', note: 'Resolved', at: '2026-09-20T16:50:00.000Z' },
+      {
+        from: 'Unassigned',
+        to: 'Daniel K.',
+        note: 'First assignment',
+        at: '2026-09-18T13:30:00.000Z',
+      },
+      {
+        from: 'Daniel K.',
+        to: 'Daniel K.',
+        note: 'Resolved',
+        at: '2026-09-20T16:50:00.000Z',
+      },
     ],
   },
 ];
@@ -199,14 +189,24 @@ export const createTicketRecord = (input: {
         createdAt: new Date().toISOString(),
       },
     ],
-    reassignmentHistory: [{ from: 'Unassigned', to: 'Unassigned', note: 'Created', at: new Date().toISOString() }],
+    reassignmentHistory: [
+      {
+        from: 'Unassigned',
+        to: 'Unassigned',
+        note: 'Created',
+        at: new Date().toISOString(),
+      },
+    ],
   };
 
   supportTickets.unshift(ticket);
   return ticket;
 };
 
-export const addMessageToTicket = (ticketId: string, message: { senderId: string; senderName: string; body: string }) => {
+export const addMessageToTicket = (
+  ticketId: string,
+  message: { senderId: string; senderName: string; body: string }
+) => {
   const target = getSupportTicketById(ticketId);
   if (!target) return null;
 

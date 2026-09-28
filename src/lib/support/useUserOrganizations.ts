@@ -10,6 +10,8 @@ import type { SessionOrganization } from './organizations';
  */
 export function useUserOrganizations(): SessionOrganization[] {
   const { data } = useSession();
-  const organizations = (data as { organizations?: SessionOrganization[] } | null)?.organizations;
+  const organizations = (
+    data as { organizations?: SessionOrganization[] } | null
+  )?.organizations;
   return Array.isArray(organizations) ? organizations : [];
 }

@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
-import { Box, CircularProgress, Typography } from '@mui/material';
-import { useLanguage } from '@/app/[lang]/contexts/LanguageContext';
 import { useDictionary } from '@/app/[lang]/contexts/DictionaryContext';
+import { useLanguage } from '@/app/[lang]/contexts/LanguageContext';
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
+import { Box, CircularProgress, Typography } from '@mui/material';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useRef } from 'react';
 
 export default function SupportRedirectPage() {
   const router = useRouter();
@@ -21,7 +21,8 @@ export default function SupportRedirectPage() {
 
     let storedUser: any = null;
     try {
-      storedUser = JSON.parse(localStorage.getItem('authData') || 'null')?.authUser?.user;
+      storedUser = JSON.parse(localStorage.getItem('authData') || 'null')
+        ?.authUser?.user;
     } catch {
       storedUser = null;
     }
@@ -30,7 +31,9 @@ export default function SupportRedirectPage() {
     const sessionUser = session?.user as any;
     const authenticatedUser = contextUser || sessionUser || storedUser;
 
-    if (!authenticatedUser && status === 'loading' && authData.isLoading) return;
+    if (!authenticatedUser && status === 'loading' && authData.isLoading) {
+      return;
+    }
 
     if (!authenticatedUser) {
       router.replace(`/${lang}/auth/signin`);
@@ -40,7 +43,9 @@ export default function SupportRedirectPage() {
     hasRedirected.current = true;
     const isStaff = authenticatedUser?.is_staff === true;
 
-    const target = isStaff ? `/${lang}/support/staff` : `/${lang}/support/customer`;
+    const target = isStaff
+      ? `/${lang}/support/staff`
+      : `/${lang}/support/customer`;
     router.replace(target);
   }, [status, session, router, lang, authData]);
 
@@ -59,7 +64,8 @@ export default function SupportRedirectPage() {
     >
       <CircularProgress sx={{ color: 'var(--pc-accent)' }} />
       <Typography sx={{ color: 'var(--pc-text-3)', fontSize: '0.9rem' }}>
-        {dictionary?.portal?.redirecting || 'Redirecting to your support portal...'}
+        {dictionary?.portal?.redirecting ||
+          'Redirecting to your support portal...'}
       </Typography>
     </Box>
   );

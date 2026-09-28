@@ -1,16 +1,31 @@
 'use client';
 
-import { AttachFile as AttachIcon, Close as RemoveIcon, Send as SendIcon } from '@mui/icons-material';
-import { Alert, Box, Chip, CircularProgress, IconButton, TextField, Typography } from '@mui/material';
-import { useEffect, useRef, useState } from 'react';
-import { FOCUS_REPLY_EVENT, setUnsentDraft } from '@/lib/support/shortcuts';
 import { useT } from '@/lib/i18n/useT';
+import { FOCUS_REPLY_EVENT, setUnsentDraft } from '@/lib/support/shortcuts';
+import {
+  AttachFile as AttachIcon,
+  Close as RemoveIcon,
+  Send as SendIcon,
+} from '@mui/icons-material';
+import {
+  Alert,
+  Box,
+  Chip,
+  CircularProgress,
+  IconButton,
+  TextField,
+  Typography,
+} from '@mui/material';
+import { useEffect, useRef, useState } from 'react';
 
 // Mirrors the backend rule on attachments.* (max:10240 KB).
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
 
 interface MessageComposerProps {
-  onSend: (body: string, files: File[]) => Promise<{ ok: true } | { ok: false; error: string }>;
+  onSend: (
+    body: string,
+    files: File[]
+  ) => Promise<{ ok: true } | { ok: false; error: string }>;
   sending?: boolean;
   disabledReason?: string | null;
   placeholder?: string;
@@ -20,7 +35,14 @@ interface MessageComposerProps {
   onDraftChange?: (hasDraft: boolean) => void;
 }
 
-export const MessageComposer = ({ onSend, sending = false, disabledReason, placeholder, onActivity, onDraftChange }: MessageComposerProps) => {
+export const MessageComposer = ({
+  onSend,
+  sending = false,
+  disabledReason,
+  placeholder,
+  onActivity,
+  onDraftChange,
+}: MessageComposerProps) => {
   const t = useT();
   const fileInput = useRef<HTMLInputElement>(null);
   const textInput = useRef<HTMLTextAreaElement>(null);
@@ -45,17 +67,36 @@ export const MessageComposer = ({ onSend, sending = false, disabledReason, place
 
   if (disabledReason) {
     return (
-      <Box sx={{ border: '1px dashed var(--pc-border-strong)', borderRadius: '12px', p: 2, bgcolor: 'var(--pc-bg)' }}>
-        <Typography sx={{ color: 'var(--pc-text-3)', fontSize: '0.9rem', textAlign: 'center' }}>{disabledReason}</Typography>
+      <Box
+        sx={{
+          border: '1px dashed var(--pc-border-strong)',
+          borderRadius: '12px',
+          p: 2,
+          bgcolor: 'var(--pc-bg)',
+        }}
+      >
+        <Typography
+          sx={{
+            color: 'var(--pc-text-3)',
+            fontSize: '0.9rem',
+            textAlign: 'center',
+          }}
+        >
+          {disabledReason}
+        </Typography>
       </Box>
     );
   }
 
   const handleFiles = (selected: FileList | null) => {
     if (!selected) return;
-    const accepted = Array.from(selected).filter((file) => file.size <= MAX_FILE_BYTES);
+    const accepted = Array.from(selected).filter(
+      (file) => file.size <= MAX_FILE_BYTES
+    );
     if (accepted.length < selected.length) {
-      setError(t('portal.chat.fileTooLarge', 'Files larger than 10 MB were skipped.'));
+      setError(
+        t('portal.chat.fileTooLarge', 'Files larger than 10 MB were skipped.')
+      );
     }
     setFiles((current) => [...current, ...accepted]);
   };
@@ -75,7 +116,11 @@ export const MessageComposer = ({ onSend, sending = false, disabledReason, place
   return (
     <Box>
       {error && (
-        <Alert severity="error" onClose={() => setError(null)} sx={{ mb: 1, borderRadius: '8px' }}>
+        <Alert
+          severity='error'
+          onClose={() => setError(null)}
+          sx={{ mb: 1, borderRadius: '8px' }}
+        >
           {error}
         </Alert>
       )}
@@ -85,17 +130,29 @@ export const MessageComposer = ({ onSend, sending = false, disabledReason, place
             <Chip
               key={`${file.name}-${index}`}
               label={file.name}
-              size="small"
-              onDelete={() => setFiles((current) => current.filter((_, i) => i !== index))}
+              size='small'
+              onDelete={() =>
+                setFiles((current) => current.filter((_, i) => i !== index))
+              }
               deleteIcon={<RemoveIcon />}
             />
           ))}
         </Box>
       )}
-      <Box sx={{ border: '1px solid var(--pc-border)', borderRadius: '12px', p: 1.5, display: 'flex', alignItems: 'flex-end', gap: 1, bgcolor: 'var(--pc-surface)' }}>
+      <Box
+        sx={{
+          border: '1px solid var(--pc-border)',
+          borderRadius: '12px',
+          p: 1.5,
+          display: 'flex',
+          alignItems: 'flex-end',
+          gap: 1,
+          bgcolor: 'var(--pc-surface)',
+        }}
+      >
         <input
           ref={fileInput}
-          type="file"
+          type='file'
           multiple
           hidden
           onChange={(event) => {
@@ -104,13 +161,17 @@ export const MessageComposer = ({ onSend, sending = false, disabledReason, place
           }}
         />
         <IconButton
-          size="small"
+          size='small'
           aria-label={t('portal.chat.attach', 'Attach')}
           onClick={() => fileInput.current?.click()}
           disabled={sending}
-          sx={{ color: 'var(--pc-text-3)', border: '1px solid var(--pc-border)', borderRadius: '8px' }}
+          sx={{
+            color: 'var(--pc-text-3)',
+            border: '1px solid var(--pc-border)',
+            borderRadius: '8px',
+          }}
         >
-          <AttachIcon fontSize="small" />
+          <AttachIcon fontSize='small' />
         </IconButton>
         <TextField
           fullWidth
@@ -132,8 +193,10 @@ export const MessageComposer = ({ onSend, sending = false, disabledReason, place
               (event.target as HTMLElement).blur();
             }
           }}
-          placeholder={placeholder || t('portal.chat.typeMessage', 'Type a message...')}
-          variant="standard"
+          placeholder={
+            placeholder || t('portal.chat.typeMessage', 'Type a message...')
+          }
+          variant='standard'
           inputRef={textInput}
           InputProps={{ disableUnderline: true }}
           sx={{ '& .MuiInputBase-input': { fontSize: '0.95rem' } }}
@@ -142,9 +205,22 @@ export const MessageComposer = ({ onSend, sending = false, disabledReason, place
           aria-label={t('portal.chat.send', 'Send')}
           onClick={handleSend}
           disabled={sending || !body.trim()}
-          sx={{ bgcolor: 'var(--pc-inverse-bg)', color: 'white', borderRadius: '8px', '&:hover': { bgcolor: 'var(--pc-inverse-bg-hover)' }, '&.Mui-disabled': { bgcolor: 'var(--pc-border-strong)', color: 'white' } }}
+          sx={{
+            bgcolor: 'var(--pc-inverse-bg)',
+            color: 'white',
+            borderRadius: '8px',
+            '&:hover': { bgcolor: 'var(--pc-inverse-bg-hover)' },
+            '&.Mui-disabled': {
+              bgcolor: 'var(--pc-border-strong)',
+              color: 'white',
+            },
+          }}
         >
-          {sending ? <CircularProgress size={18} sx={{ color: 'white' }} /> : <SendIcon fontSize="small" />}
+          {sending ? (
+            <CircularProgress size={18} sx={{ color: 'white' }} />
+          ) : (
+            <SendIcon fontSize='small' />
+          )}
         </IconButton>
       </Box>
     </Box>

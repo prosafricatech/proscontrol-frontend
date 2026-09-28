@@ -1,7 +1,15 @@
 'use client';
 
 import { ThemeProvider, createTheme, type Theme } from '@mui/material/styles';
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
 
 export type ColorMode = 'light' | 'dark';
 
@@ -50,13 +58,18 @@ function resolveInitialMode(): ColorMode {
   } catch {
     // Fall through to the system preference.
   }
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  return window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark'
+    : 'light';
 }
 
 // The template theme gives h1–h6 a fixed dark colour (#37373C), which is
 // unreadable on dark backgrounds; in dark mode they follow the text colour.
 const darkHeadingTypography = Object.fromEntries(
-  (['h1', 'h2', 'h3', 'h4', 'h5', 'h6'] as const).map((variant) => [variant, { color: darkPalette.text.primary }]),
+  (['h1', 'h2', 'h3', 'h4', 'h5', 'h6'] as const).map((variant) => [
+    variant,
+    { color: darkPalette.text.primary },
+  ])
 );
 
 export function ColorModeProvider({ children }: { children: ReactNode }) {
@@ -72,7 +85,9 @@ export function ColorModeProvider({ children }: { children: ReactNode }) {
   // Re-assert the attribute from state: if React ever re-creates <html> (e.g.
   // after a hydration mismatch) the attribute the init script set is lost.
   useEffect(() => {
-    if (resolvedMode) document.documentElement.setAttribute('data-pc-theme', resolvedMode);
+    if (resolvedMode) {
+      document.documentElement.setAttribute('data-pc-theme', resolvedMode);
+    }
   }, [resolvedMode]);
 
   const setMode = useCallback((next: ColorMode) => {
@@ -84,18 +99,38 @@ export function ColorModeProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const toggleMode = useCallback(() => setMode(mode === 'dark' ? 'light' : 'dark'), [mode, setMode]);
+  const toggleMode = useCallback(
+    () => setMode(mode === 'dark' ? 'light' : 'dark'),
+    [mode, setMode]
+  );
 
   // Portal blue replaces the template's indigo primary so MUI buttons,
   // switches and checkboxes match the rest of the support UI.
   const themeFor = useCallback(
-    (outerTheme: Theme) => createTheme(outerTheme, mode === 'dark'
-      ? { palette: { ...darkPalette, primary: { main: '#3b82f6', contrastText: '#ffffff' } }, typography: darkHeadingTypography }
-      : { palette: { primary: { main: '#2563eb', contrastText: '#ffffff' } } }),
-    [mode],
+    (outerTheme: Theme) =>
+      createTheme(
+        outerTheme,
+        mode === 'dark'
+          ? {
+              palette: {
+                ...darkPalette,
+                primary: { main: '#3b82f6', contrastText: '#ffffff' },
+              },
+              typography: darkHeadingTypography,
+            }
+          : {
+              palette: {
+                primary: { main: '#2563eb', contrastText: '#ffffff' },
+              },
+            }
+      ),
+    [mode]
   );
 
-  const value = useMemo(() => ({ mode, setMode, toggleMode }), [mode, setMode, toggleMode]);
+  const value = useMemo(
+    () => ({ mode, setMode, toggleMode }),
+    [mode, setMode, toggleMode]
+  );
 
   return (
     <ColorModeContext.Provider value={value}>

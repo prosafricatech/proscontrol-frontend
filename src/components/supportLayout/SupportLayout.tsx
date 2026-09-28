@@ -1,13 +1,13 @@
 'use client';
 
-import React from 'react';
-import { Box } from '@mui/material';
-import { Sidebar, SIDEBAR_WIDTH, SupportRole } from '../sidebar/Sidebar';
-import { AuthUserPopover } from '@/components/authUserPopover/AuthUserPopover';
 import { useDictionary } from '@/app/[lang]/contexts/DictionaryContext';
+import { AuthUserPopover } from '@/components/authUserPopover/AuthUserPopover';
 import { ColorModeToggle } from '@/components/colorMode/ColorModeToggle';
-import { NotificationBell } from './NotificationBell';
 import { LanguageSwitcher } from '@/components/languageSwitcher/LanguageSwitcher';
+import { Box } from '@mui/material';
+import React from 'react';
+import { Sidebar, SIDEBAR_WIDTH, SupportRole } from '../sidebar/Sidebar';
+import { NotificationBell } from './NotificationBell';
 
 interface SupportLayoutProps {
   children: React.ReactNode;
@@ -25,11 +25,17 @@ export const SupportLayout = ({
   const dictionary = useDictionary();
 
   return (
-    <Box sx={{ display: 'flex', width: '100vw', minHeight: '100dvh', bgcolor: 'var(--pc-bg)', overflow: 'hidden' }}>
+    <Box
+      sx={{
+        display: 'flex',
+        width: '100vw',
+        minHeight: '100dvh',
+        bgcolor: 'var(--pc-bg)',
+        overflow: 'hidden',
+      }}
+    >
       {/* Sidebar */}
-      <Sidebar
-        role={userRole}
-      />
+      <Sidebar role={userRole} />
 
       {/* Main area */}
       <Box
@@ -68,7 +74,15 @@ export const SupportLayout = ({
         </Box>
 
         {/* Page content */}
-        <Box sx={{ flex: 1, width: '100%', p: { xs: 3, md: 4 }, minWidth: 0, boxSizing: 'border-box' }}>
+        <Box
+          sx={{
+            flex: 1,
+            width: '100%',
+            p: { xs: 3, md: 4 },
+            minWidth: 0,
+            boxSizing: 'border-box',
+          }}
+        >
           {children}
         </Box>
       </Box>

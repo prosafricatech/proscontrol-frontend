@@ -1,17 +1,25 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { fetchBackend } from '@/lib/support/backend';
+import { NextRequest, NextResponse } from 'next/server';
 
 /**
  * Streams the file through so the browser never needs the Bearer token.
  */
-export async function GET(request: NextRequest, { params }: { params: Promise<{ attachmentId: string }> }) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ attachmentId: string }> }
+) {
   const { attachmentId } = await params;
-  const backendResponse = await fetchBackend(request, `/attachments/${attachmentId}`);
+  const backendResponse = await fetchBackend(
+    request,
+    `/attachments/${attachmentId}`
+  );
 
   if (backendResponse instanceof NextResponse) return backendResponse;
 
   if (!backendResponse.ok) {
-    const payload = await backendResponse.json().catch(() => ({ message: 'Unable to download attachment' }));
+    const payload = await backendResponse
+      .json()
+      .catch(() => ({ message: 'Unable to download attachment' }));
     return NextResponse.json(payload, { status: backendResponse.status });
   }
 

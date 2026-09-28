@@ -2,13 +2,12 @@
 
 import { useLanguage } from '@/app/[lang]/contexts/LanguageContext';
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
+import { useT } from '@/lib/i18n/useT';
 import { Div } from '@jumbo/shared';
 import LogoutIcon from '@mui/icons-material/Logout';
-import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
 import {
   Avatar,
   Button,
-  Chip,
   Dialog,
   DialogActions,
   DialogContent,
@@ -19,14 +18,12 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  Stack,
   Typography,
 } from '@mui/material';
 import { signOut } from 'next-auth/react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import React from 'react';
-import { useT } from '@/lib/i18n/useT';
 
 const JumboDdPopover = dynamic(
   () => import('@jumbo/components').then((mod) => mod.JumboDdPopover),
@@ -99,8 +96,15 @@ export const AuthUserPopover: React.FC<AuthUserPopoverProps> = ({
   }
 
   // Shown when there's no photo, or when the photo fails to load.
-  const initial = (user.name || user.email || '?').trim().charAt(0).toUpperCase();
-  const avatarColors = { bgcolor: '#2563eb', color: '#ffffff', fontWeight: 700 };
+  const initial = (user.name || user.email || '?')
+    .trim()
+    .charAt(0)
+    .toUpperCase();
+  const avatarColors = {
+    bgcolor: '#2563eb',
+    color: '#ffffff',
+    fontWeight: 700,
+  };
 
   // No ThemeProvider here: the menu follows the app's current light/dark theme.
   return (
@@ -151,7 +155,6 @@ export const AuthUserPopover: React.FC<AuthUserPopoverProps> = ({
           <Typography noWrap variant='body1' color='text.secondary'>
             {user?.email}
           </Typography>
-
         </Div>
 
         <Divider />

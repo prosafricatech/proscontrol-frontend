@@ -1,10 +1,10 @@
 'use client';
 
-import type { SxProps, Theme } from '@mui/material/styles';
-import { Box, Button, Card, CardContent, Typography } from '@mui/material';
 import { StatusBadge } from '@/components/supportLayout/StatusBadge';
-import type { Ticket } from '@/lib/support/mockData';
 import { useFormatDate, useT } from '@/lib/i18n/useT';
+import type { Ticket } from '@/lib/support/types';
+import { Box, Button, Card, CardContent, Typography } from '@mui/material';
+import type { SxProps, Theme } from '@mui/material/styles';
 
 interface TicketCardAction {
   label: string;
@@ -21,7 +21,13 @@ interface TicketCardProps {
   sx?: SxProps<Theme>;
 }
 
-export const TicketCard = ({ ticket, onClick, action, className, sx }: TicketCardProps) => {
+export const TicketCard = ({
+  ticket,
+  onClick,
+  action,
+  className,
+  sx,
+}: TicketCardProps) => {
   const t = useT();
   const formatDate = useFormatDate();
   return (
@@ -34,32 +40,70 @@ export const TicketCard = ({ ticket, onClick, action, className, sx }: TicketCar
         boxShadow: 'none',
         cursor: onClick ? 'pointer' : 'default',
         transition: 'all 0.2s ease',
-        '&:hover': onClick ? { borderColor: '#3b82f6', boxShadow: '0 4px 12px rgba(59,130,246,0.08)' } : {},
+        '&:hover': onClick
+          ? {
+              borderColor: '#3b82f6',
+              boxShadow: '0 4px 12px rgba(59,130,246,0.08)',
+            }
+          : {},
         ...sx,
       }}
     >
-      <CardContent sx={{ p: 2.5, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 2 }}>
+      <CardContent
+        sx={{
+          p: 2.5,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          gap: 2,
+        }}
+      >
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, flexWrap: 'wrap' }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              mb: 1,
+              flexWrap: 'wrap',
+            }}
+          >
             <StatusBadge status={ticket.status} />
-            <Typography sx={{ fontSize: '0.85rem', color: 'var(--pc-text-3)' }}>{ticket.customerEmail}</Typography>
+            <Typography sx={{ fontSize: '0.85rem', color: 'var(--pc-text-3)' }}>
+              {ticket.customerEmail}
+            </Typography>
           </Box>
-          <Typography sx={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--pc-text)', mb: 0.5 }}>
+          <Typography
+            sx={{
+              fontSize: '1.1rem',
+              fontWeight: 600,
+              color: 'var(--pc-text)',
+              mb: 0.5,
+            }}
+          >
             {ticket.subject}
           </Typography>
-          <Typography sx={{ fontSize: '0.9rem', color: 'var(--pc-text-3)', mb: 1.5 }}>
+          <Typography
+            sx={{ fontSize: '0.9rem', color: 'var(--pc-text-3)', mb: 1.5 }}
+          >
             {ticket.description}
           </Typography>
           <Typography sx={{ fontSize: '0.8rem', color: 'var(--pc-text-4)' }}>
-            {t('portal.ticketCard.meta', 'Handled by {handler} · updated {date}', {
-              handler: ticket.handledBy || t('portal.common.unassigned', 'Unassigned'),
-              date: formatDate(ticket.updatedAt, { dateStyle: 'medium' }),
-            })}
+            {t(
+              'portal.ticketCard.meta',
+              'Handled by {handler} · updated {date}',
+              {
+                handler:
+                  ticket.handledBy ||
+                  t('portal.common.unassigned', 'Unassigned'),
+                date: formatDate(ticket.updatedAt, { dateStyle: 'medium' }),
+              }
+            )}
           </Typography>
         </Box>
         {action && (
           <Button
-            variant="contained"
+            variant='contained'
             disabled={action.disabled}
             onClick={(event) => {
               event.stopPropagation();
@@ -74,7 +118,10 @@ export const TicketCard = ({ ticket, onClick, action, className, sx }: TicketCar
               py: 0.8,
               fontSize: '0.85rem',
               flexShrink: 0,
-              '&:hover': { bgcolor: action.tone === 'danger' ? 'var(--pc-danger)' : '#1d4ed8' },
+              '&:hover': {
+                bgcolor:
+                  action.tone === 'danger' ? 'var(--pc-danger)' : '#1d4ed8',
+              },
             }}
           >
             {action.label}

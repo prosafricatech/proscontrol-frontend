@@ -1,9 +1,12 @@
 'use client';
 
-import type { SxProps, Theme } from '@mui/material/styles';
-import { AttachFile as AttachIcon, DoneAll as ReadIcon } from '@mui/icons-material';
+import type { TicketAttachment } from '@/lib/support/types';
+import {
+  AttachFile as AttachIcon,
+  DoneAll as ReadIcon,
+} from '@mui/icons-material';
 import { Avatar, Box, Link, Typography } from '@mui/material';
-import type { TicketAttachment } from '@/lib/support/mockData';
+import type { SxProps, Theme } from '@mui/material/styles';
 
 interface MessageBubbleProps {
   senderName: string;
@@ -38,8 +41,20 @@ export const MessageBubble = ({
 
   if (type === 'system') {
     return (
-      <Box className={className} sx={{ my: 2, display: 'flex', justifyContent: 'center', ...sx }}>
-        <Typography sx={{ fontSize: '0.8rem', color: 'var(--pc-text-3)', bgcolor: 'var(--pc-surface-2)', px: 1.5, py: 0.5, borderRadius: '999px' }}>
+      <Box
+        className={className}
+        sx={{ my: 2, display: 'flex', justifyContent: 'center', ...sx }}
+      >
+        <Typography
+          sx={{
+            fontSize: '0.8rem',
+            color: 'var(--pc-text-3)',
+            bgcolor: 'var(--pc-surface-2)',
+            px: 1.5,
+            py: 0.5,
+            borderRadius: '999px',
+          }}
+        >
           {body} · {createdAt}
         </Typography>
       </Box>
@@ -60,21 +75,44 @@ export const MessageBubble = ({
         }}
       >
         {!isRight && (
-          <Avatar sx={{ width: 28, height: 28, bgcolor: 'var(--pc-border-strong)', color: 'var(--pc-text)', fontSize: '0.7rem' }}>
+          <Avatar
+            sx={{
+              width: 28,
+              height: 28,
+              bgcolor: 'var(--pc-border-strong)',
+              color: 'var(--pc-text)',
+              fontSize: '0.7rem',
+            }}
+          >
             {initial}
           </Avatar>
         )}
         <Typography sx={{ fontSize: '0.78rem', color: 'var(--pc-text-4)' }}>
           {senderName} · {createdAt}
         </Typography>
-        {isRight && read && <ReadIcon sx={{ fontSize: 14, color: 'var(--pc-accent)' }} />}
+        {isRight && read && (
+          <ReadIcon sx={{ fontSize: 14, color: 'var(--pc-accent)' }} />
+        )}
         {isRight && (
-          <Avatar sx={{ width: 28, height: 28, bgcolor: '#2563eb', color: '#fff', fontSize: '0.7rem' }}>
+          <Avatar
+            sx={{
+              width: 28,
+              height: 28,
+              bgcolor: '#2563eb',
+              color: '#fff',
+              fontSize: '0.7rem',
+            }}
+          >
             {initial}
           </Avatar>
         )}
       </Box>
-      <Box sx={{ display: 'flex', justifyContent: isRight ? 'flex-end' : 'flex-start' }}>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: isRight ? 'flex-end' : 'flex-start',
+        }}
+      >
         <Box
           sx={{
             maxWidth: { xs: '100%', md: '70%' },
@@ -89,21 +127,35 @@ export const MessageBubble = ({
             wordBreak: 'break-word',
           }}
         >
-          <Typography sx={{ fontSize: '0.95rem', lineHeight: 1.55 }}>{body}</Typography>
+          <Typography sx={{ fontSize: '0.95rem', lineHeight: 1.55 }}>
+            {body}
+          </Typography>
           {attachments.length > 0 && (
-            <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+            <Box
+              sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 0.5 }}
+            >
               {attachments.map((attachment) => (
                 <Link
                   key={attachment.id ?? attachment.url}
                   href={attachment.url}
-                  target="_blank"
-                  rel="noopener"
-                  underline="hover"
-                  sx={{ display: 'flex', alignItems: 'center', gap: 0.5, fontSize: '0.85rem', color: isRight ? '#dbeafe' : 'var(--pc-accent)' }}
+                  target='_blank'
+                  rel='noopener'
+                  underline='hover'
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 0.5,
+                    fontSize: '0.85rem',
+                    color: isRight ? '#dbeafe' : 'var(--pc-accent)',
+                  }}
                 >
                   <AttachIcon sx={{ fontSize: 14 }} />
                   {attachment.name}
-                  {attachment.size ? <Box component="span" sx={{ opacity: 0.7 }}>({formatSize(attachment.size)})</Box> : null}
+                  {attachment.size ? (
+                    <Box component='span' sx={{ opacity: 0.7 }}>
+                      ({formatSize(attachment.size)})
+                    </Box>
+                  ) : null}
                 </Link>
               ))}
             </Box>

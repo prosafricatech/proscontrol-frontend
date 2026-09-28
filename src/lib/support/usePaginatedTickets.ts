@@ -1,17 +1,30 @@
 'use client';
 
+import type { Ticket } from '@/lib/support/types';
 import { useCallback, useEffect, useState } from 'react';
-import type { Ticket } from '@/lib/support/mockData';
 
-export type TicketPageMeta = { current_page: number; last_page: number; per_page: number; total: number };
+export type TicketPageMeta = {
+  current_page: number;
+  last_page: number;
+  per_page: number;
+  total: number;
+};
 
-const EMPTY_META: TicketPageMeta = { current_page: 1, last_page: 1, per_page: 15, total: 0 };
+const EMPTY_META: TicketPageMeta = {
+  current_page: 1,
+  last_page: 1,
+  per_page: 15,
+  total: 0,
+};
 
 /**
  * One page of tickets from a list endpoint (`/api/support/tickets` or `/mine`).
  * Changing `query` (e.g. the status filter) goes back to page 1.
  */
-export function usePaginatedTickets(endpoint: string, query: Record<string, string | undefined> = {}) {
+export function usePaginatedTickets(
+  endpoint: string,
+  query: Record<string, string | undefined> = {}
+) {
   const [page, setPage] = useState(1);
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [meta, setMeta] = useState<TicketPageMeta>(EMPTY_META);
@@ -25,14 +38,18 @@ export function usePaginatedTickets(endpoint: string, query: Record<string, stri
 
   const load = useCallback(async () => {
     const params = new URLSearchParams();
-    Object.entries(JSON.parse(queryKey) as Record<string, string | undefined>).forEach(([key, value]) => {
+    Object.entries(
+      JSON.parse(queryKey) as Record<string, string | undefined>
+    ).forEach(([key, value]) => {
       if (value) params.set(key, value);
     });
     params.set('page', String(page));
 
     setLoading(true);
     try {
-      const response = await fetch(`${endpoint}?${params}`, { cache: 'no-store' });
+      const response = await fetch(`${endpoint}?${params}`, {
+        cache: 'no-store',
+      });
       const payload = await response.json().catch(() => null);
       if (!response.ok) {
         setError(payload?.message || 'Unable to load tickets.');

@@ -13,7 +13,15 @@ export type SupportStats = {
   recentCreatedAt: string[];
 };
 
-const EMPTY_STATS: SupportStats = { total: 0, new: 0, active: 0, closed: 0, unassigned: 0, mine: 0, recentCreatedAt: [] };
+const EMPTY_STATS: SupportStats = {
+  total: 0,
+  new: 0,
+  active: 0,
+  closed: 0,
+  unassigned: 0,
+  mine: 0,
+  recentCreatedAt: [],
+};
 
 export function useSupportStats() {
   const [stats, setStats] = useState<SupportStats>(EMPTY_STATS);
@@ -22,7 +30,9 @@ export function useSupportStats() {
     try {
       const response = await fetch('/api/support/stats', { cache: 'no-store' });
       const payload = await response.json().catch(() => null);
-      if (response.ok && payload?.data) setStats({ ...EMPTY_STATS, ...payload.data });
+      if (response.ok && payload?.data) {
+        setStats({ ...EMPTY_STATS, ...payload.data });
+      }
     } catch {
       // Keep the last known numbers; the page still works without them.
     }

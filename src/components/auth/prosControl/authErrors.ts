@@ -7,11 +7,18 @@ export function backendFieldErrors(payload: any): Record<string, string> {
 
   return Object.fromEntries(
     Object.entries(data)
-      .filter(([, messages]) => Array.isArray(messages) && typeof messages[0] === 'string')
-      .map(([field, messages]) => [field, (messages as string[])[0]]),
+      .filter(
+        ([, messages]) =>
+          Array.isArray(messages) && typeof messages[0] === 'string'
+      )
+      .map(([field, messages]) => [field, (messages as string[])[0]])
   );
 }
 
 export function firstBackendError(payload: any, fallback: string): string {
-  return Object.values(backendFieldErrors(payload))[0] || payload?.message || fallback;
+  return (
+    Object.values(backendFieldErrors(payload))[0] ||
+    payload?.message ||
+    fallback
+  );
 }

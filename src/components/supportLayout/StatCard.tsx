@@ -1,7 +1,7 @@
 'use client';
 
-import type { SxProps, Theme } from '@mui/material/styles';
 import { Box, Typography } from '@mui/material';
+import type { SxProps, Theme } from '@mui/material/styles';
 import type { ReactNode } from 'react';
 
 interface StatCardProps {
@@ -42,12 +42,29 @@ export const StatCard = ({
         gap: 1.5,
         cursor: onClick ? 'pointer' : 'default',
         transition: 'all 0.2s ease',
-        '&:hover': onClick ? { borderColor: '#3b82f6', boxShadow: '0 2px 8px rgba(59,130,246,0.1)' } : {},
+        '&:hover': onClick
+          ? {
+              borderColor: '#3b82f6',
+              boxShadow: '0 2px 8px rgba(59,130,246,0.1)',
+            }
+          : {},
         ...sx,
       }}
     >
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <Typography sx={{ fontSize: '0.85rem', color: 'var(--pc-text-3)', fontWeight: 500 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+        }}
+      >
+        <Typography
+          sx={{
+            fontSize: '0.85rem',
+            color: 'var(--pc-text-3)',
+            fontWeight: 500,
+          }}
+        >
           {label}
         </Typography>
         <Box
@@ -65,7 +82,14 @@ export const StatCard = ({
           {icon}
         </Box>
       </Box>
-      <Typography sx={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--pc-text)', lineHeight: 1 }}>
+      <Typography
+        sx={{
+          fontSize: '1.75rem',
+          fontWeight: 700,
+          color: 'var(--pc-text)',
+          lineHeight: 1,
+        }}
+      >
         {value}
       </Typography>
     </Box>

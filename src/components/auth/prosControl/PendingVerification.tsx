@@ -1,9 +1,9 @@
 'use client';
 
-import { Box, CircularProgress, Typography } from '@mui/material';
-import { signOut, useSession } from 'next-auth/react';
 import { useDictionary } from '@/app/[lang]/contexts/DictionaryContext';
 import { useLanguage } from '@/app/[lang]/contexts/LanguageContext';
+import { Box, CircularProgress, Typography } from '@mui/material';
+import { signOut, useSession } from 'next-auth/react';
 import { authLinkSx } from './AuthField';
 import { AuthShell } from './AuthShell';
 import { authHighlights } from './ProsControlAuth';
@@ -25,7 +25,10 @@ export const PendingVerification = () => {
   return (
     <AuthShell
       title={t?.verify?.shellTitle || 'One last step'}
-      subtitle={t?.verify?.shellSubtitle || 'Verify your email address to start using the support portal.'}
+      subtitle={
+        t?.verify?.shellSubtitle ||
+        'Verify your email address to start using the support portal.'
+      }
       highlights={authHighlights(dictionary)}
     >
       {status === 'loading' ? (
@@ -37,15 +40,26 @@ export const PendingVerification = () => {
           email={email}
           codeJustSent={false}
           // Full reload so the middleware re-checks verification with the backend.
-          onVerified={() => { window.location.href = `/${lang}/support`; }}
-          secondaryAction={{ label: t?.verify?.signOut || 'Sign out', onClick: handleSignOut }}
+          onVerified={() => {
+            window.location.href = `/${lang}/support`;
+          }}
+          secondaryAction={{
+            label: t?.verify?.signOut || 'Sign out',
+            onClick: handleSignOut,
+          }}
         />
       ) : (
         <Box>
           <Typography sx={{ color: 'var(--pc-text-2)', mb: 2 }}>
-            {t?.verify?.noEmail || 'Your account has no email address to verify. Please contact support.'}
+            {t?.verify?.noEmail ||
+              'Your account has no email address to verify. Please contact support.'}
           </Typography>
-          <Box component="button" type="button" onClick={handleSignOut} sx={authLinkSx}>
+          <Box
+            component='button'
+            type='button'
+            onClick={handleSignOut}
+            sx={authLinkSx}
+          >
             {t?.verify?.signOut || 'Sign out'}
           </Box>
         </Box>

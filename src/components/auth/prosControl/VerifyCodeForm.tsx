@@ -1,9 +1,16 @@
 'use client';
 
-import { MarkEmailRead as CodeIcon } from '@mui/icons-material';
-import { Alert, Box, Button, CircularProgress, Stack, Typography } from '@mui/material';
-import { useEffect, useState } from 'react';
 import { useDictionary } from '@/app/[lang]/contexts/DictionaryContext';
+import { MarkEmailRead as CodeIcon } from '@mui/icons-material';
+import {
+  Alert,
+  Box,
+  Button,
+  CircularProgress,
+  Stack,
+  Typography,
+} from '@mui/material';
+import { useEffect, useState } from 'react';
 import { AuthField, authLinkSx, authPrimaryButtonSx } from './AuthField';
 import { firstBackendError } from './authErrors';
 
@@ -17,7 +24,12 @@ interface VerifyCodeFormProps {
   codeJustSent?: boolean;
 }
 
-export const VerifyCodeForm = ({ email, onVerified, secondaryAction, codeJustSent = true }: VerifyCodeFormProps) => {
+export const VerifyCodeForm = ({
+  email,
+  onVerified,
+  secondaryAction,
+  codeJustSent = true,
+}: VerifyCodeFormProps) => {
   const dictionary = useDictionary();
   const t = dictionary.auth?.verify;
   const [code, setCode] = useState('');
@@ -25,11 +37,16 @@ export const VerifyCodeForm = ({ email, onVerified, secondaryAction, codeJustSen
   const [notice, setNotice] = useState<string | null>(null);
   const [verifying, setVerifying] = useState(false);
   const [resending, setResending] = useState(false);
-  const [cooldown, setCooldown] = useState(codeJustSent ? RESEND_COOLDOWN_SECONDS : 0);
+  const [cooldown, setCooldown] = useState(
+    codeJustSent ? RESEND_COOLDOWN_SECONDS : 0
+  );
 
   useEffect(() => {
     if (cooldown <= 0) return;
-    const timer = window.setTimeout(() => setCooldown((value) => value - 1), 1000);
+    const timer = window.setTimeout(
+      () => setCooldown((value) => value - 1),
+      1000
+    );
     return () => window.clearTimeout(timer);
   }, [cooldown]);
 
@@ -52,7 +69,12 @@ export const VerifyCodeForm = ({ email, onVerified, secondaryAction, codeJustSen
       const payload = await response.json().catch(() => null);
 
       if (!response.ok) {
-        setError(firstBackendError(payload, t?.invalidCode || 'That code is invalid or has expired.'));
+        setError(
+          firstBackendError(
+            payload,
+            t?.invalidCode || 'That code is invalid or has expired.'
+          )
+        );
         return;
       }
 
@@ -75,7 +97,13 @@ export const VerifyCodeForm = ({ email, onVerified, secondaryAction, codeJustSen
       const payload = await response.json().catch(() => null);
 
       if (!response.ok) {
-        setError(firstBackendError(payload, t?.resendFailed || 'Could not send a new code. Please try again shortly.'));
+        setError(
+          firstBackendError(
+            payload,
+            t?.resendFailed ||
+              'Could not send a new code. Please try again shortly.'
+          )
+        );
         return;
       }
 
@@ -87,19 +115,32 @@ export const VerifyCodeForm = ({ email, onVerified, secondaryAction, codeJustSen
   };
 
   return (
-    <Box component="form" onSubmit={handleVerify} noValidate>
-      <Typography variant="h5" sx={{ fontWeight: 700, color: 'var(--pc-text)', mb: 0.5 }}>
+    <Box component='form' onSubmit={handleVerify} noValidate>
+      <Typography
+        variant='h5'
+        sx={{ fontWeight: 700, color: 'var(--pc-text)', mb: 0.5 }}
+      >
         {t?.title || 'Check your email'}
       </Typography>
-      <Typography variant="body2" sx={{ color: 'var(--pc-text-3)', mb: 3 }}>
+      <Typography variant='body2' sx={{ color: 'var(--pc-text-3)', mb: 3 }}>
         {t?.sentTo || 'We sent a 6-digit code to'}{' '}
-        <Box component="span" sx={{ color: 'var(--pc-text)', fontWeight: 600 }}>{email}</Box>.{' '}
-        {t?.expires || 'It expires in 10 minutes.'}
+        <Box component='span' sx={{ color: 'var(--pc-text)', fontWeight: 600 }}>
+          {email}
+        </Box>
+        . {t?.expires || 'It expires in 10 minutes.'}
       </Typography>
 
       <Stack spacing={2.5}>
-        {error && <Alert severity="error" sx={{ borderRadius: '8px' }}>{error}</Alert>}
-        {notice && <Alert severity="success" sx={{ borderRadius: '8px' }}>{notice}</Alert>}
+        {error && (
+          <Alert severity='error' sx={{ borderRadius: '8px' }}>
+            {error}
+          </Alert>
+        )}
+        {notice && (
+          <Alert severity='success' sx={{ borderRadius: '8px' }}>
+            {notice}
+          </Alert>
+        )}
 
         <AuthField
           label={t?.codeLabel || 'Verification code'}
@@ -109,32 +150,64 @@ export const VerifyCodeForm = ({ email, onVerified, secondaryAction, codeJustSen
             setCode(event.target.value.replace(/\D/g, '').slice(0, 6));
             if (error) setError(null);
           }}
-          placeholder="000000"
+          placeholder='000000'
           autoFocus
-          autoComplete="one-time-code"
-          inputProps={{ inputMode: 'numeric', maxLength: 6, style: { letterSpacing: '0.4em', fontWeight: 600 } }}
+          autoComplete='one-time-code'
+          inputProps={{
+            inputMode: 'numeric',
+            maxLength: 6,
+            style: { letterSpacing: '0.4em', fontWeight: 600 },
+          }}
         />
 
-        <Button fullWidth type="submit" variant="contained" disabled={verifying} sx={authPrimaryButtonSx}>
-          {verifying ? <CircularProgress size={22} sx={{ color: 'white' }} /> : t?.verify || 'Verify & continue'}
+        <Button
+          fullWidth
+          type='submit'
+          variant='contained'
+          disabled={verifying}
+          sx={authPrimaryButtonSx}
+        >
+          {verifying ? (
+            <CircularProgress size={22} sx={{ color: 'white' }} />
+          ) : (
+            t?.verify || 'Verify & continue'
+          )}
         </Button>
 
-        <Typography variant="body2" align="center" sx={{ color: 'var(--pc-text-3)' }}>
+        <Typography
+          variant='body2'
+          align='center'
+          sx={{ color: 'var(--pc-text-3)' }}
+        >
           {t?.noCode || "Didn't get it?"}{' '}
           {cooldown > 0 ? (
-            <Box component="span" sx={{ color: 'var(--pc-text-4)' }}>
-              {(t?.resendIn || 'Resend in {seconds}s').replace('{seconds}', String(cooldown))}
+            <Box component='span' sx={{ color: 'var(--pc-text-4)' }}>
+              {(t?.resendIn || 'Resend in {seconds}s').replace(
+                '{seconds}',
+                String(cooldown)
+              )}
             </Box>
           ) : (
-            <Box component="button" type="button" onClick={handleResend} disabled={resending} sx={authLinkSx}>
+            <Box
+              component='button'
+              type='button'
+              onClick={handleResend}
+              disabled={resending}
+              sx={authLinkSx}
+            >
               {t?.resend || 'Send a new code'}
             </Box>
           )}
         </Typography>
 
         {secondaryAction && (
-          <Typography variant="body2" align="center">
-            <Box component="button" type="button" onClick={secondaryAction.onClick} sx={{ ...authLinkSx, color: 'var(--pc-text-3)', fontWeight: 500 }}>
+          <Typography variant='body2' align='center'>
+            <Box
+              component='button'
+              type='button'
+              onClick={secondaryAction.onClick}
+              sx={{ ...authLinkSx, color: 'var(--pc-text-3)', fontWeight: 500 }}
+            >
               {secondaryAction.label}
             </Box>
           </Typography>

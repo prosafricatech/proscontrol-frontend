@@ -1,10 +1,16 @@
 'use client';
 
-import { Visibility, VisibilityOff } from '@mui/icons-material';
-import { Box, IconButton, InputAdornment, TextField, Typography } from '@mui/material';
-import type { TextFieldProps } from '@mui/material';
-import { useState, type ReactNode } from 'react';
 import { useT } from '@/lib/i18n/useT';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
+import type { TextFieldProps } from '@mui/material';
+import {
+  Box,
+  IconButton,
+  InputAdornment,
+  TextField,
+  Typography,
+} from '@mui/material';
+import { useState, type ReactNode } from 'react';
 
 type AuthFieldProps = Omit<TextFieldProps, 'label' | 'variant'> & {
   label: string;
@@ -16,22 +22,39 @@ type AuthFieldProps = Omit<TextFieldProps, 'label' | 'variant'> & {
  * Label-above input used across the auth screens. `type="password"` gets a
  * show/hide toggle automatically.
  */
-export const AuthField = ({ label, icon, optionalLabel, type, id, ...props }: AuthFieldProps) => {
+export const AuthField = ({
+  label,
+  icon,
+  optionalLabel,
+  type,
+  id,
+  ...props
+}: AuthFieldProps) => {
   const [revealed, setRevealed] = useState(false);
   const t = useT();
   const isPassword = type === 'password';
-  const fieldId = id ?? `auth-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+  const fieldId =
+    id ?? `auth-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
 
   return (
     <Box>
       <Typography
-        component="label"
+        component='label'
         htmlFor={fieldId}
-        sx={{ display: 'block', fontWeight: 600, color: 'var(--pc-text)', mb: 0.8, fontSize: '0.875rem' }}
+        sx={{
+          display: 'block',
+          fontWeight: 600,
+          color: 'var(--pc-text)',
+          mb: 0.8,
+          fontSize: '0.875rem',
+        }}
       >
         {label}
         {optionalLabel && (
-          <Box component="span" sx={{ fontWeight: 400, color: 'var(--pc-text-4)', ml: 0.5 }}>
+          <Box
+            component='span'
+            sx={{ fontWeight: 400, color: 'var(--pc-text-4)', ml: 0.5 }}
+          >
             ({optionalLabel})
           </Box>
         )}
@@ -43,20 +66,31 @@ export const AuthField = ({ label, icon, optionalLabel, type, id, ...props }: Au
         type={isPassword && revealed ? 'text' : type}
         InputProps={{
           startAdornment: icon ? (
-            <InputAdornment position="start" sx={{ color: 'var(--pc-text-4)', '& svg': { fontSize: 20 } }}>
+            <InputAdornment
+              position='start'
+              sx={{ color: 'var(--pc-text-4)', '& svg': { fontSize: 20 } }}
+            >
               {icon}
             </InputAdornment>
           ) : undefined,
           endAdornment: isPassword ? (
-            <InputAdornment position="end">
+            <InputAdornment position='end'>
               <IconButton
                 onClick={() => setRevealed((value) => !value)}
-                edge="end"
-                size="small"
-                aria-label={revealed ? t('portal.auth.hidePassword', 'Hide password') : t('portal.auth.showPassword', 'Show password')}
+                edge='end'
+                size='small'
+                aria-label={
+                  revealed
+                    ? t('portal.auth.hidePassword', 'Hide password')
+                    : t('portal.auth.showPassword', 'Show password')
+                }
                 sx={{ color: 'var(--pc-text-4)' }}
               >
-                {revealed ? <Visibility fontSize="small" /> : <VisibilityOff fontSize="small" />}
+                {revealed ? (
+                  <Visibility fontSize='small' />
+                ) : (
+                  <VisibilityOff fontSize='small' />
+                )}
               </IconButton>
             </InputAdornment>
           ) : undefined,
@@ -67,7 +101,10 @@ export const AuthField = ({ label, icon, optionalLabel, type, id, ...props }: Au
             borderRadius: '8px',
             '& fieldset': { borderColor: 'var(--pc-border)' },
             '&:hover fieldset': { borderColor: 'var(--pc-border-strong)' },
-            '&.Mui-focused fieldset': { borderColor: '#3b82f6', borderWidth: '1.5px' },
+            '&.Mui-focused fieldset': {
+              borderColor: '#3b82f6',
+              borderWidth: '1.5px',
+            },
           },
           '& .MuiInputBase-input': { py: 1.5, fontSize: '0.95rem' },
           ...props.sx,

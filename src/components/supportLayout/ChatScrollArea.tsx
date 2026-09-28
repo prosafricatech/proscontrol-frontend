@@ -30,7 +30,12 @@ interface ChatScrollAreaProps {
  * ones while the reader is at the bottom, without yanking them down while
  * they're reading older messages.
  */
-export const ChatScrollArea = ({ children, scrollKey, forceScroll = false, sx }: ChatScrollAreaProps) => {
+export const ChatScrollArea = ({
+  children,
+  scrollKey,
+  forceScroll = false,
+  sx,
+}: ChatScrollAreaProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const hasScrolledInitially = useRef(false);
   const wasNearBottom = useRef(true);
@@ -51,7 +56,8 @@ export const ChatScrollArea = ({ children, scrollKey, forceScroll = false, sx }:
       ref={containerRef}
       onScroll={(event) => {
         const el = event.currentTarget;
-        wasNearBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < STICK_THRESHOLD;
+        wasNearBottom.current =
+          el.scrollHeight - el.scrollTop - el.clientHeight < STICK_THRESHOLD;
       }}
       sx={{
         flex: 1,
@@ -60,7 +66,10 @@ export const ChatScrollArea = ({ children, scrollKey, forceScroll = false, sx }:
         overscrollBehavior: 'contain',
         pr: 1,
         '&::-webkit-scrollbar': { width: 6 },
-        '&::-webkit-scrollbar-thumb': { bgcolor: 'var(--pc-border)', borderRadius: 3 },
+        '&::-webkit-scrollbar-thumb': {
+          bgcolor: 'var(--pc-border)',
+          borderRadius: 3,
+        },
         ...sx,
       }}
     >

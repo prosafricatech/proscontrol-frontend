@@ -1,8 +1,8 @@
 'use client';
 
-import type { SxProps, Theme } from '@mui/material/styles';
-import { Box, Typography } from '@mui/material';
 import { useDictionary } from '@/app/[lang]/contexts/DictionaryContext';
+import { Box, Typography } from '@mui/material';
+import type { SxProps, Theme } from '@mui/material/styles';
 
 interface StatusBadgeProps {
   status: 'new' | 'active' | 'closed' | 'open';
@@ -18,7 +18,12 @@ const statusStyles: Record<string, { bg: string; color: string }> = {
   open: { bg: 'var(--pc-success-soft)', color: 'var(--pc-success)' },
 };
 
-export const StatusBadge = ({ status, label, className, sx }: StatusBadgeProps) => {
+export const StatusBadge = ({
+  status,
+  label,
+  className,
+  sx,
+}: StatusBadgeProps) => {
   const dictionary = useDictionary();
   const style = statusStyles[status] || statusStyles.closed;
 

@@ -12,12 +12,20 @@ const subscribe = () => () => undefined;
  * mismatches. The server and the first client pass both render the spinner.
  */
 export function AfterHydration({ children }: { children: ReactNode }) {
-  const hydrated = useSyncExternalStore(subscribe, () => true, () => false);
+  const hydrated = useSyncExternalStore(
+    subscribe,
+    () => true,
+    () => false
+  );
 
   if (!hydrated) {
     return (
       <Box sx={{ minHeight: '100vh', display: 'grid', placeItems: 'center' }}>
-        <CircularProgress size={32} color="inherit" sx={{ color: 'var(--pc-accent)' }} />
+        <CircularProgress
+          size={32}
+          color='inherit'
+          sx={{ color: 'var(--pc-accent)' }}
+        />
       </Box>
     );
   }

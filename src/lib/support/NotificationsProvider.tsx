@@ -1,7 +1,16 @@
 'use client';
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 
 export type SupportNotification = {
   id: string;
@@ -28,7 +37,9 @@ const POLL_INTERVAL_MS = 60000;
 const SEEN_STORAGE_PREFIX = 'pc-notifications-seen:';
 const MAX_SEEN = 500;
 
-const NotificationsContext = createContext<NotificationsContextValue | null>(null);
+const NotificationsContext = createContext<NotificationsContextValue | null>(
+  null
+);
 
 function loadSeen(key: string): string[] {
   try {
@@ -53,7 +64,9 @@ function saveSeen(key: string, seen: string[]) {
  */
 export function NotificationsProvider({ children }: { children: ReactNode }) {
   const { authData } = useJumboAuth();
-  const userId = authData?.authUser?.user?.id ? String(authData.authUser.user.id) : '';
+  const userId = authData?.authUser?.user?.id
+    ? String(authData.authUser.user.id)
+    : '';
   const seenKey = `${SEEN_STORAGE_PREFIX}${userId}`;
 
   const [rawItems, setRawItems] = useState<SupportNotification[]>([]);
@@ -69,9 +82,13 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     if (!userId || inFlight.current) return;
     inFlight.current = true;
     try {
-      const response = await fetch('/api/support/notifications', { cache: 'no-store' });
+      const response = await fetch('/api/support/notifications', {
+        cache: 'no-store',
+      });
       const payload = await response.json().catch(() => null);
-      if (response.ok && Array.isArray(payload?.data?.items)) setRawItems(payload.data.items);
+      if (response.ok && Array.isArray(payload?.data?.items)) {
+        setRawItems(payload.data.items);
+      }
     } catch {
       // Keep the last list; the next poll will retry.
     } finally {
@@ -98,18 +115,23 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     };
   }, [userId, refresh]);
 
-  const markRead = useCallback((id: string) => {
-    setSeen((current) => {
-      if (current.includes(id)) return current;
-      const next = [...current, id];
-      saveSeen(seenKey, next);
-      return next;
-    });
-  }, [seenKey]);
+  const markRead = useCallback(
+    (id: string) => {
+      setSeen((current) => {
+        if (current.includes(id)) return current;
+        const next = [...current, id];
+        saveSeen(seenKey, next);
+        return next;
+      });
+    },
+    [seenKey]
+  );
 
   const markAllRead = useCallback(() => {
     setSeen((current) => {
-      const next = Array.from(new Set([...current, ...rawItems.map((item) => item.id)]));
+      const next = Array.from(
+        new Set([...current, ...rawItems.map((item) => item.id)])
+      );
       saveSeen(seenKey, next);
       return next;
     });
@@ -117,7 +139,10 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo(() => {
     const seenSet = new Set(seen);
-    const items = rawItems.map((item) => ({ ...item, unread: !seenSet.has(item.id) }));
+    const items = rawItems.map((item) => ({
+      ...item,
+      unread: !seenSet.has(item.id),
+    }));
     return {
       items,
       unreadCount: items.filter((item) => item.unread).length,
@@ -128,11 +153,19 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     };
   }, [rawItems, seen, loading, refresh, markRead, markAllRead]);
 
-  return <NotificationsContext.Provider value={value}>{children}</NotificationsContext.Provider>;
+  return (
+    <NotificationsContext.Provider value={value}>
+      {children}
+    </NotificationsContext.Provider>
+  );
 }
 
 export function useSupportNotifications() {
   const context = useContext(NotificationsContext);
-  if (!context) throw new Error('useSupportNotifications must be used inside NotificationsProvider');
+  if (!context) {
+    throw new Error(
+      'useSupportNotifications must be used inside NotificationsProvider'
+    );
+  }
   return context;
 }

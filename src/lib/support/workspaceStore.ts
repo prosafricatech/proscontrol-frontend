@@ -1,4 +1,4 @@
-import type { Ticket } from '@/lib/support/mockData';
+import type { Ticket } from '@/lib/support/types';
 
 export type WorkspaceArticle = {
   id: string;
@@ -40,13 +40,46 @@ const STORAGE_KEY = 'proscontrol-support-workspace';
 const defaultState: WorkspaceState = {
   tickets: [],
   articles: [
-    { id: 'KB-104', title: 'Troubleshooting warehouse stock sync', category: 'Inventory', body: 'Steps for validating a warehouse stock sync.', views: 238, updated: '2 days ago' },
-    { id: 'KB-103', title: 'Resolving failed billing exports', category: 'Finance', body: 'Checks for failed billing exports.', views: 187, updated: '5 days ago' },
-    { id: 'KB-102', title: 'Managing approval queue permissions', category: 'Access', body: 'How to validate approval queue permissions.', views: 142, updated: '1 week ago' },
+    {
+      id: 'KB-104',
+      title: 'Troubleshooting warehouse stock sync',
+      category: 'Inventory',
+      body: 'Steps for validating a warehouse stock sync.',
+      views: 238,
+      updated: '2 days ago',
+    },
+    {
+      id: 'KB-103',
+      title: 'Resolving failed billing exports',
+      category: 'Finance',
+      body: 'Checks for failed billing exports.',
+      views: 187,
+      updated: '5 days ago',
+    },
+    {
+      id: 'KB-102',
+      title: 'Managing approval queue permissions',
+      category: 'Access',
+      body: 'How to validate approval queue permissions.',
+      views: 142,
+      updated: '1 week ago',
+    },
   ],
   replies: [
-    { id: 'reply-1', title: 'Request more information', body: 'Thanks for reaching out. Please share the steps you took and a screenshot of the error so we can investigate.', shortcut: 'more-info', updated: 'Today' },
-    { id: 'reply-2', title: 'Issue resolved', body: 'We have applied a fix and confirmed that the issue is resolved.', shortcut: 'resolved', updated: 'Yesterday' },
+    {
+      id: 'reply-1',
+      title: 'Request more information',
+      body: 'Thanks for reaching out. Please share the steps you took and a screenshot of the error so we can investigate.',
+      shortcut: 'more-info',
+      updated: 'Today',
+    },
+    {
+      id: 'reply-2',
+      title: 'Issue resolved',
+      body: 'We have applied a fix and confirmed that the issue is resolved.',
+      shortcut: 'resolved',
+      updated: 'Yesterday',
+    },
   ],
   settings: {
     emailAlerts: true,
@@ -69,29 +102,50 @@ export function loadWorkspaceState(): WorkspaceState {
 
   try {
     const stored = window.localStorage.getItem(STORAGE_KEY);
-    return stored ? { ...cloneState(defaultState), ...JSON.parse(stored) } : cloneState(defaultState);
+    return stored
+      ? { ...cloneState(defaultState), ...JSON.parse(stored) }
+      : cloneState(defaultState);
   } catch {
     return cloneState(defaultState);
   }
 }
 
 export function saveWorkspaceState(state: WorkspaceState): WorkspaceState {
-  if (typeof window !== 'undefined') window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  if (typeof window !== 'undefined') {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
   return state;
 }
 
-export function saveSettings(state: WorkspaceState, settings: WorkspaceSettings): WorkspaceState {
+export function saveSettings(
+  state: WorkspaceState,
+  settings: WorkspaceSettings
+): WorkspaceState {
   return saveWorkspaceState({ ...state, settings });
 }
 
-export function saveReply(state: WorkspaceState, reply: WorkspaceReply): WorkspaceState {
+export function saveReply(
+  state: WorkspaceState,
+  reply: WorkspaceReply
+): WorkspaceState {
   const replies = state.replies.some((item) => item.id === reply.id)
-    ? state.replies.map((item) => item.id === reply.id ? reply : item)
+    ? state.replies.map((item) => (item.id === reply.id ? reply : item))
     : [reply, ...state.replies];
   return saveWorkspaceState({ ...state, replies });
 }
 
-export function createArticle(state: WorkspaceState, article: Pick<WorkspaceArticle, 'title' | 'category' | 'body'>): WorkspaceState {
-  const newArticle: WorkspaceArticle = { ...article, id: `KB-${Date.now()}`, views: 0, updated: 'Just now' };
-  return saveWorkspaceState({ ...state, articles: [newArticle, ...state.articles] });
+export function createArticle(
+  state: WorkspaceState,
+  article: Pick<WorkspaceArticle, 'title' | 'category' | 'body'>
+): WorkspaceState {
+  const newArticle: WorkspaceArticle = {
+    ...article,
+    id: `KB-${Date.now()}`,
+    views: 0,
+    updated: 'Just now',
+  };
+  return saveWorkspaceState({
+    ...state,
+    articles: [newArticle, ...state.articles],
+  });
 }

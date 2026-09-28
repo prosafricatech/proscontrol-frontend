@@ -1,9 +1,9 @@
 'use client';
 
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useCallback } from 'react';
 import { useLanguage } from '@/app/[lang]/contexts/LanguageContext';
 import { LOCALE_COOKIE, SUPPORTED_LOCALES } from '@/config/locales';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useCallback } from 'react';
 
 const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365;
 
@@ -22,15 +22,18 @@ export function useSwitchLocale() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const switchTo = useCallback((code: string) => {
-    if (code === lang) return;
-    rememberLocale(code);
-    const rest = pathname.replace(/^\/[a-z]{2}-[A-Z]{2}(?=\/|$)/, '');
-    const query = searchParams.toString();
-    router.replace(`/${code}${rest}${query ? `?${query}` : ''}`);
-    // The root layout loads the dictionary on the server.
-    router.refresh();
-  }, [lang, pathname, router, searchParams]);
+  const switchTo = useCallback(
+    (code: string) => {
+      if (code === lang) return;
+      rememberLocale(code);
+      const rest = pathname.replace(/^\/[a-z]{2}-[A-Z]{2}(?=\/|$)/, '');
+      const query = searchParams.toString();
+      router.replace(`/${code}${rest}${query ? `?${query}` : ''}`);
+      // The root layout loads the dictionary on the server.
+      router.refresh();
+    },
+    [lang, pathname, router, searchParams]
+  );
 
   /** Next language in SUPPORTED_LOCALES (wraps around). */
   const switchToNext = useCallback(() => {

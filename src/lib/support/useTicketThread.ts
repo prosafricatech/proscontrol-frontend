@@ -1,8 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
-import type { ReassignmentEvent, Ticket, TicketMessage } from '@/lib/support/mockData';
 import { useT } from '@/lib/i18n/useT';
+import type {
+  ReassignmentEvent,
+  Ticket,
+  TicketMessage,
+} from '@/lib/support/types';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 // v1 backend has no push channel, so the thread is polled (see API contract).
 // Messages are checked quickly while a conversation is lively and back off
@@ -13,20 +17,30 @@ const TICKET_POLL_MS = 30000;
 // Recent typing keeps polling at the fastest step instead of backing off.
 const ACTIVITY_WINDOW_MS = 15000;
 
-type ActionResult = { ok: true } | { ok: false; error: string };
+export type ActionResult = { ok: true } | { ok: false; error: string };
 
 /**
  * Pull a readable message out of the backend envelope ({ code, message, data }).
  * For a 422, `data` holds `{ field: [messages] }` and the first one is used.
  */
 function errorMessage(payload: any, fallback: string): string {
-  const fieldErrors = payload?.data && typeof payload.data === 'object' ? Object.values(payload.data) : [];
-  const firstFieldError = fieldErrors.flat().find((value) => typeof value === 'string');
+  const fieldErrors =
+    payload?.data && typeof payload.data === 'object'
+      ? Object.values(payload.data)
+      : [];
+  const firstFieldError = fieldErrors
+    .flat()
+    .find((value) => typeof value === 'string');
 
-  return (firstFieldError as string | undefined) || payload?.message || fallback;
+  return (
+    (firstFieldError as string | undefined) || payload?.message || fallback
+  );
 }
 
-function mergeMessages(existing: TicketMessage[], incoming: TicketMessage[]): TicketMessage[] {
+function mergeMessages(
+  existing: TicketMessage[],
+  incoming: TicketMessage[]
+): TicketMessage[] {
   if (incoming.length === 0) return existing;
 
   const byId = new Map(existing.map((message) => [message.id, message]));
@@ -35,7 +49,11 @@ function mergeMessages(existing: TicketMessage[], incoming: TicketMessage[]): Ti
   return Array.from(byId.values()).sort((a, b) => Number(a.id) - Number(b.id));
 }
 
-export function useTicketThread(ticketId: string | undefined, currentUserId: string, isStaff: boolean) {
+export function useTicketThread(
+  ticketId: string | undefined,
+  currentUserId: string,
+  isStaff: boolean
+) {
   const t = useT();
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [messages, setMessages] = useState<TicketMessage[]>([]);
@@ -56,11 +74,18 @@ export function useTicketThread(ticketId: string | undefined, currentUserId: str
   const fetchTicket = useCallback(async () => {
     if (!ticketId) return;
     lastTicketFetchAt.current = Date.now();
-    const response = await fetch(`/api/support/tickets/${ticketId}`, { cache: 'no-store' });
+    const response = await fetch(`/api/support/tickets/${ticketId}`, {
+      cache: 'no-store',
+    });
     const payload = await response.json().catch(() => null);
 
     if (!response.ok) {
-      setLoadError(errorMessage(payload, t('portal.chat.loadFailed', 'Unable to load this ticket.')));
+      setLoadError(
+        errorMessage(
+          payload,
+          t('portal.chat.loadFailed', 'Unable to load this ticket.')
+        )
+      );
       return;
     }
 
@@ -69,23 +94,35 @@ export function useTicketThread(ticketId: string | undefined, currentUserId: str
   }, [ticketId, t]);
 
   /** Returns how many new messages arrived from the other participant. */
-  const fetchMessages = useCallback(async (onlyNew: boolean): Promise<number> => {
-    if (!ticketId) return 0;
-    const lastId = messagesRef.current.at(-1)?.id;
-    const query = onlyNew && lastId ? `?after_id=${lastId}` : '';
-    const response = await fetch(`/api/support/tickets/${ticketId}/messages${query}`, { cache: 'no-store' });
-    if (!response.ok) return 0;
+  const fetchMessages = useCallback(
+    async (onlyNew: boolean): Promise<number> => {
+      if (!ticketId) return 0;
+      const lastId = messagesRef.current.at(-1)?.id;
+      const query = onlyNew && lastId ? `?after_id=${lastId}` : '';
+      const response = await fetch(
+        `/api/support/tickets/${ticketId}/messages${query}`,
+        { cache: 'no-store' }
+      );
+      if (!response.ok) return 0;
 
-    const payload = await response.json().catch(() => null);
-    const incoming: TicketMessage[] = payload?.data ?? [];
-    setMessages((current) => (onlyNew ? mergeMessages(current, incoming) : mergeMessages([], incoming)));
+      const payload = await response.json().catch(() => null);
+      const incoming: TicketMessage[] = payload?.data ?? [];
+      setMessages((current) =>
+        onlyNew ? mergeMessages(current, incoming) : mergeMessages([], incoming)
+      );
 
-    return incoming.filter((message) => message.senderId !== currentUserId).length;
-  }, [ticketId, currentUserId]);
+      return incoming.filter((message) => message.senderId !== currentUserId)
+        .length;
+    },
+    [ticketId, currentUserId]
+  );
 
   const fetchReassignments = useCallback(async () => {
     if (!ticketId || !isStaff) return;
-    const response = await fetch(`/api/support/tickets/${ticketId}/reassignments`, { cache: 'no-store' });
+    const response = await fetch(
+      `/api/support/tickets/${ticketId}/reassignments`,
+      { cache: 'no-store' }
+    );
     if (!response.ok) return;
 
     const payload = await response.json().catch(() => null);
@@ -105,7 +142,9 @@ export function useTicketThread(ticketId: string | undefined, currentUserId: str
     const schedule = () => {
       window.clearTimeout(timer);
       const hidden = document.visibilityState !== 'visible';
-      const delay = hidden ? MESSAGE_POLL_STEPS_MS.at(-1)! : MESSAGE_POLL_STEPS_MS[pollStep.current];
+      const delay = hidden
+        ? MESSAGE_POLL_STEPS_MS.at(-1)!
+        : MESSAGE_POLL_STEPS_MS[pollStep.current];
       timer = window.setTimeout(tick, delay);
     };
 
@@ -121,9 +160,14 @@ export function useTicketThread(ticketId: string | undefined, currentUserId: str
           fetchTicket();
         } else {
           if (Date.now() - lastActivityAt.current >= ACTIVITY_WINDOW_MS) {
-            pollStep.current = Math.min(pollStep.current + 1, MESSAGE_POLL_STEPS_MS.length - 1);
+            pollStep.current = Math.min(
+              pollStep.current + 1,
+              MESSAGE_POLL_STEPS_MS.length - 1
+            );
           }
-          if (Date.now() - lastTicketFetchAt.current >= TICKET_POLL_MS) await fetchTicket().catch(() => undefined);
+          if (Date.now() - lastTicketFetchAt.current >= TICKET_POLL_MS) {
+            await fetchTicket().catch(() => undefined);
+          }
         }
       }
 
@@ -166,90 +210,151 @@ export function useTicketThread(ticketId: string | undefined, currentUserId: str
   useEffect(() => {
     if (!ticket || !currentUserId) return;
 
-    const isRecipient = ticket.customerId === currentUserId || ticket.handledById === currentUserId;
+    const isRecipient =
+      ticket.customerId === currentUserId ||
+      ticket.handledById === currentUserId;
     if (!isRecipient) return;
 
-    const unread = messages.filter((message) =>
-      message.type !== 'system'
-      && !message.readAt
-      && message.senderId !== currentUserId
-      && !markReadAttempted.current.has(message.id));
+    const unread = messages.filter(
+      (message) =>
+        message.type !== 'system' &&
+        !message.readAt &&
+        message.senderId !== currentUserId &&
+        !markReadAttempted.current.has(message.id)
+    );
 
     unread.forEach(async (message) => {
       markReadAttempted.current.add(message.id);
-      const response = await fetch(`/api/support/messages/${message.id}/read`, { method: 'PATCH' });
+      const response = await fetch(`/api/support/messages/${message.id}/read`, {
+        method: 'PATCH',
+      });
       if (!response.ok) return;
 
       const payload = await response.json().catch(() => null);
-      if (payload?.data) setMessages((current) => mergeMessages(current, [payload.data]));
+      if (payload?.data) {
+        setMessages((current) => mergeMessages(current, [payload.data]));
+      }
     });
   }, [messages, ticket, currentUserId]);
 
-  const runTicketAction = useCallback(async (
-    action: string,
-    init: RequestInit,
-    fallbackError: string,
-  ): Promise<ActionResult> => {
-    if (!ticketId) return { ok: false, error: fallbackError };
+  const runTicketAction = useCallback(
+    async (
+      action: string,
+      init: RequestInit,
+      fallbackError: string
+    ): Promise<ActionResult> => {
+      if (!ticketId) return { ok: false, error: fallbackError };
 
-    setPendingAction(action);
-    try {
-      const response = await fetch(`/api/support/tickets/${ticketId}/${action}`, { method: 'POST', ...init });
-      const payload = await response.json().catch(() => null);
+      setPendingAction(action);
+      try {
+        const response = await fetch(
+          `/api/support/tickets/${ticketId}/${action}`,
+          { method: 'POST', ...init }
+        );
+        const payload = await response.json().catch(() => null);
 
-      if (!response.ok) return { ok: false, error: errorMessage(payload, fallbackError) };
+        if (!response.ok) {
+          return { ok: false, error: errorMessage(payload, fallbackError) };
+        }
 
-      if (payload?.data) setTicket(payload.data);
-      fetchReassignments();
-      fetchMessages(true);
+        if (payload?.data) setTicket(payload.data);
+        fetchReassignments();
+        fetchMessages(true);
 
-      return { ok: true };
-    } catch {
-      return { ok: false, error: fallbackError };
-    } finally {
-      setPendingAction(null);
-    }
-  }, [ticketId, fetchReassignments, fetchMessages]);
+        return { ok: true };
+      } catch {
+        return { ok: false, error: fallbackError };
+      } finally {
+        setPendingAction(null);
+      }
+    },
+    [ticketId, fetchReassignments, fetchMessages]
+  );
 
-  const sendMessage = useCallback(async (body: string, files: File[]): Promise<ActionResult> => {
-    if (!ticketId) return { ok: false, error: t('portal.chat.sendFailed', 'Unable to send message.') };
+  const sendMessage = useCallback(
+    async (body: string, files: File[]): Promise<ActionResult> => {
+      if (!ticketId) {
+        return {
+          ok: false,
+          error: t('portal.chat.sendFailed', 'Unable to send message.'),
+        };
+      }
 
-    const formData = new FormData();
-    formData.append('body', body);
-    files.forEach((file) => formData.append('attachments[]', file));
+      const formData = new FormData();
+      formData.append('body', body);
+      files.forEach((file) => formData.append('attachments[]', file));
 
-    setPendingAction('send');
-    try {
-      const response = await fetch(`/api/support/tickets/${ticketId}/messages`, { method: 'POST', body: formData });
-      const payload = await response.json().catch(() => null);
+      setPendingAction('send');
+      try {
+        const response = await fetch(
+          `/api/support/tickets/${ticketId}/messages`,
+          { method: 'POST', body: formData }
+        );
+        const payload = await response.json().catch(() => null);
 
-      if (!response.ok) return { ok: false, error: errorMessage(payload, t('portal.chat.sendFailed', 'Unable to send message.')) };
+        if (!response.ok) {
+          return {
+            ok: false,
+            error: errorMessage(
+              payload,
+              t('portal.chat.sendFailed', 'Unable to send message.')
+            ),
+          };
+        }
 
-      if (payload?.data) setMessages((current) => mergeMessages(current, [payload.data]));
-      pollStep.current = 0;
+        if (payload?.data) {
+          setMessages((current) => mergeMessages(current, [payload.data]));
+        }
+        pollStep.current = 0;
 
-      return { ok: true };
-    } catch {
-      return { ok: false, error: t('portal.chat.sendFailed', 'Unable to send message.') };
-    } finally {
-      setPendingAction(null);
-    }
-  }, [ticketId, t]);
+        return { ok: true };
+      } catch {
+        return {
+          ok: false,
+          error: t('portal.chat.sendFailed', 'Unable to send message.'),
+        };
+      } finally {
+        setPendingAction(null);
+      }
+    },
+    [ticketId, t]
+  );
 
   const activate = useCallback(
-    () => runTicketAction('activate', {}, t('portal.chat.activateFailed', 'Unable to activate this ticket.')),
-    [runTicketAction, t],
+    () =>
+      runTicketAction(
+        'activate',
+        {},
+        t('portal.chat.activateFailed', 'Unable to activate this ticket.')
+      ),
+    [runTicketAction, t]
   );
 
   const close = useCallback(
-    () => runTicketAction('close', {}, t('portal.chat.closeFailed', 'Unable to close this ticket.')),
-    [runTicketAction, t],
+    () =>
+      runTicketAction(
+        'close',
+        {},
+        t('portal.chat.closeFailed', 'Unable to close this ticket.')
+      ),
+    [runTicketAction, t]
   );
 
-  const reassign = useCallback((toUserId: string, reason?: string) => runTicketAction('reassign', {
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ to_user_id: Number(toUserId), reason: reason || undefined }),
-  }, t('portal.chat.reassignFailed', 'Unable to reassign this ticket.')), [runTicketAction, t]);
+  const reassign = useCallback(
+    (toUserId: string, reason?: string) =>
+      runTicketAction(
+        'reassign',
+        {
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to_user_id: Number(toUserId),
+            reason: reason || undefined,
+          }),
+        },
+        t('portal.chat.reassignFailed', 'Unable to reassign this ticket.')
+      ),
+    [runTicketAction, t]
+  );
 
   return {
     ticket,

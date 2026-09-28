@@ -1,21 +1,29 @@
 'use client';
 
+import { useDictionary } from '@/app/[lang]/contexts/DictionaryContext';
+import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
+import { StatCard } from '@/components/supportLayout/StatCard';
+import { SupportLayout } from '@/components/supportLayout/SupportLayout';
+import { useT } from '@/lib/i18n/useT';
+import { useSupportStats } from '@/lib/support/useSupportStats';
 import {
-  AccessTime as TimeIcon,
   CheckCircleOutline as CheckIcon,
   Inbox as InboxIcon,
   Layers as LayersIcon,
   PersonAddAlt as PersonAddIcon,
+  AccessTime as TimeIcon,
 } from '@mui/icons-material';
-import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 import { Box, Card, CardContent, Typography } from '@mui/material';
 import { useMemo } from 'react';
-import { useDictionary } from '@/app/[lang]/contexts/DictionaryContext';
-import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
-import { SupportLayout } from '@/components/supportLayout/SupportLayout';
-import { StatCard } from '@/components/supportLayout/StatCard';
-import { useSupportStats } from '@/lib/support/useSupportStats';
-import { useT } from '@/lib/i18n/useT';
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
+} from 'recharts';
 
 export default function StaffDashboardPage() {
   const dictionary = useDictionary();
@@ -27,8 +35,16 @@ export default function StaffDashboardPage() {
 
   const statusData = [
     { name: t?.stats?.new || 'New', value: stats.new, color: '#3b82f6' },
-    { name: t?.stats?.active || 'Active', value: stats.active, color: '#22c55e' },
-    { name: t?.stats?.closed || 'Closed', value: stats.closed, color: '#94a3b8' },
+    {
+      name: t?.stats?.active || 'Active',
+      value: stats.active,
+      color: '#22c55e',
+    },
+    {
+      name: t?.stats?.closed || 'Closed',
+      value: stats.closed,
+      color: '#94a3b8',
+    },
   ];
 
   // Tickets created on each of the last 7 days (local time), oldest first.
@@ -55,9 +71,20 @@ export default function StaffDashboardPage() {
   }, [stats.recentCreatedAt, t]);
 
   return (
-    <SupportLayout userRole="staff" userName={authUser?.name || tr('portal.common.staff', 'Staff')} userRoleLabel={tr('portal.common.staff', 'Staff')}>
+    <SupportLayout
+      userRole='staff'
+      userName={authUser?.name || tr('portal.common.staff', 'Staff')}
+      userRoleLabel={tr('portal.common.staff', 'Staff')}
+    >
       <Box sx={{ mb: 3 }}>
-        <Typography sx={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--pc-text)', mb: 0.5 }}>
+        <Typography
+          sx={{
+            fontSize: '1.75rem',
+            fontWeight: 700,
+            color: 'var(--pc-text)',
+            mb: 0.5,
+          }}
+        >
           {t?.title || 'Staff Dashboard'}
         </Typography>
         <Typography sx={{ color: 'var(--pc-text-3)', fontSize: '0.95rem' }}>
@@ -65,27 +92,92 @@ export default function StaffDashboardPage() {
         </Typography>
       </Box>
 
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(5, 1fr)' }, gap: 2, mb: 3 }}>
-        <StatCard label={t?.stats?.total || 'Total'} value={stats.total} icon={<LayersIcon sx={{ fontSize: 18 }} />} iconBg="var(--pc-surface-2)" iconColor="var(--pc-text-3)" />
-        <StatCard label={t?.stats?.new || 'New'} value={stats.new} icon={<InboxIcon sx={{ fontSize: 18 }} />} iconBg="var(--pc-accent-soft-2)" iconColor="#2563eb" />
-        <StatCard label={t?.stats?.active || 'Active'} value={stats.active} icon={<TimeIcon sx={{ fontSize: 18 }} />} iconBg="var(--pc-success-soft)" iconColor="var(--pc-success)" />
-        <StatCard label={t?.stats?.closed || 'Closed'} value={stats.closed} icon={<CheckIcon sx={{ fontSize: 18 }} />} iconBg="var(--pc-surface-2)" iconColor="var(--pc-text-3)" />
-        <StatCard label={t?.stats?.unassigned || 'Unassigned'} value={stats.unassigned} icon={<PersonAddIcon sx={{ fontSize: 18 }} />} iconBg="var(--pc-warning-soft)" iconColor="var(--pc-warning-2)" />
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(5, 1fr)' },
+          gap: 2,
+          mb: 3,
+        }}
+      >
+        <StatCard
+          label={t?.stats?.total || 'Total'}
+          value={stats.total}
+          icon={<LayersIcon sx={{ fontSize: 18 }} />}
+          iconBg='var(--pc-surface-2)'
+          iconColor='var(--pc-text-3)'
+        />
+        <StatCard
+          label={t?.stats?.new || 'New'}
+          value={stats.new}
+          icon={<InboxIcon sx={{ fontSize: 18 }} />}
+          iconBg='var(--pc-accent-soft-2)'
+          iconColor='#2563eb'
+        />
+        <StatCard
+          label={t?.stats?.active || 'Active'}
+          value={stats.active}
+          icon={<TimeIcon sx={{ fontSize: 18 }} />}
+          iconBg='var(--pc-success-soft)'
+          iconColor='var(--pc-success)'
+        />
+        <StatCard
+          label={t?.stats?.closed || 'Closed'}
+          value={stats.closed}
+          icon={<CheckIcon sx={{ fontSize: 18 }} />}
+          iconBg='var(--pc-surface-2)'
+          iconColor='var(--pc-text-3)'
+        />
+        <StatCard
+          label={t?.stats?.unassigned || 'Unassigned'}
+          value={stats.unassigned}
+          icon={<PersonAddIcon sx={{ fontSize: 18 }} />}
+          iconBg='var(--pc-warning-soft)'
+          iconColor='var(--pc-warning-2)'
+        />
       </Box>
 
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
-        <Card sx={{ borderRadius: '12px', border: '1px solid var(--pc-border)', boxShadow: 'none' }}>
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+          gap: 2,
+        }}
+      >
+        <Card
+          sx={{
+            borderRadius: '12px',
+            border: '1px solid var(--pc-border)',
+            boxShadow: 'none',
+          }}
+        >
           <CardContent sx={{ p: 3 }}>
-            <Typography sx={{ fontWeight: 600, color: 'var(--pc-text)', mb: 2 }}>
+            <Typography
+              sx={{ fontWeight: 600, color: 'var(--pc-text)', mb: 2 }}
+            >
               {t?.charts?.ticketsByStatus || 'Tickets by status'}
             </Typography>
             <Box sx={{ height: 260 }}>
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width='100%' height='100%'>
                 <BarChart data={statusData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis dataKey="name" tickLine={false} axisLine={false} tick={{ fill: 'var(--pc-text-3)', fontSize: 12 }} />
-                  <YAxis tickLine={false} axisLine={false} tick={{ fill: 'var(--pc-text-3)', fontSize: 12 }} allowDecimals={false} />
-                  <Bar dataKey="value" barSize={48} radius={[4, 4, 0, 0]}>
+                  <CartesianGrid
+                    strokeDasharray='3 3'
+                    vertical={false}
+                    stroke='#f1f5f9'
+                  />
+                  <XAxis
+                    dataKey='name'
+                    tickLine={false}
+                    axisLine={false}
+                    tick={{ fill: 'var(--pc-text-3)', fontSize: 12 }}
+                  />
+                  <YAxis
+                    tickLine={false}
+                    axisLine={false}
+                    tick={{ fill: 'var(--pc-text-3)', fontSize: 12 }}
+                    allowDecimals={false}
+                  />
+                  <Bar dataKey='value' barSize={48} radius={[4, 4, 0, 0]}>
                     {statusData.map((entry, index) => (
                       <Cell key={`${entry.name}-${index}`} fill={entry.color} />
                     ))}
@@ -96,18 +188,45 @@ export default function StaffDashboardPage() {
           </CardContent>
         </Card>
 
-        <Card sx={{ borderRadius: '12px', border: '1px solid var(--pc-border)', boxShadow: 'none' }}>
+        <Card
+          sx={{
+            borderRadius: '12px',
+            border: '1px solid var(--pc-border)',
+            boxShadow: 'none',
+          }}
+        >
           <CardContent sx={{ p: 3 }}>
-            <Typography sx={{ fontWeight: 600, color: 'var(--pc-text)', mb: 2 }}>
+            <Typography
+              sx={{ fontWeight: 600, color: 'var(--pc-text)', mb: 2 }}
+            >
               {t?.charts?.newTicketsLast7Days || 'New tickets - last 7 days'}
             </Typography>
             <Box sx={{ height: 260 }}>
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width='100%' height='100%'>
                 <BarChart data={weeklyData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis dataKey="day" tickLine={false} axisLine={false} tick={{ fill: 'var(--pc-text-3)', fontSize: 12 }} />
-                  <YAxis tickLine={false} axisLine={false} tick={{ fill: 'var(--pc-text-3)', fontSize: 12 }} allowDecimals={false} />
-                  <Bar dataKey="value" fill="#3b82f6" barSize={48} radius={[4, 4, 0, 0]} />
+                  <CartesianGrid
+                    strokeDasharray='3 3'
+                    vertical={false}
+                    stroke='#f1f5f9'
+                  />
+                  <XAxis
+                    dataKey='day'
+                    tickLine={false}
+                    axisLine={false}
+                    tick={{ fill: 'var(--pc-text-3)', fontSize: 12 }}
+                  />
+                  <YAxis
+                    tickLine={false}
+                    axisLine={false}
+                    tick={{ fill: 'var(--pc-text-3)', fontSize: 12 }}
+                    allowDecimals={false}
+                  />
+                  <Bar
+                    dataKey='value'
+                    fill='#3b82f6'
+                    barSize={48}
+                    radius={[4, 4, 0, 0]}
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </Box>

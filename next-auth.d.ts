@@ -45,6 +45,11 @@ declare module 'next-auth' {
     expires: string;
     error: string;
     /** prosERP organizations captured at login (see src/lib/support/organizations.ts). */
-    organizations?: { id: string; name: string; autoload: boolean }[];
+    organizations?: {
+      id: string;
+      name: string;
+      autoload: boolean;
+      logo: string | null;
+    }[];
   }
 }

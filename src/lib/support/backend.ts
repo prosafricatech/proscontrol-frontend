@@ -1,6 +1,11 @@
+import type {
+  ReassignmentEvent,
+  TicketAttachment,
+  TicketMessage,
+  TicketStatus,
+} from '@/lib/support/types';
 import { getAuthHeaders } from '@/lib/utils/apiUtils';
 import { NextRequest, NextResponse } from 'next/server';
-import type { ReassignmentEvent, TicketAttachment, TicketMessage, TicketStatus } from '@/lib/support/mockData';
 
 const API_BASE = process.env.API_BASE_URL;
 
@@ -62,7 +67,9 @@ export function normalizeTicket(ticket: BackendTicket) {
     customerName: ticket.user?.name ?? 'Customer',
     customerEmail: ticket.user?.email ?? '',
     handledBy: ticket.attended_by?.name,
-    handledById: ticket.attended_by?.id ? String(ticket.attended_by.id) : undefined,
+    handledById: ticket.attended_by?.id
+      ? String(ticket.attended_by.id)
+      : undefined,
     closedAt: ticket.closed_at ?? null,
     createdAt: ticket.created_at ?? '',
     updatedAt: ticket.updated_at ?? ticket.created_at ?? '',
@@ -72,7 +79,9 @@ export function normalizeTicket(ticket: BackendTicket) {
   };
 }
 
-export function normalizeAttachment(attachment: BackendAttachment): TicketAttachment {
+export function normalizeAttachment(
+  attachment: BackendAttachment
+): TicketAttachment {
   return {
     id: String(attachment.id),
     name: attachment.filename ?? 'attachment',
@@ -95,7 +104,9 @@ export function normalizeMessage(message: BackendMessage): TicketMessage {
   };
 }
 
-export function normalizeReassignment(reassignment: BackendReassignment): ReassignmentEvent {
+export function normalizeReassignment(
+  reassignment: BackendReassignment
+): ReassignmentEvent {
   return {
     from: reassignment.from_user?.name ?? '',
     to: reassignment.to_user?.name ?? '',
@@ -109,16 +120,25 @@ export function normalizeReassignment(reassignment: BackendReassignment): Reassi
  * NextResponse when the call can't be made at all (not configured), so
  * callers can return it straight away.
  */
-export async function fetchBackend(request: NextRequest, path: string, init: RequestInit = {}) {
+export async function fetchBackend(
+  request: NextRequest,
+  path: string,
+  init: RequestInit = {}
+) {
   const { headers, response } = await getAuthHeaders(request, false);
   if (response) return response;
 
   if (!API_BASE) {
-    return NextResponse.json({ message: 'API_BASE_URL is not configured' }, { status: 500 });
+    return NextResponse.json(
+      { message: 'API_BASE_URL is not configured' },
+      { status: 500 }
+    );
   }
 
   const requestHeaders = new Headers(headers ?? {});
-  new Headers(init.headers).forEach((value, key) => requestHeaders.set(key, value));
+  new Headers(init.headers).forEach((value, key) =>
+    requestHeaders.set(key, value)
+  );
 
   // Let fetch set the multipart boundary itself; a forced JSON (or boundary-less
   // multipart) Content-Type makes Laravel drop the uploaded files.
@@ -133,7 +153,11 @@ export async function fetchBackend(request: NextRequest, path: string, init: Req
   });
 }
 
-export async function requestBackend(request: NextRequest, path: string, init: RequestInit = {}) {
+export async function requestBackend(
+  request: NextRequest,
+  path: string,
+  init: RequestInit = {}
+) {
   const backendResponse = await fetchBackend(request, path, init);
   if (backendResponse instanceof NextResponse) return backendResponse;
 
@@ -154,7 +178,10 @@ export async function requestAllPages(request: NextRequest, path: string) {
   let lastPage = 1;
 
   do {
-    const result = await requestBackend(request, `${path}${separator}page=${page}`);
+    const result = await requestBackend(
+      request,
+      `${path}${separator}page=${page}`
+    );
     if (result instanceof NextResponse) return result;
     if (!result.response.ok) return { ok: false as const, ...result };
 
@@ -167,15 +194,27 @@ export async function requestAllPages(request: NextRequest, path: string) {
   return { ok: true as const, items };
 }
 
-export type PageMeta = { current_page: number; last_page: number; per_page: number; total: number };
+export type PageMeta = {
+  current_page: number;
+  last_page: number;
+  per_page: number;
+  total: number;
+};
 
 /**
  * One page of a paginated backend list (`data: { items, meta }`). Returns the
  * failed result instead when the call fails, so the caller can relay it.
  */
-export async function requestPage(request: NextRequest, path: string, page = 1) {
+export async function requestPage(
+  request: NextRequest,
+  path: string,
+  page = 1
+) {
   const separator = path.includes('?') ? '&' : '?';
-  const result = await requestBackend(request, `${path}${separator}page=${page}`);
+  const result = await requestBackend(
+    request,
+    `${path}${separator}page=${page}`
+  );
   if (result instanceof NextResponse) return result;
   if (!result.response.ok) return { ok: false as const, ...result };
 
@@ -187,7 +226,11 @@ export async function requestPage(request: NextRequest, path: string, page = 1) 
     total: Number(data?.meta?.total ?? 0),
   };
 
-  return { ok: true as const, items: Array.isArray(data?.items) ? data.items : [], meta };
+  return {
+    ok: true as const,
+    items: Array.isArray(data?.items) ? data.items : [],
+    meta,
+  };
 }
 
 export function backendData(payload: any) {

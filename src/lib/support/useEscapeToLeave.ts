@@ -15,7 +15,13 @@ export function useEscapeToLeave(enabled: boolean, onLeave: () => void) {
     if (!enabled) return;
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape' || event.defaultPrevented || event.isComposing) return;
+      if (
+        event.key !== 'Escape' ||
+        event.defaultPrevented ||
+        event.isComposing
+      ) {
+        return;
+      }
       onLeaveRef.current();
     };
 

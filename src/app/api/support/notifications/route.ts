@@ -1,5 +1,9 @@
+import {
+  backendData,
+  requestBackend,
+  requestPage,
+} from '@/lib/support/backend';
 import { NextRequest, NextResponse } from 'next/server';
-import { backendData, requestBackend, requestPage } from '@/lib/support/backend';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 // Lifecycle events (activated / closed / assigned) older than this aren't shown.
@@ -34,31 +38,52 @@ type BackendTicket = {
   updated_at?: string;
 };
 
-const isRecent = (value?: string | null) => !!value && Date.now() - Date.parse(value) <= EVENT_WINDOW_MS;
+const isRecent = (value?: string | null) =>
+  !!value && Date.now() - Date.parse(value) <= EVENT_WINDOW_MS;
 
 /**
  * Unread messages from the other participant on one ticket. Only the newest
  * page is inspected (15 messages), which is enough to count "new" ones.
  */
-async function unreadMessages(request: NextRequest, ticketId: number, meId: number) {
+async function unreadMessages(
+  request: NextRequest,
+  ticketId: number,
+  meId: number
+) {
   const first = await requestPage(request, `/tickets/${ticketId}/messages`, 1);
   if (first instanceof NextResponse || !first.ok) return null;
 
   let items = first.items;
   if (first.meta.last_page > 1) {
-    const last = await requestPage(request, `/tickets/${ticketId}/messages`, first.meta.last_page);
+    const last = await requestPage(
+      request,
+      `/tickets/${ticketId}/messages`,
+      first.meta.last_page
+    );
     if (last instanceof NextResponse || !last.ok) return null;
     items = last.items;
   }
 
-  const unread = items.filter((message: any) => message.type !== 'system' && !message.read_at && message.sender?.id !== meId);
+  const unread = items.filter(
+    (message: any) =>
+      message.type !== 'system' &&
+      !message.read_at &&
+      message.sender?.id !== meId
+  );
   if (unread.length === 0) return null;
 
   const latest = unread.at(-1);
-  return { count: unread.length, capped: unread.length === items.length && first.meta.last_page > 1, latest };
+  return {
+    count: unread.length,
+    capped: unread.length === items.length && first.meta.last_page > 1,
+    latest,
+  };
 }
 
-function messagesNotification(ticket: BackendTicket, unread: NonNullable<Awaited<ReturnType<typeof unreadMessages>>>): SupportNotification {
+function messagesNotification(
+  ticket: BackendTicket,
+  unread: NonNullable<Awaited<ReturnType<typeof unreadMessages>>>
+): SupportNotification {
   return {
     // Includes the newest unread id, so a later message re-notifies after "mark as read".
     id: `messages:${ticket.id}:${unread.latest?.id}`,
@@ -66,7 +91,11 @@ function messagesNotification(ticket: BackendTicket, unread: NonNullable<Awaited
     actorName: unread.latest?.sender?.name ?? null,
     count: unread.capped ? `${unread.count}+` : String(unread.count),
     subject: ticket.subject ?? `#${ticket.id}`,
-    at: unread.latest?.sent_at ?? unread.latest?.created_at ?? ticket.updated_at ?? '',
+    at:
+      unread.latest?.sent_at ??
+      unread.latest?.created_at ??
+      ticket.updated_at ??
+      '',
     ticketId: String(ticket.id),
   };
 }
@@ -78,7 +107,11 @@ function messagesNotification(ticket: BackendTicket, unread: NonNullable<Awaited
 export async function GET(request: NextRequest) {
   const meResult = await requestBackend(request, '/auth/me');
   if (meResult instanceof NextResponse) return meResult;
-  if (!meResult.response.ok) return NextResponse.json(meResult.payload, { status: meResult.response.status });
+  if (!meResult.response.ok) {
+    return NextResponse.json(meResult.payload, {
+      status: meResult.response.status,
+    });
+  }
 
   const me = backendData(meResult.payload)?.user;
   const meId = Number(me?.id);
@@ -91,10 +124,15 @@ export async function GET(request: NextRequest) {
     ]);
     for (const result of [waiting, mine]) {
       if (result instanceof NextResponse) return result;
-      if (!result.ok) return NextResponse.json(result.payload, { status: result.response.status });
+      if (!result.ok) {
+        return NextResponse.json(result.payload, {
+          status: result.response.status,
+        });
+      }
     }
 
-    for (const ticket of (waiting as Extract<typeof waiting, { ok: true }>).items as BackendTicket[]) {
+    for (const ticket of (waiting as Extract<typeof waiting, { ok: true }>)
+      .items as BackendTicket[]) {
       items.push({
         id: `new_ticket:${ticket.id}`,
         kind: 'new_ticket',
@@ -106,28 +144,39 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const myTickets = ((mine as Extract<typeof mine, { ok: true }>).items as BackendTicket[]).slice(0, MAX_TICKETS);
-    await Promise.all(myTickets.map(async (ticket) => {
-      const [unread, history] = await Promise.all([
-        unreadMessages(request, ticket.id, meId),
-        requestPage(request, `/tickets/${ticket.id}/reassignments`),
-      ]);
-      if (unread) items.push(messagesNotification(ticket, unread));
+    const myTickets = (
+      (mine as Extract<typeof mine, { ok: true }>).items as BackendTicket[]
+    ).slice(0, MAX_TICKETS);
+    await Promise.all(
+      myTickets.map(async (ticket) => {
+        const [unread, history] = await Promise.all([
+          unreadMessages(request, ticket.id, meId),
+          requestPage(request, `/tickets/${ticket.id}/reassignments`),
+        ]);
+        if (unread) items.push(messagesNotification(ticket, unread));
 
-      // Newest reassignment first; skip when I assigned it to myself.
-      const latest = !(history instanceof NextResponse) && history.ok ? history.items[0] : null;
-      if (latest && latest.reassigned_by?.id !== meId && isRecent(latest.created_at)) {
-        items.push({
-          id: `assigned:${ticket.id}:${latest.id ?? latest.created_at}`,
-          kind: 'assigned',
-          actorName: latest.reassigned_by?.name ?? null,
-          count: null,
-          subject: ticket.subject ?? `#${ticket.id}`,
-          at: latest.created_at,
-          ticketId: String(ticket.id),
-        });
-      }
-    }));
+        // Newest reassignment first; skip when I assigned it to myself.
+        const latest =
+          !(history instanceof NextResponse) && history.ok
+            ? history.items[0]
+            : null;
+        if (
+          latest &&
+          latest.reassigned_by?.id !== meId &&
+          isRecent(latest.created_at)
+        ) {
+          items.push({
+            id: `assigned:${ticket.id}:${latest.id ?? latest.created_at}`,
+            kind: 'assigned',
+            actorName: latest.reassigned_by?.name ?? null,
+            count: null,
+            subject: ticket.subject ?? `#${ticket.id}`,
+            at: latest.created_at,
+            ticketId: String(ticket.id),
+          });
+        }
+      })
+    );
   } else {
     const [active, closed] = await Promise.all([
       requestPage(request, '/tickets?status=active'),
@@ -135,28 +184,37 @@ export async function GET(request: NextRequest) {
     ]);
     for (const result of [active, closed]) {
       if (result instanceof NextResponse) return result;
-      if (!result.ok) return NextResponse.json(result.payload, { status: result.response.status });
-    }
-
-    const activeTickets = ((active as Extract<typeof active, { ok: true }>).items as BackendTicket[]).slice(0, MAX_TICKETS);
-    await Promise.all(activeTickets.map(async (ticket) => {
-      if (ticket.attended_by && isRecent(ticket.updated_at)) {
-        items.push({
-          // Includes the handler, so a reassignment shows up as a new notification.
-          id: `activated:${ticket.id}:${ticket.attended_by.id}`,
-          kind: 'activated',
-          actorName: ticket.attended_by.name ?? null,
-          count: null,
-          subject: ticket.subject ?? `#${ticket.id}`,
-          at: ticket.updated_at ?? '',
-          ticketId: String(ticket.id),
+      if (!result.ok) {
+        return NextResponse.json(result.payload, {
+          status: result.response.status,
         });
       }
-      const unread = await unreadMessages(request, ticket.id, meId);
-      if (unread) items.push(messagesNotification(ticket, unread));
-    }));
+    }
 
-    for (const ticket of (closed as Extract<typeof closed, { ok: true }>).items as BackendTicket[]) {
+    const activeTickets = (
+      (active as Extract<typeof active, { ok: true }>).items as BackendTicket[]
+    ).slice(0, MAX_TICKETS);
+    await Promise.all(
+      activeTickets.map(async (ticket) => {
+        if (ticket.attended_by && isRecent(ticket.updated_at)) {
+          items.push({
+            // Includes the handler, so a reassignment shows up as a new notification.
+            id: `activated:${ticket.id}:${ticket.attended_by.id}`,
+            kind: 'activated',
+            actorName: ticket.attended_by.name ?? null,
+            count: null,
+            subject: ticket.subject ?? `#${ticket.id}`,
+            at: ticket.updated_at ?? '',
+            ticketId: String(ticket.id),
+          });
+        }
+        const unread = await unreadMessages(request, ticket.id, meId);
+        if (unread) items.push(messagesNotification(ticket, unread));
+      })
+    );
+
+    for (const ticket of (closed as Extract<typeof closed, { ok: true }>)
+      .items as BackendTicket[]) {
       if (!isRecent(ticket.closed_at)) continue;
       items.push({
         id: `closed:${ticket.id}`,

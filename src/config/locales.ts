@@ -11,12 +11,16 @@ export const DEFAULT_LOCALE: SupportedLocale = 'en-US';
 /** Remembers the user's language choice for URLs without a locale. */
 export const LOCALE_COOKIE = 'NEXT_LOCALE';
 
-export function isSupportedLocale(value: string | null | undefined): value is SupportedLocale {
+export function isSupportedLocale(
+  value: string | null | undefined
+): value is SupportedLocale {
   return SUPPORTED_LOCALES.some((locale) => locale.code === value);
 }
 
 /** Maps an Accept-Language header to a supported locale ("sw", "sw-KE" → "sw-TZ"). */
-export function localeFromAcceptLanguage(header: string | null): SupportedLocale | null {
+export function localeFromAcceptLanguage(
+  header: string | null
+): SupportedLocale | null {
   if (!header) return null;
   const languages = header
     .split(',')
@@ -24,9 +28,14 @@ export function localeFromAcceptLanguage(header: string | null): SupportedLocale
     .filter(Boolean);
 
   for (const language of languages) {
-    const exact = SUPPORTED_LOCALES.find((locale) => locale.code.toLowerCase() === language);
+    const exact = SUPPORTED_LOCALES.find(
+      (locale) => locale.code.toLowerCase() === language
+    );
     if (exact) return exact.code;
-    const byLanguage = SUPPORTED_LOCALES.find((locale) => locale.code.split('-')[0].toLowerCase() === language.split('-')[0]);
+    const byLanguage = SUPPORTED_LOCALES.find(
+      (locale) =>
+        locale.code.split('-')[0].toLowerCase() === language.split('-')[0]
+    );
     if (byLanguage) return byLanguage.code;
   }
   return null;

@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { requestPage } from '@/lib/support/backend';
+import { NextRequest, NextResponse } from 'next/server';
 
 // Enough history for "last 7 days" in any timezone; the client buckets by local day.
 const RECENT_WINDOW_MS = 8 * 24 * 60 * 60 * 1000;
@@ -22,10 +22,15 @@ export async function GET(request: NextRequest) {
 
   for (const result of [all, fresh, active, closed, mine]) {
     if (result instanceof NextResponse) return result;
-    if (!result.ok) return NextResponse.json(result.payload, { status: result.response.status });
+    if (!result.ok) {
+      return NextResponse.json(result.payload, {
+        status: result.response.status,
+      });
+    }
   }
 
-  const ok = (result: typeof all) => result as Extract<typeof all, { ok: true }>;
+  const ok = (result: typeof all) =>
+    result as Extract<typeof all, { ok: true }>;
 
   // Tickets come newest first, so stop at the first page that reaches past the window.
   const cutoff = Date.now() - RECENT_WINDOW_MS;
@@ -38,10 +43,18 @@ export async function GET(request: NextRequest) {
       page = next;
     }
 
-    const createdAts: string[] = page.items.map((ticket: any) => ticket.created_at).filter(Boolean);
-    recentCreatedAt.push(...createdAts.filter((createdAt) => new Date(createdAt).getTime() >= cutoff));
+    const createdAts: string[] = page.items
+      .map((ticket: any) => ticket.created_at)
+      .filter(Boolean);
+    recentCreatedAt.push(
+      ...createdAts.filter(
+        (createdAt) => new Date(createdAt).getTime() >= cutoff
+      )
+    );
 
-    const reachedOlder = createdAts.some((createdAt) => new Date(createdAt).getTime() < cutoff);
+    const reachedOlder = createdAts.some(
+      (createdAt) => new Date(createdAt).getTime() < cutoff
+    );
     if (reachedOlder || pageNumber >= page.meta.last_page) break;
   }
 

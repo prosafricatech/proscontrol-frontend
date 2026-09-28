@@ -1,13 +1,21 @@
 'use client';
 
+import { useLanguage } from '@/app/[lang]/contexts/LanguageContext';
+import { useT } from '@/lib/i18n/useT';
+import { useSupportNotifications } from '@/lib/support/NotificationsProvider';
 import { NotificationsNone as BellIcon } from '@mui/icons-material';
-import { Badge, Box, Button, IconButton, Popover, Tooltip, Typography } from '@mui/material';
+import {
+  Badge,
+  Box,
+  Button,
+  IconButton,
+  Popover,
+  Tooltip,
+  Typography,
+} from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { useLanguage } from '@/app/[lang]/contexts/LanguageContext';
-import { useSupportNotifications } from '@/lib/support/NotificationsProvider';
 import { NotificationList } from './NotificationList';
-import { useT } from '@/lib/i18n/useT';
 
 export const NotificationBell = () => {
   const { unreadCount, refresh, markAllRead } = useSupportNotifications();
@@ -15,9 +23,13 @@ export const NotificationBell = () => {
   const router = useRouter();
   const lang = useLanguage();
   const t = useT();
-  const label = unreadCount > 0
-    ? t('portal.notifications.bellUnread', 'Notifications ({count} unread, { count: unreadCount })')
-    : t('portal.notifications.bell', 'Notifications');
+  const label =
+    unreadCount > 0
+      ? t(
+          'portal.notifications.bellUnread',
+          'Notifications ({count} unread, { count: unreadCount })'
+        )
+      : t('portal.notifications.bell', 'Notifications');
 
   return (
     <>
@@ -34,11 +46,14 @@ export const NotificationBell = () => {
             borderRadius: '10px',
             width: 38,
             height: 38,
-            '&:hover': { bgcolor: 'var(--pc-surface-2)', color: 'var(--pc-text)' },
+            '&:hover': {
+              bgcolor: 'var(--pc-surface-2)',
+              color: 'var(--pc-text)',
+            },
           }}
         >
-          <Badge badgeContent={unreadCount} color="error" max={99}>
-            <BellIcon fontSize="small" />
+          <Badge badgeContent={unreadCount} color='error' max={99}>
+            <BellIcon fontSize='small' />
           </Badge>
         </IconButton>
       </Tooltip>
@@ -49,11 +64,39 @@ export const NotificationBell = () => {
         onClose={() => setAnchor(null)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-        slotProps={{ paper: { sx: { width: 380, maxWidth: 'calc(100vw - 32px)', mt: 1, borderRadius: '12px', border: '1px solid var(--pc-border)', bgcolor: 'var(--pc-surface)', backgroundImage: 'none' } } }}
+        slotProps={{
+          paper: {
+            sx: {
+              width: 380,
+              maxWidth: 'calc(100vw - 32px)',
+              mt: 1,
+              borderRadius: '12px',
+              border: '1px solid var(--pc-border)',
+              bgcolor: 'var(--pc-surface)',
+              backgroundImage: 'none',
+            },
+          },
+        }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2, py: 1.5, borderBottom: '1px solid var(--pc-border)' }}>
-          <Typography sx={{ fontWeight: 700, color: 'var(--pc-text)' }}>{t('portal.notifications.bell', 'Notifications')}</Typography>
-          <Button size="small" onClick={markAllRead} disabled={unreadCount === 0} sx={{ textTransform: 'none' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            px: 2,
+            py: 1.5,
+            borderBottom: '1px solid var(--pc-border)',
+          }}
+        >
+          <Typography sx={{ fontWeight: 700, color: 'var(--pc-text)' }}>
+            {t('portal.notifications.bell', 'Notifications')}
+          </Typography>
+          <Button
+            size='small'
+            onClick={markAllRead}
+            disabled={unreadCount === 0}
+            sx={{ textTransform: 'none' }}
+          >
             {t('portal.notifications.markAllAsRead', 'Mark all as read')}
           </Button>
         </Box>

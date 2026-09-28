@@ -1,10 +1,10 @@
 'use client';
 
+import { useLanguage } from '@/app/[lang]/contexts/LanguageContext';
+import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import { getSession, signIn, useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTransition } from 'react';
-import { useLanguage } from '@/app/[lang]/contexts/LanguageContext';
-import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 
 /**
  * One sign-in path for everyone. The backend tries prosERP first and falls
@@ -18,7 +18,10 @@ export function useProsControlSignIn() {
   const { setAuthValues } = useJumboAuth();
   const [isRedirecting, startTransition] = useTransition();
 
-  const signInWithCredentials = async (identifier: string, password: string): Promise<boolean> => {
+  const signInWithCredentials = async (
+    identifier: string,
+    password: string
+  ): Promise<boolean> => {
     const result = await signIn('credentials', {
       email: identifier,
       password,
@@ -51,14 +54,18 @@ export function useProsControlSignIn() {
         isAuthenticated: true,
         isLoading: false,
       } as any,
-      { persist: true },
+      { persist: true }
     );
 
     // Only follow same-site paths from the middleware's callbackUrl.
     const callbackUrl = searchParams.get('callbackUrl');
-    const target = callbackUrl && callbackUrl.startsWith('/') && !callbackUrl.startsWith('//') && !callbackUrl.includes('/auth/')
-      ? callbackUrl
-      : `/${lang}/support`;
+    const target =
+      callbackUrl &&
+      callbackUrl.startsWith('/') &&
+      !callbackUrl.startsWith('//') &&
+      !callbackUrl.includes('/auth/')
+        ? callbackUrl
+        : `/${lang}/support`;
 
     startTransition(() => router.push(target));
 
