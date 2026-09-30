@@ -7,6 +7,7 @@ import { TicketConversation } from '@/components/supportLayout/ticket/TicketConv
 import { TicketLoadingState } from '@/components/supportLayout/ticket/TicketLoadingState';
 import { useTicketDetailText } from '@/components/supportLayout/ticket/useTicketDetailText';
 import { useT } from '@/lib/i18n/useT';
+import { useMarkTicketNotificationsRead } from '@/lib/support/NotificationsProvider';
 import type { TicketStatus } from '@/lib/support/types';
 import { useTicketBackNavigation } from '@/lib/support/useTicketBackNavigation';
 import { useTicketThread } from '@/lib/support/useTicketThread';
@@ -41,6 +42,7 @@ export default function CustomerTicketDetailPage() {
   const currentUserId = currentUser?.id ? String(currentUser.id) : '';
 
   const thread = useTicketThread(ticketId, currentUserId, false);
+  useMarkTicketNotificationsRead(ticketId);
   const { goBack, setHasDraft } = useTicketBackNavigation('/support/customer');
   const blockedReason = useComposerBlockedReason(
     thread.ticket?.status ?? 'new'

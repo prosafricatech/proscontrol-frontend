@@ -4,13 +4,21 @@ import { NotificationList } from '@/components/supportLayout/NotificationList';
 import { useT } from '@/lib/i18n/useT';
 import { useSupportNotifications } from '@/lib/support/NotificationsProvider';
 import { Box, Button, Card, Chip, Typography } from '@mui/material';
+import { useState } from 'react';
 import { cardSx, PageHeader } from './shared';
 
 export default function NotificationCenterPage() {
   const t = useT();
-  const { items, unreadCount, loading, markAllRead } =
+  const { items, unreadCount, total, loading, hasMore, loadMore, markAllRead } =
     useSupportNotifications();
+  const [loadingMore, setLoadingMore] = useState(false);
   const isFirstLoad = loading && items.length === 0;
+
+  const loadMoreNotifications = async () => {
+    setLoadingMore(true);
+    await loadMore();
+    setLoadingMore(false);
+  };
 
   return (
     <>
@@ -35,7 +43,7 @@ export default function NotificationCenterPage() {
         <Chip
           color='primary'
           label={t('portal.notifications.allCount', 'All {count}', {
-            count: items.length,
+            count: total,
           })}
         />
         <Chip
@@ -62,6 +70,18 @@ export default function NotificationCenterPage() {
           />
         )}
       </Card>
+
+      {hasMore && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+          <Button
+            variant='outlined'
+            onClick={loadMoreNotifications}
+            disabled={loadingMore}
+          >
+            {t('portal.notifications.loadMore', 'Load more')}
+          </Button>
+        </Box>
+      )}
     </>
   );
 }

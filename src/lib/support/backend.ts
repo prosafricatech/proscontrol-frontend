@@ -1,5 +1,6 @@
 import type {
   ReassignmentEvent,
+  SupportNotification,
   TicketAttachment,
   TicketMessage,
   TicketStatus,
@@ -112,6 +113,52 @@ export function normalizeReassignment(
     to: reassignment.to_user?.name ?? '',
     note: reassignment.reason ?? '',
     at: reassignment.created_at ?? '',
+  };
+}
+
+type BackendNotification = {
+  id: string | number;
+  type?: string;
+  notifiable_type?: string;
+  notifiable_id?: string | number;
+  data?: {
+    subject?: string;
+    ticket_id?: string | number;
+    body?: string;
+  } | null;
+  read_at?: string | null;
+  created_at?: string;
+};
+
+/**
+ * The ticket a notification points at. For `message.sent`, `notifiable_id`
+ * is the message's own id, so the ticket comes from `data.ticket_id`.
+ */
+function notificationTicketId(
+  notification: BackendNotification
+): string | null {
+  if (notification.type === 'message.sent') {
+    return notification.data?.ticket_id
+      ? String(notification.data.ticket_id)
+      : null;
+  }
+  if (notification.notifiable_type === 'ticket' && notification.notifiable_id) {
+    return String(notification.notifiable_id);
+  }
+  return null;
+}
+
+export function normalizeNotification(
+  notification: BackendNotification
+): SupportNotification {
+  return {
+    id: String(notification.id),
+    type: notification.type ?? '',
+    ticketId: notificationTicketId(notification),
+    subject: notification.data?.subject ?? null,
+    preview: notification.data?.body ?? null,
+    readAt: notification.read_at ?? null,
+    createdAt: notification.created_at ?? '',
   };
 }
 

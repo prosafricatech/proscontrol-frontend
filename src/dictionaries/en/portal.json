@@ -111,15 +111,15 @@
     "markAllAsRead": "Mark all as read",
     "viewAll": "View all notifications",
     "caughtUp": "You're all caught up.",
-    "someone": "Someone",
-    "kinds": {
-      "messageOne": "1 new message from {actor}",
-      "messageMany": "{count} new messages from {actor}",
-      "newTicket": "New ticket from {actor}",
-      "assigned": "Ticket assigned to you by {actor}",
-      "activated": "{actor} is now handling your ticket",
-      "closed": "Your ticket was closed"
-    }
+    "types": {
+      "created": "New ticket",
+      "activated": "Your ticket is now being handled",
+      "reassigned": "Ticket reassigned",
+      "closed": "Ticket closed",
+      "message": "New message",
+      "other": "Notification"
+    },
+    "loadMore": "Load more"
   },
   "replies": {
     "title": "Saved Replies",

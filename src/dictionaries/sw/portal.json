@@ -111,15 +111,15 @@
     "markAllAsRead": "Weka zote zimesomwa",
     "viewAll": "Tazama arifa zote",
     "caughtUp": "Hakuna arifa mpya.",
-    "someone": "Mtu fulani",
-    "kinds": {
-      "messageOne": "Ujumbe 1 mpya kutoka kwa {actor}",
-      "messageMany": "Jumbe {count} mpya kutoka kwa {actor}",
-      "newTicket": "Tiketi mpya kutoka kwa {actor}",
-      "assigned": "Umepewa tiketi na {actor}",
-      "activated": "{actor} sasa anashughulikia tiketi yako",
-      "closed": "Tiketi yako imefungwa"
-    }
+    "types": {
+      "created": "Tiketi mpya",
+      "activated": "Tiketi yako sasa inashughulikiwa",
+      "reassigned": "Tiketi imepangwa upya",
+      "closed": "Tiketi imefungwa",
+      "message": "Ujumbe mpya",
+      "other": "Arifa"
+    },
+    "loadMore": "Pakia zaidi"
   },
   "replies": {
     "title": "Majibu Yaliyohifadhiwa",

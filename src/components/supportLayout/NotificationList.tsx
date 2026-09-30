@@ -4,50 +4,163 @@ import { useLanguage } from '@/app/[lang]/contexts/LanguageContext';
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import { useT } from '@/lib/i18n/useT';
 import { useTimeAgo } from '@/lib/i18n/useTimeAgo';
-import {
-  useSupportNotifications,
-  type SupportNotification,
-} from '@/lib/support/NotificationsProvider';
+import { useSupportNotifications } from '@/lib/support/NotificationsProvider';
+import type { SupportNotification } from '@/lib/support/types';
 import {
   PlayCircleOutline as ActivatedIcon,
-  AssignmentInd as AssignedIcon,
   CheckCircleOutline as ClosedIcon,
   ChatBubbleOutline as MessageIcon,
   Inbox as NewTicketIcon,
+  NotificationsNone as OtherIcon,
+  SwapHoriz as ReassignedIcon,
 } from '@mui/icons-material';
 import { Box, ButtonBase, Typography } from '@mui/material';
 import { useRouter } from 'next/navigation';
+import type { ReactNode } from 'react';
 
-const KIND_STYLE: Record<
-  SupportNotification['kind'],
-  { icon: React.ReactNode; bg: string; color: string }
-> = {
-  messages: {
-    icon: <MessageIcon fontSize='small' />,
-    bg: 'var(--pc-accent-soft)',
-    color: 'var(--pc-accent)',
-  },
-  new_ticket: {
+type TypeDisplay = {
+  icon: ReactNode;
+  bg: string;
+  color: string;
+  titleKey: string;
+  title: string;
+};
+
+const TYPE_DISPLAY: Record<string, TypeDisplay> = {
+  'ticket.created': {
     icon: <NewTicketIcon fontSize='small' />,
     bg: 'var(--pc-warning-soft)',
     color: 'var(--pc-warning)',
+    titleKey: 'portal.notifications.types.created',
+    title: 'New ticket',
   },
-  assigned: {
-    icon: <AssignedIcon fontSize='small' />,
-    bg: 'var(--pc-purple-soft)',
-    color: 'var(--pc-purple)',
-  },
-  activated: {
+  'ticket.activated': {
     icon: <ActivatedIcon fontSize='small' />,
     bg: 'var(--pc-success-soft)',
     color: 'var(--pc-success)',
+    titleKey: 'portal.notifications.types.activated',
+    title: 'Your ticket is now being handled',
   },
-  closed: {
+  'ticket.reassigned': {
+    icon: <ReassignedIcon fontSize='small' />,
+    bg: 'var(--pc-purple-soft)',
+    color: 'var(--pc-purple)',
+    titleKey: 'portal.notifications.types.reassigned',
+    title: 'Ticket reassigned',
+  },
+  'ticket.closed': {
     icon: <ClosedIcon fontSize='small' />,
     bg: 'var(--pc-surface-2)',
     color: 'var(--pc-text-3)',
+    titleKey: 'portal.notifications.types.closed',
+    title: 'Ticket closed',
+  },
+  'message.sent': {
+    icon: <MessageIcon fontSize='small' />,
+    bg: 'var(--pc-accent-soft)',
+    color: 'var(--pc-accent)',
+    titleKey: 'portal.notifications.types.message',
+    title: 'New message',
   },
 };
+
+// For notification types added to the backend after this frontend was built.
+const FALLBACK_DISPLAY: TypeDisplay = {
+  icon: <OtherIcon fontSize='small' />,
+  bg: 'var(--pc-surface-2)',
+  color: 'var(--pc-text-3)',
+  titleKey: 'portal.notifications.types.other',
+  title: 'Notification',
+};
+
+interface NotificationRowProps {
+  notification: SupportNotification;
+  onOpen: (notification: SupportNotification) => void;
+}
+
+function NotificationRow({ notification, onOpen }: NotificationRowProps) {
+  const t = useT();
+  const timeAgo = useTimeAgo();
+  const display = TYPE_DISPLAY[notification.type] ?? FALLBACK_DISPLAY;
+  const isUnread = !notification.readAt;
+  const detail = notification.preview ?? notification.subject;
+
+  return (
+    <ButtonBase
+      onClick={() => onOpen(notification)}
+      sx={{
+        width: '100%',
+        display: 'flex',
+        alignItems: 'flex-start',
+        gap: 1.5,
+        textAlign: 'left',
+        px: 2,
+        py: 1.5,
+        borderBottom: '1px solid var(--pc-border)',
+        bgcolor: isUnread ? 'var(--pc-accent-softer)' : 'transparent',
+        '&:hover': { bgcolor: 'var(--pc-surface-2)' },
+      }}
+    >
+      <Box
+        sx={{
+          width: 34,
+          height: 34,
+          borderRadius: '10px',
+          display: 'grid',
+          placeItems: 'center',
+          flexShrink: 0,
+          bgcolor: display.bg,
+          color: display.color,
+        }}
+      >
+        {display.icon}
+      </Box>
+
+      <Box sx={{ flex: 1, minWidth: 0 }}>
+        <Typography
+          sx={{
+            fontSize: '0.9rem',
+            fontWeight: isUnread ? 700 : 500,
+            color: 'var(--pc-text)',
+          }}
+        >
+          {t(display.titleKey, display.title)}
+        </Typography>
+        {detail && (
+          <Typography
+            sx={{
+              fontSize: '0.82rem',
+              color: 'var(--pc-text-3)',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {detail}
+          </Typography>
+        )}
+        <Typography
+          sx={{ fontSize: '0.75rem', color: 'var(--pc-text-4)', mt: 0.25 }}
+        >
+          {timeAgo(notification.createdAt)}
+        </Typography>
+      </Box>
+
+      {isUnread && (
+        <Box
+          sx={{
+            width: 8,
+            height: 8,
+            borderRadius: '50%',
+            bgcolor: '#2563eb',
+            mt: 0.75,
+            flexShrink: 0,
+          }}
+        />
+      )}
+    </ButtonBase>
+  );
+}
 
 interface NotificationListProps {
   limit?: number;
@@ -55,60 +168,29 @@ interface NotificationListProps {
   emptyText?: string;
 }
 
-export const NotificationList = ({
+export function NotificationList({
   limit,
   onNavigate,
   emptyText,
-}: NotificationListProps) => {
+}: NotificationListProps) {
   const t = useT();
-  const timeAgo = useTimeAgo();
-  const { items, markRead } = useSupportNotifications();
-  const { authData } = useJumboAuth();
   const lang = useLanguage();
   const router = useRouter();
+  const { authData } = useJumboAuth();
+  const { items, markRead } = useSupportNotifications();
   const isStaff = authData?.authUser?.user?.is_staff === true;
   const visible = limit ? items.slice(0, limit) : items;
 
-  // Sentences are built here (not on the server) so they follow the page language.
-  const describe = (item: SupportNotification) => {
-    const actor =
-      item.actorName || t('portal.notifications.someone', 'Someone');
-    switch (item.kind) {
-      case 'messages':
-        return item.count === '1'
-          ? t(
-              'portal.notifications.kinds.messageOne',
-              '1 new message from {actor}',
-              { actor }
-            )
-          : t(
-              'portal.notifications.kinds.messageMany',
-              '{count} new messages from {actor}',
-              { count: item.count ?? '', actor }
-            );
-      case 'new_ticket':
-        return t(
-          'portal.notifications.kinds.newTicket',
-          'New ticket from {actor}',
-          { actor }
-        );
-      case 'assigned':
-        return t(
-          'portal.notifications.kinds.assigned',
-          'Ticket assigned to you by {actor}',
-          { actor }
-        );
-      case 'activated':
-        return t(
-          'portal.notifications.kinds.activated',
-          '{actor} is now handling your ticket',
-          { actor }
-        );
-      case 'closed':
-        return t('portal.notifications.kinds.closed', 'Your ticket was closed');
-      default:
-        return item.subject;
-    }
+  const openNotification = (notification: SupportNotification) => {
+    markRead(notification.id);
+    if (!notification.ticketId) return;
+
+    onNavigate?.();
+    router.push(
+      isStaff
+        ? `/${lang}/support/staff/tickets/${notification.ticketId}`
+        : `/${lang}/support/customer/${notification.ticketId}`
+    );
   };
 
   if (visible.length === 0) {
@@ -129,93 +211,13 @@ export const NotificationList = ({
 
   return (
     <Box>
-      {visible.map((item) => {
-        const style = KIND_STYLE[item.kind];
-        return (
-          <ButtonBase
-            key={item.id}
-            onClick={() => {
-              markRead(item.id);
-              onNavigate?.();
-              router.push(
-                isStaff
-                  ? `/${lang}/support/staff/tickets/${item.ticketId}`
-                  : `/${lang}/support/customer/${item.ticketId}`
-              );
-            }}
-            sx={{
-              width: '100%',
-              display: 'flex',
-              alignItems: 'flex-start',
-              gap: 1.5,
-              textAlign: 'left',
-              px: 2,
-              py: 1.5,
-              borderBottom: '1px solid var(--pc-border)',
-              bgcolor: item.unread ? 'var(--pc-accent-softer)' : 'transparent',
-              '&:hover': { bgcolor: 'var(--pc-surface-2)' },
-            }}
-          >
-            <Box
-              sx={{
-                width: 34,
-                height: 34,
-                borderRadius: '10px',
-                display: 'grid',
-                placeItems: 'center',
-                flexShrink: 0,
-                bgcolor: style.bg,
-                color: style.color,
-              }}
-            >
-              {style.icon}
-            </Box>
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography
-                sx={{
-                  fontSize: '0.9rem',
-                  fontWeight: item.unread ? 700 : 500,
-                  color: 'var(--pc-text)',
-                }}
-              >
-                {describe(item)}
-              </Typography>
-              <Typography
-                sx={{
-                  fontSize: '0.82rem',
-                  color: 'var(--pc-text-3)',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {item.subject}
-              </Typography>
-              <Typography
-                sx={{
-                  fontSize: '0.75rem',
-                  color: 'var(--pc-text-4)',
-                  mt: 0.25,
-                }}
-              >
-                {timeAgo(item.at)}
-              </Typography>
-            </Box>
-            {item.unread && (
-              <Box
-                sx={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: '50%',
-                  bgcolor: '#2563eb',
-                  mt: 0.75,
-                  flexShrink: 0,
-                }}
-              />
-            )}
-          </ButtonBase>
-        );
-      })}
+      {visible.map((notification) => (
+        <NotificationRow
+          key={notification.id}
+          notification={notification}
+          onOpen={openNotification}
+        />
+      ))}
     </Box>
   );
-};
+}

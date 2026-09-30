@@ -11,147 +11,210 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-
-export type SupportNotification = {
-  id: string;
-  kind: 'new_ticket' | 'assigned' | 'activated' | 'closed' | 'messages';
-  actorName: string | null;
-  count: string | null;
-  subject: string;
-  at: string;
-  ticketId: string;
-};
+import type { SupportNotification } from './types';
 
 type NotificationsContextValue = {
-  items: (SupportNotification & { unread: boolean })[];
+  /** Loaded notifications, newest first (page 1, plus any pages loaded with loadMore). */
+  items: SupportNotification[];
   unreadCount: number;
+  /** Total notifications on the server (not just the loaded pages). */
+  total: number;
   loading: boolean;
+  hasMore: boolean;
+  /** Reload the first page (e.g. when the bell opens). */
   refresh: () => Promise<void>;
+  loadMore: () => Promise<void>;
   markRead: (id: string) => void;
   markAllRead: () => void;
+  /** Mark every unread notification about this ticket as read (the user is viewing it). */
+  markTicketRead: (ticketId: string) => void;
 };
 
-// Derived notifications are cheap to miss for a minute; see the API route for cost.
-const POLL_INTERVAL_MS = 60000;
-// "Read" state lives in the browser until the backend has a notifications table.
-const SEEN_STORAGE_PREFIX = 'pc-notifications-seen:';
-const MAX_SEEN = 500;
+// Only the unread count is polled; the list is reloaded when the count changes.
+const UNREAD_POLL_INTERVAL_MS = 30000;
 
 const NotificationsContext = createContext<NotificationsContextValue | null>(
   null
 );
 
-function loadSeen(key: string): string[] {
-  try {
-    const stored = JSON.parse(window.localStorage.getItem(key) || '[]');
-    return Array.isArray(stored) ? stored : [];
-  } catch {
-    return [];
-  }
+type PagePayload = {
+  data?: SupportNotification[];
+  meta?: { current_page: number; last_page: number; total: number };
+};
+
+async function fetchPage(page: number): Promise<PagePayload | null> {
+  const response = await fetch(`/api/support/notifications?page=${page}`, {
+    cache: 'no-store',
+  });
+  return response.ok ? response.json() : null;
 }
 
-function saveSeen(key: string, seen: string[]) {
-  try {
-    window.localStorage.setItem(key, JSON.stringify(seen.slice(-MAX_SEEN)));
-  } catch {
-    // Storage unavailable: read state just won't survive a reload.
-  }
+async function fetchUnreadCount(): Promise<number | null> {
+  const response = await fetch('/api/support/notifications/unread-count', {
+    cache: 'no-store',
+  });
+  if (!response.ok) return null;
+
+  const payload = await response.json().catch(() => null);
+  return typeof payload?.data?.count === 'number' ? payload.data.count : null;
 }
 
 /**
- * One notifications poller for the whole support portal, so every page's bell
- * shares the same data instead of each page fetching its own.
+ * The signed-in user's notifications, from the backend notifications API.
+ * One provider for the whole support portal, so every page's bell shares it.
  */
 export function NotificationsProvider({ children }: { children: ReactNode }) {
   const { authData } = useJumboAuth();
   const userId = authData?.authUser?.user?.id
     ? String(authData.authUser.user.id)
     : '';
-  const seenKey = `${SEEN_STORAGE_PREFIX}${userId}`;
 
-  const [rawItems, setRawItems] = useState<SupportNotification[]>([]);
-  const [seen, setSeen] = useState<string[]>([]);
+  const [items, setItems] = useState<SupportNotification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  const inFlight = useRef(false);
-
-  useEffect(() => {
-    if (userId) setSeen(loadSeen(seenKey));
-  }, [userId, seenKey]);
+  const [page, setPage] = useState(1);
+  const [lastPage, setLastPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const lastSeenUnreadCount = useRef<number | null>(null);
 
   const refresh = useCallback(async () => {
-    if (!userId || inFlight.current) return;
-    inFlight.current = true;
+    if (!userId) return;
+
     try {
-      const response = await fetch('/api/support/notifications', {
-        cache: 'no-store',
-      });
-      const payload = await response.json().catch(() => null);
-      if (response.ok && Array.isArray(payload?.data?.items)) {
-        setRawItems(payload.data.items);
+      const [firstPage, count] = await Promise.all([
+        fetchPage(1),
+        fetchUnreadCount(),
+      ]);
+      if (firstPage?.data) {
+        setItems(firstPage.data);
+        setPage(1);
+        setLastPage(firstPage.meta?.last_page ?? 1);
+        setTotal(firstPage.meta?.total ?? firstPage.data.length);
+      }
+      if (count !== null) {
+        setUnreadCount(count);
+        lastSeenUnreadCount.current = count;
       }
     } catch {
-      // Keep the last list; the next poll will retry.
+      // Keep what we have; the next poll retries.
     } finally {
-      inFlight.current = false;
       setLoading(false);
     }
   }, [userId]);
 
+  const loadMore = useCallback(async () => {
+    if (page >= lastPage) return;
+
+    const nextPage = await fetchPage(page + 1).catch(() => null);
+    if (!nextPage?.data) return;
+
+    setItems((current) => {
+      const knownIds = new Set(current.map((item) => item.id));
+      return [
+        ...current,
+        ...nextPage.data!.filter((item) => !knownIds.has(item.id)),
+      ];
+    });
+    setPage(page + 1);
+    setLastPage(nextPage.meta?.last_page ?? lastPage);
+  }, [page, lastPage]);
+
+  // Poll the cheap unread count; reload the list only when it changed.
   useEffect(() => {
     if (!userId) return;
+
     refresh();
 
-    const interval = window.setInterval(() => {
-      if (document.visibilityState === 'visible') refresh();
-    }, POLL_INTERVAL_MS);
-    const onVisibilityChange = () => {
-      if (document.visibilityState === 'visible') refresh();
+    const checkForNew = async () => {
+      if (document.visibilityState !== 'visible') return;
+
+      const count = await fetchUnreadCount().catch(() => null);
+      if (count !== null && count !== lastSeenUnreadCount.current) {
+        refresh();
+      }
     };
-    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    const interval = window.setInterval(checkForNew, UNREAD_POLL_INTERVAL_MS);
+    document.addEventListener('visibilitychange', checkForNew);
 
     return () => {
       window.clearInterval(interval);
-      document.removeEventListener('visibilitychange', onVisibilityChange);
+      document.removeEventListener('visibilitychange', checkForNew);
     };
   }, [userId, refresh]);
 
-  const markRead = useCallback(
-    (id: string) => {
-      setSeen((current) => {
-        if (current.includes(id)) return current;
-        const next = [...current, id];
-        saveSeen(seenKey, next);
-        return next;
-      });
-    },
-    [seenKey]
-  );
+  // Latest items for callbacks that must not re-create on every change.
+  const itemsRef = useRef(items);
+  itemsRef.current = items;
+
+  const markRead = useCallback((id: string) => {
+    const target = itemsRef.current.find((item) => item.id === id);
+    if (!target || target.readAt) return;
+
+    const now = new Date().toISOString();
+    setItems((current) =>
+      current.map((item) => (item.id === id ? { ...item, readAt: now } : item))
+    );
+
+    // Update the badge right away; the server call makes it permanent.
+    setUnreadCount((count) => Math.max(0, count - 1));
+    lastSeenUnreadCount.current = Math.max(
+      0,
+      (lastSeenUnreadCount.current ?? 1) - 1
+    );
+    fetch(`/api/support/notifications/${id}/read`, { method: 'PATCH' }).catch(
+      () => undefined
+    );
+  }, []);
 
   const markAllRead = useCallback(() => {
-    setSeen((current) => {
-      const next = Array.from(
-        new Set([...current, ...rawItems.map((item) => item.id)])
-      );
-      saveSeen(seenKey, next);
-      return next;
-    });
-  }, [rawItems, seenKey]);
+    const now = new Date().toISOString();
+    setItems((current) =>
+      current.map((item) => (item.readAt ? item : { ...item, readAt: now }))
+    );
+    setUnreadCount(0);
+    lastSeenUnreadCount.current = 0;
+    fetch('/api/support/notifications/read-all', { method: 'PATCH' }).catch(
+      () => undefined
+    );
+  }, []);
 
-  const value = useMemo(() => {
-    const seenSet = new Set(seen);
-    const items = rawItems.map((item) => ({
-      ...item,
-      unread: !seenSet.has(item.id),
-    }));
-    return {
+  const markTicketRead = useCallback(
+    (ticketId: string) => {
+      itemsRef.current
+        .filter((item) => item.ticketId === ticketId && !item.readAt)
+        .forEach((item) => markRead(item.id));
+    },
+    [markRead]
+  );
+
+  const value = useMemo(
+    () => ({
       items,
-      unreadCount: items.filter((item) => item.unread).length,
+      unreadCount,
+      total,
       loading,
+      hasMore: page < lastPage,
       refresh,
+      loadMore,
       markRead,
       markAllRead,
-    };
-  }, [rawItems, seen, loading, refresh, markRead, markAllRead]);
+      markTicketRead,
+    }),
+    [
+      items,
+      unreadCount,
+      total,
+      loading,
+      page,
+      lastPage,
+      refresh,
+      loadMore,
+      markRead,
+      markAllRead,
+      markTicketRead,
+    ]
+  );
 
   return (
     <NotificationsContext.Provider value={value}>
@@ -168,4 +231,21 @@ export function useSupportNotifications() {
     );
   }
   return context;
+}
+
+/**
+ * While a ticket is open, mark its notifications read (including ones that
+ * arrive while the user is looking at the conversation).
+ */
+export function useMarkTicketNotificationsRead(ticketId: string | undefined) {
+  const { items, markTicketRead } = useSupportNotifications();
+  const hasUnreadForTicket =
+    !!ticketId &&
+    items.some((item) => item.ticketId === ticketId && !item.readAt);
+
+  useEffect(() => {
+    if (ticketId && hasUnreadForTicket) {
+      markTicketRead(ticketId);
+    }
+  }, [ticketId, hasUnreadForTicket, markTicketRead]);
 }

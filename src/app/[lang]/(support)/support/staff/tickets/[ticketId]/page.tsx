@@ -8,6 +8,7 @@ import { TicketDetailsPanel } from '@/components/supportLayout/ticket/TicketDeta
 import { TicketLoadingState } from '@/components/supportLayout/ticket/TicketLoadingState';
 import { useTicketDetailText } from '@/components/supportLayout/ticket/useTicketDetailText';
 import { useFormatDate, useT } from '@/lib/i18n/useT';
+import { useMarkTicketNotificationsRead } from '@/lib/support/NotificationsProvider';
 import type { Ticket } from '@/lib/support/types';
 import { useTicketBackNavigation } from '@/lib/support/useTicketBackNavigation';
 import { useTicketThread } from '@/lib/support/useTicketThread';
@@ -47,6 +48,7 @@ export default function StaffTicketDetailPage() {
   const staffLabel = t('portal.common.staff', 'Staff');
 
   const thread = useTicketThread(ticketId, currentUserId, true);
+  useMarkTicketNotificationsRead(ticketId);
   const { goBack, setHasDraft } = useTicketBackNavigation(
     '/support/staff/tickets'
   );
