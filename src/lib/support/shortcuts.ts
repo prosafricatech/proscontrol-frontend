@@ -5,6 +5,7 @@ export type ShortcutAction =
   | { type: 'help' }
   | { type: 'toggle-theme' }
   | { type: 'toggle-language' }
+  | { type: 'toggle-push' }
   | { type: 'focus-reply' };
 
 export type ShortcutDefinition = {
@@ -53,6 +54,14 @@ export const SHORTCUTS: ShortcutDefinition[] = [
     group: 'General',
     roles: BOTH,
     action: { type: 'toggle-language' },
+  },
+  {
+    id: 'desktopNotifications',
+    keys: 'n',
+    description: 'Turn desktop notifications on / off',
+    group: 'General',
+    roles: BOTH,
+    action: { type: 'toggle-push' },
   },
 
   {

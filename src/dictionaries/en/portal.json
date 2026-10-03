@@ -270,7 +270,8 @@
       "focusReply": "Focus the reply box",
       "send": "Send message",
       "newLine": "New line",
-      "leave": "Leave the conversation (kept while you have an unsent draft)"
+      "leave": "Leave the conversation (kept while you have an unsent draft)",
+      "desktopNotifications": "Turn desktop notifications on / off"
     },
     "groups": {
       "general": "General",
@@ -325,6 +326,8 @@
     "blocked": "Blocked in your browser. Allow notifications for this site in the browser’s site settings, then switch this on.",
     "unsupported": "Not available in this browser.",
     "failed": "Couldn’t change desktop notifications. Please try again.",
-    "unconfigured": "Not set up yet. An administrator needs to add the Firebase keys."
+    "unconfigured": "Not set up yet. An administrator needs to add the Firebase keys.",
+    "turnedOn": "Desktop notifications are on.",
+    "turnedOff": "Desktop notifications are off."
   }
 }

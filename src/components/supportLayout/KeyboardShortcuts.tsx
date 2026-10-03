@@ -3,6 +3,7 @@
 import { useLanguage } from '@/app/[lang]/contexts/LanguageContext';
 import { useColorMode } from '@/app/providers/ColorModeProvider';
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
+import { useTogglePush } from '@/components/supportLayout/useTogglePush';
 import { useSwitchLocale } from '@/lib/i18n/useSwitchLocale';
 import { useT } from '@/lib/i18n/useT';
 import {
@@ -119,6 +120,7 @@ export function KeyboardShortcutsProvider({
   const lang = useLanguage();
   const { toggleMode } = useColorMode();
   const { switchToNext: switchLanguage } = useSwitchLocale();
+  const togglePush = useTogglePush();
   const { enqueueSnackbar } = useSnackbar();
   const { authData } = useJumboAuth();
   const role =
@@ -137,6 +139,7 @@ export function KeyboardShortcutsProvider({
       const { action } = shortcut;
       if (action.type === 'help') setHelpOpen(true);
       if (action.type === 'toggle-theme') toggleMode();
+      if (action.type === 'toggle-push') togglePush();
       if (action.type === 'focus-reply') {
         window.dispatchEvent(new Event(FOCUS_REPLY_EVENT));
       }
@@ -156,7 +159,7 @@ export function KeyboardShortcutsProvider({
       if (action.type === 'toggle-language') switchLanguage();
       if (action.type === 'navigate') router.push(`/${lang}${action.path}`);
     },
-    [enqueueSnackbar, lang, router, switchLanguage, t, toggleMode]
+    [enqueueSnackbar, lang, router, switchLanguage, t, toggleMode, togglePush]
   );
 
   useEffect(() => {

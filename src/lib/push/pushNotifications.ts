@@ -16,6 +16,9 @@ const VAPID_KEY = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
 const ENABLED_KEY = 'pc-push-enabled';
 const TOKEN_KEY = 'pc-push-token';
 
+/** Fired on window (detail: PushStatus) whenever push is switched on or off. */
+export const PUSH_STATUS_EVENT = 'pc:push-status';
+
 export type PushStatus =
   /** The NEXT_PUBLIC_FIREBASE_* config or the VAPID key is missing. */
   | 'unconfigured'
@@ -25,6 +28,10 @@ export type PushStatus =
   | 'blocked'
   | 'off'
   | 'on';
+
+function announce(status: PushStatus) {
+  window.dispatchEvent(new CustomEvent(PUSH_STATUS_EVENT, { detail: status }));
+}
 
 function readStorage(key: string): string | null {
   try {
@@ -95,11 +102,14 @@ export async function getPushStatus(): Promise<PushStatus> {
 export async function enablePush(): Promise<PushStatus> {
   const permission = await Notification.requestPermission();
   if (permission !== 'granted') {
-    return permission === 'denied' ? 'blocked' : 'off';
+    const status = permission === 'denied' ? 'blocked' : 'off';
+    announce(status);
+    return status;
   }
 
   await registerBrowser();
   writeStorage(ENABLED_KEY, '1');
+  announce('on');
 
   return 'on';
 }
@@ -108,6 +118,7 @@ export async function disablePush(): Promise<void> {
   const token = readStorage(TOKEN_KEY);
   writeStorage(ENABLED_KEY, null);
   writeStorage(TOKEN_KEY, null);
+  announce('off');
 
   if (token) {
     await sendToken('DELETE', token).catch(() => undefined);
@@ -117,6 +128,25 @@ export async function disablePush(): Promise<void> {
   if (messaging) {
     await deleteToken(messaging).catch(() => undefined);
   }
+}
+
+/**
+ * Flips push for this browser (the keyboard shortcut). Returns the new
+ * status; when push can't be used, returns why (blocked, unsupported…).
+ * Must run from a key press or click, like enablePush.
+ */
+export async function togglePush(): Promise<PushStatus> {
+  const status = await getPushStatus();
+
+  if (status === 'on') {
+    await disablePush();
+    return 'off';
+  }
+  if (status === 'off') {
+    return enablePush();
+  }
+
+  return status;
 }
 
 /** On app load: re-register if the user switched push on earlier. */

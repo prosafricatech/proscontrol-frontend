@@ -6,6 +6,7 @@ import {
   disablePush,
   enablePush,
   getPushStatus,
+  PUSH_STATUS_EVENT,
   type PushStatus,
 } from '@/lib/push/pushNotifications';
 import { NotificationsActiveOutlined as PushIcon } from '@mui/icons-material';
@@ -54,6 +55,14 @@ export function DesktopNotificationsCard() {
 
   useEffect(() => {
     getPushStatus().then(setStatus);
+
+    // Stay in sync when the keyboard shortcut switches push on this page.
+    const onStatusChange = (event: Event) => {
+      setStatus((event as CustomEvent<PushStatus>).detail);
+    };
+    window.addEventListener(PUSH_STATUS_EVENT, onStatusChange);
+
+    return () => window.removeEventListener(PUSH_STATUS_EVENT, onStatusChange);
   }, []);
 
   const toggle = async (turnOn: boolean) => {

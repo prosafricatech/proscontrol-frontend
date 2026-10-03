@@ -270,7 +270,8 @@
       "focusReply": "Nenda kwenye kisanduku cha kujibu",
       "send": "Tuma ujumbe",
       "newLine": "Mstari mpya",
-      "leave": "Toka kwenye mazungumzo (haitoki ukiwa na ujumbe ambao haujatumwa)"
+      "leave": "Toka kwenye mazungumzo (haitoki ukiwa na ujumbe ambao haujatumwa)",
+      "desktopNotifications": "Washa / zima arifa za kompyuta"
     },
     "groups": {
       "general": "Jumla",
@@ -325,6 +326,8 @@
     "blocked": "Zimezuiwa na kivinjari chako. Ruhusu arifa kwa tovuti hii kwenye mipangilio ya kivinjari, kisha uziwashe.",
     "unsupported": "Hazipatikani kwenye kivinjari hiki.",
     "failed": "Imeshindikana kubadilisha arifa za kompyuta. Tafadhali jaribu tena.",
-    "unconfigured": "Bado hazijawekwa. Msimamizi anahitaji kuongeza funguo za Firebase."
+    "unconfigured": "Bado hazijawekwa. Msimamizi anahitaji kuongeza funguo za Firebase.",
+    "turnedOn": "Arifa za kompyuta zimewashwa.",
+    "turnedOff": "Arifa za kompyuta zimezimwa."
   }
 }
