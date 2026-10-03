@@ -89,14 +89,6 @@
     refresh?: boolean;
   }
   
-  export interface TokenMetadata {
-    geolocation_accuracy?: number;
-    latitude?: number;
-    longitude?: number;
-    fcm_token?: string;
-    [key: string]: any;
-  }
-  
   export interface BasicAuthContextType {
     signUp: (
       userData: any, 

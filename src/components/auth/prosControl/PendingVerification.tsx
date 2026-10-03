@@ -2,6 +2,7 @@
 
 import { useDictionary } from '@/app/[lang]/contexts/DictionaryContext';
 import { useLanguage } from '@/app/[lang]/contexts/LanguageContext';
+import { signOutOfBackend } from '@/lib/support/signOutOfBackend';
 import { Box, CircularProgress, Typography } from '@mui/material';
 import { signOut, useSession } from 'next-auth/react';
 import { authLinkSx } from './AuthField';
@@ -20,7 +21,10 @@ export const PendingVerification = () => {
   const { data: session, status } = useSession();
   const email = session?.user?.email;
 
-  const handleSignOut = () => signOut({ callbackUrl: `/${lang}/auth/signin` });
+  const handleSignOut = async () => {
+    await signOutOfBackend();
+    await signOut({ callbackUrl: `/${lang}/auth/signin` });
+  };
 
   return (
     <AuthShell

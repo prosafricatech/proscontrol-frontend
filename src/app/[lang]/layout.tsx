@@ -9,7 +9,7 @@ import { Providers } from '../providers';
 import { getDictionary } from './dictionaries';
 import { DictionaryProvider } from './contexts/DictionaryContext';
 import { LanguageProvider } from './contexts/LanguageContext';
-import { colorModeInitScript } from '@/app/providers/ColorModeProvider';
+import { ColorModeScript } from '@/app/providers/ColorModeScript';
 
 interface RootLayoutProps {
   children: ReactNode;
@@ -86,12 +86,12 @@ export default async function RootLayout({ children, params }: RootLayoutProps) 
   return (
     <html lang={lang} data-lt-installed="true" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: colorModeInitScript }} />
         <link rel="manifest" href={`/api/manifest?lang=${lang}`} />
         <link rel="icon" href="/assets/images/icons/logo512.png" />
         <link rel="apple-touch-icon" href="/assets/images/icons/logo512.png" />
       </head>
       <body cz-shortcut-listen="true">
+        <ColorModeScript />
         <div id="root">
           <LanguageProvider lang={lang}>
             <DictionaryProvider dictionary={dictionary}>

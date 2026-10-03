@@ -1,4 +1,5 @@
 import type {
+  ActivityEntry,
   ReassignmentEvent,
   SupportNotification,
   TicketAttachment,
@@ -159,6 +160,59 @@ export function normalizeNotification(
     preview: notification.data?.body ?? null,
     readAt: notification.read_at ?? null,
     createdAt: notification.created_at ?? '',
+  };
+}
+
+type BackendActivityEntry = {
+  id: string | number;
+  action?: string;
+  actor?: { name?: string; email?: string; is_staff?: boolean } | null;
+  subject_type?: string;
+  subject_id?: string | number;
+  properties?: {
+    subject?: string;
+    from_name?: string | null;
+    to_name?: string | null;
+    reason?: string | null;
+    method?: string | null;
+    identifier?: string | null;
+    account_type?: 'staff' | 'customer' | null;
+    channel?: string | null;
+    ip_address?: string | null;
+    user_agent?: string | null;
+  } | null;
+  created_at?: string;
+};
+
+export function normalizeActivityEntry(
+  entry: BackendActivityEntry
+): ActivityEntry {
+  const properties = entry.properties ?? {};
+
+  return {
+    id: String(entry.id),
+    action: entry.action ?? '',
+    actorName: entry.actor?.name ?? null,
+    actorEmail: entry.actor?.email ?? null,
+    accountType: entry.actor
+      ? entry.actor.is_staff
+        ? 'staff'
+        : 'customer'
+      : (properties.account_type ?? null),
+    ticketId:
+      entry.subject_type === 'ticket' && entry.subject_id
+        ? String(entry.subject_id)
+        : null,
+    subject: properties.subject ?? null,
+    fromName: properties.from_name ?? null,
+    toName: properties.to_name ?? null,
+    reason: properties.reason ?? null,
+    method: properties.method ?? null,
+    identifier: properties.identifier ?? null,
+    channel: properties.channel ?? null,
+    ipAddress: properties.ip_address ?? null,
+    userAgent: properties.user_agent ?? null,
+    createdAt: entry.created_at ?? '',
   };
 }
 

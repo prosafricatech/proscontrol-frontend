@@ -30,7 +30,7 @@ const ColorModeContext = createContext<ColorModeContextValue>({
 export const useColorMode = () => useContext(ColorModeContext);
 
 /**
- * Runs in <head> before paint (see the root layout) so the saved or system
+ * Runs before paint (injected by ColorModeScript) so the saved or system
  * mode is applied without a light flash. Must stay dependency-free.
  */
 export const colorModeInitScript = `(function(){try{var m=localStorage.getItem('${COLOR_MODE_STORAGE_KEY}');if(m!=='light'&&m!=='dark'){m=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-pc-theme',m);}catch(e){document.documentElement.setAttribute('data-pc-theme','light');}})();`;

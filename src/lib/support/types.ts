@@ -75,3 +75,51 @@ export interface SupportNotification {
   readAt: string | null;
   createdAt: string;
 }
+
+/** `action` values the backend writes to the activity log. */
+export type ActivityAction =
+  | 'ticket.created'
+  | 'ticket.activated'
+  | 'ticket.reassigned'
+  | 'ticket.closed'
+  | 'auth.login'
+  | 'auth.login_failed'
+  | 'auth.logout'
+  | 'auth.registered'
+  | 'auth.verified';
+
+/** Groups of actions the activity log can be filtered by. */
+export type ActivityCategory = 'ticket' | 'auth';
+
+/** Whether a staff member or a customer (including guests) acted. */
+export type ActivityActorType = 'staff' | 'customer';
+
+export interface ActivityEntry {
+  id: string;
+  /** An ActivityAction, or a newer action this frontend doesn't know yet. */
+  action: string;
+  actorName: string | null;
+  actorEmail: string | null;
+  /**
+   * The actor's role. For a failed sign-in (no actor) it's the type of the
+   * account that was targeted, or null when the identifier matched nobody.
+   */
+  accountType: ActivityActorType | null;
+  /** Null for sign-in entries, which aren't about a ticket. */
+  ticketId: string | null;
+  subject: string | null;
+  /** Reassignments only. */
+  fromName: string | null;
+  toName: string | null;
+  reason: string | null;
+  /** Sign-ins only: 'proserp' or 'guest'. */
+  method: string | null;
+  /** Failed sign-ins only: the email or phone that was tried. */
+  identifier: string | null;
+  /** Verifications only: 'email' or 'phone'. */
+  channel: string | null;
+  /** As the backend saw it (may be the frontend server's address). */
+  ipAddress: string | null;
+  userAgent: string | null;
+  createdAt: string;
+}

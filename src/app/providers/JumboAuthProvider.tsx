@@ -1,11 +1,9 @@
 'use client';
 
-import { messaging } from '@/app/helpers/init-firebase';
 import organizationServices from '@/components/organizations/organizationServices';
 import authServices from '@/services/auth-services';
 import { AuthOrganization, User } from '@/types/auth-types';
 import { useQueryClient } from '@tanstack/react-query';
-import { getToken } from 'firebase/messaging';
 import React, {
   createContext,
   useCallback,
@@ -13,7 +11,6 @@ import React, {
   useEffect,
   useMemo,
   useReducer,
-  useState,
 } from 'react';
 
 interface AuthUser {
@@ -44,13 +41,6 @@ interface AuthState {
     routes: string[];
     fallbackPath: string | null;
   };
-}
-
-interface TokenMetadata {
-  latitude?: number;
-  longitude?: number;
-  geolocation_accuracy?: number;
-  fcm_token?: string;
 }
 
 interface AuthConfig {
@@ -230,9 +220,6 @@ export const JumboAuthProvider = ({
     ...init(restProps),
     isLoading: true,
   });
-  const [tokenMetadata, setTokenMetadata] = useState<TokenMetadata | null>(
-    null
-  );
   const queryClient = useQueryClient();
 
   // Helper functions
@@ -343,49 +330,6 @@ export const JumboAuthProvider = ({
             { persist: true }
           );
         }
-
-        const getLocation = async () => {
-          if ('geolocation' in navigator) {
-            navigator.geolocation.getCurrentPosition(
-              (position) => {
-                setTokenMetadata((prev) => ({
-                  ...prev,
-                  geolocation_accuracy: position.coords.accuracy,
-                  latitude: position.coords.latitude,
-                  longitude: position.coords.longitude,
-                }));
-              },
-              (error) => console.error('Error getting location:', error)
-            );
-          }
-        };
-
-        const getFCMToken = async () => {
-          Notification.requestPermission().then(async (permission) => {
-            if (permission === 'granted') {
-              return getToken(messaging, {
-                vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
-              })
-                .then((currentToken) => {
-                  if (currentToken) {
-                    setTokenMetadata((metadata) => ({
-                      ...metadata,
-                      fcm_token: currentToken,
-                    }));
-                  }
-                })
-                .catch((err) => {
-                  console.log(
-                    'An error occurred when requesting to receive the token.',
-                    err
-                  );
-                });
-            }
-          });
-          await getLocation();
-        };
-
-        await getFCMToken();
       }
 
       if (!currentUser || refresh) {
@@ -590,17 +534,6 @@ export const JumboAuthProvider = ({
     },
     [authData.authOrganization]
   );
-
-  useEffect(() => {
-    if (tokenMetadata) {
-      authServices.updateAuthTokenMetaData(tokenMetadata);
-    }
-  }, [
-    tokenMetadata?.longitude,
-    tokenMetadata?.latitude,
-    tokenMetadata?.fcm_token,
-    tokenMetadata?.geolocation_accuracy,
-  ]);
 
   useEffect(() => {
     const initializeAuth = async () => {

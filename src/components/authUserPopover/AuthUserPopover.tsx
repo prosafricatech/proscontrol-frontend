@@ -3,6 +3,7 @@
 import { useLanguage } from '@/app/[lang]/contexts/LanguageContext';
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import { useT } from '@/lib/i18n/useT';
+import { signOutOfBackend } from '@/lib/support/signOutOfBackend';
 import { Div } from '@jumbo/shared';
 import LogoutIcon from '@mui/icons-material/Logout';
 import {
@@ -73,6 +74,7 @@ export const AuthUserPopover: React.FC<AuthUserPopoverProps> = ({
 
   const logout = React.useCallback(() => {
     (async () => {
+      await signOutOfBackend();
       await signOut({
         callbackUrl: `/${lang}/auth/signin`,
       });

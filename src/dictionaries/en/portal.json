@@ -88,14 +88,73 @@
   "activity": {
     "title": "Activity Logs",
     "subtitle": "Audit administrative actions across the support workspace.",
-    "filter": "Filter logs",
-    "recent": "Recent activity",
-    "systemEvent": "System audit event · today",
-    "samples": {
-      "reassigned": "Ticket reassigned · TCK-1001 → Lilian M.",
-      "closed": "Ticket closed · TCK-1003",
-      "article": "Article updated · Stock sync guide",
-      "settings": "Settings changed · Email alerts"
+    "empty": "No activity matches these filters.",
+    "loadFailed": "Unable to load the activity log.",
+    "someone": "Someone",
+    "view": "View details",
+    "ticketRef": "Ticket #{id}",
+    "ipAddress": "IP {ip}",
+    "tabs": {
+      "ticket": "Ticket activity",
+      "auth": "Auth trail"
+    },
+    "filters": {
+      "keyword": "Name, email, ticket # or IP",
+      "from": "From",
+      "to": "To",
+      "action": "Action",
+      "allActions": "All actions",
+      "clear": "Clear"
+    },
+    "labels": {
+      "created": "Opened",
+      "activated": "Picked up",
+      "reassigned": "Reassigned",
+      "closed": "Closed",
+      "login": "Signed in",
+      "loginFailed": "Failed sign-in",
+      "logout": "Signed out",
+      "registered": "Registered",
+      "verified": "Verified"
+    },
+    "methods": {
+      "proserp": "prosERP",
+      "guest": "Guest"
+    },
+    "channels": {
+      "email": "Email",
+      "phone": "Phone"
+    },
+    "dialog": {
+      "title": "Audit entry",
+      "close": "Close",
+      "record": "Record",
+      "type": "Type",
+      "ticket": "Ticket",
+      "number": "Number",
+      "subject": "Subject",
+      "user": "User",
+      "attemptedAs": "Tried to sign in as",
+      "ip": "IP address",
+      "timestamp": "Timestamp",
+      "details": "Details",
+      "from": "From",
+      "to": "To",
+      "reason": "Reason",
+      "method": "Signed in with",
+      "channel": "Verified by"
+    },
+    "roles": {
+      "staff": "Staff",
+      "customer": "Customer",
+      "staffAccount": "Staff account",
+      "customerAccount": "Customer account",
+      "unknownAccount": "Unknown account"
+    },
+    "actorTypes": {
+      "all": "All",
+      "staff": "Staff",
+      "customer": "Customers"
     }
   },
   "notifications": {

@@ -88,14 +88,73 @@
   "activity": {
     "title": "Kumbukumbu za Shughuli",
     "subtitle": "Kagua vitendo vya kiutawala katika eneo la kazi la msaada.",
-    "filter": "Chuja kumbukumbu",
-    "recent": "Shughuli za karibuni",
-    "systemEvent": "Tukio la ukaguzi wa mfumo · leo",
-    "samples": {
-      "reassigned": "Tiketi imepangwa upya · TCK-1001 → Lilian M.",
-      "closed": "Tiketi imefungwa · TCK-1003",
-      "article": "Makala imesasishwa · Mwongozo wa kusawazisha stoo",
-      "settings": "Mipangilio imebadilishwa · Arifa za barua pepe"
+    "empty": "Hakuna shughuli zinazolingana na vichujio hivi.",
+    "loadFailed": "Imeshindikana kupakia kumbukumbu za shughuli.",
+    "someone": "Mtu fulani",
+    "view": "Angalia maelezo",
+    "ticketRef": "Tiketi #{id}",
+    "ipAddress": "IP {ip}",
+    "tabs": {
+      "ticket": "Shughuli za tiketi",
+      "auth": "Kumbukumbu za kuingia"
+    },
+    "filters": {
+      "keyword": "Jina, barua pepe, tiketi # au IP",
+      "from": "Kuanzia",
+      "to": "Hadi",
+      "action": "Kitendo",
+      "allActions": "Vitendo vyote",
+      "clear": "Futa"
+    },
+    "labels": {
+      "created": "Imefunguliwa",
+      "activated": "Imechukuliwa",
+      "reassigned": "Imepangwa upya",
+      "closed": "Imefungwa",
+      "login": "Ameingia",
+      "loginFailed": "Kuingia kumeshindikana",
+      "logout": "Ametoka",
+      "registered": "Amejisajili",
+      "verified": "Amethibitishwa"
+    },
+    "methods": {
+      "proserp": "prosERP",
+      "guest": "Mgeni"
+    },
+    "channels": {
+      "email": "Barua pepe",
+      "phone": "Simu"
+    },
+    "dialog": {
+      "title": "Kumbukumbu ya ukaguzi",
+      "close": "Funga",
+      "record": "Rekodi",
+      "type": "Aina",
+      "ticket": "Tiketi",
+      "number": "Namba",
+      "subject": "Mada",
+      "user": "Mtumiaji",
+      "attemptedAs": "Alijaribu kuingia kama",
+      "ip": "Anwani ya IP",
+      "timestamp": "Muda",
+      "details": "Maelezo",
+      "from": "Kutoka",
+      "to": "Kwenda",
+      "reason": "Sababu",
+      "method": "Ameingia kwa",
+      "channel": "Amethibitishwa kwa"
+    },
+    "roles": {
+      "staff": "Mhudumu",
+      "customer": "Mteja",
+      "staffAccount": "Akaunti ya mhudumu",
+      "customerAccount": "Akaunti ya mteja",
+      "unknownAccount": "Akaunti isiyojulikana"
+    },
+    "actorTypes": {
+      "all": "Wote",
+      "staff": "Wahudumu",
+      "customer": "Wateja"
     }
   },
   "notifications": {
