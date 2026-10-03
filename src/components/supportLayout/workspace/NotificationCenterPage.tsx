@@ -1,5 +1,6 @@
 'use client';
 
+import { DesktopNotificationsCard } from '@/components/supportLayout/DesktopNotificationsCard';
 import { NotificationList } from '@/components/supportLayout/NotificationList';
 import { useT } from '@/lib/i18n/useT';
 import { useSupportNotifications } from '@/lib/support/NotificationsProvider';
@@ -38,6 +39,8 @@ export default function NotificationCenterPage() {
           </Button>
         }
       />
+
+      <DesktopNotificationsCard />
 
       <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
         <Chip

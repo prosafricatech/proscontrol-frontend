@@ -317,5 +317,14 @@
   },
   "language": {
     "change": "Badilisha lugha"
+  },
+  "push": {
+    "title": "Arifa za kompyuta",
+    "off": "Pata arifa ibukizi kwenye kifaa hiki tiketi au ujumbe unapokuhitaji.",
+    "on": "Zimewashwa kwa kivinjari hiki. Utapata arifa hata ProsControl ikiwa haijafunguliwa.",
+    "blocked": "Zimezuiwa na kivinjari chako. Ruhusu arifa kwa tovuti hii kwenye mipangilio ya kivinjari, kisha uziwashe.",
+    "unsupported": "Hazipatikani kwenye kivinjari hiki.",
+    "failed": "Imeshindikana kubadilisha arifa za kompyuta. Tafadhali jaribu tena.",
+    "unconfigured": "Bado hazijawekwa. Msimamizi anahitaji kuongeza funguo za Firebase."
   }
 }

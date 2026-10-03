@@ -1,7 +1,8 @@
-import { initializeApp } from "firebase/app";
-import { getMessaging, onMessage, isSupported } from "firebase/messaging";
+import { initializeApp, type FirebaseApp } from 'firebase/app';
+import { getMessaging, isSupported, type Messaging } from 'firebase/messaging';
 
-// Your web app's Firebase configuration
+// Values come from .env.local (project: proscontrol-notifications). They are
+// public identifiers, not secrets.
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -11,37 +12,34 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-const hasFirebaseConfig = Boolean(firebaseConfig.projectId && firebaseConfig.messagingSenderId && firebaseConfig.appId);
+export const isFirebaseConfigured = Boolean(
+  firebaseConfig.projectId &&
+  firebaseConfig.messagingSenderId &&
+  firebaseConfig.appId
+);
 
-// Initialize Firebase App (safe even on server) — only when configured, since
-// an all-undefined config still "succeeds" here but throws later on
-// getMessaging(), which is an easy footgun to hit in environments (e.g. local
-// dev) where the NEXT_PUBLIC_FIREBASE_* env vars simply aren't set.
-const app = hasFirebaseConfig ? initializeApp(firebaseConfig) : null;
+let messagingPromise: Promise<Messaging | null> | null = null;
 
-let messaging: any = null;
+/**
+ * Firebase Cloud Messaging for this browser, or null when it can't be used:
+ * on the server, without the NEXT_PUBLIC_FIREBASE_* config, or in a browser
+ * without push support (e.g. Safari outside an installed web app).
+ */
+export function getFirebaseMessaging(): Promise<Messaging | null> {
+  if (typeof window === 'undefined' || !isFirebaseConfigured) {
+    return Promise.resolve(null);
+  }
 
-// Initialize messaging only in the browser
-if (app && typeof window !== "undefined") {
-  isSupported()
+  messagingPromise ??= isSupported()
     .then((supported) => {
-      if (supported) {
-        messaging = getMessaging(app);
+      if (!supported) {
+        return null;
       }
+      const app: FirebaseApp = initializeApp(firebaseConfig);
+
+      return getMessaging(app);
     })
-    .catch(() => {
-      // Push notifications are optional — never let a messaging setup
-      // failure (unsupported browser, service worker registration issue)
-      // surface as an unhandled error.
-    });
+    .catch(() => null);
+
+  return messagingPromise;
 }
-
-export const onMessageListener = () =>
-  new Promise((resolve) => {
-    if (!messaging) return;
-    onMessage(messaging, (payload) => {
-      resolve(payload);
-    });
-  });
-
-export { messaging };

@@ -4,7 +4,6 @@ import React, { ReactNode } from 'react';
 import { SnackbarProvider, useSnackbar } from 'notistack';
 import { IconButton } from '@mui/material';
 import { CloseOutlined } from '@mui/icons-material';
-import PushNotification from '@/shared/Information/PushNotification';
 
 interface SnackbarCloseButtonProps {
   snackbarKey: string | number;
@@ -32,7 +31,6 @@ export const AppSnackbar: React.FC<AppSnackbarProps> = ({ children }) => {
       maxSnack={3}
     >
       {children}
-      <PushNotification/>
     </SnackbarProvider>
   );
 };

@@ -317,5 +317,14 @@
   },
   "language": {
     "change": "Change language"
+  },
+  "push": {
+    "title": "Desktop notifications",
+    "off": "Get a pop-up on this device when a ticket or message needs you.",
+    "on": "On for this browser. You’ll get a pop-up even when ProsControl isn’t open.",
+    "blocked": "Blocked in your browser. Allow notifications for this site in the browser’s site settings, then switch this on.",
+    "unsupported": "Not available in this browser.",
+    "failed": "Couldn’t change desktop notifications. Please try again.",
+    "unconfigured": "Not set up yet. An administrator needs to add the Firebase keys."
   }
 }
