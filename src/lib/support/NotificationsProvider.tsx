@@ -1,7 +1,10 @@
 'use client';
 
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
-import { isPollingFallbackEnabled } from '@/lib/realtime/echo';
+import {
+  CONNECTED_SAFETY_CHECK_MS,
+  isPollingFallbackEnabled,
+} from '@/lib/realtime/fallback';
 import { useRealtime, useRealtimeEvent } from '@/lib/realtime/RealtimeProvider';
 import { normalizeNotification } from '@/lib/support/normalize';
 import {
@@ -131,10 +134,11 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     refresh();
   }, [refresh]);
 
-  // Fallback polling, only while the WebSocket is down: check the cheap
-  // unread count and reload the list only when it changed.
+  // Check the cheap unread count and reload the list only when it changed:
+  // every 30 s while the WebSocket is down, and as a slow safety check while
+  // it's up (see lib/realtime/fallback.ts).
   useEffect(() => {
-    if (!userId || connected || !isPollingFallbackEnabled) return;
+    if (!userId || !isPollingFallbackEnabled) return;
 
     const checkForNew = async () => {
       if (document.visibilityState !== 'visible') return;
@@ -145,7 +149,10 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       }
     };
 
-    const interval = window.setInterval(checkForNew, UNREAD_POLL_INTERVAL_MS);
+    const interval = window.setInterval(
+      checkForNew,
+      connected ? CONNECTED_SAFETY_CHECK_MS : UNREAD_POLL_INTERVAL_MS
+    );
     document.addEventListener('visibilitychange', checkForNew);
 
     return () => {

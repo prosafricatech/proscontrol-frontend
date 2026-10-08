@@ -1,7 +1,10 @@
 'use client';
 
 import { useT } from '@/lib/i18n/useT';
-import { isPollingFallbackEnabled } from '@/lib/realtime/echo';
+import {
+  CONNECTED_SAFETY_CHECK_MS,
+  isPollingFallbackEnabled,
+} from '@/lib/realtime/fallback';
 import { useRealtime, useRealtimeEvent } from '@/lib/realtime/RealtimeProvider';
 import { normalizeMessage, normalizeTicket } from '@/lib/support/normalize';
 import type {
@@ -11,11 +14,11 @@ import type {
 } from '@/lib/support/types';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-// New messages and ticket changes arrive over the WebSocket. Polling is the
-// fallback while it's down: messages are checked quickly while a conversation
-// is lively and back off step by step when it goes quiet; any activity snaps
-// back to the first step.
-const MESSAGE_POLL_STEPS_MS = [5000, 10000, 15000, 30000];
+// New messages and ticket changes arrive over the WebSocket. Polling is only
+// the fallback while it's down (see lib/realtime/fallback.ts), so it can be
+// gentle: every 15 s while a conversation is lively, backing off to 30 s when
+// it goes quiet; any activity snaps back to the first step.
+const MESSAGE_POLL_STEPS_MS = [15000, 20000, 30000];
 // The ticket itself (status, assignee) changes rarely.
 const TICKET_POLL_MS = 30000;
 // Recent typing keeps polling at the fastest step instead of backing off.
@@ -212,6 +215,22 @@ export function useTicketThread(
       wakePolling.current();
     }
   }, [connected]);
+
+  // Safety check while connected: catches a silent socket (e.g. the backend's
+  // queue worker stopped) that the fallback above can't see.
+  useEffect(() => {
+    if (!ticketId || !connected || !isPollingFallbackEnabled) return;
+
+    const interval = window.setInterval(() => {
+      if (document.visibilityState !== 'visible') return;
+      if (ticketStatusRef.current === 'closed') return;
+
+      fetchMessages(true).catch(() => undefined);
+      fetchTicket().catch(() => undefined);
+    }, CONNECTED_SAFETY_CHECK_MS);
+
+    return () => window.clearInterval(interval);
+  }, [ticketId, connected, fetchMessages, fetchTicket]);
 
   // A message in this ticket, from either side. The sender gets their own
   // message too (other tabs/devices); merging by id drops the duplicate.

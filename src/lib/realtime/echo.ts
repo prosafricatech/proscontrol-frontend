@@ -10,14 +10,6 @@ const USE_TLS = process.env.NEXT_PUBLIC_REVERB_SCHEME === 'https';
 /** False when the NEXT_PUBLIC_REVERB_* values are missing: the app polls instead. */
 export const isRealtimeConfigured = Boolean(KEY && HOST);
 
-/**
- * Polling while the WebSocket is down. On by default; set
- * NEXT_PUBLIC_POLLING_FALLBACK=off to test WebSockets on their own (nothing
- * updates live then unless Reverb and the queue worker are running).
- */
-export const isPollingFallbackEnabled =
-  process.env.NEXT_PUBLIC_POLLING_FALLBACK !== 'off';
-
 type AuthCallback = (error: Error | null, data: any) => void;
 
 /**
