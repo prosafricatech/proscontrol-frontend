@@ -1,6 +1,8 @@
 'use client';
 
 import { useT } from '@/lib/i18n/useT';
+import { useRealtime, useRealtimeEvent } from '@/lib/realtime/RealtimeProvider';
+import { normalizeMessage, normalizeTicket } from '@/lib/support/normalize';
 import type {
   ReassignmentEvent,
   Ticket,
@@ -8,9 +10,10 @@ import type {
 } from '@/lib/support/types';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-// v1 backend has no push channel, so the thread is polled (see API contract).
-// Messages are checked quickly while a conversation is lively and back off
-// step by step when it goes quiet; any activity snaps back to the first step.
+// New messages and ticket changes arrive over the WebSocket. Polling is the
+// fallback while it's down: messages are checked quickly while a conversation
+// is lively and back off step by step when it goes quiet; any activity snaps
+// back to the first step.
 const MESSAGE_POLL_STEPS_MS = [5000, 10000, 15000, 30000];
 // The ticket itself (status, assignee) changes rarely.
 const TICKET_POLL_MS = 30000;
@@ -67,8 +70,11 @@ export function useTicketThread(
   const pollStep = useRef(0);
   const lastActivityAt = useRef(0);
   const wakePolling = useRef<() => void>(() => undefined);
+  const { connected } = useRealtime();
+  const connectedRef = useRef(connected);
 
   messagesRef.current = messages;
+  connectedRef.current = connected;
   ticketStatusRef.current = ticket?.status ?? null;
 
   const fetchTicket = useCallback(async () => {
@@ -152,6 +158,8 @@ export function useTicketThread(
       if (cancelled) return;
       // Closed is final (no reopening), so nothing more can arrive.
       if (ticketStatusRef.current === 'closed') return;
+      // Live over the WebSocket: stop polling until it drops (see below).
+      if (connectedRef.current) return;
 
       if (document.visibilityState === 'visible') {
         const newFromOthers = await fetchMessages(true).catch(() => 0);
@@ -195,6 +203,38 @@ export function useTicketThread(
       wakePolling.current = () => undefined;
     };
   }, [ticketId, fetchTicket, fetchMessages, fetchReassignments]);
+
+  // The WebSocket dropped: restart the polling fallback straight away.
+  useEffect(() => {
+    if (!connected) {
+      wakePolling.current();
+    }
+  }, [connected]);
+
+  // A message in this ticket, from either side. The sender gets their own
+  // message too (other tabs/devices); merging by id drops the duplicate.
+  useRealtimeEvent('message.sent', (payload) => {
+    if (String(payload?.ticket_id) !== ticketId) return;
+
+    setMessages((current) =>
+      mergeMessages(current, [normalizeMessage(payload)])
+    );
+  });
+
+  // Status or assignee changed (activate, reassign, close).
+  useRealtimeEvent('ticket.updated', (payload) => {
+    if (String(payload?.id) !== ticketId) return;
+
+    setTicket(normalizeTicket(payload));
+    // The payload has no reassignment history (staff-only data).
+    fetchReassignments();
+  });
+
+  // Back online after a drop: fetch what may have arrived in between.
+  useRealtimeEvent('reconnected', () => {
+    fetchMessages(true);
+    fetchTicket();
+  });
 
   /**
    * Call on user activity (typing): if polling has backed off, check right away

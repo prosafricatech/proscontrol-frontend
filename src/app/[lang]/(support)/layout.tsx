@@ -1,6 +1,7 @@
 import { AfterHydration } from '@/components/supportLayout/AfterHydration';
 import { KeyboardShortcutsProvider } from '@/components/supportLayout/KeyboardShortcuts';
 import { PushListener } from '@/components/supportLayout/PushListener';
+import { RealtimeProvider } from '@/lib/realtime/RealtimeProvider';
 import { NotificationsProvider } from '@/lib/support/NotificationsProvider';
 import { InAppNavigationTracker } from '@/lib/support/inAppNavigation';
 import { Box } from '@mui/material';
@@ -17,10 +18,12 @@ export default function SupportShellLayout({
     <Box sx={{ minHeight: '100vh', bgcolor: 'var(--pc-bg)' }}>
       <AfterHydration>
         <InAppNavigationTracker />
-        <NotificationsProvider>
-          <PushListener />
-          <KeyboardShortcutsProvider>{children}</KeyboardShortcutsProvider>
-        </NotificationsProvider>
+        <RealtimeProvider>
+          <NotificationsProvider>
+            <PushListener />
+            <KeyboardShortcutsProvider>{children}</KeyboardShortcutsProvider>
+          </NotificationsProvider>
+        </RealtimeProvider>
       </AfterHydration>
     </Box>
   );

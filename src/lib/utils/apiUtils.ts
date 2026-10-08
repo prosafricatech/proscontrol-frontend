@@ -1,3 +1,4 @@
+import { SESSION_COOKIE_NAME } from '@/lib/auth/sessionCookie';
 import { getToken } from 'next-auth/jwt';
 import { NextRequest, NextResponse } from 'next/server';
 import axios from '@/lib/services/config';
@@ -118,6 +119,7 @@ export async function getAuthHeaders(
   const token = await getToken({
     req,
     secret: process.env.NEXTAUTH_SECRET,
+    cookieName: SESSION_COOKIE_NAME,
   });
 
   if (requireAuth && !token?.accessToken) {

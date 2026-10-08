@@ -1,3 +1,4 @@
+import { SESSION_COOKIE_NAME } from '@/lib/auth/sessionCookie';
 import { NextRequest, NextResponse } from 'next/server';
 import { encode, JWT } from 'next-auth/jwt';
 import { getAuthHeaders, handleJsonResponse } from '@/lib/utils/apiUtils';
@@ -59,9 +60,7 @@ export async function PUT(req: NextRequest) {
     });
 
     // Clear existing session cookies (including chunked cookies)
-    const cookieName = process.env.NODE_ENV === 'production'
-      ? '__Secure-next-auth.session-token'
-      : 'next-auth.session-token';
+    const cookieName = SESSION_COOKIE_NAME;
     
     // Delete the primary session cookie
     response.cookies.delete(cookieName);

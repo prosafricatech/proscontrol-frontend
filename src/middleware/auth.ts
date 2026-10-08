@@ -1,10 +1,6 @@
+import { SESSION_COOKIE_NAME } from '@/lib/auth/sessionCookie';
 import { getToken } from 'next-auth/jwt';
 import { NextRequest, NextResponse } from 'next/server';
-
-const COOKIE_NAME =
-  process.env.NODE_ENV === 'production'
-    ? '__Secure-next-auth.session-token'
-    : 'next-auth.session-token';
 
 export async function authMiddleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
@@ -81,7 +77,7 @@ export async function anonymousMiddleware(request: NextRequest) {
   const token = await getToken({
     req: request,
     secret: process.env.NEXTAUTH_SECRET,
-    cookieName: COOKIE_NAME,
+    cookieName: SESSION_COOKIE_NAME,
   });
 
   const pathname = request.nextUrl.pathname;

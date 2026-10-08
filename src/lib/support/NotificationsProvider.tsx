@@ -1,6 +1,8 @@
 'use client';
 
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
+import { useRealtime, useRealtimeEvent } from '@/lib/realtime/RealtimeProvider';
+import { normalizeNotification } from '@/lib/support/normalize';
 import {
   createContext,
   useCallback,
@@ -30,7 +32,8 @@ type NotificationsContextValue = {
   markTicketRead: (ticketId: string) => void;
 };
 
-// Only the unread count is polled; the list is reloaded when the count changes.
+// Fallback while the WebSocket is down: only the unread count is polled, and
+// the list is reloaded when the count changes.
 const UNREAD_POLL_INTERVAL_MS = 30000;
 
 const NotificationsContext = createContext<NotificationsContextValue | null>(
@@ -62,6 +65,9 @@ async function fetchUnreadCount(): Promise<number | null> {
 /**
  * The signed-in user's notifications, from the backend notifications API.
  * One provider for the whole support portal, so every page's bell shares it.
+ *
+ * First load is REST. After that, new notifications arrive live over the
+ * WebSocket (`notification.created`); polling runs only while it's down.
  */
 export function NotificationsProvider({ children }: { children: ReactNode }) {
   const { authData } = useJumboAuth();
@@ -76,6 +82,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   const [lastPage, setLastPage] = useState(1);
   const [total, setTotal] = useState(0);
   const lastSeenUnreadCount = useRef<number | null>(null);
+  const { connected } = useRealtime();
 
   const refresh = useCallback(async () => {
     if (!userId) return;
@@ -119,11 +126,14 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     setLastPage(nextPage.meta?.last_page ?? lastPage);
   }, [page, lastPage]);
 
-  // Poll the cheap unread count; reload the list only when it changed.
   useEffect(() => {
-    if (!userId) return;
-
     refresh();
+  }, [refresh]);
+
+  // Fallback polling, only while the WebSocket is down: check the cheap
+  // unread count and reload the list only when it changed.
+  useEffect(() => {
+    if (!userId || connected) return;
 
     const checkForNew = async () => {
       if (document.visibilityState !== 'visible') return;
@@ -141,11 +151,32 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       window.clearInterval(interval);
       document.removeEventListener('visibilitychange', checkForNew);
     };
-  }, [userId, refresh]);
+  }, [userId, connected, refresh]);
 
   // Latest items for callbacks that must not re-create on every change.
   const itemsRef = useRef(items);
   itemsRef.current = items;
+
+  // A new notification over the WebSocket: add it to the top of the list and
+  // count it. The unread count is never in the payload, so it's kept locally
+  // and reconciled with the server on reconnect.
+  useRealtimeEvent('notification.created', (payload) => {
+    const notification = normalizeNotification(payload);
+    if (itemsRef.current.some((item) => item.id === notification.id)) {
+      return;
+    }
+
+    setItems((current) => [notification, ...current]);
+    setTotal((current) => current + 1);
+    if (!notification.readAt) {
+      setUnreadCount((current) => current + 1);
+    }
+  });
+
+  // Back online after a drop: fetch whatever arrived in between.
+  useRealtimeEvent('reconnected', () => {
+    refresh();
+  });
 
   const markRead = useCallback((id: string) => {
     const target = itemsRef.current.find((item) => item.id === id);

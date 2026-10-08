@@ -2,6 +2,7 @@ import axios from '@/lib/services/config';
 import { getForwardedRequestHeadersFromHeaders } from '@/lib/utils/apiUtils';
 import NextAuth from 'next-auth';
 import { toSessionOrganizations } from '@/lib/support/organizations';
+import { nextAuthCookies } from '@/lib/auth/sessionCookie';
 import CredentialsProvider from 'next-auth/providers/credentials';
 
 const authOptions = {
@@ -108,6 +109,8 @@ const authOptions = {
   },
 
   session: { strategy: 'jwt', maxAge: 24 * 60 * 60 },
+  // Own cookie names, so prosERP on the same host can't overwrite our session.
+  cookies: nextAuthCookies,
   pages: { signIn: '/auth/signin' },
   secret: process.env.NEXTAUTH_SECRET,
   debug: process.env.NODE_ENV !== 'production',
