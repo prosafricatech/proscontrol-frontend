@@ -329,5 +329,13 @@
     "unconfigured": "Bado hazijawekwa. Msimamizi anahitaji kuongeza funguo za Firebase.",
     "turnedOn": "Arifa za kompyuta zimewashwa.",
     "turnedOff": "Arifa za kompyuta zimezimwa."
+  },
+  "emoji": {
+    "open": "Emoji",
+    "recent": "Za karibuni",
+    "smileys": "Nyuso",
+    "gestures": "Ishara",
+    "work": "Kazi",
+    "symbols": "Alama"
   }
 }

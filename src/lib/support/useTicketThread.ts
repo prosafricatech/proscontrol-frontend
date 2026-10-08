@@ -1,6 +1,7 @@
 'use client';
 
 import { useT } from '@/lib/i18n/useT';
+import { isPollingFallbackEnabled } from '@/lib/realtime/echo';
 import { useRealtime, useRealtimeEvent } from '@/lib/realtime/RealtimeProvider';
 import { normalizeMessage, normalizeTicket } from '@/lib/support/normalize';
 import type {
@@ -159,7 +160,8 @@ export function useTicketThread(
       // Closed is final (no reopening), so nothing more can arrive.
       if (ticketStatusRef.current === 'closed') return;
       // Live over the WebSocket: stop polling until it drops (see below).
-      if (connectedRef.current) return;
+      // Or the fallback is switched off (NEXT_PUBLIC_POLLING_FALLBACK=off).
+      if (connectedRef.current || !isPollingFallbackEnabled) return;
 
       if (document.visibilityState === 'visible') {
         const newFromOthers = await fetchMessages(true).catch(() => 0);

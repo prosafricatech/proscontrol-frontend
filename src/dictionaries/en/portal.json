@@ -329,5 +329,13 @@
     "unconfigured": "Not set up yet. An administrator needs to add the Firebase keys.",
     "turnedOn": "Desktop notifications are on.",
     "turnedOff": "Desktop notifications are off."
+  },
+  "emoji": {
+    "open": "Emoji",
+    "recent": "Recent",
+    "smileys": "Smileys",
+    "gestures": "Gestures",
+    "work": "Work",
+    "symbols": "Symbols"
   }
 }

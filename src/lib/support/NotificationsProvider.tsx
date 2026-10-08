@@ -1,6 +1,7 @@
 'use client';
 
 import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
+import { isPollingFallbackEnabled } from '@/lib/realtime/echo';
 import { useRealtime, useRealtimeEvent } from '@/lib/realtime/RealtimeProvider';
 import { normalizeNotification } from '@/lib/support/normalize';
 import {
@@ -133,7 +134,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   // Fallback polling, only while the WebSocket is down: check the cheap
   // unread count and reload the list only when it changed.
   useEffect(() => {
-    if (!userId || connected) return;
+    if (!userId || connected || !isPollingFallbackEnabled) return;
 
     const checkForNew = async () => {
       if (document.visibilityState !== 'visible') return;

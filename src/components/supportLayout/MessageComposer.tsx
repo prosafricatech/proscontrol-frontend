@@ -1,5 +1,6 @@
 'use client';
 
+import { EmojiPicker } from '@/components/supportLayout/EmojiPicker';
 import { useT } from '@/lib/i18n/useT';
 import { FOCUS_REPLY_EVENT, setUnsentDraft } from '@/lib/support/shortcuts';
 import {
@@ -101,6 +102,23 @@ export const MessageComposer = ({
     setFiles((current) => [...current, ...accepted]);
   };
 
+  /** Puts the emoji where the cursor is (or replaces the selected text). */
+  const insertEmoji = (emoji: string) => {
+    const input = textInput.current;
+    const start = input?.selectionStart ?? body.length;
+    const end = input?.selectionEnd ?? body.length;
+
+    setBody(body.slice(0, start) + emoji + body.slice(end));
+    onActivity?.();
+
+    // After React renders the new text, put the cursor right after the emoji.
+    requestAnimationFrame(() => {
+      const caret = start + emoji.length;
+      input?.focus();
+      input?.setSelectionRange(caret, caret);
+    });
+  };
+
   const handleSend = async () => {
     if (!body.trim() || sending) return;
     setError(null);
@@ -173,6 +191,7 @@ export const MessageComposer = ({
         >
           <AttachIcon fontSize='small' />
         </IconButton>
+        <EmojiPicker onSelect={insertEmoji} disabled={sending} />
         <TextField
           fullWidth
           multiline
