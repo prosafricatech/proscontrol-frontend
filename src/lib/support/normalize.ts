@@ -1,5 +1,6 @@
 import type {
   ActivityEntry,
+  ProsAfrican,
   ReassignmentEvent,
   SupportNotification,
   TicketAttachment,
@@ -212,5 +213,25 @@ export function normalizeActivityEntry(
     ipAddress: properties.ip_address ?? null,
     userAgent: properties.user_agent ?? null,
     createdAt: entry.created_at ?? '',
+  };
+}
+
+type BackendProsAfrican = {
+  proserp_user_id: string | number;
+  user_id?: string | number | null;
+  name?: string;
+  email?: string | null;
+  phone?: string | null;
+  roles?: string[];
+};
+
+export function normalizeProsAfrican(person: BackendProsAfrican): ProsAfrican {
+  return {
+    proserpUserId: String(person.proserp_user_id),
+    userId: person.user_id ? String(person.user_id) : null,
+    name: person.name ?? '',
+    email: person.email ?? null,
+    phone: person.phone ?? null,
+    roles: person.roles ?? [],
   };
 }

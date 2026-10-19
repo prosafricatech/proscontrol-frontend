@@ -15,7 +15,11 @@ export default function SupportShellLayout({
   children,
 }: SupportShellLayoutProps) {
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'var(--pc-bg)' }}>
+    // #root is a flex row (style.css), so fill its width; otherwise centred
+    // content such as the loading spinners sits at the far left.
+    <Box
+      sx={{ flex: 1, minWidth: 0, minHeight: '100vh', bgcolor: 'var(--pc-bg)' }}
+    >
       <AfterHydration>
         <InAppNavigationTracker />
         <RealtimeProvider>

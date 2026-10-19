@@ -1,97 +1,43 @@
 'use client';
 
+import { ProsAfricanCard } from '@/components/supportLayout/staff/ProsAfricanCard';
+import { TicketPagination } from '@/components/supportLayout/TicketPagination';
 import { useT } from '@/lib/i18n/useT';
-import { Email, PersonAdd, Search } from '@mui/icons-material';
+import { useProsAfricans } from '@/lib/support/useProsAfricans';
+import { Search } from '@mui/icons-material';
 import {
-  Avatar,
+  Alert,
   Box,
-  Button,
   Card,
-  CardContent,
-  Chip,
-  Divider,
   InputAdornment,
+  Skeleton,
   TextField,
   Typography,
 } from '@mui/material';
 import { useState } from 'react';
 import { cardSx, fieldSx, PageHeader } from './shared';
 
-// Sample data until the backend provides a staff list endpoint.
-const SAMPLE_STAFF = ['Lilian M.', 'Daniel K.', 'Asha N.', 'Musa P.'];
+const LOADING_CARD_COUNT = 4;
 
-interface StaffCardProps {
-  name: string;
-  isSenior: boolean;
-  isAvailable: boolean;
-}
+const gridSx = {
+  display: 'grid',
+  gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' },
+  gap: 2,
+};
 
-function StaffCard({ name, isSenior, isAvailable }: StaffCardProps) {
-  const t = useT();
-  const email = `${name.toLowerCase().replaceAll(' ', '.')}@proscontrol.com`;
-
-  return (
-    <Card sx={cardSx}>
-      <CardContent sx={{ p: 2.5 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Box sx={{ display: 'flex', gap: 1.5 }}>
-            <Avatar
-              sx={{
-                bgcolor: 'var(--pc-accent-soft-2)',
-                color: 'var(--pc-accent)',
-              }}
-            >
-              {name[0]}
-            </Avatar>
-            <Box>
-              <Typography sx={{ fontWeight: 700 }}>{name}</Typography>
-              <Typography sx={{ color: 'var(--pc-text-3)', fontSize: 13 }}>
-                {isSenior
-                  ? t(
-                      'portal.staffDirectory.role.senior',
-                      'Senior Support Specialist'
-                    )
-                  : t(
-                      'portal.staffDirectory.role.specialist',
-                      'Support Specialist'
-                    )}
-              </Typography>
-            </Box>
-          </Box>
-          <Chip
-            size='small'
-            color={isAvailable ? 'success' : 'warning'}
-            label={
-              isAvailable
-                ? t('portal.staffDirectory.available', 'Available')
-                : t('portal.staffDirectory.busy', 'Busy')
-            }
-          />
-        </Box>
-
-        <Divider sx={{ my: 2 }} />
-
-        <Typography sx={{ color: 'var(--pc-text-3)', fontSize: 13 }}>
-          <Email sx={{ fontSize: 15, verticalAlign: 'middle', mr: 1 }} />
-          {email}
-        </Typography>
-      </CardContent>
-    </Card>
-  );
-}
-
+/**
+ * The support team: ProsAfricans from prosERP (where members are added and
+ * removed), searched on the server. The same list feeds "Assign to" on tickets.
+ */
 export default function StaffDirectoryPage() {
   const t = useT();
-  const [query, setQuery] = useState('');
-  const [invited, setInvited] = useState<string[]>([]);
+  const [keyword, setKeyword] = useState('');
+  const [page, setPage] = useState(1);
+  const { people, meta, loading, error } = useProsAfricans(keyword, true, page);
 
-  const matchingStaff = SAMPLE_STAFF.filter((name) =>
-    name.toLowerCase().includes(query.toLowerCase())
-  );
-  const members = [...matchingStaff, ...invited];
-
-  const inviteTeammate = () => {
-    setInvited((current) => [...current, `New teammate ${current.length + 1}`]);
+  const search = (text: string) => {
+    setKeyword(text);
+    setPage(1);
   };
 
   return (
@@ -100,50 +46,76 @@ export default function StaffDirectoryPage() {
         title={t('portal.staffDirectory.title', 'Staff Directory')}
         subtitle={t(
           'portal.staffDirectory.subtitle',
-          'Find teammates, check availability, and assign work confidently.'
+          'The ProsAfricans who handle support. Members are added and removed in prosERP.'
         )}
-        action={
-          <Button
-            variant='contained'
-            startIcon={<PersonAdd />}
-            onClick={inviteTeammate}
-          >
-            {t('portal.staffDirectory.invite', 'Invite staff')}
-          </Button>
-        }
-      />
-
-      <TextField
-        size='small'
-        value={query}
-        onChange={(event) => setQuery(event.target.value)}
-        placeholder={t('portal.staffDirectory.search', 'Search staff')}
-        sx={{ ...fieldSx, width: 320, mb: 2 }}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position='start'>
-              <Search fontSize='small' />
-            </InputAdornment>
-          ),
-        }}
       />
 
       <Box
         sx={{
-          display: 'grid',
-          gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' },
-          gap: 2,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: 1.5,
+          mb: 2,
         }}
       >
-        {members.map((name, index) => (
-          <StaffCard
-            key={name}
-            name={name}
-            isSenior={index % 2 === 0}
-            isAvailable={index % 3 === 0}
-          />
-        ))}
+        <TextField
+          size='small'
+          value={keyword}
+          onChange={(event) => search(event.target.value)}
+          placeholder={t(
+            'portal.staffDirectory.search',
+            'Search by name or email'
+          )}
+          sx={{ ...fieldSx, width: { xs: '100%', sm: 320 } }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position='start'>
+                <Search fontSize='small' />
+              </InputAdornment>
+            ),
+          }}
+        />
+        {!loading && !error && (
+          <Typography sx={{ color: 'var(--pc-text-3)', fontSize: 14 }}>
+            {t('portal.staffDirectory.count', '{count} ProsAfricans', {
+              count: meta.total,
+            })}
+          </Typography>
+        )}
       </Box>
+
+      {error && (
+        <Alert severity='warning' sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+
+      {loading && people.length === 0 ? (
+        <Box sx={gridSx}>
+          {Array.from({ length: LOADING_CARD_COUNT }, (_, index) => (
+            <Skeleton key={index} variant='rounded' height={150} />
+          ))}
+        </Box>
+      ) : people.length === 0 && !error ? (
+        <Card sx={{ ...cardSx, p: 4, textAlign: 'center' }}>
+          <Typography sx={{ color: 'var(--pc-text-3)' }}>
+            {t(
+              'portal.staffDirectory.empty',
+              'No ProsAfricans match your search.'
+            )}
+          </Typography>
+        </Card>
+      ) : (
+        <Box sx={{ ...gridSx, opacity: loading ? 0.6 : 1 }}>
+          {people.map((person) => (
+            <ProsAfricanCard key={person.proserpUserId} person={person} />
+          ))}
+        </Box>
+      )}
+
+      <TicketPagination meta={meta} onPageChange={setPage} />
     </>
   );
 }

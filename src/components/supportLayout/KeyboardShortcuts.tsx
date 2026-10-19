@@ -6,6 +6,7 @@ import { useJumboAuth } from '@/app/providers/JumboAuthProvider';
 import { useTogglePush } from '@/components/supportLayout/useTogglePush';
 import { useSwitchLocale } from '@/lib/i18n/useSwitchLocale';
 import { useT } from '@/lib/i18n/useT';
+import { isHiddenPage } from '@/lib/support/hiddenPages';
 import {
   CONVERSATION_KEY_HINTS,
   FOCUS_REPLY_EVENT,
@@ -130,7 +131,16 @@ export function KeyboardShortcutsProvider({
   const pendingSequenceAt = useRef(0);
 
   const shortcuts = useMemo(
-    () => SHORTCUTS.filter((shortcut) => shortcut.roles.includes(role)),
+    () =>
+      SHORTCUTS.filter(
+        (shortcut) =>
+          shortcut.roles.includes(role) &&
+          // No shortcut to a page that's hidden from the menu.
+          !(
+            shortcut.action.type === 'navigate' &&
+            isHiddenPage(shortcut.action.path)
+          )
+      ),
     [role]
   );
 

@@ -100,6 +100,7 @@ export function TicketDetailsPanel({
                 status={ticket.status}
                 isAttending={isAttending}
                 busy={busy}
+                currentHandlerId={ticket.handledById}
                 onActivate={onActivate}
                 onClose={onClose}
                 onReassign={onReassign}

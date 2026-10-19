@@ -1,6 +1,7 @@
 'use client';
 
-import type { TicketStatus } from '@/lib/support/types';
+import type { ProsAfrican, TicketStatus } from '@/lib/support/types';
+import { resolveAssigneeUserId } from '@/lib/support/useProsAfricans';
 import type { ActionResult } from '@/lib/support/useTicketThread';
 import {
   PlayArrow as ActivateIcon,
@@ -8,6 +9,7 @@ import {
 } from '@mui/icons-material';
 import { Alert, Box, Button, TextField } from '@mui/material';
 import { useState } from 'react';
+import { AssigneePicker } from './AssigneePicker';
 import { useTicketDetailText } from './useTicketDetailText';
 
 const actionButtonSx = {
@@ -23,6 +25,8 @@ interface StaffTicketActionsProps {
   isAttending: boolean;
   /** A ticket action is in progress; buttons are disabled meanwhile. */
   busy: boolean;
+  /** ProsControl user id of the staff member handling the ticket now. */
+  currentHandlerId?: string;
   onActivate: () => Promise<ActionResult>;
   onClose: () => Promise<ActionResult>;
   onReassign: (toUserId: string, reason: string) => Promise<ActionResult>;
@@ -36,13 +40,15 @@ export function StaffTicketActions({
   status,
   isAttending,
   busy,
+  currentHandlerId,
   onActivate,
   onClose,
   onReassign,
 }: StaffTicketActionsProps) {
   const t = useTicketDetailText();
   const [error, setError] = useState<string | null>(null);
-  const [reassignTo, setReassignTo] = useState('');
+  const [assignee, setAssignee] = useState<ProsAfrican | null>(null);
+  const [enrolling, setEnrolling] = useState(false);
   const [reassignReason, setReassignReason] = useState('');
 
   const run = async (action: () => Promise<ActionResult>): Promise<boolean> => {
@@ -55,9 +61,25 @@ export function StaffTicketActions({
   };
 
   const submitReassign = async () => {
-    const succeeded = await run(() => onReassign(reassignTo, reassignReason));
+    if (!assignee) return;
+
+    const succeeded = await run(async () => {
+      // Someone new to ProsControl gets an account first (see the backend's
+      // POST /prosafricans/{id}/enroll), then the ticket moves to them.
+      setEnrolling(true);
+      const resolved = await resolveAssigneeUserId(
+        assignee,
+        t?.reassignFailed || 'Unable to reassign this ticket.'
+      );
+      setEnrolling(false);
+
+      return resolved.ok
+        ? onReassign(resolved.userId, reassignReason)
+        : resolved;
+    });
+
     if (succeeded) {
-      setReassignTo('');
+      setAssignee(null);
       setReassignReason('');
     }
   };
@@ -111,13 +133,11 @@ export function StaffTicketActions({
 
       {status === 'active' && (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-          {/* No staff list endpoint exists yet, so the target is entered by user ID. */}
-          <TextField
-            size='small'
-            type='number'
-            label={t?.reassignToUserId || 'Reassign to staff user ID'}
-            value={reassignTo}
-            onChange={(event) => setReassignTo(event.target.value)}
+          <AssigneePicker
+            value={assignee}
+            onChange={setAssignee}
+            currentHandlerId={currentHandlerId}
+            disabled={busy || enrolling}
           />
           <TextField
             size='small'
@@ -128,7 +148,7 @@ export function StaffTicketActions({
           />
           <Button
             variant='outlined'
-            disabled={busy || !reassignTo}
+            disabled={busy || enrolling || !assignee}
             onClick={submitReassign}
             sx={{
               ...actionButtonSx,

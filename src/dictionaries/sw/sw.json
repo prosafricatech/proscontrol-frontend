@@ -623,6 +623,13 @@
         "onlyAttendingCanReply": "Ni mhudumu anayeshughulikia tiketi hii pekee anayeweza kujibu.",
         "activateTicket": "Chukua na uwashe",
         "reassignToUserId": "Panga upya kwa kitambulisho cha mhudumu",
+        "assignTo": "Mpe",
+        "searchProsAfricans": "Tafuta kwa jina au barua pepe",
+        "loadingProsAfricans": "Inapakia ProsAfricans…",
+        "noProsAfricans": "Hakuna ProsAfrican anayelingana na utafutaji wako.",
+        "handlingNow": "Anashughulikia sasa",
+        "newToProsControl": "Mgeni kwenye ProsControl",
+        "reassignFailed": "Imeshindikana kupanga upya tiketi hii.",
         "reassignReason": "Sababu (si lazima)",
         "reassign": "Panga upya"
       }

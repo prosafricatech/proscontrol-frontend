@@ -76,6 +76,17 @@ export interface SupportNotification {
   createdAt: string;
 }
 
+/** Someone on prosERP's internal team, who can be assigned a ticket. */
+export interface ProsAfrican {
+  proserpUserId: string;
+  /** Their ProsControl account, or null if they've never signed in here. */
+  userId: string | null;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  roles: string[];
+}
+
 /** `action` values the backend writes to the activity log. */
 export type ActivityAction =
   | 'ticket.created'

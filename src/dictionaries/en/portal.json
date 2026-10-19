@@ -1,15 +1,12 @@
 {
   "staffDirectory": {
     "title": "Staff Directory",
-    "subtitle": "Find teammates, check availability, and assign work confidently.",
-    "invite": "Invite staff",
-    "search": "Search staff",
-    "role": {
-      "specialist": "Support Specialist",
-      "senior": "Senior Support Specialist"
-    },
-    "available": "Available",
-    "busy": "Busy"
+    "subtitle": "The ProsAfricans who handle support. Members are added and removed in prosERP.",
+    "search": "Search by name or email",
+    "count": "{count} ProsAfricans",
+    "inProsControl": "In ProsControl",
+    "notSignedIn": "Not signed in yet",
+    "empty": "No ProsAfricans match your search."
   },
   "customerProfile": {
     "title": "Customer Profile",

@@ -1,15 +1,12 @@
 {
   "staffDirectory": {
     "title": "Orodha ya Wahudumu",
-    "subtitle": "Tafuta wenzako, angalia upatikanaji wao, na gawa kazi kwa uhakika.",
-    "invite": "Alika mhudumu",
-    "search": "Tafuta mhudumu",
-    "role": {
-      "specialist": "Mtaalamu wa Msaada",
-      "senior": "Mtaalamu Mkuu wa Msaada"
-    },
-    "available": "Anapatikana",
-    "busy": "Ana shughuli"
+    "subtitle": "ProsAfricans wanaoshughulikia msaada. Wanachama huongezwa na kuondolewa kwenye prosERP.",
+    "search": "Tafuta kwa jina au barua pepe",
+    "count": "ProsAfricans {count}",
+    "inProsControl": "Yupo ProsControl",
+    "notSignedIn": "Bado hajaingia",
+    "empty": "Hakuna ProsAfrican anayelingana na utafutaji wako."
   },
   "customerProfile": {
     "title": "Wasifu wa Mteja",

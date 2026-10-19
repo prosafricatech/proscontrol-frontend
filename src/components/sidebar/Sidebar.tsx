@@ -7,6 +7,7 @@ import {
   useKeyboardShortcuts,
 } from '@/components/supportLayout/KeyboardShortcuts';
 import { useT } from '@/lib/i18n/useT';
+import { isHiddenPage } from '@/lib/support/hiddenPages';
 import {
   History as ActivityIcon,
   ChatBubbleOutline as ChatIcon,
@@ -65,7 +66,7 @@ export const Sidebar = ({ role }: SidebarProps) => {
   /* ------------------------------------------------------------------ */
   /* Menu items — differ by role                                         */
   /* ------------------------------------------------------------------ */
-  const menuItems: MenuItem[] =
+  const allMenuItems: MenuItem[] =
     role === 'staff'
       ? [
           {
@@ -163,6 +164,11 @@ export const Sidebar = ({ role }: SidebarProps) => {
             href: `/${lang}/notifications`,
           },
         ];
+
+  // Pages that aren't ready yet stay out of the menu (see hiddenPages.ts).
+  const menuItems = allMenuItems.filter(
+    (item) => !isHiddenPage(item.href.replace(`/${lang}`, ''))
+  );
 
   /* ------------------------------------------------------------------ */
   /* Helpers                                                             */

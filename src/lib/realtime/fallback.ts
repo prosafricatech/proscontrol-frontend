@@ -7,11 +7,12 @@
  *   queue worker stops, the socket stays open but goes silent, and only this
  *   check notices.
  *
- * Both are on by default. NEXT_PUBLIC_POLLING_FALLBACK=off switches both off,
- * to test WebSockets on their own.
+ * Both are OFF by default: updates come only over the WebSocket, so Reverb
+ * and the queue worker must be running. Set NEXT_PUBLIC_POLLING_FALLBACK=on
+ * to turn both back on (e.g. for networks that block WebSockets).
  */
 export const isPollingFallbackEnabled =
-  process.env.NEXT_PUBLIC_POLLING_FALLBACK !== 'off';
+  process.env.NEXT_PUBLIC_POLLING_FALLBACK === 'on';
 
 /** Safety-check interval while the socket is connected. */
 export const CONNECTED_SAFETY_CHECK_MS = 2 * 60 * 1000;

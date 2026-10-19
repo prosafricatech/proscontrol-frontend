@@ -615,6 +615,13 @@
         "onlyAttendingCanReply": "Only the staff member handling this ticket can reply.",
         "activateTicket": "Pick up & activate",
         "reassignToUserId": "Reassign to staff user ID",
+        "assignTo": "Assign to",
+        "searchProsAfricans": "Search by name or email",
+        "loadingProsAfricans": "Loading ProsAfricans…",
+        "noProsAfricans": "No ProsAfricans match your search.",
+        "handlingNow": "Handling now",
+        "newToProsControl": "New to ProsControl",
+        "reassignFailed": "Unable to reassign this ticket.",
         "reassignReason": "Reason (optional)",
         "reassign": "Reassign"
       }
